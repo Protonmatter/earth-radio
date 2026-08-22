@@ -101,7 +101,7 @@ export function applyDeclarativeI18n(documentRef = globalThis.document, locale =
     const attr = element.getAttribute('data-i18n-attr');
     const value = t(key, undefined, locale);
     if (attr) element.setAttribute(attr, value);
-    if (!attr || element.childElementCount === 0) element.textContent = value;
+    else element.textContent = value;
   }
   for (const element of documentRef.querySelectorAll('[data-i18n-placeholder]')) {
     element.setAttribute('placeholder', t(element.getAttribute('data-i18n-placeholder'), undefined, locale));

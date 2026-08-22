@@ -4,7 +4,7 @@ Status date: 2026-08-22. Candidate version: `0.24.0-recovered.1`.
 
 ## Validated
 
-- The additive Atlas Editorial layer, six structurally complete UI catalogs, destination/split/collapse contract tests, and service-worker cache-version checks pass locally via `npm run verify`. Engineering-authored catalogs are identified as such.
+- The additive Atlas Editorial layer, six structurally complete UI catalogs, destination/split/collapse contract tests, and service-worker cache-version checks pass locally via `npm run verify`. Localization updates attributes or visible text, not both, so play/search glyphs remain. Engineering-authored catalogs are identified as such.
 
 - Both supplied ZIP inputs were hashed and inventoried; recovery selection is captured in `docs/provenance/recovery-manifest.json`.
 - The installed executable reports Earth Radio 0.24.0 and is not Authenticode signed.

@@ -168,7 +168,7 @@ function applyWorkspace(state, mode) {
   }
 }
 
-function presentSearch(active) {
+function presentSearch(active, focusInput = false) {
   const modal = byId('search-modal');
   if (!modal) return;
   modal.classList.toggle('er-search-destination', active);
@@ -177,6 +177,7 @@ function presentSearch(active) {
     modal.style.display = 'flex';
     modal.setAttribute('aria-hidden', 'false');
     modal.setAttribute('aria-modal', 'false');
+    if (focusInput) queueMicrotask(() => byId('search-input')?.focus());
   } else if (modal.classList.contains('er-search-destination') || classifyViewport() === 'mobile') {
     modal.classList.remove('er-search-destination');
     if (classifyViewport() === 'mobile') {
@@ -185,6 +186,15 @@ function presentSearch(active) {
       modal.setAttribute('aria-hidden', 'true');
     }
   }
+}
+
+function setOverflowOpen(open) {
+  const sheet = byId('er-overflow');
+  const toggle = document.querySelector('[data-er-overflow]');
+  if (!sheet) return;
+  sheet.hidden = !open;
+  sheet.setAttribute('aria-hidden', String(!open));
+  toggle?.setAttribute('aria-expanded', String(open));
 }
 
 function setDestination(destination, persistHash = false) {
@@ -197,6 +207,8 @@ function setDestination(destination, persistHash = false) {
     if (favorites?.classList.contains('header-btn--active')) favorites.click();
   }
   applyViewport(next);
+  setOverflowOpen(false);
+  if (destination === 'search' && persistHash) presentSearch(true, true);
   if (persistHash) {
     const current = location.hash.replace(/^#/, '');
     if (!current.includes('=')) history.replaceState(history.state, '', `#${destination}`);
@@ -315,17 +327,15 @@ function bindActions() {
     }
     if (event.target.closest('[data-er-overflow]')) {
       const sheet = byId('er-overflow');
-      if (sheet) {
-        sheet.hidden = !sheet.hidden;
-        sheet.setAttribute('aria-hidden', String(sheet.hidden));
-      }
+      setOverflowOpen(Boolean(sheet?.hidden));
       return;
     }
     if (event.target.closest('[data-click-id]')) {
       clickExisting(event.target.closest('[data-click-id]').getAttribute('data-click-id'));
-      byId('er-overflow').hidden = true;
+      setOverflowOpen(false);
       return;
     }
+    if (!event.target.closest('#er-overflow')) setOverflowOpen(false);
     if (event.target.closest('[data-er-collapse]')) {
       const target = event.target.closest('[data-er-collapse]').getAttribute('data-er-collapse');
       const state = loadUiState();
@@ -359,6 +369,10 @@ function bindActions() {
     const state = sanitizeUiState({ ...loadUiState(), split: loadUiState().split, viewportWidth: window.innerWidth });
     saveUiState(state);
     applyViewport(state);
+  });
+
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape') setOverflowOpen(false);
   });
 }
 

@@ -33,16 +33,16 @@
     <div class="er-header-tools">
       <button class="er-icon-btn er-tablet-only" type="button" data-er-dest="listen" data-i18n="nav.listen">Listen</button>
       <button class="er-icon-btn er-tablet-only" type="button" data-er-dest="map" data-i18n="nav.map">Map</button>
-      <button class="er-icon-btn" type="button" data-er-open-search data-i18n="header.search" data-i18n-attr="aria-label">Search stations</button>
-      <button class="er-icon-btn" type="button" data-er-overflow data-i18n="header.overflow" data-i18n-attr="aria-label" aria-controls="er-overflow">More actions</button>
+      <button class="er-icon-btn" type="button" data-er-open-search data-i18n="header.search" data-i18n-attr="aria-label" aria-label="Search stations"><span class="er-icon er-icon-search" aria-hidden="true"></span></button>
+      <button class="er-icon-btn" type="button" data-er-overflow data-i18n="header.overflow" data-i18n-attr="aria-label" aria-label="More actions" aria-controls="er-overflow" aria-expanded="false"><span class="er-icon er-icon-more" aria-hidden="true"></span></button>
       <button id="er-restore-panel" class="er-collapse" type="button" hidden data-er-collapse="map" data-i18n="desktop.restoreMap">Show map</button>
     </div>
     <div class="header-right">
-      <button class="header-btn" id="refresh-stations" type="button" data-i18n="header.refresh" data-i18n-attr="aria-label" aria-label="Refresh station directory">Refresh</button>
-      <button class="header-btn" id="surprise" type="button" data-i18n="header.surprise" data-i18n-attr="aria-label" aria-label="Surprise me with a station">Surprise</button>
-      <button class="header-btn" id="recent-toggle" type="button" aria-pressed="false" data-i18n="header.recent" data-i18n-attr="aria-label" aria-label="Show recently played">Recent</button>
-      <button class="header-btn header-btn--utility" id="export-data" type="button" data-i18n="header.export" data-i18n-attr="aria-label" aria-label="Export favorites and preferences">Export</button>
-      <button class="header-btn header-btn--utility" id="import-data" type="button" data-i18n="header.import" data-i18n-attr="aria-label" aria-label="Import favorites and preferences from JSON">Import</button>
+      <button class="header-btn" id="refresh-stations" type="button" data-i18n="header.refresh" aria-label="Refresh station directory">Refresh</button>
+      <button class="header-btn" id="surprise" type="button" data-i18n="header.surprise" aria-label="Surprise me with a station">World Scan</button>
+      <button class="header-btn" id="recent-toggle" type="button" aria-pressed="false" data-i18n="saved.recent" aria-label="Show recently played">Recent</button>
+      <button class="header-btn header-btn--utility" id="export-data" type="button" data-i18n="header.export" aria-label="Export favorites and preferences">Export</button>
+      <button class="header-btn header-btn--utility" id="import-data" type="button" data-i18n="header.import" aria-label="Import favorites and preferences from JSON">Import</button>
       <input id="import-data-input" type="file" accept="application/json,.json" hidden aria-hidden="true" />
       <button class="header-btn" id="favorites-toggle" type="button" aria-pressed="false" data-i18n="header.favorites" data-i18n-attr="aria-label" aria-label="Show favorites only">
         <span class="heart-icon" aria-hidden="true">&#9829;</span>
@@ -57,6 +57,8 @@
 
   <div id="er-overflow" class="er-overflow" hidden aria-hidden="true">
     <button type="button" data-click-id="surprise" data-i18n="header.surprise">World Scan</button>
+    <button type="button" data-click-id="recent-toggle" data-i18n="saved.recent">Recent</button>
+    <button type="button" data-click-id="favorites-toggle" data-i18n="saved.favorites">Favorites</button>
     <button type="button" data-click-id="filters-toggle" data-i18n="header.filters">Filters</button>
     <button type="button" data-click-id="refresh-stations" data-i18n="header.refresh">Refresh</button>
     <button type="button" data-click-id="theme-toggle" data-i18n="header.theme">Toggle theme</button>

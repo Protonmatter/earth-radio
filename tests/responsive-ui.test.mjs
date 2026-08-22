@@ -68,4 +68,13 @@ test('responsive assets are referenced after the recovered runtime and staged as
   assert.match(html, /zh-Hant/);
   assert.match(html, /er-mobile-nav/);
   assert.match(html, /responsive-ui.css/);
+  assert.match(html, /data-i18n-attr="aria-label"/);
+  assert.match(html, /er-icon-search/);
+});
+
+test('overflow menu can become visible and search occupies the mobile workspace', async () => {
+  const css = await readFile(path.join(root, 'site', 'assets', 'responsive-ui.css'), 'utf8');
+  assert.match(css, /\.er-overflow:not\(\[hidden\]\)\s*\{\s*display:\s*grid;/);
+  assert.match(css, /html\.er-mobile \.search-modal\.er-search-destination\s*\{[\s\S]*position:\s*fixed;/);
+  assert.match(css, /html\.er-root \.player-info\s*\{[\s\S]*appearance:\s*none;/);
 });

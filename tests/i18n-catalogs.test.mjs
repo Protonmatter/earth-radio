@@ -5,6 +5,7 @@ import {
   DEFAULT_LOCALE,
   REQUIRED_KEYS,
   SUPPORTED_LOCALES,
+  applyDeclarativeI18n,
   applyDocumentLocale,
   catalogPlaceholders,
   detectBrowserLocale,
@@ -65,6 +66,30 @@ test('document locale updates lang, dir, and font profile', () => {
   assert.equal(fake.documentElement.lang, 'zh-Hant');
   assert.equal(fake.documentElement.dir, 'ltr');
   assert.equal(fake.documentElement.dataset.fontProfile, 'zh-Hant');
+});
+
+test('declarative i18n keeps icon glyphs when only an attribute is localized', () => {
+  const icon = {
+    attrs: { 'data-i18n': 'player.play', 'data-i18n-attr': 'aria-label' },
+    textContent: '▶',
+    getAttribute(name) { return this.attrs[name]; },
+    setAttribute(name, value) { this.attrs[name] = value; }
+  };
+  const label = {
+    attrs: { 'data-i18n': 'header.refresh' },
+    textContent: 'Refresh',
+    getAttribute(name) { return this.attrs[name]; },
+    setAttribute(name, value) { this.attrs[name] = value; }
+  };
+  applyDeclarativeI18n({
+    querySelectorAll(selector) {
+      if (selector === '[data-i18n]') return [icon, label];
+      return [];
+    }
+  }, 'en');
+  assert.equal(icon.textContent, '▶');
+  assert.equal(icon.attrs['aria-label'], 'Play');
+  assert.equal(label.textContent, 'Refresh');
 });
 
 test('first-use browser language selects a supported locale', () => {
