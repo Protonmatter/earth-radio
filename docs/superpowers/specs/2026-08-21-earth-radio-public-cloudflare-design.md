@@ -1,9 +1,13 @@
 # Earth Radio Public Repository and Cloudflare Pages Design
 
-**Status:** Approved in conversation on 2026-08-21  
-**Owner:** Protonmatter  
-**Canonical repository:** `https://github.com/Protonmatter/earth-radio`  
-**Initial production host:** Cloudflare Pages Free  
+**Status:** Approved in conversation on 2026-08-21
+
+**Owner:** Protonmatter
+
+**Canonical repository:** `https://github.com/Protonmatter/earth-radio`
+
+**Initial production host:** Cloudflare Pages Free
+
 **Intended production hostname:** `https://earth-radio.pages.dev`
 
 ## 1. Purpose
