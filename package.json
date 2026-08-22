@@ -1,0 +1,24 @@
+{
+  "name": "earth-radio",
+  "version": "0.24.0-recovered.1",
+  "private": true,
+  "type": "module",
+  "description": "Recovered Earth Radio desktop and public web application.",
+  "engines": {
+    "node": "24.18.0"
+  },
+  "scripts": {
+    "test:recovery": "node --test tests/recovery-inventory.test.mjs"
+  },
+  "dependencies": {
+    "hls.js": "1.6.16",
+    "idb": "8.0.3",
+    "leaflet": "1.9.4",
+    "leaflet.markercluster": "1.5.3"
+  },
+  "devDependencies": {
+    "@electron/asar": "4.3.0",
+    "electron": "43.4.1",
+    "electron-builder": "26.15.3"
+  }
+}
