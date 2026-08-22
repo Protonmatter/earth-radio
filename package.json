@@ -8,7 +8,10 @@
     "node": "24.18.0"
   },
   "scripts": {
-    "test:recovery": "node --test tests/recovery-inventory.test.mjs"
+    "test:recovery": "node --test tests/recovery-inventory.test.mjs",
+    "build:web": "node scripts/stage-site.mjs",
+    "verify:site": "node scripts/validate-site.mjs site && node scripts/validate-site.mjs .build/site",
+    "test:site": "node --test tests/stage-site.test.mjs tests/validate-site.test.mjs"
   },
   "dependencies": {
     "hls.js": "1.6.16",

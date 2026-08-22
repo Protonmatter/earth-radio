@@ -1,5 +1,15 @@
-const CACHE_NAME = 'earth-radio-shell-v24-country-font';
-const SHELL_ASSETS = ['./', './favicon.svg', './manifest.webmanifest', './assets/metadata-enrichment.js', './assets/metadata-enrichment.css'];
+const CACHE_NAME = 'earth-radio-shell-v24-recovered-1';
+const SHELL_ASSETS = [
+  './',
+  './config.js',
+  './favicon.svg',
+  './manifest.webmanifest',
+  './assets/hls.light-Dr1Fv81C.js',
+  './assets/index-B4rKOAHV.js',
+  './assets/index-CSoL7F-Y.css',
+  './assets/metadata-enrichment.js',
+  './assets/metadata-enrichment.css'
+];
 
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(SHELL_ASSETS)).catch(() => undefined));
