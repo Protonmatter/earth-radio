@@ -2,7 +2,7 @@
 
 Explore live radio stations around the world in a recovered, auditable web and Electron application.
 
-Intended production URL: **https://earth-radio.pages.dev** (not deployed or verified yet). Intended public repository: **https://github.com/Protonmatter/earth-radio** (not created yet).
+Intended production URL: **https://earth-radio.pages.dev** (not deployed or verified yet). Public repository: **https://github.com/Protonmatter/earth-radio**.
 
 This repository was reconstructed from the installed Earth Radio 0.24.0 application and two user-supplied archives. It is not a byte-for-byte reproduction of the original development repository. The newest runnable installed assets were selected where they differed from older archived source; those decisions are recorded in [docs/PROVENANCE.md](docs/PROVENANCE.md).
 
