@@ -4,6 +4,8 @@ Status date: 2026-08-22. Candidate version: `0.24.0-recovered.1`.
 
 ## Validated
 
+- The additive Atlas Editorial layer, six structurally complete UI catalogs, destination/split/collapse contract tests, and service-worker cache-version checks pass locally via `npm run verify`. Engineering-authored catalogs are identified as such.
+
 - Both supplied ZIP inputs were hashed and inventoried; recovery selection is captured in `docs/provenance/recovery-manifest.json`.
 - The installed executable reports Earth Radio 0.24.0 and is not Authenticode signed.
 - Locked dependency installation completed with Node.js 24.18.0 and npm 11.16.0.
@@ -23,6 +25,8 @@ Status date: 2026-08-22. Candidate version: `0.24.0-recovered.1`.
 - Desktop installer creation, launch/runtime behavior, Authenticode signing, installation, upgrade, and rollback have not been validated from this recovered repository. The unpacked packaging candidate is unsigned and uses Electron's default icon.
 - Live station behavior depends on current third-party catalogs, CORS, codecs, and stream uptime. Direct iTunes metadata lookup returned HTTP 403 for one raw station label during smoke testing and degraded to raw ICY metadata as designed.
 - The recovered TypeScript tree is not proven to rebuild the selected installed hashed JavaScript bundle.
+- Physical iOS Safari, installed-PWA, VoiceOver, and native-speaker editorial review of the six UI catalogs have not been captured. Catalogs are engineering-authored.
+- The recovered virtual list still windows at 168px; compact 64px row geometry was not overlaid into the hashed bundle.
 
 ## Live deployment
 

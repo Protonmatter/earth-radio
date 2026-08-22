@@ -8,6 +8,15 @@
 /assets/*
   Cache-Control: public, max-age=31536000, immutable
 
+/assets/responsive-ui.css
+  Cache-Control: public, max-age=300, must-revalidate
+
+/assets/responsive-ui.js
+  Cache-Control: public, max-age=300, must-revalidate
+
+/i18n/*
+  Cache-Control: public, max-age=300, must-revalidate
+
 /config.js
   Cache-Control: public, max-age=300, must-revalidate
 

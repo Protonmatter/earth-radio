@@ -1,10 +1,22 @@
-const CACHE_NAME = 'earth-radio-shell-v24-recovered-3';
+const CACHE_NAME = 'earth-radio-shell-v25-responsive-1';
 const SHELL_ASSETS = [
+  './',
+  './index.html',
+  './manifest.webmanifest',
   './assets/hls.light-Dr1Fv81C.js',
   './assets/index-B4rKOAHV.js',
   './assets/index-CSoL7F-Y.css',
   './assets/metadata-enrichment.js',
-  './assets/metadata-enrichment.css'
+  './assets/metadata-enrichment.css',
+  './assets/responsive-ui.css',
+  './assets/responsive-ui.js',
+  './i18n/index.js',
+  './i18n/en.js',
+  './i18n/es.js',
+  './i18n/ar.js',
+  './i18n/ko.js',
+  './i18n/zh-Hans.js',
+  './i18n/zh-Hant.js'
 ];
 
 self.addEventListener('install', event => {
@@ -45,15 +57,21 @@ async function cacheFirst(request) {
   return response;
 }
 
+function isImmutableAsset(pathname) {
+  return /index-B4rKOAHV|index-CSoL7F-Y|hls\.light-Dr1Fv81C/.test(pathname);
+}
+
 self.addEventListener('fetch', event => {
   const request = event.request;
   if (request.method !== 'GET') return;
   const url = new URL(request.url);
 
   if (url.origin !== self.location.origin) return;
-  if (request.mode === 'navigate' || url.pathname.endsWith('/config.js')) {
+  if (request.mode === 'navigate' || url.pathname.endsWith('/config.js') || url.pathname.includes('/i18n/') || url.pathname.includes('responsive-ui')) {
     event.respondWith(networkFirst(request));
-  } else if (url.pathname.includes('/assets/')) {
+  } else if (url.pathname.includes('/assets/') && isImmutableAsset(url.pathname)) {
     event.respondWith(cacheFirst(request));
+  } else if (url.pathname.includes('/assets/')) {
+    event.respondWith(networkFirst(request));
   }
 });

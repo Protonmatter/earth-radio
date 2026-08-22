@@ -28,3 +28,13 @@ test('service worker refreshes navigations and config while caching only immutab
   assert.match(worker, /event\.waitUntil\([\s\S]*self\.clients\.claim\(\)/);
   assert.doesNotMatch(worker, /cached \|\| fetch\(request\)/);
 });
+
+test('service worker precaches the responsive shell and i18n catalogs under a new cache version', async () => {
+  const worker = await readFile(path.join(root, 'site', 'sw.js'), 'utf8');
+  assert.match(worker, /earth-radio-shell-v25-responsive-1/);
+  assert.match(worker, /responsive-ui\.js/);
+  assert.match(worker, /i18n\/zh-Hant\.js/);
+  assert.match(worker, /i18n\/zh-Hans\.js/);
+  assert.match(worker, /\.\/index\.html/);
+  assert.match(worker, /networkFirst/);
+});

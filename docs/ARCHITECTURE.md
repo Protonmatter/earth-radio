@@ -8,6 +8,8 @@ Cloudflare Pages, if later created, serves only the deterministic `.build/site` 
 
 The service worker caches versioned application assets. `_headers` supplies defensive browser headers. Static hosting cannot bypass upstream CORS, mixed-content, codec, or station availability constraints.
 
+An additive Atlas Editorial presentation layer (`site/assets/responsive-ui.css`, `site/assets/responsive-ui.js`, and `site/i18n/*`) loads after the recovered hashed runtime. It owns mobile destinations, Now Playing visibility, desktop split/collapse, and locale chrome. Catalog, playback, favorites, filters, metadata, and the Leaflet map remain runtime-owned. Presentation destinations persist in `earthRadio.ui.v1` and do not overwrite runtime `station`/`view` hashes. The recovered virtualizer keeps its 168px cell height; mobile rows expose a 64px minimum and 44px play targets. Chinese locale IDs stay `zh-Hans` and `zh-Hant`. Electron’s minimum window remains 1080×720, so the desktop split is the Electron layout; mobile navigation appears only at or below 767px.
+
 ## Local Electron desktop
 
 `electron/main.mjs` creates a sandboxed window with context isolation, Node integration disabled, navigation blocked, and external HTTP(S) links opened by the operating system. `electron/preload.cjs` exposes only the narrow proxy/configuration bridge required by the renderer.

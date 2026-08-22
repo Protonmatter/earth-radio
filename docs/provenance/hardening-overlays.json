@@ -81,10 +81,22 @@
         "sha256": "c007984ee6349eaee532c1b3e2297e7fdac81610d4fae167c7595e127cef2d42"
       },
       "current": {
-        "bytes": 12328,
-        "sha256": "146a7d9a0e3946595d6b8f0c0d898fc61fc7e400ec74673be15ffc69eb878bc9"
+        "bytes": 19708,
+        "sha256": "c8ffa56f13eb66afedd95874fee32b5c636d8096bd309b7faed8e06723c5db9b"
       },
-      "reason": "Move frame-ancestors enforcement to the deployable response header policy."
+      "reason": "Move frame-ancestors enforcement to the deployable response header policy, then add Atlas Editorial landmarks, iOS viewport/audio attributes, mobile destinations, and the additive responsive layer references."
+    },
+    {
+      "path": "site/manifest.webmanifest",
+      "intake": {
+        "bytes": 512,
+        "sha256": "23085fdaf6fbe198ca5c7589a47fc35e48dae97df08e8464e7e9795f3401ade9"
+      },
+      "current": {
+        "bytes": 512,
+        "sha256": "c81386e1c9beab7f995e052d64456b4d96ef65c5edd752cf10066af17523f3e9"
+      },
+      "reason": "Align PWA theme and background colors with the Atlas Editorial tokens."
     },
     {
       "path": "site/sw.js",
@@ -93,10 +105,10 @@
         "sha256": "b09e3207532fe7f47d14e9c53804d7e8caf31cad2fcb2c652b728a93871ea094"
       },
       "current": {
-        "bytes": 1768,
-        "sha256": "5a2e306f6e7a97c467c81059c201717b961d43f47b1d711d36ca4de17445440f"
+        "bytes": 2350,
+        "sha256": "cae7a46bb9a65474ffabf8138c2f792d61a7e678a12d43b1bf03431e17093db5"
       },
-      "reason": "Use network-first navigation/configuration updates and cache-first immutable assets."
+      "reason": "Use network-first navigation/configuration updates, cache the responsive shell and i18n catalogs, and keep hashed recovered assets cache-first."
     }
   ]
 }

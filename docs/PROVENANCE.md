@@ -19,7 +19,7 @@ The installed evidence was `C:\Users\mkang\AppData\Local\Programs\Earth Radio\Ea
 4. Exclude executable/package artifacts, dependency trees, source maps, credentials, logs, and user data from the repository candidate.
 5. Emit stable per-file size, hash, and source attribution in `docs/provenance/recovery-manifest.json`.
 
-The recovery manifest is immutable intake evidence and is not rewritten when hardening changes a selected runtime file. Intentional post-recovery changes are recorded separately in the hardening overlay at `docs/provenance/hardening-overlays.json`, with both the intake and current hashes, sizes, and rationale. Any drift not represented by that overlay is a release blocker.
+The recovery manifest is immutable intake evidence and is not rewritten when hardening changes a selected runtime file. Intentional post-recovery changes are recorded separately in the hardening overlay at `docs/provenance/hardening-overlays.json`, with both the intake and current hashes, sizes, and rationale. Any drift not represented by that overlay is a release blocker. The 2026-08-22 responsive layer adds maintained files under `site/assets/responsive-ui.*` and `site/i18n/`; edits to `site/index.html` and `site/sw.js` remain overlay-recorded so intake hashes stay immutable.
 
 Examples of installed-newer intake selections include `site/assets/index-B4rKOAHV.js` (273,352 bytes), `server/desktop-proxy.mjs` (24,630 bytes), and `server/metadata-providers.mjs` (17,799 bytes). The older `index-CosF9-ak.js` archive bundle was not selected. Full file-level intake evidence lives in the machine-readable recovery manifest; current release hashes live in the release manifest and the hardening overlay.
 
