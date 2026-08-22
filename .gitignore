@@ -16,3 +16,4 @@ release/
 *.AppImage
 *.asar
 earth-radio-user-data/
+.playwright-cli/

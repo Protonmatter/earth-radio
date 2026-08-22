@@ -2,6 +2,7 @@ import { app, BrowserWindow, ipcMain, shell, session } from 'electron';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createDesktopProxy } from '../server/desktop-proxy.mjs';
+import { parseNetworkProxyRule } from './proxy-rules.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const appRoot = path.resolve(__dirname, '..');
@@ -60,16 +61,13 @@ async function createMainWindow(proxyBaseUrl) {
     });
   });
 
-  await mainWindow.loadFile(resolveAsset('dist', 'index.html'));
+  await mainWindow.loadFile(resolveAsset('site', 'index.html'));
 }
 
 function registerIpc() {
   ipcMain.handle('earth-radio:get-network-proxy', async () => networkProxyRules);
   ipcMain.handle('earth-radio:set-network-proxy', async (_event, rawValue) => {
-    const value = String(rawValue || '').trim();
-    if (value && !/^(direct|https?:\/\/|socks5?:\/\/|[^:\s]+:\d+)$/i.test(value)) {
-      throw new Error('Invalid proxy rule. Use direct, host:port, http://host:port, or socks5://host:port.');
-    }
+    const value = parseNetworkProxyRule(rawValue);
     networkProxyRules = value;
     if (!value || value.toLowerCase() === 'direct') {
       await session.defaultSession.setProxy({ mode: 'direct' });

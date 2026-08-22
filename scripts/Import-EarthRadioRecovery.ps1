@@ -78,7 +78,24 @@ function Copy-RequiredFile {
     Copy-Item -LiteralPath $Source -Destination $Destination -Force
 }
 
+function Test-ProtectedRepositoryDestination {
+    param([string] $Candidate)
+    $repoFull = [System.IO.Path]::GetFullPath($repoRoot).TrimEnd('\')
+    $destFull = [System.IO.Path]::GetFullPath($Candidate).TrimEnd('\')
+    if ([string]::Equals($destFull, $repoFull, [System.StringComparison]::OrdinalIgnoreCase)) {
+        return $true
+    }
+    $repoPrefix = $repoFull + [System.IO.Path]::DirectorySeparatorChar
+    if ($destFull.StartsWith($repoPrefix, [System.StringComparison]::OrdinalIgnoreCase)) {
+        return $true
+    }
+    return Test-Path -LiteralPath (Join-Path $destFull '.git')
+}
+
 try {
+    if (Test-ProtectedRepositoryDestination -Candidate $destination) {
+        throw "Refusing to import recovery files into an active Git repository: $destination"
+    }
     New-Item -ItemType Directory -Path $destination -Force | Out-Null
 
     if ($PSCmdlet.ParameterSetName -eq 'Resources') {

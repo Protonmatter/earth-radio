@@ -855,11 +855,13 @@ function setupRouting(): void {
 
 function registerServiceWorker(): void {
   if (!('serviceWorker' in navigator)) return;
-  window.addEventListener('load', () => {
+  const register = (): void => {
     navigator.serviceWorker.register('./sw.js').catch(() => {
       /* app works without the service worker */
     });
-  });
+  };
+  if (document.readyState === 'complete') register();
+  else window.addEventListener('load', register, { once: true });
 }
 
 async function startup(): Promise<void> {

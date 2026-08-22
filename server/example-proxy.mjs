@@ -15,6 +15,6 @@ http.createServer(async (req, res) => {
     res.writeHead(500, { 'content-type': 'application/json' });
     res.end(JSON.stringify({ error: error?.message || 'internal error' }));
   }
-}).listen(port, () => {
+}).listen(port, '127.0.0.1', () => {
   console.log(`Earth Radio metadata proxy listening on http://127.0.0.1:${port}`);
 });

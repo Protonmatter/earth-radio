@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 1,
+  "description": "Intentional post-recovery hardening overlays applied to immutable installed-runtime intake files.",
+  "files": [
+    {
+      "path": "electron/main.mjs",
+      "intake": {
+        "bytes": 3630,
+        "sha256": "942d2d61015289e649cf74ff509a95fd2ca20090fc40cb9fd3e5f21d89c29dcc"
+      },
+      "current": {
+        "bytes": 3491,
+        "sha256": "8e7a18a2fc8a8f27750348c692baf161805d5ad22d14a6db3c350ad6f55e06cb"
+      },
+      "reason": "Load the selected site directory and validate complete supported network-proxy rules with URL parsing."
+    },
+    {
+      "path": "server/desktop-proxy.mjs",
+      "intake": {
+        "bytes": 24630,
+        "sha256": "329c8af7c7fa7b0921dd2c0028a057e8fea8ff4ac706c0760b8d8de629ede401"
+      },
+      "current": {
+        "bytes": 26751,
+        "sha256": "02e5017566aee3bf997cf479d6ed77f1498274bbbbaa741f8aa6468e0fb0ce65"
+      },
+      "reason": "Require a per-launch capability path and Origin on API routes, and reject mapped IPv6, CGNAT, and other private stream targets."
+    },
+    {
+      "path": "server/example-proxy.mjs",
+      "intake": {
+        "bytes": 773,
+        "sha256": "d839161c06ea67188b9573b10bcc2962ccdc692df73be44b7596ff4080bff941"
+      },
+      "current": {
+        "bytes": 786,
+        "sha256": "7aa65e87a5b6c0dedd323c36c3a7188d5c8ac62a3a8095f1be092f81c67316c4"
+      },
+      "reason": "Bind the local example metadata proxy to 127.0.0.1 only."
+    },
+    {
+      "path": "site/assets/hls.light-Dr1Fv81C.js",
+      "intake": {
+        "bytes": 331939,
+        "sha256": "7cc13521b6efbae9936a87663c47971b3ec8c8a48d4d023eb505c6e800ee3327"
+      },
+      "current": {
+        "bytes": 331893,
+        "sha256": "6560373fba977682d3acc4290af72029fb722879a2edce30504f8a93caec069c"
+      },
+      "reason": "Remove a reference to an excluded source map from the vendored HLS runtime."
+    },
+    {
+      "path": "site/assets/index-B4rKOAHV.js",
+      "intake": {
+        "bytes": 273352,
+        "sha256": "610e3cdbea0e98b748aef94a24ea8362024430e01647b35bb4cd62038a04fa13"
+      },
+      "current": {
+        "bytes": 273377,
+        "sha256": "77eb908050d7a2ef4220ac1af0ae78b061bd141f348d0f8886710cb3d4a9609d"
+      },
+      "reason": "Register the service worker after asynchronous startup and remove a reference to an excluded source map."
+    },
+    {
+      "path": "site/config.js",
+      "intake": {
+        "bytes": 1408,
+        "sha256": "c83167f40ae7df3b389e35707b4abac834b10dc223ecb836d7840f90a7ef92a6"
+      },
+      "current": {
+        "bytes": 1433,
+        "sha256": "8c9d59221f38f8a86a84fc0ad5008d2015cea4881a45012892bf486b10e234a4"
+      },
+      "reason": "Keep Cloudflare Pages on an empty proxy URL and document that only Electron injects the loopback capability path."
+    },
+    {
+      "path": "site/index.html",
+      "intake": {
+        "bytes": 12352,
+        "sha256": "c007984ee6349eaee532c1b3e2297e7fdac81610d4fae167c7595e127cef2d42"
+      },
+      "current": {
+        "bytes": 12328,
+        "sha256": "146a7d9a0e3946595d6b8f0c0d898fc61fc7e400ec74673be15ffc69eb878bc9"
+      },
+      "reason": "Move frame-ancestors enforcement to the deployable response header policy."
+    },
+    {
+      "path": "site/sw.js",
+      "intake": {
+        "bytes": 1118,
+        "sha256": "b09e3207532fe7f47d14e9c53804d7e8caf31cad2fcb2c652b728a93871ea094"
+      },
+      "current": {
+        "bytes": 1768,
+        "sha256": "5a2e306f6e7a97c467c81059c201717b961d43f47b1d711d36ca4de17445440f"
+      },
+      "reason": "Use network-first navigation/configuration updates and cache-first immutable assets."
+    }
+  ]
+}

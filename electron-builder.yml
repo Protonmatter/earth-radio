@@ -2,9 +2,10 @@ appId: com.protonmatter.earthradio
 productName: Earth Radio
 copyright: Copyright © 2026 Protonmatter
 files:
-  - dist/**
+  - site/**
   - electron/**
   - server/**
+  - '!server/example-proxy.mjs'
   - package.json
 asar: true
 asarUnpack:

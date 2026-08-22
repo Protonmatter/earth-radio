@@ -6,8 +6,8 @@ const desktopProxyBaseUrl = window.earthRadio && window.earthRadio.isDesktop && 
   : '';
 
 window.RADIO_CONFIG = window.RADIO_CONFIG || {
-  // Set this to a deployed proxy URL, for example: "https://radio.example.com".
-  // Direct mode remains available, but proxy mode is preferred for production.
+  // Public Cloudflare Pages deployments use browser-direct mode, so this must remain empty.
+  // The authorized loopback value is injected only by the packaged Electron preload bridge.
   proxyBaseUrl: desktopProxyBaseUrl || '',
   stationLimit: 3000,
   useFederatedIndex: true,

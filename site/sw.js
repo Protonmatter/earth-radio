@@ -1,9 +1,5 @@
-const CACHE_NAME = 'earth-radio-shell-v24-recovered-1';
+const CACHE_NAME = 'earth-radio-shell-v24-recovered-3';
 const SHELL_ASSETS = [
-  './',
-  './config.js',
-  './favicon.svg',
-  './manifest.webmanifest',
   './assets/hls.light-Dr1Fv81C.js',
   './assets/index-B4rKOAHV.js',
   './assets/index-CSoL7F-Y.css',
@@ -18,23 +14,46 @@ self.addEventListener('install', event => {
 
 self.addEventListener('activate', event => {
   event.waitUntil(
-    caches.keys().then(keys => Promise.all(keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))))
+    Promise.all([
+      caches.keys().then(keys => Promise.all(keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key)))),
+      self.clients.claim()
+    ])
   );
-  self.clients.claim();
 });
+
+async function networkFirst(request) {
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      const cache = await caches.open(CACHE_NAME);
+      await cache.put(request, response.clone());
+    }
+    return response;
+  } catch {
+    return (await caches.match(request)) || (await caches.match('./index.html')) || Response.error();
+  }
+}
+
+async function cacheFirst(request) {
+  const cached = await caches.match(request);
+  if (cached) return cached;
+  const response = await fetch(request);
+  if (response.ok) {
+    const cache = await caches.open(CACHE_NAME);
+    await cache.put(request, response.clone());
+  }
+  return response;
+}
 
 self.addEventListener('fetch', event => {
   const request = event.request;
   if (request.method !== 'GET') return;
   const url = new URL(request.url);
 
-  if (url.origin === self.location.origin) {
-    event.respondWith(
-      caches.match(request).then(cached => cached || fetch(request).then(response => {
-        const copy = response.clone();
-        caches.open(CACHE_NAME).then(cache => cache.put(request, copy)).catch(() => undefined);
-        return response;
-      }).catch(() => caches.match('./')))
-    );
+  if (url.origin !== self.location.origin) return;
+  if (request.mode === 'navigate' || url.pathname.endsWith('/config.js')) {
+    event.respondWith(networkFirst(request));
+  } else if (url.pathname.includes('/assets/')) {
+    event.respondWith(cacheFirst(request));
   }
 });

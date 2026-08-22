@@ -1,28 +1,34 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { parseNowPlaying, identifyTrack, scoreAndRank } from '../server/metadata-providers.mjs';
+import {
+  clearIdentifyCache,
+  getIdentifyCacheSize,
+  parseNowPlaying,
+  identifyTrack,
+  scoreAndRank
+} from '../server/metadata-providers.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const required = [
-  'dist/index.html',
-  'dist/config.js',
-  'dist/assets/metadata-enrichment.js',
-  'dist/assets/metadata-enrichment.css',
+  'site/index.html',
+  'site/config.js',
+  'site/assets/metadata-enrichment.js',
+  'site/assets/metadata-enrichment.css',
   'server/metadata-providers.mjs',
   'server/metadata-api.mjs',
-  'docs/METADATA_ENRICHMENT_IMPLEMENTATION.md'
+  'docs/recovered/METADATA_ENRICHMENT_IMPLEMENTATION.md'
 ];
 
 for (const file of required) {
   if (!fs.existsSync(path.join(root, file))) throw new Error(`Missing ${file}`);
 }
 
-const index = fs.readFileSync(path.join(root, 'dist/index.html'), 'utf8');
+const index = fs.readFileSync(path.join(root, 'site/index.html'), 'utf8');
 if (!index.includes('metadata-enrichment.js')) throw new Error('index.html does not load metadata-enrichment.js');
 if (!index.includes('metadata-enrichment.css')) throw new Error('index.html does not load metadata-enrichment.css');
 
-const config = fs.readFileSync(path.join(root, 'dist/config.js'), 'utf8');
+const config = fs.readFileSync(path.join(root, 'site/config.js'), 'utf8');
 if (!config.includes('metadataEnrichment')) throw new Error('config.js lacks metadataEnrichment config block');
 
 const parsed = parseNowPlaying('Kate Bush - Running Up That Hill');
@@ -48,8 +54,15 @@ if (titleByArtist.artist !== 'Kate Bush' || titleByArtist.title !== 'Running Up 
 const titleOnly = parseNowPlaying('Bohemian Rhapsody');
 if (titleOnly.artist !== '' || titleOnly.title !== 'Bohemian Rhapsody') throw new Error('parseNowPlaying failed title-only pattern');
 
+if (parseNowPlaying('Weather update sponsored by Example') !== null) {
+  throw new Error('sponsorship metadata should be rejected as non-track content');
+}
+
+clearIdentifyCache();
 const miss = await identifyTrack({ raw: 'Advertisement' });
 if (miss.found !== false) throw new Error('junk metadata should not resolve');
+const cachedMiss = await identifyTrack({ raw: 'Advertisement' });
+if (!cachedMiss.cached || getIdentifyCacheSize() !== 1) throw new Error('negative identification result was not cached');
 
 const track = { artist: 'Kate Bush', title: 'Running Up That Hill', raw: 'Kate Bush - Running Up That Hill' };
 const [exact] = scoreAndRank(track, [{
@@ -77,10 +90,24 @@ const [tribute] = scoreAndRank(track, [{
 }]);
 if (tribute && tribute.confidence >= 58) throw new Error('tribute candidate should be penalized');
 
-const bundle = fs.readFileSync(path.join(root, 'dist/assets/index-CosF9-ak.js'), 'utf8');
+const stableCandidates = [
+  { provider: 'itunes', title: track.title, artist: track.artist, id: 'second' },
+  { provider: 'itunes', title: track.title, artist: track.artist, id: 'first' }
+];
+const stableOrder = scoreAndRank(track, stableCandidates).map(candidate => candidate.id).join(',');
+if (stableOrder !== 'second,first') throw new Error('equal-scoring candidates did not preserve input order');
+
+clearIdentifyCache();
+for (let index = 0; index < 520; index += 1) {
+  await identifyTrack({ raw: `Advertisement ${index}` });
+}
+if (getIdentifyCacheSize() !== 512) throw new Error(`identify cache is not bounded at 512 entries: ${getIdentifyCacheSize()}`);
+clearIdentifyCache();
+
+const bundle = fs.readFileSync(path.join(root, 'site/assets/index-B4rKOAHV.js'), 'utf8');
 if (bundle.includes('Ya(Yh(i))')) throw new Error('runtime bundle still seeds provider links from station metadata');
 
-const panelSource = fs.readFileSync(path.join(root, 'recovered_src/src/ui/nowPlayingPanel.ts'), 'utf8');
+const panelSource = fs.readFileSync(path.join(root, 'src-recovered/ui/nowPlayingPanel.ts'), 'utf8');
 if (panelSource.includes('renderLinks(seedTrack')) throw new Error('source panel still seeds provider links from station metadata');
 
 console.log('metadata smoke checks passed');

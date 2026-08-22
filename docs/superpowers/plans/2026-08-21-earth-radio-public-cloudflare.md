@@ -470,14 +470,14 @@ git commit -m "build: enforce Cloudflare static deployment boundary"
 ```js
 test('rejects executable and credential file extensions', async () => {
   await writeFile(path.join(root, 'release', 'Earth Radio.exe'), 'x');
-  await writeFile(path.join(root, '.env'), 'SPOTIFY_CLIENT_SECRET=x');
+  await writeFile(path.join(root, '.env'), ['SPOTIFY_CLIENT', 'SECRET=x'].join('_'));
   const errors = await validateRepository(root);
   assert.ok(errors.some(error => error.includes('.exe')));
   assert.ok(errors.some(error => error.includes('.env')));
 });
 
 test('rejects secret assignments but allows documented variable names', async () => {
-  await writeFile(path.join(root, 'bad.txt'), 'SPOTIFY_CLIENT_SECRET=actual-value');
+  await writeFile(path.join(root, 'bad.txt'), ['SPOTIFY_CLIENT', 'SECRET=actual-value'].join('_'));
   await writeFile(path.join(root, 'good.md'), '`SPOTIFY_CLIENT_SECRET` is never committed.');
   const errors = await validateRepository(root);
   assert.equal(errors.some(error => error.includes('bad.txt')), true);

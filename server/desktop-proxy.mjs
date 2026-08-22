@@ -3,6 +3,7 @@
 
 import http from 'node:http';
 import https from 'node:https';
+import { randomBytes } from 'node:crypto';
 import dns from 'node:dns/promises';
 import net from 'node:net';
 import { URL, pathToFileURL } from 'node:url';
@@ -30,9 +31,11 @@ const WINDOWS_1252_METADATA_DECODER = new TextDecoder('windows-1252');
 
 const directoryCache = new Map();
 
-export async function createDesktopProxy({ port = 0, host = '127.0.0.1' } = {}) {
+export async function createDesktopProxy({ port = 0, host = '127.0.0.1', accessToken = randomBytes(32).toString('base64url') } = {}) {
+  if (!/^[A-Za-z0-9_-]{32,}$/.test(accessToken)) throw new Error('desktop proxy access token is invalid');
+  const routePrefix = `/${accessToken}`;
   const server = http.createServer((req, res) => {
-    void route(req, res).catch(error => sendRouteError(res, error));
+    void route(req, res, routePrefix).catch(error => sendRouteError(res, error));
   });
 
   await new Promise((resolve, reject) => {
@@ -42,8 +45,9 @@ export async function createDesktopProxy({ port = 0, host = '127.0.0.1' } = {}) 
 
   const address = server.address();
   const actualPort = typeof address === 'object' && address ? address.port : port;
-  const baseUrl = `http://${host}:${actualPort}`;
-  console.log(`Earth Radio desktop proxy listening on ${baseUrl}`);
+  const origin = `http://${host}:${actualPort}`;
+  const baseUrl = `${origin}${routePrefix}`;
+  console.log(`Earth Radio desktop proxy listening on ${origin} with per-launch authorization`);
 
   return {
     server,
@@ -52,11 +56,18 @@ export async function createDesktopProxy({ port = 0, host = '127.0.0.1' } = {}) 
   };
 }
 
-async function route(req, res) {
-  if (!applyCors(req, res)) return sendJson(res, 403, { error: 'origin not allowed' });
+async function route(req, res, routePrefix) {
+  const requested = new URL(req.url || '/', 'http://localhost');
+  if (requested.pathname !== routePrefix && !requested.pathname.startsWith(`${routePrefix}/`)) {
+    return sendJson(res, 404, { error: 'not found' });
+  }
+  requested.pathname = requested.pathname.slice(routePrefix.length) || '/';
+  req.url = `${requested.pathname}${requested.search}`;
+  const requireOrigin = requested.pathname.startsWith('/api/');
+  if (!applyCors(req, res, { requireOrigin })) return sendJson(res, 403, { error: 'origin not allowed' });
   if (req.method === 'OPTIONS') return res.end();
 
-  const url = new URL(req.url || '/', 'http://localhost');
+  const url = requested;
   if (await handleTrackIdentify(req, res)) return;
 
   if (req.method !== 'GET') return sendJson(res, 405, { error: 'method not allowed' });
@@ -101,10 +112,10 @@ async function route(req, res) {
   return sendJson(res, 404, { error: 'not found' });
 }
 
-function applyCors(req, res) {
+function applyCors(req, res, { requireOrigin = false } = {}) {
   const origin = req.headers.origin;
   const allowedOrigin = allowedCorsOrigin(origin);
-  if (origin && !allowedOrigin) return false;
+  if ((requireOrigin && !origin) || (origin && !allowedOrigin)) return false;
   if (allowedOrigin) res.setHeader('access-control-allow-origin', allowedOrigin);
   res.setHeader('access-control-allow-methods', 'GET,OPTIONS');
   res.setHeader('access-control-allow-headers', 'accept,content-type');
@@ -611,11 +622,19 @@ function createPinnedLookup(target) {
     const cb = typeof options === 'function' ? options : callback;
     if (!cb) return;
     if (normalizeHostname(hostname) === target.hostname) {
+      if (isPrivateIp(target.address)) {
+        cb(new Error('stream host resolves to a private address'));
+        return;
+      }
       cb(null, target.address, target.family);
       return;
     }
-    dns.lookup(normalizeHostname(hostname), { all: false })
-      .then(record => cb(null, record.address, record.family))
+    dns.lookup(normalizeHostname(hostname), { all: true, verbatim: false })
+      .then(records => {
+        if (!records.length) throw new Error('stream host did not resolve');
+        if (records.some(record => isPrivateIp(record.address))) throw new Error('stream host resolves to a private address');
+        cb(null, records[0].address, records[0].family);
+      })
       .catch(error => cb(error));
   };
 }
@@ -639,10 +658,13 @@ function corsHeadersFor(req) {
 }
 
 function isPrivateIp(address) {
+  const embeddedIpv4 = ipv4FromMappedOrCompatibleIpv6(address);
+  if (embeddedIpv4) return isPrivateIp(embeddedIpv4);
   const kind = net.isIP(address);
   if (kind === 4) {
     const [a, b] = address.split('.').map(Number);
     if (a === 10 || a === 127 || a === 0) return true;
+    if (a === 100 && b >= 64 && b <= 127) return true;
     if (a === 169 && b === 254) return true;
     if (a === 172 && b >= 16 && b <= 31) return true;
     if (a === 192 && b === 168) return true;
@@ -650,15 +672,29 @@ function isPrivateIp(address) {
     return false;
   }
   if (kind === 6) {
-    const lower = address.toLowerCase();
-    return lower === '::1' || lower.startsWith('fc') || lower.startsWith('fd') || lower.startsWith('fe80') || lower.startsWith('ff');
+    const lower = address.toLowerCase().split('%', 1)[0];
+    const firstWord = Number.parseInt(lower.split(':').find(Boolean) || '0', 16);
+    return lower === '::' || lower === '::1' || lower.startsWith('fc') || lower.startsWith('fd') ||
+      (Number.isFinite(firstWord) && (firstWord & 0xffc0) === 0xfe80) || lower.startsWith('ff');
   }
   return false;
+}
+
+function ipv4FromMappedOrCompatibleIpv6(address) {
+  const lower = String(address || '').toLowerCase().split('%', 1)[0];
+  if (!lower.includes(':')) return '';
+  const dotted = lower.match(/^(?:::ffff:|::)(\d{1,3}(?:\.\d{1,3}){3})$/);
+  if (dotted && net.isIP(dotted[1]) === 4) return dotted[1];
+  const hexadecimal = lower.match(/^::(?:ffff:)?([0-9a-f]{1,4}):([0-9a-f]{1,4})$/);
+  if (!hexadecimal) return '';
+  const high = Number.parseInt(hexadecimal[1], 16);
+  const low = Number.parseInt(hexadecimal[2], 16);
+  return `${high >>> 8}.${high & 0xff}.${low >>> 8}.${low & 0xff}`;
 }
 
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   createDesktopProxy({ port: Number(process.env.PORT || process.env.EARTH_RADIO_PROXY_PORT || 8787) })
-    .then(proxy => console.log(`Desktop proxy ready: ${proxy.baseUrl}`))
+    .then(() => console.log('Desktop proxy ready on an authorized loopback route'))
     .catch(error => { console.error(error); process.exitCode = 1; });
 }
