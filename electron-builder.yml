@@ -1,0 +1,32 @@
+appId: com.protonmatter.earthradio
+productName: Earth Radio
+copyright: Copyright © 2026 Protonmatter
+files:
+  - dist/**
+  - electron/**
+  - server/**
+  - package.json
+asar: true
+asarUnpack:
+  - server/**
+directories:
+  output: release
+win:
+  target:
+    - nsis
+    - portable
+  artifactName: EarthRadio-${version}-${arch}.${ext}
+linux:
+  target:
+    - AppImage
+  category: Audio
+  artifactName: EarthRadio-${version}-${arch}.${ext}
+mac:
+  target:
+    - dmg
+  category: public.app-category.music
+  artifactName: EarthRadio-${version}-${arch}.${ext}
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true

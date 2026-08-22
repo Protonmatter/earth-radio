@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#ffffff" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; media-src https: http: blob:; connect-src 'self' https: http: ws:; font-src 'self'; worker-src 'self' blob:; manifest-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'" />
+  <meta name="description" content="A resilient global internet radio browser with map, search, filters, favorites, dark mode, explainable playback health scoring, and confidence-scored live music metadata." />
+  <title>Earth Radio</title>
+  <link rel="icon" type="image/png" href="./icon-192.png" />
+  <link rel="apple-touch-icon" href="./icon-192.png" />
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <script type="module" src="./config.js"></script>
+  <script type="module" src="./assets/metadata-enrichment.js"></script>
+  <link rel="stylesheet" href="./assets/metadata-enrichment.css" />
+  <script type="module" crossorigin src="./assets/index-B4rKOAHV.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-CSoL7F-Y.css">
+</head>
+<body>
+  <div id="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+  <header class="header">
+    <div class="header-left">
+      <a href="./" class="logo" aria-label="Earth Radio home"><span class="logo-mark" aria-hidden="true"></span>Earth Radio</a>
+      <span class="status-line" id="status-line">Initializing...</span>
+    </div>
+    <div class="header-right">
+      <button class="header-btn" id="refresh-stations" type="button" aria-label="Refresh station directory">Refresh</button>
+      <button class="header-btn" id="surprise" type="button" aria-label="Surprise me with a station">Surprise</button>
+      <button class="header-btn" id="recent-toggle" type="button" aria-pressed="false" aria-label="Show recently played">Recent</button>
+      <button class="header-btn header-btn--utility" id="export-data" type="button" aria-label="Export favorites and preferences">Export</button>
+      <button class="header-btn header-btn--utility" id="import-data" type="button" aria-label="Import favorites and preferences from JSON">Import</button>
+      <input id="import-data-input" type="file" accept="application/json,.json" hidden aria-hidden="true" />
+      <button class="header-btn" id="favorites-toggle" type="button" aria-pressed="false" aria-label="Show favorites only">
+        <span class="heart-icon" aria-hidden="true">&#9829;</span>
+        <span class="favorites-count">0</span>
+      </button>
+      <button class="header-btn" id="filters-toggle" data-open-filters type="button" aria-controls="filter-sidebar" aria-expanded="false">Filters</button>
+      <button class="header-btn header-btn--icon" id="theme-toggle" type="button" aria-label="Toggle theme"></button>
+      <button class="header-btn header-btn--icon" id="settings-toggle" type="button" aria-label="Settings"></button>
+      <span class="kbd-hint" aria-hidden="true"><kbd>&#8984;</kbd><kbd>K</kbd></span>
+    </div>
+  </header>
+
+  <main class="main">
+    <section class="panel panel--grid" id="grid-panel" aria-label="Station list">
+      <div class="grid-header">
+        <div>
+          <h1 class="grid-title" id="grid-title">All Stations</h1>
+          <p class="grid-subtitle" id="grid-subtitle">Quality score favors recent checks, secure streams, declared codec, bitrate, and local playback health.</p>
+        </div>
+        <span class="grid-count" id="grid-count">0 stations</span>
+      </div>
+      <section class="daily-dashboard" id="daily-dashboard" aria-label="Daily listening dashboard">
+        <button class="daily-action daily-action--primary" type="button" data-dashboard-action="continue">
+          <span class="daily-action__eyebrow">Continue</span>
+          <strong class="daily-action__title" id="dashboard-continue-title">Last station</strong>
+          <span class="daily-action__meta" id="dashboard-continue-meta">Pick up where you left off</span>
+        </button>
+        <button class="daily-action" type="button" data-dashboard-action="world-scan">
+          <span class="daily-action__eyebrow">World scan</span>
+          <strong class="daily-action__title">Spin the globe</strong>
+          <span class="daily-action__meta">Jump to a reliable live station</span>
+        </button>
+        <button class="daily-action" type="button" data-dashboard-action="local">
+          <span class="daily-action__eyebrow">Near me</span>
+          <strong class="daily-action__title" id="dashboard-local-title">Local radio</strong>
+          <span class="daily-action__meta">Use your locale without location tracking</span>
+        </button>
+        <button class="daily-action" type="button" data-dashboard-action="reliable">
+          <span class="daily-action__eyebrow">Works now</span>
+          <strong class="daily-action__title">High-confidence streams</strong>
+          <span class="daily-action__meta" id="dashboard-reliable-meta">Strong quality stations</span>
+        </button>
+      </section>
+      <div class="collections" id="collections" role="group" aria-label="Curated collections"></div>
+      <div class="station-grid" id="station-grid"></div>
+      <div class="empty-state" id="empty-state" style="display:none;"></div>
+    </section>
+
+    <section class="panel panel--map" id="map-panel" aria-label="Station map">
+      <p class="sr-only">The map is a visual aid. Use the keyboard-accessible station list on the left to browse and play stations.</p>
+      <div id="map"></div>
+      <aside class="nowcard" id="nowcard" aria-live="polite" aria-label="Now playing" hidden>
+        <button class="nowcard-close" id="nowcard-close" type="button" aria-label="Hide now playing">&#10005;</button>
+        <div class="nowcard-head">
+          <div class="nowcard-art" id="nowcard-art" aria-hidden="true"></div>
+          <div class="nowcard-headtext">
+            <span class="nowcard-eyebrow" id="nowcard-eyebrow">On air</span>
+            <span class="nowcard-title" id="nowcard-title">-</span>
+            <span class="nowcard-artist" id="nowcard-artist"></span>
+          </div>
+        </div>
+        <div class="nowcard-links" id="nowcard-links"></div>
+        <button class="nowcard-station" id="nowcard-station" type="button"></button>
+        <div class="nowcard-facts" id="nowcard-facts"></div>
+      </aside>
+    </section>
+  </main>
+
+  <footer class="player-bar" id="player-bar" aria-label="Audio player">
+    <span class="player-eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+    <div class="player-info">
+      <div class="player-station" id="player-station">Select a station</div>
+      <div class="player-meta" id="player-meta"></div>
+    </div>
+    <div class="player-controls">
+      <button class="player-btn" id="btn-prev" type="button" aria-label="Previous station">&#9198;</button>
+      <button class="player-btn player-btn--large" id="btn-play" type="button" aria-label="Play">&#9654;</button>
+      <button class="player-btn" id="btn-next" type="button" aria-label="Next station">&#9197;</button>
+    </div>
+    <div class="player-extras">
+      <label class="sr-only" for="volume">Volume</label>
+      <input type="range" class="volume-slider" id="volume" min="0" max="1" step="0.01" value="0.8" />
+      <button class="player-btn" id="btn-similar" type="button" aria-label="Find similar stations">&#8776;</button>
+      <button class="player-btn" id="btn-favorite" type="button" aria-label="Favorite current station" aria-pressed="false">&#9829;</button>
+      <div class="sleep-dropdown">
+        <button class="player-btn" id="btn-sleep" type="button" aria-label="Sleep timer">&#128164;</button>
+        <div class="sleep-menu" id="sleep-menu">
+          <button type="button" data-min="15">15 min</button>
+          <button type="button" data-min="30">30 min</button>
+          <button type="button" data-min="60">60 min</button>
+          <button type="button" data-min="90">90 min</button>
+          <button type="button" data-min="0">Off</button>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <div class="search-modal" id="search-modal" role="dialog" aria-modal="true" aria-labelledby="search-title" aria-hidden="true" hidden style="display:none;">
+    <div class="search-backdrop"></div>
+    <div class="search-container">
+      <h2 class="sr-only" id="search-title">Search stations</h2>
+      <input type="text" class="search-input" id="search-input" placeholder="Search stations, countries, tags..." autocomplete="off" spellcheck="false" aria-controls="search-results" />
+      <div class="search-results" id="search-results" role="listbox" aria-label="Station search results"></div>
+      <div class="search-footer">
+        <span><kbd>&#8593;</kbd><kbd>&#8595;</kbd> Navigate</span>
+        <span><kbd>&#8629;</kbd> Play</span>
+        <span><kbd>Esc</kbd> Close</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="settings-modal" id="settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-title" aria-hidden="true" hidden style="display:none;">
+    <div class="settings-backdrop" data-close-settings></div>
+    <div class="settings-container">
+      <div class="settings-header">
+        <h2 id="settings-title">Settings</h2>
+        <button class="close-btn" data-close-settings type="button" aria-label="Close settings">&#10005;</button>
+      </div>
+      <div class="settings-body">
+        <label class="settings-field">
+          <span class="settings-label">Theme</span>
+          <select id="setting-theme">
+            <option value="system">System</option>
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+          </select>
+        </label>
+        <label class="settings-field">
+          <span class="settings-label">Language</span>
+          <select id="setting-locale">
+            <option value="en">English</option>
+            <option value="es">Espa&ntilde;ol</option>
+            <option value="ar">&#1575;&#1604;&#1593;&#1585;&#1576;&#1610;&#1577;</option>
+          </select>
+        </label>
+        <div class="settings-field" id="setting-proxy-row" hidden>
+          <span class="settings-label">Network proxy</span>
+          <input id="setting-proxy" type="text" autocomplete="off" spellcheck="false" placeholder="http://proxy:8080 - leave blank to use system" />
+          <p class="settings-hint">Routes playback and metadata through a proxy/VPN to reach blocked stations.</p>
+        </div>
+      </div>
+      <div class="settings-footer">
+        <button class="btn-clear" data-close-settings type="button">Cancel</button>
+        <button class="btn-primary" id="settings-save" type="button">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <aside class="filter-sidebar" id="filter-sidebar" aria-hidden="true" aria-label="Station filters">
+    <div class="filter-header">
+      <div>
+        <h2>Filters</h2>
+        <p id="filter-summary">No active filters</p>
+      </div>
+      <button class="close-btn" data-close-filters type="button" aria-label="Close filters">&#10005;</button>
+    </div>
+    <div class="filter-body" id="filter-body">
+      <div class="filter-section">
+        <h3>Playback quality</h3>
+        <label class="filter-item filter-item--switch">
+          <input type="checkbox" id="filter-secure-only" />
+          <span>Secure HTTPS streams only</span>
+        </label>
+        <label class="range-filter">
+          <span>Minimum quality score</span>
+          <input id="filter-quality" type="range" min="0" max="90" step="10" value="0" />
+        </label>
+      </div>
+      <div class="filter-section">
+        <h3>Country</h3>
+        <div class="filter-list" id="filter-countries"></div>
+      </div>
+      <div class="filter-section">
+        <h3>Tags</h3>
+        <div class="filter-list" id="filter-tags"></div>
+      </div>
+      <div class="filter-section">
+        <h3>Bitrate</h3>
+        <div class="filter-list" id="filter-bitrates"></div>
+      </div>
+      <button class="btn-clear" data-reset-filters type="button">Reset filters</button>
+    </div>
+  </aside>
+
+  <audio id="audio-player"></audio>
+</body>
+</html>

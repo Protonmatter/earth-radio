@@ -1,0 +1,87 @@
+// Default (English) message catalog. Keys are dot-namespaced; `{name}` style placeholders
+// are interpolated by core/i18n.ts.
+const en: Record<string, string> = {
+  'app.tagline': 'Resilient global radio',
+  'status.initializing': 'Initializing…',
+  'status.loading': 'Loading station directory…',
+  'status.loaded': '{count} stations loaded from {mode}: {source}',
+  'status.visible': '{visible} visible of {total} loaded stations',
+  'status.playing': 'Playing {name}',
+  'status.loadingStation': 'Loading {name}…',
+  'status.failed': 'Playback failed: {name}',
+  'status.skipping': 'Station unavailable — trying {name}…',
+  'status.imported': 'Imported user data',
+
+  'header.refresh': 'Refresh',
+  'header.export': 'Export',
+  'header.import': 'Import',
+  'header.surprise': 'Surprise me',
+  'header.favorites': 'Show favorites only',
+  'header.filters': 'Filters',
+  'header.theme': 'Toggle theme',
+
+  'grid.all': 'All Stations',
+  'grid.favorites': 'Favorites',
+  'grid.filtered': 'Filtered Stations',
+  'grid.recent': 'Recently Played',
+  'grid.similar': 'Similar Stations',
+  'grid.subtitle': 'Quality favors recent checks, secure streams, declared codec, bitrate, source agreement, and local playback health.',
+  'grid.count': '{count} stations',
+  'grid.countOne': '1 station',
+
+  'player.select': 'Select a station',
+  'player.play': 'Play',
+  'player.pause': 'Pause',
+  'player.prev': 'Previous station',
+  'player.next': 'Next station',
+  'player.favorite': 'Favorite current station',
+  'player.sleep': 'Sleep timer',
+
+  'search.placeholder': 'Search stations, countries, tags…',
+  'search.navigate': 'Navigate',
+  'search.play': 'Play',
+  'search.close': 'Close',
+  'search.empty': 'No stations found',
+
+  'filters.title': 'Filters',
+  'filters.none': 'No active filters',
+  'filters.active': '{count} active filters',
+  'filters.activeOne': '1 active filter',
+  'filters.quality': 'Minimum quality score',
+  'filters.secure': 'Secure HTTPS streams only',
+  'filters.country': 'Country',
+  'filters.tags': 'Tags',
+  'filters.bitrate': 'Bitrate',
+  'filters.reset': 'Reset filters',
+  'filters.empty': 'No values available',
+
+  'empty.noMatch': 'No stations match the current filters.',
+  'empty.failed': 'Failed to load stations.',
+  'empty.loading': 'Loading stations…',
+  'empty.clearFilters': 'Clear filters',
+  'empty.refresh': 'Refresh stations',
+  'empty.retry': 'Retry',
+  'empty.noRecent': 'No recently played stations yet.',
+
+  'toast.added': 'Added to favorites',
+  'toast.removed': 'Removed from favorites',
+  'toast.unavailable': 'Station unavailable; trying next station',
+  'toast.noWorking': 'Couldn\u2019t find a playable station nearby',
+  'toast.loaded': '{count} stations loaded',
+  'toast.staleCache': 'Loaded stale cache; live API unavailable',
+  'toast.loadFailed': 'Failed to load stations',
+  'toast.importFailed': 'Import failed: {message}',
+  'toast.imported': 'Imported {favorites} favorites, {recent} recents, {prefs} preferences',
+  'toast.sleepSet': 'Sleep timer set for {minutes} min',
+  'toast.sleepOff': 'Sleep timer off',
+  'toast.surprise': 'Surprising you with {name}',
+  'toast.noStations': 'No stations available yet',
+
+  'nowplaying.label': 'Now playing',
+
+  'settings.title': 'Settings',
+  'settings.saved': 'Settings saved',
+  'settings.applying': 'Applying settings…'
+};
+
+export default en;
