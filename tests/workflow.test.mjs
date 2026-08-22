@@ -29,7 +29,18 @@ test('desktop proxy settings parse complete supported URLs instead of a prefix r
   const main = await readFile(path.resolve(import.meta.dirname, '..', 'electron', 'main.mjs'), 'utf8');
   assert.match(main, /parseNetworkProxyRule\(rawValue\)/);
   assert.doesNotMatch(main, /https\?:\\\/\\\/\|socks5\?:\\\/\\\//);
-  for (const value of ['direct', 'proxy.example:8080', 'http://proxy.example:8080', 'https://proxy.example:8443', 'socks5://proxy.example:1080', '[::1]:8080']) {
+  for (const value of [
+    'direct',
+    'proxy.example:8080',
+    'proxy.example:80',
+    'http://proxy.example:8080',
+    'http://proxy.example:80',
+    'https://proxy.example:8443',
+    'https://proxy.example:443',
+    'socks5://proxy.example:1080',
+    '[::1]:8080',
+    '[::1]:80'
+  ]) {
     assert.equal(parseNetworkProxyRule(value), value);
   }
   for (const value of ['http://', 'ftp://proxy.example:21', 'http://proxy.example', 'http://user:pass@proxy.example:8080', 'http://proxy.example:8080/path']) {

@@ -12,11 +12,25 @@ export function parseNetworkProxyRule(rawValue) {
     throw invalidProxyRule();
   }
   const hasUnexpectedPath = parsed.pathname !== '' && parsed.pathname !== '/';
-  if ((hasScheme && !ALLOWED_PROXY_PROTOCOLS.has(parsed.protocol)) || !parsed.hostname || !parsed.port ||
-      parsed.username || parsed.password || parsed.search || parsed.hash || hasUnexpectedPath) {
+  if ((hasScheme && !ALLOWED_PROXY_PROTOCOLS.has(parsed.protocol)) || !parsed.hostname ||
+      !explicitPort(value, parsed, hasScheme) || parsed.username || parsed.password ||
+      parsed.search || parsed.hash || hasUnexpectedPath) {
     throw invalidProxyRule();
   }
   return value;
+}
+
+function explicitPort(value, parsed, hasScheme) {
+  if (parsed.port) return parsed.port;
+  const hostPart = hasScheme ? value.slice(value.indexOf('://') + 3) : value;
+  if (hostPart.startsWith('[')) {
+    const close = hostPart.indexOf(']');
+    if (close === -1) return '';
+    const match = hostPart.slice(close + 1).match(/^:(\d{1,5})(?=[/?#]|$)/);
+    return match ? match[1] : '';
+  }
+  const match = hostPart.match(/^[^/?#]*:(\d{1,5})(?=[/?#]|$)/);
+  return match ? match[1] : '';
 }
 
 function invalidProxyRule() {

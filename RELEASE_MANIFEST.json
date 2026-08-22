@@ -100,8 +100,8 @@
     },
     {
       "path": "electron/proxy-rules.mjs",
-      "bytes": 915,
-      "sha256": "354acc4878206d9ceb8aa5b0d0af223ce6f516db5c3ba8c9ad442140b6610bbc"
+      "bytes": 1438,
+      "sha256": "5cdd70a24b5d15a4f79deba9a83790d567c320a18e24d8c63864f87074bb5142"
     },
     {
       "path": "package-lock.json",
@@ -495,8 +495,8 @@
     },
     {
       "path": "tests/workflow.test.mjs",
-      "bytes": 2252,
-      "sha256": "d66f21fbcad95f5102f59d15625d29fa3a76571057bc76ee032b4b2750ea1a15"
+      "bytes": 2384,
+      "sha256": "736282561de8c541f73b1543161d7f57edad605c29c30f9667b8ad9318936c1b"
     }
   ]
 }
