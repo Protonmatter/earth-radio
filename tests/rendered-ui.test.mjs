@@ -82,16 +82,18 @@ test('responsive UI rendered matrix preserves layout, actions, and locale contra
     'country search leaked stations from another country'
   );
 
+  // The ui-refresh layer re-ramps the palette: mobile header/body take the
+  // refresh surface and background, and the primary action takes --er2-action.
   const palette = byId(payload.results, 'mobile-listen-390x844').probe.palette;
-  assert.equal(palette.header, 'rgb(37, 36, 61)');
-  assert.equal(palette.body, 'rgb(247, 241, 233)');
-  assert.equal(palette.primary, 'rgb(223, 98, 69)');
+  assert.equal(palette.header, 'rgb(255, 255, 255)');
+  assert.equal(palette.body, 'rgb(247, 243, 237)');
+  assert.equal(palette.primary, 'rgb(222, 91, 56)');
   assert.equal(palette.map, 'rgb(227, 228, 234)');
 
   const darkPalette = byId(payload.results, 'mobile-dark-390x844').probe.palette;
-  assert.equal(darkPalette.header, 'rgb(23, 22, 38)');
-  assert.equal(darkPalette.body, 'rgb(29, 27, 43)');
-  assert.equal(darkPalette.primary, 'rgb(237, 118, 91)');
+  assert.equal(darkPalette.header, 'rgb(23, 22, 31)');
+  assert.equal(darkPalette.body, 'rgb(15, 14, 23)');
+  assert.equal(darkPalette.primary, 'rgb(242, 112, 79)');
   assert.equal(darkPalette.map, 'rgb(41, 40, 56)');
 
   const nowPlaying = byId(payload.results, 'mobile-nowplaying-390x844').probe;

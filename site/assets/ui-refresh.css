@@ -37,9 +37,6 @@ html.er-root {
   --er2-action-ink: #ffffff;
   --er2-action-soft: rgba(222, 91, 56, 0.10);
   --er2-action-edge: rgba(222, 91, 56, 0.34);
-  --er2-signal: #12876b;
-  --er2-signal-dim: #d3c9bc;
-  --er2-warn: #96690a;
   --er2-shadow: 0 14px 34px rgba(60, 45, 35, 0.14);
   --er2-shadow-lg: 0 24px 56px rgba(60, 45, 35, 0.20);
 
@@ -47,7 +44,11 @@ html.er-root {
   --er2-rail: 232px;
   --er2-player: 80px;
 
-  /* Re-point the recovered runtime's own variables at the new ramp. */
+  /* Re-point the recovered runtime's and the Atlas layer's own variables at
+     the new ramp. --er-coral must follow --er2-action or responsive-ui's
+     higher-specificity dark rules repaint the primary action in the old coral. */
+  --er-coral: var(--er2-action);
+  --er-coral-ink: var(--er2-action-ink);
   --bg: var(--er2-bg);
   --surface: var(--er2-surface);
   --surface-2: var(--er2-selected);
@@ -64,7 +65,6 @@ html.er-root {
   --ring: 0 0 0 3px rgba(222, 91, 56, 0.34);
   --radius: 12px;
   --radius-sm: 8px;
-  --er-player: var(--er2-player);
 }
 
 html.er-root[data-theme="dark"] {
@@ -82,9 +82,6 @@ html.er-root[data-theme="dark"] {
   --er2-action-ink: #17110e;
   --er2-action-soft: rgba(242, 112, 79, 0.13);
   --er2-action-edge: rgba(242, 112, 79, 0.34);
-  --er2-signal: #3fcba4;
-  --er2-signal-dim: #35323f;
-  --er2-warn: #c9a227;
   --er2-shadow: 0 14px 34px rgba(0, 0, 0, 0.5);
   --er2-shadow-lg: 0 26px 60px rgba(0, 0, 0, 0.58);
 
@@ -249,7 +246,6 @@ html.er-root .btn-primary:hover {
   html.er-root #recent-toggle { order: 3; }
   html.er-root #filters-toggle { order: 4; }
   html.er-root #refresh-stations { order: 5; }
-  html.er-root .kbd-hint { order: 6; }
   html.er-root #export-data { order: 7; }
   html.er-root #import-data { order: 8; }
   html.er-root #theme-toggle { order: 9; }
@@ -304,16 +300,8 @@ html.er-root .btn-primary:hover {
     height: 40px;
   }
 
-  html.er-root .kbd-hint {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    padding: 8px 12px 0;
-    font-family: var(--er2-mono);
-    font-size: 11px;
-    color: var(--er2-faint);
-  }
-
+  /* .kbd-hint stays hidden: its glyph is a hardcoded mac-only ⌘K while the
+     runtime also binds Ctrl+K, so re-showing it would mislead on Windows/Linux. */
 
   /* responsive-ui.css parks these in the overflow menu because a 56px strip has no
      room for them. The rail does, so they come back as first-class rail items and
@@ -339,13 +327,33 @@ html.er-root .btn-primary:hover {
     margin: 0;
   }
 
+  /* The player and chrome geometry below is desktop-only: the phone and tablet
+     player contract (safe-area insets, landscape compaction, height: auto) is
+     owned by responsive-ui.css and must not be overridden from here. */
+  html.er-root {
+    --er-player: var(--er2-player);
+  }
+
   html.er-root .main {
     margin-left: var(--er2-rail);
-    height: calc(100vh - var(--er2-player));
+    height: calc(100dvh - var(--er2-player));
   }
 
   html.er-root .player-bar {
     left: var(--er2-rail);
+    height: var(--er2-player);
+    gap: 20px;
+    padding: 0 20px;
+  }
+
+  /* Pointer-fine desktop sizing; every touch mode keeps the 44px floor that
+     responsive-ui.css enforces. */
+  html.er-root .station-card__play,
+  html.er-root .station-card__favorite {
+    width: 38px;
+    min-width: 38px;
+    height: 38px;
+    min-height: 38px;
   }
 
   html.er-root .filter-sidebar {
@@ -440,8 +448,7 @@ html.er-root .er-saved-seg {
 
 html.er-root .er-saved-seg button {
   flex: 1;
-  height: 30px;
-  min-height: 30px;
+  min-height: 44px;
   border: 0;
   border-radius: 7px;
   background: transparent;
@@ -615,10 +622,6 @@ html.er-root .station-card__flag {
    Keep that mechanism, move play to the bottom corner so the two stop colliding. */
 html.er-root .station-card__play,
 html.er-root .station-card__favorite {
-  width: 38px;
-  min-width: 38px;
-  height: 38px;
-  min-height: 38px;
   border-radius: 999px;
   opacity: 1;
 }
@@ -775,6 +778,9 @@ html.er-root .quality-pill__glyph {
   flex: 0 0 16px;
 }
 
+/* Meter colors are baked into the data URIs below because var() cannot reach
+   inside url(); a retune must edit every light and dark fill together
+   (signal #12876b / #3fcba4, dim #d3c9bc / #35323f, warn #96690a / #c9a227). */
 html.er-root .quality-pill--strong .quality-pill__glyph {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='14'%3E%3Cg fill='%2312876b'%3E%3Crect y='10' width='2.6' height='4' rx='1'/%3E%3Crect x='4.4' y='7' width='2.6' height='7' rx='1'/%3E%3Crect x='8.8' y='4' width='2.6' height='10' rx='1'/%3E%3Crect x='13.2' width='2.6' height='14' rx='1'/%3E%3C/g%3E%3C/svg%3E");
 }
@@ -866,7 +872,7 @@ html.er-root .nowcard-title {
 }
 
 html.er-root .nowcard-artist,
-html.er-root .nowcard-subtitle {
+html.er-root .nowcard-station {
   font-size: 12.5px;
   color: var(--er2-muted);
 }
@@ -893,9 +899,6 @@ html.er-root .nowcard-fact-val {
 /* ------------------------------------------------------------ the player */
 
 html.er-root .player-bar {
-  height: var(--er2-player);
-  gap: 20px;
-  padding: 0 20px;
   background: var(--er2-surface);
   border-top: 1px solid var(--er2-line);
   box-shadow: none;
@@ -1169,14 +1172,6 @@ html.er-root #toast-container > * {
     width: 46px;
     height: 46px;
     border-radius: 10px;
-  }
-
-  html.er-root .station-card__play,
-  html.er-root .station-card__favorite {
-    width: 44px;
-    height: 44px;
-    min-width: 44px;
-    min-height: 44px;
   }
 
   html.er-root .er-nowplaying {

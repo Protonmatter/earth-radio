@@ -536,6 +536,11 @@ function syncChromeMetrics() {
     const inset = parseFloat(rootStyle.getPropertyValue(insetName)) || 0;
     const height = Math.round(element.getBoundingClientRect().height - inset);
     if (!height) continue;
+    // A presentation layer may restyle a chrome element into a full-height
+    // rail (fixed, pinned top and bottom). Its height is then the viewport,
+    // not chrome depth; adopting it would poison every inset derived from
+    // this variable and, via the header's own min-height, latch permanently.
+    if (height > window.innerHeight / 2) continue;
     const current = parseFloat(root.style.getPropertyValue(name));
     if (Number.isFinite(current) && Math.abs(current - height) <= 1) continue;
     root.style.setProperty(name, `${height}px`);
@@ -595,6 +600,15 @@ function applyViewport(state) {
   syncVirtualRows();
 }
 
+// Split percentages apply to main's width, which a presentation layer may
+// inset from the viewport (the desktop rail); clamping and reporting bounds
+// against window.innerWidth would let the panels drop below their pixel
+// floors and desynchronize the separator's ARIA bounds.
+function workspaceWidth() {
+  const width = document.querySelector('main.main')?.getBoundingClientRect().width;
+  return width || window.innerWidth;
+}
+
 function applyWorkspace(state, mode) {
   const list = byId('grid-panel');
   const map = byId('map-panel');
@@ -643,7 +657,7 @@ function applyWorkspace(state, mode) {
     // accessibility tree entirely rather than exposing a dead control.
     separator.hidden = Boolean(state.collapsed);
     separator.setAttribute('aria-hidden', String(Boolean(state.collapsed)));
-    const bounds = splitBounds(window.innerWidth);
+    const bounds = splitBounds(workspaceWidth());
     separator.setAttribute('aria-valuemin', String(bounds.min));
     separator.setAttribute('aria-valuemax', String(bounds.max));
     separator.setAttribute('aria-valuenow', String(Math.round(state.split)));
@@ -1418,7 +1432,7 @@ function bindSeparator() {
   if (!separator) return;
 
   const applyValue = (value, flush = false) => {
-    const split = clampSplitPercent(value, window.innerWidth);
+    const split = clampSplitPercent(value, workspaceWidth());
     applyViewport(saveUiState({ split }));
     invalidateMap(flush);
   };
@@ -1426,7 +1440,7 @@ function bindSeparator() {
   separator.addEventListener('keydown', event => {
     const current = loadUiState().split;
     const step = event.shiftKey ? 8 : 2;
-    const bounds = splitBounds(window.innerWidth);
+    const bounds = splitBounds(workspaceWidth());
     const handled = {
       ArrowLeft: () => applyValue(current - step, true),
       ArrowRight: () => applyValue(current + step, true),
