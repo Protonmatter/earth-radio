@@ -151,7 +151,7 @@ export default {
 
   'nowplaying.title': '지금 재생',
   'nowplaying.label': '지금 재생',
-  'nowplaying.metadata': '트랙 메타데이터 신뢰도',
+  'nowplaying.metadataLabel': '트랙 메타데이터 신뢰도',
   'nowplaying.metadataWaiting': '실시간 방송국 메타데이터 대기 중',
   'nowplaying.dismiss': '지금 재생 닫기',
   'nowplaying.live': '생방송 방송국',

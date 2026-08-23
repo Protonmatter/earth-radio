@@ -151,7 +151,7 @@ export default {
 
   'nowplaying.title': '正在播放',
   'nowplaying.label': '正在播放',
-  'nowplaying.metadata': '曲目元数据可信度',
+  'nowplaying.metadataLabel': '曲目元数据可信度',
   'nowplaying.metadataWaiting': '正在等待电台实时元数据',
   'nowplaying.dismiss': '关闭正在播放',
   'nowplaying.live': '直播电台',

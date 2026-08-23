@@ -151,7 +151,7 @@ export default {
 
   'nowplaying.title': 'Now Playing',
   'nowplaying.label': 'Now playing',
-  'nowplaying.metadata': 'Track metadata confidence',
+  'nowplaying.metadataLabel': 'Track metadata confidence',
   'nowplaying.metadataWaiting': 'Waiting for live station metadata',
   'nowplaying.dismiss': 'Close Now Playing',
   'nowplaying.live': 'Live station',

@@ -81,8 +81,8 @@
         "sha256": "c007984ee6349eaee532c1b3e2297e7fdac81610d4fae167c7595e127cef2d42"
       },
       "current": {
-        "bytes": 21913,
-        "sha256": "51cd8184179550059d546889d2029d3aa525dc66b6b69e623ee61fb1829ac01b"
+        "bytes": 21918,
+        "sha256": "2da59c3ac553ac88ecbfde6a2b570510d11edf1710d2317683f7b3e038db2bfe"
       },
       "reason": "Move frame-ancestors enforcement to the deployable response header policy, then add responsive landmarks, iOS viewport/audio attributes, mobile destinations, compact header icons, additive responsive assets, country and station search controls, and complete Now Playing metadata and sleep actions."
     },
@@ -106,7 +106,7 @@
       },
       "current": {
         "bytes": 2350,
-        "sha256": "20b244c08436b0948bf7b2ae941f6bb9b95134fab129d4ade2c1ecb264421731"
+        "sha256": "937bab7cd5b0ac52f965a67ce140ed1e9af7a599f5d7dc5432929096259a32f1"
       },
       "reason": "Use network-first navigation/configuration updates, cache the responsive shell and i18n catalogs under a bumped UI cache version, and keep hashed recovered assets cache-first."
     }

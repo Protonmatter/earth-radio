@@ -53,7 +53,8 @@ const SEED = [
   ['Wien Kammerton', 'Austria', 'AT', 'AAC', 192, 'classical', 48.21, 16.37],
   ['Zurich Quiet Hours', 'Switzerland', 'CH', 'MP3', 128, 'ambient', 47.38, 8.54],
   ['Reykjavik Deep Cuts', 'Iceland', 'IS', 'AAC', 96, 'electronic', 64.13, -21.9],
-  ['Singapore Harbour Mix', 'Singapore', 'SG', 'MP3', 128, 'pop,city', 1.35, 103.82]
+  ['Singapore Harbour Mix', 'Singapore', 'SG', 'MP3', 128, 'pop,city', 1.35, 103.82],
+  ['Atlas Editorial FM', 'Canada', 'CA', 'AAC', 160, 'duplicate,deepcut', 45.5, -73.57]
 ];
 
 function uuid(index) {

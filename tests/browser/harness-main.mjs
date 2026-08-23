@@ -48,6 +48,7 @@ const CONTENT_TYPES = {
 };
 
 const SEED_PAGE = '<!doctype html><meta charset="utf-8"><title>seed</title><body>seed</body>';
+let observedStreamHosts = [];
 
 async function startStaticServer() {
   const server = createServer(async (request, response) => {
@@ -93,6 +94,7 @@ function installHttpsFixtures() {
     if (url.hostname.endsWith('api.radio-browser.info') && url.pathname.startsWith('/json/stations')) {
       return new Response(stations, { status: 200, headers: { 'content-type': 'application/json' } });
     }
+    if (url.hostname.endsWith('.example.invalid')) observedStreamHosts.push(url.hostname);
     // Everything else (map tiles, station favicons, artwork, metadata providers) is offline
     // on purpose so failure handling is exercised instead of the network.
     return new Response('', { status: 404, headers: { 'content-type': 'text/plain' } });
@@ -174,6 +176,7 @@ const PROBE = `(() => {
     bodyOverflow: document.body.scrollWidth - document.body.clientWidth,
     stationCount: document.querySelectorAll('#station-grid .station-card').length,
     header: query('header.header'),
+    headerContent: queryAll('header .logo, header button'),
     main: query('main.main'),
     list: query('#grid-panel'),
     map: query('#map-panel'),
@@ -185,6 +188,7 @@ const PROBE = `(() => {
     playerPrev: query('#btn-prev'),
     playerNext: query('#btn-next'),
     playerInfo: query('#er-open-nowplaying'),
+    playerContent: queryAll('#player-bar button, #er-open-nowplaying'),
     nav: query('.er-mobile-nav'),
     navButtons: queryAll('.er-mobile-nav [data-er-dest]'),
     headerSearch: query('[data-er-open-search]'),
@@ -198,6 +202,7 @@ const PROBE = `(() => {
     nowPlayingPlay: query('#er-nowplaying [data-er-nowplaying-play]'),
     nowPlayingMetadata: query('#er-nowplaying-metadata'),
     nowPlayingSleepButtons: queryAll('#er-nowplaying [data-er-sleep-min]'),
+    nowPlayingContent: queryAll('#er-nowplaying button, #er-nowplaying h2, #er-nowplaying-metadata'),
     searchPanel: query('#search-modal'),
     searchInput: query('#search-input'),
     stationQuery: query('#er-station-query'),
@@ -366,7 +371,8 @@ const ACTION_PROBE = `(() => ({
   split: document.getElementById('er-separator')?.getAttribute('aria-valuenow') || '',
   overflowOpen: !document.getElementById('er-overflow')?.hidden,
   nowPlayingOpen: document.getElementById('er-nowplaying')?.classList.contains('is-open') || false,
-  activeElement: document.activeElement?.id || ''
+  activeElement: document.activeElement?.id || '',
+  trustedPointer: window.__erTrustedPointer || null
 }))()`;
 
 async function runAction(window_, action) {
@@ -383,6 +389,35 @@ async function runAction(window_, action) {
       return true;
     })()`, true);
     await new Promise(resolve => setTimeout(resolve, 150));
+    return contents.executeJavaScript(ACTION_PROBE, true);
+  }
+  if (action.type === 'pointer') {
+    const point = await contents.executeJavaScript(`(() => {
+      const node = document.querySelector(${JSON.stringify(action.selector)});
+      if (!node) return null;
+      node.scrollIntoView({ block: 'center', inline: 'nearest' });
+      const rect = node.getBoundingClientRect();
+      if (rect.width <= 0 || rect.height <= 0) return null;
+      window.__erTrustedPointer = { expectedTarget: node.className, point: null, received: null };
+      document.addEventListener('click', event => {
+        window.__erTrustedPointer.received = {
+          isTrusted: event.isTrusted,
+          target: event.target instanceof Element ? event.target.className : '',
+          x: event.clientX,
+          y: event.clientY
+        };
+      }, { capture: true, once: true });
+      return { x: Math.round(rect.left + rect.width / 2), y: Math.round(rect.top + rect.height / 2) };
+    })()`, true);
+    if (point) {
+      await contents.executeJavaScript(`window.__erTrustedPointer.point = ${JSON.stringify(point)}`, true);
+      window_.focus();
+      contents.focus();
+      contents.sendInputEvent({ type: 'mouseMove', x: point.x, y: point.y });
+      contents.sendInputEvent({ type: 'mouseDown', x: point.x, y: point.y, button: 'left', clickCount: 1 });
+      contents.sendInputEvent({ type: 'mouseUp', x: point.x, y: point.y, button: 'left', clickCount: 1 });
+    }
+    await new Promise(resolve => setTimeout(resolve, 200));
     return contents.executeJavaScript(ACTION_PROBE, true);
   }
   if (action.type === 'focus') {
@@ -446,14 +481,16 @@ async function correctViewport(window_, scenario) {
   contents.setZoomFactor(1 / displayScale);
   const emulatedWidth = Math.round(scenario.width * displayScale);
   const emulatedHeight = Math.round(scenario.height * displayScale);
-  contents.enableDeviceEmulation({
-    screenPosition: desktopEmulation ? 'desktop' : 'mobile',
-    screenSize: { width: emulatedWidth, height: emulatedHeight },
-    viewSize: { width: emulatedWidth, height: emulatedHeight },
-    viewPosition: { x: 0, y: 0 },
-    deviceScaleFactor: 1,
-    scale: 1
-  });
+  if (desktopEmulation) {
+    contents.enableDeviceEmulation({
+      screenPosition: 'desktop',
+      screenSize: { width: emulatedWidth, height: emulatedHeight },
+      viewSize: { width: emulatedWidth, height: emulatedHeight },
+      viewPosition: { x: 0, y: 0 },
+      deviceScaleFactor: 1,
+      scale: 1
+    });
+  }
   await new Promise(resolve => setTimeout(resolve, 200));
   for (let attempt = 0; attempt < 4; attempt += 1) {
     const measured = await contents.executeJavaScript('({ width: window.innerWidth, height: window.innerHeight })', true);
@@ -518,6 +555,7 @@ async function runScenario(scenario, baseUrl) {
     }
 
     const actionLog = [];
+    observedStreamHosts = [];
     for (const action of scenario.actions ?? []) {
       actionLog.push({ action, result: await runAction(window_, action) });
     }
@@ -543,6 +581,7 @@ async function runScenario(scenario, baseUrl) {
       screenshot: path.relative(repositoryRoot, file).replaceAll(path.sep, '/'),
       imeDuringComposition,
       actionLog,
+      streamHosts: [...observedStreamHosts],
       consoleErrors: consoleMessages,
       probe
     };

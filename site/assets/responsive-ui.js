@@ -719,6 +719,8 @@ let selectedCountry = '';
 let stationQuery = '';
 let activeCountryIndex = -1;
 let countrySearchBound = false;
+let runtimeSearchStations = null;
+let runtimeSearchStationsPromise = null;
 
 function countryFilterEntries() {
   return [...document.querySelectorAll('#filter-countries .filter-item')].map(item => ({
@@ -808,15 +810,70 @@ function updateCountrySummary() {
   else summary.textContent = t(stationQuery ? 'search.noStationsForQuery' : 'search.noStationsInCountry', { country: selectedCountry });
 }
 
+function readRuntimeSearchStations() {
+  if (runtimeSearchStationsPromise) return runtimeSearchStationsPromise;
+  runtimeSearchStationsPromise = new Promise(resolve => {
+    if (!globalThis.indexedDB) {
+      resolve(null);
+      return;
+    }
+    const request = globalThis.indexedDB.open('earthRadio', 1);
+    request.onerror = () => resolve(null);
+    request.onupgradeneeded = () => {
+      request.transaction?.abort();
+      resolve(null);
+    };
+    request.onsuccess = () => {
+      const database = request.result;
+      if (!database.objectStoreNames.contains('cache')) {
+        database.close();
+        resolve(null);
+        return;
+      }
+      const transaction = database.transaction('cache', 'readonly');
+      const get = transaction.objectStore('cache').get('stations.v3');
+      get.onerror = () => resolve(null);
+      get.onsuccess = () => {
+        const stations = Array.isArray(get.result?.stations) ? get.result.stations : null;
+        resolve(stations);
+      };
+      transaction.oncomplete = () => database.close();
+      transaction.onabort = () => database.close();
+    };
+  }).then(stations => {
+    runtimeSearchStations = stations;
+    runtimeSearchStationsPromise = null;
+    return stations;
+  });
+  return runtimeSearchStationsPromise;
+}
+
 function stationResultMatches(result) {
   const wanted = normalizeSearchTerm(stationQuery);
   if (!wanted) return true;
-  const resultName = result.querySelector('.search-result-item__name')?.textContent || '';
-  const stationCard = [...document.querySelectorAll('#station-grid .station-card')].find(card => (
-    card.querySelector('.station-card__name')?.textContent || ''
-  ).trim() === resultName.trim());
-  const haystack = normalizeSearchTerm(`${result.textContent || ''} ${stationCard?.textContent || ''}`);
-  return wanted.split(' ').every(term => haystack.includes(term));
+  const terms = wanted.split(' ');
+  const visibleHaystack = normalizeSearchTerm(result.textContent || '');
+  if (terms.every(term => visibleHaystack.includes(term))) return true;
+  // The runtime's IndexedDB record is the authoritative catalog. It lets the
+  // presentation layer validate tag/language matches without depending on the
+  // handful of station cards currently mounted by the virtual list.
+  if (!Array.isArray(runtimeSearchStations)) return true;
+  const name = (result.querySelector('.search-result-item__name')?.textContent || '').trim();
+  const metadata = result.querySelector('.search-result-item__meta')?.textContent || '';
+  return runtimeSearchStations.some(station => {
+    if (String(station?.name || '').trim() !== name) return false;
+    if (!matchesSelectedCountry(metadata, station?.country)) return false;
+    const haystack = normalizeSearchTerm([
+      station.name,
+      station.country,
+      station.countrycode,
+      station.tags,
+      station.language,
+      station.codec,
+      station.bitrate
+    ].filter(Boolean).join(' '));
+    return terms.every(term => haystack.includes(term));
+  });
 }
 
 function applySearchScope() {
@@ -836,26 +893,20 @@ function syncRuntimeSearch() {
   engine.value = buildCountryStationQuery(countryRuntimeNames.get(selectedCountry) || selectedCountry, stationQuery);
   engine.dispatchEvent(new Event('input', { bubbles: true }));
   queueMicrotask(applySearchScope);
+  void readRuntimeSearchStations().then(() => applySearchScope());
 }
 
 function visibleSearchResults() {
   return [...document.querySelectorAll('#search-results .search-result-item:not([hidden]):not(.search-result-item--empty)')];
 }
 
-function activateSearchResult(result) {
+function markActivatedSearchResult(result) {
   const name = result?.querySelector('.search-result-item__name')?.textContent?.trim();
   if (!name) return false;
   for (const item of document.querySelectorAll('#search-results [data-er-activated]')) {
     item.removeAttribute('data-er-activated');
   }
   result.setAttribute('data-er-activated', 'true');
-  const card = [...document.querySelectorAll('#station-grid .station-card')].find(item => (
-    item.querySelector('.station-card__name')?.textContent || ''
-  ).trim() === name);
-  const action = card?.querySelector('.station-card__play');
-  if (!action) return false;
-  action.click();
-  setDestination('listen', true);
   return true;
 }
 
@@ -963,7 +1014,7 @@ function bindCountrySearch() {
     if (event.key === 'Enter') {
       event.preventDefault();
       const results = visibleSearchResults();
-      activateSearchResult(results.find(result => result.classList.contains('search-result-item--active')) || results[0]);
+      (results.find(result => result.classList.contains('search-result-item--active')) || results[0])?.click();
       return;
     }
     engine.dispatchEvent(new KeyboardEvent('keydown', { key: event.key, bubbles: true, cancelable: true }));
@@ -1187,9 +1238,13 @@ function bindActions() {
     if (!target) return;
     const searchResult = target.closest('#search-results .search-result-item:not(.search-result-item--empty)');
     if (searchResult && loadUiState().destination === 'search') {
-      event.preventDefault();
-      event.stopImmediatePropagation();
-      activateSearchResult(searchResult);
+      markActivatedSearchResult(searchResult);
+      // Let the recovered result handler use its stable filtered-result index.
+      // Reconcile the presentation destination after the recovered handler has
+      // consumed the click so mobile never lands on a blank Search workspace.
+      queueMicrotask(() => {
+        setDestination('listen', true);
+      });
       return;
     }
     const dest = target.closest('button[data-er-dest]');

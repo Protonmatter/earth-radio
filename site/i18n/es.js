@@ -151,7 +151,7 @@ export default {
 
   'nowplaying.title': 'Reproduciendo ahora',
   'nowplaying.label': 'Reproduciendo ahora',
-  'nowplaying.metadata': 'Confianza de los metadatos de la pista',
+  'nowplaying.metadataLabel': 'Confianza de los metadatos de la pista',
   'nowplaying.metadataWaiting': 'Esperando metadatos en vivo de la emisora',
   'nowplaying.dismiss': 'Cerrar Reproduciendo ahora',
   'nowplaying.live': 'Emisora en vivo',

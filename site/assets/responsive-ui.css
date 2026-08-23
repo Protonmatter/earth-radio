@@ -970,6 +970,8 @@ html.er-tablet .player-bar {
   flex: 0 0 auto;
   height: auto;
   min-height: var(--er-player);
+  padding-inline-start: calc(20px + var(--er-safe-start));
+  padding-inline-end: calc(20px + var(--er-safe-end));
   padding-bottom: var(--er-safe-bottom);
 }
 

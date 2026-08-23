@@ -1,4 +1,4 @@
-const CACHE_NAME = 'earth-radio-shell-v25-responsive-5';
+const CACHE_NAME = 'earth-radio-shell-v25-responsive-6';
 const SHELL_ASSETS = [
   './',
   './index.html',

@@ -10,6 +10,15 @@ import { matchesSelectedCountry } from '../site/assets/responsive-ui.js';
 
 const unavailable = rendererUnavailableReason();
 
+function assertInsideLateralSafeArea(items, id, start = 50, end = 794) {
+  const visible = items.filter(item => item.visible);
+  assert.ok(visible.length > 0, `${id}: no visible safe-area content was probed`);
+  for (const item of visible) {
+    assert.ok(item.rect.left >= start, `${id}: content crosses the start safe area (${item.rect.left}px)`);
+    assert.ok(item.rect.right <= end, `${id}: content crosses the end safe area (${item.rect.right}px)`);
+  }
+}
+
 test('responsive UI rendered matrix preserves layout, actions, and locale contracts', {
   skip: unavailable || false,
   timeout: 180_000
@@ -50,11 +59,15 @@ test('responsive UI rendered matrix preserves layout, actions, and locale contra
   assert.ok(selectedSearch.settledSearchNames.length > 0);
   assert.ok(selectedSearch.settledSearchNames.length < selectedSearch.stationCount);
   assert.equal(selectedSearch.settledSearchNames.every(name => /atlas/i.test(name)), true);
+  const selectedSearchResult = byId(payload.results, 'mobile-search-select-390x844');
+  assert.equal(selectedSearchResult.actionLog.find(entry => entry.action.type === 'pointer')?.result.trustedPointer?.received?.isTrusted, true);
+  assert.ok(selectedSearchResult.streamHosts.includes('stream49.example.invalid'));
 
   const keyboardSearch = byId(payload.results, 'mobile-search-keyboard-select-390x844').probe;
   assert.equal(keyboardSearch.destination, 'listen');
   assert.equal(keyboardSearch.searchPanel.visible, false);
-  assert.equal(keyboardSearch.activatedSearchName, 'Atlas Editorial FM');
+  assert.equal(keyboardSearch.activatedSearchName, 'Praha Vinyl');
+  assert.ok(byId(payload.results, 'mobile-search-keyboard-select-390x844').streamHosts.includes('stream44.example.invalid'));
 
   const countrySearch = byId(payload.results, 'mobile-country-search-390x844').probe;
   assert.equal(countrySearch.stationQuery.visible, true);
@@ -86,6 +99,7 @@ test('responsive UI rendered matrix preserves layout, actions, and locale contra
   assert.equal(nowPlaying.activeElement.id, 'er-nowplaying-dismiss');
   assert.notEqual(nowPlaying.nowPlayingTitle.text, 'Select a station');
   assert.equal(nowPlaying.nowPlayingMetadata.visible, true);
+  assert.equal(nowPlaying.nowPlayingMetadata.ariaLabel, 'Track metadata confidence');
   assert.match(nowPlaying.nowPlayingMetadata.text, /Station metadata only|Identifying|Identified|Raw ICY/i);
   assert.equal(nowPlaying.nowPlayingPlay.ariaLabel, nowPlaying.playerPlay.ariaLabel);
   assert.ok(nowPlaying.nowPlayingSleepButtons.length >= 4);
@@ -114,6 +128,16 @@ test('responsive UI rendered matrix preserves layout, actions, and locale contra
   const landscape = byId(payload.results, 'mobile-landscape-844x390').probe;
   assert.equal(landscape.safeAreaVariables.start, '50px');
   assert.equal(landscape.safeAreaVariables.end, '50px');
+  assertInsideLateralSafeArea(landscape.headerContent, 'mobile-landscape header');
+  assertInsideLateralSafeArea(landscape.playerContent, 'mobile-landscape player');
+
+  const landscapeOverflow = byId(payload.results, 'mobile-landscape-overflow-844x390').probe;
+  assert.equal(landscapeOverflow.overflowSheet.visible, true);
+  assertInsideLateralSafeArea(landscapeOverflow.overflowItems, 'mobile-landscape overflow');
+
+  const landscapeNowPlaying = byId(payload.results, 'mobile-landscape-nowplaying-844x390').probe;
+  assert.equal(landscapeNowPlaying.nowPlaying.visible, true);
+  assertInsideLateralSafeArea(landscapeNowPlaying.nowPlayingContent, 'mobile-landscape Now Playing');
 
   const desktop = byId(payload.results, 'desktop-1440x900').probe;
   assert.match(desktop.documentElementClass, /\ber-desktop\b/);

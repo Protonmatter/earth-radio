@@ -151,7 +151,7 @@ export default {
 
   'nowplaying.title': 'قيد التشغيل الآن',
   'nowplaying.label': 'قيد التشغيل الآن',
-  'nowplaying.metadata': 'درجة موثوقية بيانات المقطع',
+  'nowplaying.metadataLabel': 'درجة موثوقية بيانات المقطع',
   'nowplaying.metadataWaiting': 'بانتظار بيانات المحطة المباشرة',
   'nowplaying.dismiss': 'إغلاق قيد التشغيل الآن',
   'nowplaying.live': 'محطة مباشرة',

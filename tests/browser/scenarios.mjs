@@ -74,7 +74,7 @@ export const SCENARIOS = [
         type: 'script',
         code: `(() => {
           const input = document.querySelector('#er-station-query');
-          input.value = 'Atlas';
+          input.value = 'duplicate';
           input.dispatchEvent(new Event('input', { bubbles: true }));
           return true;
         })()`
@@ -85,10 +85,13 @@ export const SCENARIOS = [
         code: `(() => {
           window.__erSettledSearchNames = [...document.querySelectorAll('#search-results .search-result-item:not([hidden]) .search-result-item__name')]
             .map(node => (node.textContent || '').trim());
+          const target = [...document.querySelectorAll('#search-results .search-result-item:not([hidden])')]
+            .find(node => /Canada/.test(node.querySelector('.search-result-item__meta')?.textContent || ''));
+          target?.setAttribute('data-er-pointer-target', 'true');
           return window.__erSettledSearchNames.length;
         })()`
       },
-      { type: 'click', selector: '#search-results .search-result-item:not([hidden])' },
+      { type: 'pointer', selector: '#search-results [data-er-pointer-target]' },
       { type: 'wait', ms: 250 }
     ]
   },
@@ -106,7 +109,7 @@ export const SCENARIOS = [
         type: 'script',
         code: `(() => {
           const input = document.querySelector('#er-station-query');
-          input.value = 'Atlas';
+          input.value = '1970';
           input.dispatchEvent(new Event('input', { bubbles: true }));
           return true;
         })()`
@@ -209,6 +212,33 @@ export const SCENARIOS = [
     destination: 'listen',
     safeArea: IPHONE_LANDSCAPE_SAFE_AREA,
     seed: SEEDED
+  },
+  {
+    id: 'mobile-landscape-overflow-844x390',
+    title: 'iPhone landscape — overflow inside lateral safe areas',
+    width: 844,
+    height: 390,
+    destination: 'listen',
+    safeArea: IPHONE_LANDSCAPE_SAFE_AREA,
+    seed: SEEDED,
+    actions: [
+      { type: 'click', selector: '[data-er-overflow]' },
+      { type: 'wait', ms: 150 }
+    ]
+  },
+  {
+    id: 'mobile-landscape-nowplaying-844x390',
+    title: 'iPhone landscape — Now Playing inside lateral safe areas',
+    width: 844,
+    height: 390,
+    destination: 'listen',
+    safeArea: IPHONE_LANDSCAPE_SAFE_AREA,
+    seed: SEEDED,
+    actions: [
+      { type: 'click', selector: '#station-grid .station-card__play' },
+      { type: 'click', selector: '#er-open-nowplaying' },
+      { type: 'wait', ms: 200 }
+    ]
   },
   {
     id: 'mobile-standalone-390x844',
