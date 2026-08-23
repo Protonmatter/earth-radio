@@ -105,10 +105,10 @@
         "sha256": "b09e3207532fe7f47d14e9c53804d7e8caf31cad2fcb2c652b728a93871ea094"
       },
       "current": {
-        "bytes": 2350,
-        "sha256": "937bab7cd5b0ac52f965a67ce140ed1e9af7a599f5d7dc5432929096259a32f1"
+        "bytes": 2443,
+        "sha256": "921f2efeb49bd08536a5d9de52483b920891951ced201c3765c6f5007a22bae9"
       },
-      "reason": "Use network-first navigation/configuration updates, cache the responsive shell and i18n catalogs under a bumped UI cache version, and keep hashed recovered assets cache-first."
+      "reason": "Use network-first navigation/configuration updates, keep hashed recovered assets cache-first, bump the responsive shell cache generation, and reload installation requests so stale browser HTTP entries cannot seed the new service-worker cache."
     }
   ]
 }

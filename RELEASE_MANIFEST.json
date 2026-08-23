@@ -10,8 +10,8 @@
     },
     {
       "path": "docs/ARCHITECTURE.md",
-      "bytes": 3851,
-      "sha256": "df28ab6cff25dd43c38e64ced4b42baf553bd1a187ab2056ae96a11dbb4defa1"
+      "bytes": 4178,
+      "sha256": "43c016499adc72e027d47d1610fc4d744ae15f20fec619b0c877d69ce8ab6865"
     },
     {
       "path": "docs/BUILD_STATE.md",
@@ -20,8 +20,8 @@
     },
     {
       "path": "docs/OPERATIONS.md",
-      "bytes": 2768,
-      "sha256": "69ed7e3abb6ae0af5b816e169022a367ba5094e0227203d4330106abdb31fe8f"
+      "bytes": 3319,
+      "sha256": "566d6a64d5ef13c6a73fbfcf07db9aeb5e5d4b276c04854046a3c4e23569e2a9"
     },
     {
       "path": "docs/PROVENANCE.md",
@@ -30,8 +30,8 @@
     },
     {
       "path": "docs/provenance/hardening-overlays.json",
-      "bytes": 4367,
-      "sha256": "096dc3482ebeab53fcf35a902ebf9c362e21345fef9cc531093f1fc092b76054"
+      "bytes": 4434,
+      "sha256": "ce4a7fbdf1aa8d76464d197dbbc2e2c8443318c49e1970445101225464481c69"
     },
     {
       "path": "docs/provenance/recovery-manifest.json",
@@ -145,8 +145,8 @@
     },
     {
       "path": "scripts/validate-site.mjs",
-      "bytes": 3489,
-      "sha256": "f8aa285655faab9763d51d58947da16fbdb8e3f5eb6a485db5c56a08c4e1afac"
+      "bytes": 4944,
+      "sha256": "79c59686454415ee8dfb64fd0b9df4b9a2b9ef60e9f79ebbc84dc0f0267bd41e"
     },
     {
       "path": "server/desktop-proxy.mjs",
@@ -170,8 +170,8 @@
     },
     {
       "path": "site/_headers",
-      "bytes": 898,
-      "sha256": "002c330e27e40c172e2e7da84b2fd31b1edeb178138b22efc06d11001c135bc8"
+      "bytes": 1252,
+      "sha256": "40eeecfb9fb3b45d6cecfe3dd933a0d2f0200797febe9c28ac708ef9f787d8c7"
     },
     {
       "path": "site/assets/hls.light-Dr1Fv81C.js",
@@ -280,8 +280,8 @@
     },
     {
       "path": "site/sw.js",
-      "bytes": 2350,
-      "sha256": "937bab7cd5b0ac52f965a67ce140ed1e9af7a599f5d7dc5432929096259a32f1"
+      "bytes": 2443,
+      "sha256": "921f2efeb49bd08536a5d9de52483b920891951ced201c3765c6f5007a22bae9"
     },
     {
       "path": "src-recovered/core/config.ts",
@@ -555,8 +555,8 @@
     },
     {
       "path": "tests/service-worker.test.mjs",
-      "bytes": 1999,
-      "sha256": "3e75821fcafe9324c7441486f83701e5cc8b23fe0ffde9e8332575b7ef12f239"
+      "bytes": 2139,
+      "sha256": "c43571882da1c9f9053194c95fe6480eb50fc63d0b52be502b44a1836c53ed17"
     },
     {
       "path": "tests/smoke-desktop.mjs",
@@ -585,8 +585,8 @@
     },
     {
       "path": "tests/validate-site.test.mjs",
-      "bytes": 2795,
-      "sha256": "259ffc8dd1c1ff3e7d3fa385d9926cd20ed21567007a26e46fefdecae8d5d333"
+      "bytes": 3440,
+      "sha256": "a3fea6edfaa0f9f82d1ffed7128c0437a66923dd5203ced97cb4dff46e204d71"
     },
     {
       "path": "tests/workflow.test.mjs",

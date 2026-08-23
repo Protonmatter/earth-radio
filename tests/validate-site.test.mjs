@@ -7,6 +7,7 @@ import { validateSite } from '../scripts/validate-site.mjs';
 
 async function createSite(root, {
   config = "window.RADIO_CONFIG={proxyBaseUrl: desktopProxyBaseUrl || ''};",
+  headers = '/*\n  X-Content-Type-Options: nosniff\n',
   missingAsset = false,
   sourceMapReference = false
 } = {}) {
@@ -19,7 +20,7 @@ async function createSite(root, {
   await writeFile(path.join(root, 'config.js'), config);
   await writeFile(path.join(root, 'manifest.webmanifest'), '{"start_url":"./"}\n');
   await writeFile(path.join(root, 'sw.js'), "const SHELL_ASSETS=['./','./config.js','./assets/app.js'];\n");
-  await writeFile(path.join(root, '_headers'), '/*\n  X-Content-Type-Options: nosniff\n');
+  await writeFile(path.join(root, '_headers'), headers);
 }
 
 test('validateSite accepts a complete direct-mode site', async () => {
@@ -53,5 +54,26 @@ test('validateSite rejects a source map reference even when the map is absent', 
   try {
     await createSite(root, { sourceMapReference: true });
     await assert.rejects(() => validateSite(root), /source map reference/i);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test('validateSite rejects immutable caching inherited by a mutable asset', async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), 'earth-radio-cache-policy-site-'));
+  try {
+    await createSite(root, {
+      headers: `/*
+  X-Content-Type-Options: nosniff
+
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/assets/app.js
+  Cache-Control: public, max-age=300, must-revalidate
+`
+    });
+    await assert.rejects(
+      () => validateSite(root),
+      /non-fingerprinted asset assets\/app\.js inherits immutable caching/i
+    );
   } finally { await rm(root, { recursive: true, force: true }); }
 });

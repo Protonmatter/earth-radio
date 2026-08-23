@@ -22,6 +22,34 @@ function localAsset(value) {
   return value.replace(/^\.\//, '').split(/[?#]/, 1)[0].replace(/\/$/, 'index.html');
 }
 
+function parseHeaderRules(source) {
+  const rules = [];
+  let current = null;
+  for (const line of source.split(/\r?\n/)) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) continue;
+    if (!/^\s/.test(line)) {
+      current = { pattern: trimmed, headers: [] };
+      rules.push(current);
+      continue;
+    }
+    const match = trimmed.match(/^([^:]+):\s*(.*)$/);
+    if (current && match) {
+      current.headers.push({ name: match[1].trim().toLowerCase(), value: match[2].trim() });
+    }
+  }
+  return rules;
+}
+
+function headerPatternMatches(pattern, relative) {
+  const escaped = pattern.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replaceAll('*', '.*');
+  return new RegExp(`^${escaped}$`).test(`/${relative}`);
+}
+
+function isFingerprintedAsset(relative) {
+  return /-[A-Za-z0-9_-]{8,}\.[^.]+$/.test(path.basename(relative));
+}
+
 export async function validateSite(rootInput) {
   const root = path.resolve(rootInput);
   const files = await collectFiles(root);
@@ -50,6 +78,19 @@ export async function validateSite(rootInput) {
   }
   for (const asset of [...new Set(assets)].sort()) {
     if (!fileSet.has(asset)) errors.push(`Missing asset referenced by site: ${asset}`);
+  }
+
+  const headerRules = parseHeaderRules(await readFile(path.join(root, '_headers'), 'utf8'));
+  for (const relative of files.filter(file => file.startsWith('assets/') && !isFingerprintedAsset(file))) {
+    const cacheControl = headerRules
+      .filter(rule => headerPatternMatches(rule.pattern, relative))
+      .flatMap(rule => rule.headers)
+      .filter(header => header.name === 'cache-control')
+      .map(header => header.value)
+      .join(', ');
+    if (/\bimmutable\b/i.test(cacheControl)) {
+      errors.push(`Non-fingerprinted asset ${relative} inherits immutable caching`);
+    }
   }
 
   const config = await readFile(path.join(root, 'config.js'), 'utf8');

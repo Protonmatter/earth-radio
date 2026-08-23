@@ -5,8 +5,20 @@
   Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
   Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; media-src https: http: blob:; connect-src 'self' https: http:; font-src 'self'; worker-src 'self' blob:; manifest-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
 
-/assets/*
+/assets/hls.light-Dr1Fv81C.js
   Cache-Control: public, max-age=31536000, immutable
+
+/assets/index-B4rKOAHV.js
+  Cache-Control: public, max-age=31536000, immutable
+
+/assets/index-CSoL7F-Y.css
+  Cache-Control: public, max-age=31536000, immutable
+
+/assets/metadata-enrichment.css
+  Cache-Control: public, max-age=300, must-revalidate
+
+/assets/metadata-enrichment.js
+  Cache-Control: public, max-age=300, must-revalidate
 
 /assets/responsive-ui.css
   Cache-Control: public, max-age=300, must-revalidate
