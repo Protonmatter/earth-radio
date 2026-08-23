@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="theme-color" content="#1f3d32" />
+  <meta name="theme-color" content="#25243D" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="mobile-web-app-capable" content="yes" />
@@ -34,7 +34,7 @@
       <button class="er-icon-btn er-tablet-only" type="button" data-er-dest="listen" data-i18n="nav.listen">Listen</button>
       <button class="er-icon-btn er-tablet-only" type="button" data-er-dest="map" data-i18n="nav.map">Map</button>
       <button class="er-icon-btn" type="button" data-er-open-search data-i18n="header.search" data-i18n-attr="aria-label" aria-label="Search stations"><span class="er-icon er-icon-search" aria-hidden="true"></span></button>
-      <button class="er-icon-btn" type="button" data-er-overflow data-i18n="header.overflow" data-i18n-attr="aria-label" aria-label="More actions" aria-controls="er-overflow" aria-expanded="false"><span class="er-icon er-icon-more" aria-hidden="true"></span></button>
+      <button class="er-icon-btn" id="er-overflow-toggle" type="button" data-er-overflow data-i18n="header.overflow" data-i18n-attr="aria-label" aria-label="More actions" aria-controls="er-overflow" aria-expanded="false"><span class="er-icon er-icon-more" aria-hidden="true"></span></button>
       <button id="er-restore-panel" class="er-collapse" type="button" hidden data-er-collapse="map" data-i18n="desktop.restoreMap">Show map</button>
     </div>
     <div class="header-right">
@@ -55,7 +55,7 @@
     </div>
   </header>
 
-  <div id="er-overflow" class="er-overflow" hidden aria-hidden="true">
+  <div id="er-overflow" class="er-overflow" hidden aria-hidden="true" data-i18n="header.overflow" data-i18n-attr="aria-label" aria-label="More actions" role="group">
     <button type="button" data-click-id="surprise" data-i18n="header.surprise">World Scan</button>
     <button type="button" data-click-id="recent-toggle" data-i18n="saved.recent">Recent</button>
     <button type="button" data-click-id="favorites-toggle" data-i18n="saved.favorites">Favorites</button>
@@ -171,7 +171,6 @@
     <div class="er-nowplaying-head">
       <button id="er-nowplaying-dismiss" class="er-nowplaying-dismiss" type="button" data-i18n="nowplaying.dismiss">Close Now Playing</button>
       <strong data-i18n="nowplaying.title">Now Playing</strong>
-      <button type="button" data-click-id="btn-sleep" data-i18n="nowplaying.more">More station actions</button>
     </div>
     <div id="er-nowplaying-art" class="er-nowplaying-art" aria-hidden="true"></div>
     <p id="er-nowplaying-live" data-i18n="nowplaying.live">Live station</p>
@@ -179,7 +178,7 @@
     <p id="er-nowplaying-meta"></p>
     <div class="er-nowplaying-actions">
       <button type="button" data-click-id="btn-prev" data-i18n="player.prev">Previous station</button>
-      <button type="button" data-click-id="btn-play" data-i18n="player.play">Play</button>
+      <button type="button" data-click-id="btn-play" data-er-nowplaying-play data-i18n="player.play">Play</button>
       <button type="button" data-click-id="btn-next" data-i18n="player.next">Next station</button>
     </div>
     <div class="er-nowplaying-actions">
@@ -187,13 +186,32 @@
       <button type="button" data-click-id="btn-similar" data-i18n="player.similar">Find similar stations</button>
       <button type="button" data-er-dest="map" data-i18n="nowplaying.map">Show on map</button>
     </div>
+    <div class="er-nowplaying-sleep" role="group" data-i18n="player.sleep" data-i18n-attr="aria-label" aria-label="Sleep timer">
+      <strong data-i18n="player.sleep">Sleep timer</strong>
+      <button type="button" data-er-sleep-min="15" data-i18n="sleep.15">15 min</button>
+      <button type="button" data-er-sleep-min="30" data-i18n="sleep.30">30 min</button>
+      <button type="button" data-er-sleep-min="60" data-i18n="sleep.60">60 min</button>
+      <button type="button" data-er-sleep-min="0" data-i18n="sleep.off">Off</button>
+    </div>
+    <section id="er-nowplaying-metadata" class="er-nowplaying-metadata" data-i18n="nowplaying.metadataLabel" data-i18n-attr="aria-label" aria-label="Track metadata confidence"></section>
   </section>
 
   <div class="search-modal" id="search-modal" role="dialog" aria-modal="true" aria-labelledby="search-title" aria-hidden="true" hidden style="display:none;">
     <div class="search-backdrop"></div>
     <div class="search-container">
       <h2 class="sr-only" id="search-title" data-i18n="search.title">Search stations</h2>
-      <input type="text" class="search-input" id="search-input" placeholder="Search stations, countries, tags..." data-i18n-placeholder="search.placeholder" autocomplete="off" spellcheck="false" aria-controls="search-results" />
+      <label class="sr-only" for="er-station-query" data-i18n="search.stationLabel">Station</label>
+      <input type="search" class="search-input er-station-query" id="er-station-query" placeholder="Search stations, tags…" data-i18n-placeholder="search.stationPlaceholder" autocomplete="off" spellcheck="false" aria-controls="search-results" />
+      <input type="text" class="er-search-engine" id="search-input" tabindex="-1" autocomplete="off" spellcheck="false" aria-hidden="true" />
+      <div class="er-country-picker">
+        <label class="er-country-label" for="er-country-query" data-i18n="search.countryLabel">Country</label>
+        <div class="er-country-control">
+          <input type="search" id="er-country-query" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="er-country-options" aria-describedby="er-country-summary" autocomplete="off" spellcheck="false" placeholder="All countries" data-i18n-placeholder="search.countryPlaceholder" />
+          <button type="button" id="er-country-clear" data-i18n="search.clearCountry" data-i18n-attr="aria-label" aria-label="Clear country" hidden>×</button>
+        </div>
+        <div id="er-country-options" class="er-country-options" role="listbox" data-i18n="search.countryLabel" data-i18n-attr="aria-label" aria-label="Country" hidden></div>
+      </div>
+      <p id="er-country-summary" class="er-country-summary" aria-live="polite"></p>
       <div class="search-results" id="search-results" role="listbox" aria-label="Station search results"></div>
       <div class="search-footer">
         <span><kbd>&#8593;</kbd><kbd>&#8595;</kbd> <span data-i18n="search.navigate">Navigate</span></span>

@@ -67,6 +67,16 @@ export default {
   'saved.backToListen': '浏览电台',
 
   'search.placeholder': '搜索电台、国家、标签…',
+  'search.stationLabel': '电台',
+  'search.stationPlaceholder': '搜索电台或标签…',
+  'search.countryLabel': '国家或地区',
+  'search.countryPlaceholder': '所有国家和地区',
+  'search.allCountries': '所有国家和地区',
+  'search.clearCountry': '清除国家或地区',
+  'search.countryNoMatch': '没有匹配的国家或地区',
+  'search.noStationsInCountry': '{country}暂无可用电台。',
+  'search.noStationsForQuery': '{country}没有匹配此搜索的电台。',
+  'search.resultSummary': '{country}的{count}个电台',
   'search.navigate': '导航',
   'search.play': '播放',
   'search.close': '关闭',
@@ -141,6 +151,8 @@ export default {
 
   'nowplaying.title': '正在播放',
   'nowplaying.label': '正在播放',
+  'nowplaying.metadataLabel': '曲目元数据可信度',
+  'nowplaying.metadataWaiting': '正在等待电台实时元数据',
   'nowplaying.dismiss': '关闭正在播放',
   'nowplaying.live': '直播电台',
   'nowplaying.more': '更多电台操作',
@@ -154,6 +166,9 @@ export default {
   'nowplaying.onAir': '播出中',
 
   'sleep.minutes': '{minutes} 分钟',
+  'sleep.15': '15 分钟',
+  'sleep.30': '30 分钟',
+  'sleep.60': '60 分钟',
   'sleep.off': '关闭',
 
   'desktop.separator': '调整电台列表与地图',

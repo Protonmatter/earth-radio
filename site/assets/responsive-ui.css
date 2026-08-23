@@ -1,35 +1,90 @@
+/*
+ * Earth Radio responsive presentation layer (Atlas Editorial).
+ * Additive only: this sheet restyles and re-lays-out recovered runtime elements.
+ * It never introduces a second player, catalog, map, or favorites store.
+ *
+ * Load order contract: this file loads AFTER the recovered runtime stylesheet,
+ * so plain `html.er-root ...` selectors are enough to win without `!important`.
+ */
+
 :root {
-  --er-paper: #f4efe4;
-  --er-paper-2: #ece4d4;
-  --er-ink: #1d2a24;
-  --er-muted: #5c6b63;
-  --er-green: #1f3d32;
-  --er-green-2: #2d5a48;
-  --er-map: #d7e4d2;
-  --er-coral: #d85a3a;
-  --er-coral-ink: #fffaf6;
-  --er-stroke: #d5cbb8;
+  /* Midnight Aubergine: approved warm editorial palette. */
+  --er-paper: #f7f1e9;
+  --er-paper-2: #eae0da;
+  --er-ink: #24222a;
+  --er-muted: #625c69;
+  --er-green: #25243d;
+  --er-green-2: #50445e;
+  --er-map: #e3e4ea;
+  --er-coral: #df6245;
+  --er-coral-ink: #1f1d24;
+  --er-chrome-ink: #f7f1e9;
+  --er-stroke: #cfc3c0;
+  /* Re-skin recovered runtime surfaces without editing its minified bundle. */
+  --bg: #f7f1e9;
+  --surface: #fffaf6;
+  --surface-2: #eae0da;
+  --surface-3: #ddd2d0;
+  --border: #d5c9c6;
+  --border-strong: #b9aaae;
+  --text: #24222a;
+  --text-muted: #625c69;
+  --text-faint: #756e7a;
+  --accent: #df6245;
+  --accent-hover: #c94f36;
+  --accent-soft: #f5d8cf;
+  --accent-contrast: #1f1d24;
+  --ring: 0 0 0 3px #df624566;
+  --q-strong-bg: #ddd8ec;
+  --q-strong-text: #40355c;
   --er-header: 56px;
   --er-player: 72px;
   --er-nav: 64px;
   --er-safe-top: env(safe-area-inset-top, 0px);
   --er-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --er-safe-start: env(safe-area-inset-left, 0px);
+  --er-safe-end: env(safe-area-inset-right, 0px);
+  --er-tap: 44px;
+  --er-radius: 12px;
+  --er-shadow: 0 12px 32px #1d2a2426;
   --er-font: "Iowan Old Style", "Palatino Linotype", Palatino, "Times New Roman", "Segoe UI", sans-serif;
   --er-list-pct: 42%;
 }
 
 html[data-theme="dark"] {
-  --er-paper: #15201b;
-  --er-paper-2: #1d2b25;
-  --er-ink: #f3eee4;
-  --er-muted: #b7c4bc;
-  --er-green: #0f1c17;
-  --er-green-2: #234136;
-  --er-map: #24362d;
-  --er-coral: #e2785c;
-  --er-coral-ink: #1a120e;
-  --er-stroke: #31443b;
+  --er-paper: #1d1b2b;
+  --er-paper-2: #302b3d;
+  --er-ink: #f7f1e9;
+  --er-muted: #c7bdc8;
+  --er-green: #171626;
+  --er-green-2: #42394f;
+  --er-map: #292838;
+  --er-coral: #ed765b;
+  --er-coral-ink: #1f1d24;
+  --er-chrome-ink: #f7f1e9;
+  --er-stroke: #50485d;
+  --bg: #1d1b2b;
+  --surface: #25243d;
+  --surface-2: #302b3d;
+  --surface-3: #42394f;
+  --border: #50485d;
+  --border-strong: #6d6377;
+  --text: #f7f1e9;
+  --text-muted: #c7bdc8;
+  --text-faint: #aaa0ac;
+  --accent: #ed765b;
+  --accent-hover: #f18b72;
+  --accent-soft: #51322f;
+  --accent-contrast: #1f1d24;
+  --ring: 0 0 0 3px #ed765b66;
+  --q-strong-bg: #443b59;
+  --q-strong-text: #e3d9f5;
+  --er-shadow: 0 12px 32px #00000059;
 }
+
+/* ------------------------------------------------------------------ *
+ * Document shell
+ * ------------------------------------------------------------------ */
 
 html.er-root,
 html.er-root body {
@@ -39,16 +94,75 @@ html.er-root body {
   min-height: 100vh;
   min-height: 100dvh;
   overflow-x: hidden;
+  max-width: 100%;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
+html.er-root body {
+  margin: 0;
+  overscroll-behavior-y: none;
+}
+
+/* Author display rules must never override the platform hidden contract. */
+html.er-root [hidden] {
+  display: none !important;
+}
+
+/* No descendant may push the document into horizontal overflow. */
+html.er-root img,
+html.er-root svg,
+html.er-root video,
+html.er-root canvas {
+  max-width: 100%;
+}
+
+/* ------------------------------------------------------------------ *
+ * Localization: font profiles, CJK line breaking, RTL
+ * ------------------------------------------------------------------ */
+
+/*
+ * responsive-ui.js sets --er-font inline from FONT_PROFILES. These rules are a
+ * no-network fallback for the same stacks when the inline property is absent.
+ */
+html.er-root[data-font-profile="ko"] {
+  --er-font: "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", "Noto Sans CJK KR", "Segoe UI", sans-serif;
+}
+
+html.er-root[data-font-profile="zh-Hans"] {
+  --er-font: "PingFang SC", "Microsoft YaHei UI", "Microsoft YaHei", "Noto Sans CJK SC", "Noto Sans SC", "Segoe UI", sans-serif;
+}
+
+html.er-root[data-font-profile="zh-Hant"] {
+  --er-font: "PingFang TC", "Microsoft JhengHei UI", "Microsoft JhengHei", "Noto Sans CJK TC", "Noto Sans TC", "Segoe UI", sans-serif;
+}
+
+html.er-root[data-font-profile="ar"] {
+  --er-font: "Segoe UI", Tahoma, Arial, sans-serif;
+}
+
+/* CJK: no artificial tracking, natural line breaking, no mid-word chopping. */
 html.er-root[data-font-profile="ko"],
 html.er-root[data-font-profile="zh-Hans"],
 html.er-root[data-font-profile="zh-Hant"] {
   letter-spacing: 0;
   word-break: normal;
+  overflow-wrap: anywhere;
   line-break: strict;
+  line-height: 1.6;
 }
 
+html.er-root[data-font-profile="ko"] .station-card__name,
+html.er-root[data-font-profile="zh-Hans"] .station-card__name,
+html.er-root[data-font-profile="zh-Hant"] .station-card__name,
+html.er-root[data-font-profile="ko"] .grid-title,
+html.er-root[data-font-profile="zh-Hans"] .grid-title,
+html.er-root[data-font-profile="zh-Hant"] .grid-title {
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+/* Mixed-script runtime values keep their own direction inside an RTL shell. */
 html.er-root .station-card__name,
 html.er-root .station-card__meta,
 html.er-root .player-station,
@@ -56,9 +170,44 @@ html.er-root .player-meta,
 html.er-root .search-result-item__name,
 html.er-root .search-result-item__meta,
 html.er-root .nowcard-title,
-html.er-root .nowcard-artist {
+html.er-root .nowcard-artist,
+html.er-root #er-nowplaying-title,
+html.er-root #er-nowplaying-meta {
   unicode-bidi: plaintext;
 }
+
+html[dir="rtl"] .header-right,
+html[dir="rtl"] .player-extras,
+html[dir="rtl"] .filter-sidebar {
+  margin-inline-start: auto;
+  margin-inline-end: 0;
+}
+
+html[dir="rtl"] .filter-sidebar {
+  inset-inline-start: 0;
+  inset-inline-end: auto;
+  right: auto;
+  left: 0;
+}
+
+/* Transport glyphs are directionally neutral; do not mirror them. */
+html[dir="rtl"] .player-controls,
+html[dir="rtl"] .er-nowplaying-actions {
+  direction: ltr;
+}
+
+html[dir="rtl"] .er-icon-search::after {
+  transform: rotate(-45deg);
+}
+
+html.er-root .nowcard {
+  inset-inline-start: 10px;
+  left: auto;
+}
+
+/* ------------------------------------------------------------------ *
+ * Accessibility primitives
+ * ------------------------------------------------------------------ */
 
 .er-skip {
   position: absolute;
@@ -66,7 +215,7 @@ html.er-root .nowcard-artist {
   top: 8px;
   z-index: 80;
   background: var(--er-green);
-  color: var(--er-paper);
+  color: var(--er-chrome-ink);
   padding: 8px 12px;
   border-radius: 8px;
   transform: translateY(-200%);
@@ -76,16 +225,46 @@ html.er-root .nowcard-artist {
   transform: none;
 }
 
+html.er-root :focus-visible {
+  outline: 3px solid var(--er-coral);
+  outline-offset: 2px;
+}
+
+html.er-root [aria-current="page"],
+html.er-root [aria-pressed="true"] {
+  font-weight: 700;
+}
+
+@media (forced-colors: active) {
+  html.er-root .er-icon-btn,
+  html.er-root .er-mobile-nav button,
+  html.er-root #er-separator {
+    border: 1px solid ButtonBorder;
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Header
+ * ------------------------------------------------------------------ */
+
 html.er-root .header {
   background: var(--er-green);
-  color: var(--er-paper);
+  color: var(--er-chrome-ink);
   border-bottom: 1px solid var(--er-stroke);
   min-height: var(--er-header);
   padding-top: var(--er-safe-top);
+  padding-inline-start: calc(12px + var(--er-safe-start));
+  padding-inline-end: calc(12px + var(--er-safe-end));
   overflow: hidden;
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+html.er-mobile .header,
+html.er-tablet .header {
+  min-height: calc(var(--er-header) + var(--er-safe-top));
+  flex: 0 0 auto;
 }
 
 html.er-root .header-left,
@@ -98,6 +277,26 @@ html.er-root .logo,
 html.er-root .status-line,
 html.er-root .header-btn {
   color: inherit;
+  background: var(--er-green-2);
+  border-color: color-mix(in srgb, var(--er-chrome-ink) 28%, transparent);
+}
+
+html.er-root .header-btn:hover {
+  color: inherit;
+  background: color-mix(in srgb, var(--er-green-2) 75%, var(--er-paper));
+  border-color: color-mix(in srgb, var(--er-chrome-ink) 48%, transparent);
+}
+
+html.er-root .header-btn--active {
+  background: var(--er-coral);
+  color: var(--er-coral-ink);
+  border-color: transparent;
+}
+
+html.er-root .logo {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 html.er-root .header-btn,
@@ -110,10 +309,16 @@ html.er-root .er-icon-btn {
   min-height: 44px;
 }
 
+/* The primary header never becomes a horizontally scrolling action strip. */
 html.er-root .header-right {
   overflow: hidden;
   max-width: none;
+  flex-wrap: nowrap;
 }
+
+/* ------------------------------------------------------------------ *
+ * Surfaces
+ * ------------------------------------------------------------------ */
 
 html.er-root .main {
   background: var(--er-paper);
@@ -128,14 +333,45 @@ html.er-root .panel--map {
   background: var(--er-map);
 }
 
+html.er-root .station-grid {
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+/*
+ * The recovered virtual list positions cards absolutely on a fixed row stride.
+ * responsive-ui.js measures the real stride and publishes --er-row-h and
+ * --er-card-h, so card height tracks the runtime instead of assuming it; the
+ * fallbacks keep the cards usable before the first measurement.
+ */
+html.er-root .station-grid .station-card {
+  box-sizing: border-box;
+  height: var(--er-card-h, auto);
+  min-height: 64px;
+  overflow: hidden;
+}
+
+/* Dragging the separator must not select text or hit-test the panels. */
+html.er-resizing,
+html.er-resizing body {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+html.er-resizing .panel--grid,
+html.er-resizing .panel--map {
+  pointer-events: none;
+}
+
 html.er-root .player-bar {
   background: var(--er-green);
-  color: var(--er-paper);
+  color: var(--er-chrome-ink);
   min-height: var(--er-player);
 }
 
 html.er-root .player-info {
   appearance: none;
+  -webkit-appearance: none;
   background: transparent;
   border: 0;
   color: inherit;
@@ -145,6 +381,20 @@ html.er-root .player-info {
   cursor: pointer;
   padding: 0;
   font: inherit;
+}
+
+html.er-root .player-station,
+html.er-root .player-meta {
+  color: inherit;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+html.er-root .player-bar .player-btn:not(.player-btn--large),
+html.er-root .player-bar .player-extras,
+html.er-root .player-bar .volume-label {
+  color: var(--er-chrome-ink);
 }
 
 html.er-root .player-btn--large,
@@ -163,6 +413,20 @@ html.er-root .player-btn--large {
   border-color: transparent;
 }
 
+html.er-root .player-btn--large {
+  transition: none;
+}
+
+html[data-theme="dark"].er-root .daily-action--primary,
+html[data-theme="dark"].er-root .er-mobile-nav .is-active,
+html[data-theme="dark"].er-root .player-btn--large {
+  background: var(--er-coral);
+}
+
+/* ------------------------------------------------------------------ *
+ * Layer controls
+ * ------------------------------------------------------------------ */
+
 .er-chrome-btn,
 .er-icon-btn,
 .er-sep,
@@ -179,15 +443,16 @@ html.er-root .player-btn--large {
   min-width: 44px;
   padding: 0 14px;
   font: inherit;
+  cursor: pointer;
 }
 
 .er-icon-btn {
   padding: 0;
   display: inline-grid;
   place-items: center;
-  color: var(--er-paper);
-  background: color-mix(in srgb, var(--er-paper) 12%, transparent);
-  border-color: color-mix(in srgb, var(--er-paper) 24%, transparent);
+  color: var(--er-chrome-ink);
+  background: color-mix(in srgb, var(--er-chrome-ink) 12%, transparent);
+  border-color: color-mix(in srgb, var(--er-chrome-ink) 24%, transparent);
 }
 
 .er-icon {
@@ -246,17 +511,20 @@ html.er-root .player-btn--large {
 .er-overflow {
   display: none;
   position: fixed;
-  inset-inline-end: 12px;
+  inset-inline-end: calc(12px + var(--er-safe-end));
   top: calc(var(--er-header) + var(--er-safe-top) + 8px);
   z-index: 40;
   gap: 8px;
   min-width: 220px;
+  max-width: min(320px, calc(100vw - 24px));
+  max-height: calc(100dvh - var(--er-header) - var(--er-safe-top) - var(--er-player) - var(--er-nav) - var(--er-safe-bottom) - 24px);
+  overflow-y: auto;
   padding: 12px;
   background: var(--er-paper);
   color: var(--er-ink);
   border: 1px solid var(--er-stroke);
-  border-radius: 12px;
-  box-shadow: 0 12px 32px #1d2a241a;
+  border-radius: var(--er-radius);
+  box-shadow: var(--er-shadow);
 }
 
 .er-overflow:not([hidden]) {
@@ -277,6 +545,7 @@ html.er-mobile .header-right,
 html.er-tablet .header-right,
 html.er-mobile .kbd-hint,
 html.er-tablet .kbd-hint,
+html.er-desktop .kbd-hint,
 html.er-desktop #refresh-stations,
 html.er-desktop #surprise,
 html.er-desktop #recent-toggle,
@@ -292,6 +561,17 @@ html.er-mobile .header-left {
   flex: 1 1 auto;
 }
 
+/* ------------------------------------------------------------------ *
+ * Mobile shell (<= 767px)
+ *
+ * The whole shell is a single flex column: header, workspace, player,
+ * bottom navigation. The recovered runtime pins `.player-bar` with
+ * `position: fixed; bottom: 0`, which would sit directly on top of the
+ * four-tab navigation. Every mobile/tablet rule below returns the player
+ * to normal flow so the player and the navigation stack instead of
+ * overlapping, and so neither can conceal list content or map attribution.
+ * ------------------------------------------------------------------ */
+
 html.er-mobile,
 html.er-mobile body {
   height: 100vh;
@@ -301,11 +581,17 @@ html.er-mobile body {
   flex-direction: column;
 }
 
+html.er-mobile .header {
+  flex: 0 0 auto;
+  position: static;
+}
+
 html.er-mobile .main {
   flex: 1 1 auto;
   min-height: 0;
   height: auto;
   flex-direction: column;
+  padding-bottom: 0;
 }
 
 html.er-mobile .panel--grid,
@@ -327,9 +613,19 @@ html.er-mobile .daily-action__meta {
 
 html.er-mobile .collections {
   display: flex;
+  flex-wrap: nowrap;
   gap: 8px;
   overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  /* Visible edge affordance: the last chip is never flush with the edge. */
   padding-inline: 16px;
+  scroll-padding-inline: 16px;
+}
+
+html.er-mobile .collections > * {
+  flex: 0 0 auto;
+  scroll-snap-align: start;
 }
 
 html.er-mobile[data-er-dest="saved"] #daily-dashboard,
@@ -345,11 +641,37 @@ html.er-mobile .station-card {
   min-height: 64px;
 }
 
+html.er-mobile .station-card__play,
+html.er-mobile .station-card__favorite {
+  min-width: var(--er-tap);
+  min-height: var(--er-tap);
+}
+
+/*
+ * PRIORITY: the fixed player must not overlap the bottom navigation.
+ * `position: static` returns the player to the flex column directly above
+ * `.er-mobile-nav`, and the deterministic height keeps the fixed Search
+ * destination inset math below in sync with the real chrome height.
+ */
 html.er-mobile .player-bar {
-  padding-bottom: 0;
-  height: auto;
+  position: static;
+  inset: auto;
+  bottom: auto;
+  left: auto;
+  right: auto;
+  order: 0;
   flex: 0 0 auto;
   flex-wrap: nowrap;
+  height: var(--er-player);
+  min-height: var(--er-player);
+  max-height: var(--er-player);
+  padding: 8px 12px;
+  padding-inline-start: calc(12px + var(--er-safe-start));
+  padding-inline-end: calc(12px + var(--er-safe-end));
+  padding-bottom: 0;
+  margin: 0;
+  gap: 8px;
+  z-index: 30;
 }
 
 html.er-mobile .player-extras,
@@ -357,17 +679,28 @@ html.er-mobile .player-eq {
   display: none;
 }
 
+html.er-mobile .player-controls {
+  flex: 0 0 auto;
+  gap: 4px;
+}
+
 html.er-mobile .er-mobile-nav {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 4px;
+  /* Static, not fixed: the nav is the last row of the shell column. */
   position: relative;
   bottom: 0;
   z-index: 30;
+  order: 1;
   flex: 0 0 auto;
   background: var(--er-green);
-  color: var(--er-paper);
+  color: var(--er-chrome-ink);
+  border-top: 1px solid color-mix(in srgb, var(--er-chrome-ink) 18%, transparent);
+  min-height: var(--er-nav);
   padding: 6px 8px calc(8px + var(--er-safe-bottom));
+  padding-inline-start: calc(8px + var(--er-safe-start));
+  padding-inline-end: calc(8px + var(--er-safe-end));
 }
 
 html.er-mobile .er-mobile-nav button {
@@ -376,7 +709,19 @@ html.er-mobile .er-mobile-nav button {
   border-color: transparent;
   display: grid;
   place-items: center;
+  min-width: 0;
+  min-height: var(--er-tap);
+  padding: 0 4px;
   font-size: 12px;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+html.er-mobile .er-mobile-nav button[aria-current="page"],
+html.er-mobile .er-mobile-nav button.is-active {
+  background: var(--er-coral);
+  color: var(--er-coral-ink);
 }
 
 html.er-mobile .er-saved-seg {
@@ -391,6 +736,18 @@ html.er-mobile[data-er-dest="map"] .er-saved-seg {
   display: none;
 }
 
+/* Map owns the mobile content region; attribution stays clear of chrome. */
+html.er-mobile[data-er-dest="map"] .panel--map,
+html.er-mobile[data-er-dest="map"] #map {
+  height: 100%;
+  min-height: 0;
+}
+
+html.er-mobile .leaflet-control-attribution {
+  margin-bottom: 0;
+}
+
+/* Search is a destination, not a modal: it fills the workspace only. */
 html.er-mobile .search-modal.er-search-destination {
   position: fixed;
   inset: calc(var(--er-header) + var(--er-safe-top)) 0 calc(var(--er-player) + var(--er-nav) + var(--er-safe-bottom));
@@ -414,6 +771,173 @@ html.er-mobile .search-modal.er-search-destination .search-container {
   border-radius: 0;
 }
 
+/* The recovered runtime retains the actual search engine input. The additive
+ * controls below own presentation and forward a composed query to that input. */
+html.er-root .er-search-engine {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+html.er-root .er-country-picker {
+  position: relative;
+  padding: 10px 20px 0;
+  background: var(--surface);
+}
+
+html.er-root .er-country-label {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+html.er-root .er-country-control {
+  position: relative;
+}
+
+html.er-root #er-country-query {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 44px 10px 12px;
+  color: var(--text);
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  font: inherit;
+}
+
+html[dir="rtl"] #er-country-query {
+  padding: 10px 12px 10px 44px;
+}
+
+html.er-root #er-country-clear {
+  position: absolute;
+  inset-inline-end: 2px;
+  top: 2px;
+  width: 40px;
+  height: 40px;
+  color: var(--text-muted);
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  font-size: 22px;
+}
+
+html.er-root .er-country-options {
+  position: absolute;
+  z-index: 4;
+  inset-inline: 20px;
+  top: calc(100% - 1px);
+  max-height: min(260px, 38vh);
+  overflow-y: auto;
+  padding: 6px;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  box-shadow: var(--er-shadow);
+}
+
+html.er-root .er-country-option {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 44px;
+  padding: 7px 10px;
+  color: var(--text);
+  text-align: start;
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  font: inherit;
+}
+
+html.er-root .er-country-option:hover,
+html.er-root .er-country-option.is-active,
+html.er-root .er-country-option[aria-selected="true"] {
+  background: var(--accent-soft);
+}
+
+html.er-root .er-country-option-code,
+html.er-root .er-country-option-count,
+html.er-root .er-country-summary {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+html.er-root .er-country-option-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+html.er-root .er-country-summary {
+  min-height: 18px;
+  margin: 5px 20px 0;
+}
+
+html.er-root .er-country-no-match {
+  padding: 12px;
+  color: var(--text-muted);
+}
+
+html.er-root .er-cluster {
+  background: color-mix(in srgb, var(--er-coral) 24%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--er-coral) 42%, transparent);
+}
+
+html.er-root .er-cluster span {
+  background: var(--er-coral);
+  color: var(--er-coral-ink);
+  box-shadow: 0 2px 8px #6f2d2766;
+}
+
+/* 16px minimum stops iOS Safari from zooming the viewport on focus. */
+html.er-mobile .search-input,
+html.er-mobile input[type="text"],
+html.er-mobile input[type="search"],
+html.er-mobile select,
+html.er-mobile textarea {
+  font-size: 16px;
+}
+
+/* Installed PWA: no browser chrome, so honor the full inset ourselves. */
+html.er-standalone.er-mobile .er-mobile-nav {
+  padding-bottom: calc(10px + var(--er-safe-bottom));
+}
+
+/* Landscape phones (e.g. 844x390) get shorter, still non-overlapping chrome. */
+@media (max-height: 480px) and (orientation: landscape) {
+  html.er-mobile {
+    --er-player: 60px;
+    --er-nav: 52px;
+  }
+
+  html.er-mobile .er-mobile-nav button {
+    font-size: 11px;
+  }
+
+  html.er-mobile .daily-dashboard {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Tablet / narrow desktop (768px - 1099px)
+ * Explicit List/Map modes instead of a split; no bottom navigation.
+ * ------------------------------------------------------------------ */
+
 html.er-tablet,
 html.er-tablet body {
   height: 100vh;
@@ -435,12 +959,35 @@ html.er-tablet .panel--map {
   width: 100%;
   height: 100%;
   min-height: 0;
+  border: 0;
+}
+
+/* The tablet player is also in flow, so it cannot cover the workspace. */
+html.er-tablet .player-bar {
+  position: static;
+  inset: auto;
+  bottom: auto;
+  flex: 0 0 auto;
+  height: auto;
+  min-height: var(--er-player);
+  padding-inline-start: calc(20px + var(--er-safe-start));
+  padding-inline-end: calc(20px + var(--er-safe-end));
+  padding-bottom: var(--er-safe-bottom);
 }
 
 html.er-tablet .er-collapse,
 html.er-tablet .er-tablet-only {
   display: inline-flex;
 }
+
+html.er-tablet[data-er-dest="map"] .panel--grid,
+html.er-tablet[data-er-dest="listen"] .panel--map {
+  display: none;
+}
+
+/* ------------------------------------------------------------------ *
+ * Desktop studio (>= 1100px)
+ * ------------------------------------------------------------------ */
 
 html.er-desktop .main {
   height: calc(100dvh - var(--er-header) - var(--er-player));
@@ -450,13 +997,19 @@ html.er-desktop .main {
 
 html.er-desktop .panel--grid {
   width: var(--er-list-pct);
+  min-width: 0;
   height: 100%;
   border-inline-end: 0;
 }
 
 html.er-desktop .panel--map {
   width: calc(100% - var(--er-list-pct) - 12px);
+  min-width: 0;
   height: 100%;
+}
+
+html.er-desktop .player-bar {
+  padding-bottom: var(--er-safe-bottom);
 }
 
 html.er-desktop #er-separator {
@@ -464,18 +1017,38 @@ html.er-desktop #er-separator {
   align-items: center;
   justify-content: center;
   width: 12px;
+  flex: 0 0 12px;
   cursor: col-resize;
   background: var(--er-paper-2);
   border: 0;
   padding: 0;
+  touch-action: none;
+  color: transparent;
+  font-size: 0;
+  line-height: 0;
+  overflow: hidden;
+}
+
+html.er-desktop #er-separator::before {
+  content: "";
+  width: 2px;
+  height: 28px;
+  border-radius: 2px;
+  background: var(--er-stroke);
+}
+
+html.er-desktop #er-separator:hover::before {
+  background: var(--er-coral);
 }
 
 html.er-desktop #er-separator:focus-visible {
   outline: 3px solid var(--er-coral);
+  outline-offset: -3px;
 }
 
 html.er-desktop .er-collapse {
   display: inline-flex;
+  align-items: center;
   margin: 8px;
 }
 
@@ -484,6 +1057,24 @@ html.er-desktop[data-er-collapsed="list"] .panel--map {
   width: 100%;
 }
 
+html.er-desktop[data-er-collapsed="map"] .panel--map,
+html.er-desktop[data-er-collapsed="list"] .panel--grid,
+html.er-desktop[data-er-collapsed="map"] #er-separator,
+html.er-desktop[data-er-collapsed="list"] #er-separator {
+  display: none;
+}
+
+/* Play and Favorite stay visible without hover on every pointer type. */
+html.er-desktop .station-card__play,
+html.er-desktop .station-card__favorite {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* ------------------------------------------------------------------ *
+ * Now Playing
+ * ------------------------------------------------------------------ */
+
 html.er-nowplaying-open .er-nowplaying {
   display: flex;
 }
@@ -491,11 +1082,13 @@ html.er-nowplaying-open .er-nowplaying {
 .er-nowplaying {
   position: fixed;
   inset: 0;
-  z-index: 60;
+  z-index: 600;
   background: var(--er-paper);
   color: var(--er-ink);
   flex-direction: column;
-  padding: calc(12px + var(--er-safe-top)) 20px calc(20px + var(--er-safe-bottom));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: calc(12px + var(--er-safe-top)) calc(20px + var(--er-safe-end)) calc(20px + var(--er-safe-bottom)) calc(20px + var(--er-safe-start));
   gap: 16px;
 }
 
@@ -504,14 +1097,44 @@ html.er-desktop .er-nowplaying {
   max-height: 80vh;
   border: 1px solid var(--er-stroke);
   border-radius: 16px;
+  box-shadow: var(--er-shadow);
 }
 
 .er-nowplaying-head,
-.er-nowplaying-actions {
+.er-nowplaying-actions,
+.er-nowplaying-sleep {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 12px;
+  flex-wrap: wrap;
+}
+
+.er-nowplaying-sleep {
+  padding: 12px;
+  border: 1px solid var(--er-stroke);
+  border-radius: 14px;
+  background: var(--er-paper-2);
+}
+
+.er-nowplaying-sleep button {
+  min-width: 44px;
+  min-height: 44px;
+  border: 1px solid var(--er-stroke);
+  border-radius: 999px;
+  padding: 0 14px;
+  background: var(--er-paper);
+  color: var(--er-ink);
+  font: inherit;
+}
+
+.er-nowplaying-metadata {
+  width: min(100%, 720px);
+  margin-inline: auto;
+}
+
+.er-nowplaying-metadata:empty {
+  display: none;
 }
 
 .er-nowplaying-art {
@@ -536,29 +1159,30 @@ html.er-desktop .er-nowplaying {
   margin: 0;
 }
 
-html[dir="rtl"] .header-right,
-html[dir="rtl"] .player-extras,
-html[dir="rtl"] .filter-sidebar {
-  margin-inline-start: auto;
-  margin-inline-end: 0;
+@media (max-height: 480px) and (orientation: landscape) {
+  .er-nowplaying-art {
+    width: min(28vw, 160px);
+  }
+
+  .er-nowplaying h2 {
+    font-size: 20px;
+  }
 }
 
-html[dir="rtl"] .filter-sidebar {
-  inset-inline-start: 0;
-  inset-inline-end: auto;
-  right: auto;
-  left: 0;
-}
-
-html.er-root .nowcard {
-  inset-inline-start: 10px;
-  left: auto;
-}
+/* ------------------------------------------------------------------ *
+ * Motion and misc
+ * ------------------------------------------------------------------ */
 
 @media (prefers-reduced-motion: reduce) {
   html.er-root * {
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
+
+  html.er-root .collections {
+    scroll-snap-type: none;
   }
 }
 

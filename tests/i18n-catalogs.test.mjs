@@ -1,4 +1,6 @@
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+import path from 'node:path';
 import test from 'node:test';
 import {
   CATALOGS,
@@ -15,6 +17,15 @@ import {
   t,
   validateCatalogs
 } from '../site/i18n/index.js';
+
+test('locale source files do not declare duplicate keys', async () => {
+  for (const locale of SUPPORTED_LOCALES) {
+    const source = await readFile(path.join(import.meta.dirname, '..', 'site', 'i18n', `${locale}.js`), 'utf8');
+    const keys = [...source.matchAll(/^\s*'([^']+)'\s*:/gm)].map(match => match[1]);
+    const duplicates = keys.filter((key, index) => keys.indexOf(key) !== index);
+    assert.deepEqual(duplicates, [], `${locale} contains duplicate catalog keys`);
+  }
+});
 
 test('six catalogs share identical keys and placeholders', () => {
   const errors = validateCatalogs();

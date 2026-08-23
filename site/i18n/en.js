@@ -67,6 +67,16 @@ export default {
   'saved.backToListen': 'Browse stations',
 
   'search.placeholder': 'Search stations, countries, tags…',
+  'search.stationLabel': 'Station',
+  'search.stationPlaceholder': 'Search stations, tags…',
+  'search.countryLabel': 'Country',
+  'search.countryPlaceholder': 'All countries',
+  'search.allCountries': 'All countries',
+  'search.clearCountry': 'Clear country',
+  'search.countryNoMatch': 'No countries match',
+  'search.noStationsInCountry': 'No stations are available in {country}.',
+  'search.noStationsForQuery': 'No stations in {country} match that search.',
+  'search.resultSummary': '{count} stations in {country}',
   'search.navigate': 'Navigate',
   'search.play': 'Play',
   'search.close': 'Close',
@@ -141,6 +151,8 @@ export default {
 
   'nowplaying.title': 'Now Playing',
   'nowplaying.label': 'Now playing',
+  'nowplaying.metadataLabel': 'Track metadata confidence',
+  'nowplaying.metadataWaiting': 'Waiting for live station metadata',
   'nowplaying.dismiss': 'Close Now Playing',
   'nowplaying.live': 'Live station',
   'nowplaying.more': 'More station actions',
@@ -154,6 +166,9 @@ export default {
   'nowplaying.onAir': 'On air',
 
   'sleep.minutes': '{minutes} min',
+  'sleep.15': '15 min',
+  'sleep.30': '30 min',
+  'sleep.60': '60 min',
   'sleep.off': 'Off',
 
   'desktop.separator': 'Resize station list and map',

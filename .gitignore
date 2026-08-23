@@ -18,3 +18,5 @@ release/
 earth-radio-user-data/
 .playwright-cli/
 .superpowers/
+evidence/responsive-ui-*/
+evidence/summary.json

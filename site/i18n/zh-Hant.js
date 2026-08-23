@@ -67,6 +67,16 @@ export default {
   'saved.backToListen': '瀏覽電臺',
 
   'search.placeholder': '搜尋電臺、國家、標籤…',
+  'search.stationLabel': '電臺',
+  'search.stationPlaceholder': '搜尋電臺或標籤…',
+  'search.countryLabel': '國家或地區',
+  'search.countryPlaceholder': '所有國家和地區',
+  'search.allCountries': '所有國家和地區',
+  'search.clearCountry': '清除國家或地區',
+  'search.countryNoMatch': '沒有相符的國家或地區',
+  'search.noStationsInCountry': '{country}目前沒有可用的電臺。',
+  'search.noStationsForQuery': '{country}沒有符合此搜尋的電臺。',
+  'search.resultSummary': '{country}的{count}個電臺',
   'search.navigate': '導覽',
   'search.play': '播放',
   'search.close': '關閉',
@@ -141,6 +151,8 @@ export default {
 
   'nowplaying.title': '正在播放',
   'nowplaying.label': '正在播放',
+  'nowplaying.metadataLabel': '曲目中繼資料可信度',
+  'nowplaying.metadataWaiting': '正在等待電台即時中繼資料',
   'nowplaying.dismiss': '關閉正在播放',
   'nowplaying.live': '直播電臺',
   'nowplaying.more': '更多電臺動作',
@@ -154,6 +166,9 @@ export default {
   'nowplaying.onAir': '播出中',
 
   'sleep.minutes': '{minutes} 分鐘',
+  'sleep.15': '15 分鐘',
+  'sleep.30': '30 分鐘',
+  'sleep.60': '60 分鐘',
   'sleep.off': '關閉',
 
   'desktop.separator': '調整電臺列表與地圖',

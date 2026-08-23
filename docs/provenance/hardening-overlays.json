@@ -81,10 +81,10 @@
         "sha256": "c007984ee6349eaee532c1b3e2297e7fdac81610d4fae167c7595e127cef2d42"
       },
       "current": {
-        "bytes": 19946,
-        "sha256": "0b2ab64eed8b9923b29682b6d6b627293c1c40bb6ed05a9c1ecb90b63c186397"
+        "bytes": 21918,
+        "sha256": "2da59c3ac553ac88ecbfde6a2b570510d11edf1710d2317683f7b3e038db2bfe"
       },
-      "reason": "Move frame-ancestors enforcement to the deployable response header policy, then add Atlas Editorial landmarks, iOS viewport/audio attributes, mobile destinations, compact header icons, and the additive responsive layer references."
+      "reason": "Move frame-ancestors enforcement to the deployable response header policy, then add responsive landmarks, iOS viewport/audio attributes, mobile destinations, compact header icons, additive responsive assets, country and station search controls, and complete Now Playing metadata and sleep actions."
     },
     {
       "path": "site/manifest.webmanifest",
@@ -106,9 +106,9 @@
       },
       "current": {
         "bytes": 2350,
-        "sha256": "9e9ea19f935c30bb1b3a26410672a1858e8b66b4b95f309086ba6daf4c79ba54"
+        "sha256": "937bab7cd5b0ac52f965a67ce140ed1e9af7a599f5d7dc5432929096259a32f1"
       },
-      "reason": "Use network-first navigation/configuration updates, cache the responsive shell and i18n catalogs, and keep hashed recovered assets cache-first."
+      "reason": "Use network-first navigation/configuration updates, cache the responsive shell and i18n catalogs under a bumped UI cache version, and keep hashed recovered assets cache-first."
     }
   ]
 }

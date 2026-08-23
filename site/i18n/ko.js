@@ -67,6 +67,16 @@ export default {
   'saved.backToListen': '방송국 둘러보기',
 
   'search.placeholder': '방송국, 국가, 태그 검색…',
+  'search.stationLabel': '방송국',
+  'search.stationPlaceholder': '방송국 또는 태그 검색…',
+  'search.countryLabel': '국가',
+  'search.countryPlaceholder': '모든 국가',
+  'search.allCountries': '모든 국가',
+  'search.clearCountry': '국가 지우기',
+  'search.countryNoMatch': '일치하는 국가가 없습니다',
+  'search.noStationsInCountry': '{country}에서 이용 가능한 방송국이 없습니다.',
+  'search.noStationsForQuery': '{country}에서 검색과 일치하는 방송국이 없습니다.',
+  'search.resultSummary': '{country}의 방송국 {count}개',
   'search.navigate': '이동',
   'search.play': '재생',
   'search.close': '닫기',
@@ -141,6 +151,8 @@ export default {
 
   'nowplaying.title': '지금 재생',
   'nowplaying.label': '지금 재생',
+  'nowplaying.metadataLabel': '트랙 메타데이터 신뢰도',
+  'nowplaying.metadataWaiting': '실시간 방송국 메타데이터 대기 중',
   'nowplaying.dismiss': '지금 재생 닫기',
   'nowplaying.live': '생방송 방송국',
   'nowplaying.more': '방송국 추가 작업',
@@ -154,6 +166,9 @@ export default {
   'nowplaying.onAir': '방송 중',
 
   'sleep.minutes': '{minutes}분',
+  'sleep.15': '15분',
+  'sleep.30': '30분',
+  'sleep.60': '60분',
   'sleep.off': '끄기',
 
   'desktop.separator': '목록과 지도 크기 조절',

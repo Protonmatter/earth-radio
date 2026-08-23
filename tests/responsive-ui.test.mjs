@@ -10,6 +10,8 @@ import {
   nextCollapse,
   parseDestination,
   parseNowPlayingHistory,
+  resolveInitialLocale,
+  resolveThemePreference,
   sanitizeUiState
 } from '../site/assets/responsive-ui.js';
 
@@ -49,6 +51,18 @@ test('invalid presentation preferences are ignored and clamped', () => {
   assert.equal(sanitizeUiState({ locale: 'zh' }).locale, 'en');
   assert.equal(sanitizeUiState({ locale: 'zh-Hant' }).locale, 'zh-Hant');
   assert.equal(sanitizeUiState({ savedSegment: 'similar' }).savedSegment, 'favorites');
+  assert.equal(sanitizeUiState(null).localeExplicit, false);
+  assert.equal(sanitizeUiState({ locale: 'en' }).localeExplicit, true);
+});
+
+test('explicit locale and system theme preferences survive initialization', () => {
+  assert.equal(resolveInitialLocale({ locale: 'en', localeExplicit: true }, ['ko-KR']), 'en');
+  assert.equal(resolveInitialLocale({ locale: 'en', localeExplicit: false }, ['ko-KR']), 'ko');
+  assert.equal(resolveInitialLocale({ locale: 'zh-Hant', localeExplicit: true }, ['en-US']), 'zh-Hant');
+  assert.equal(resolveThemePreference('system', true), 'dark');
+  assert.equal(resolveThemePreference('system', false), 'light');
+  assert.equal(resolveThemePreference('dark', false), 'dark');
+  assert.equal(resolveThemePreference('invalid', true), 'dark');
 });
 
 test('Now Playing history state is distinct from runtime hash writes', () => {
@@ -70,6 +84,8 @@ test('responsive assets are referenced after the recovered runtime and staged as
   assert.match(html, /responsive-ui.css/);
   assert.match(html, /data-i18n-attr="aria-label"/);
   assert.match(html, /er-icon-search/);
+  assert.match(html, /id="er-nowplaying-metadata"/);
+  assert.match(html, /data-er-sleep-min="30"/);
 });
 
 test('overflow menu can become visible and search occupies the mobile workspace', async () => {

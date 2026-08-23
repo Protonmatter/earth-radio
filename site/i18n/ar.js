@@ -67,6 +67,16 @@ export default {
   'saved.backToListen': 'تصفح المحطات',
 
   'search.placeholder': 'ابحث عن محطات أو دول أو وسوم…',
+  'search.stationLabel': 'المحطة',
+  'search.stationPlaceholder': 'ابحث عن محطات أو وسوم…',
+  'search.countryLabel': 'الدولة',
+  'search.countryPlaceholder': 'كل الدول',
+  'search.allCountries': 'كل الدول',
+  'search.clearCountry': 'مسح الدولة',
+  'search.countryNoMatch': 'لا توجد دول مطابقة',
+  'search.noStationsInCountry': 'لا توجد محطات متاحة في {country}.',
+  'search.noStationsForQuery': 'لا توجد محطات في {country} تطابق البحث.',
+  'search.resultSummary': '{count} محطة في {country}',
   'search.navigate': 'تنقل',
   'search.play': 'تشغيل',
   'search.close': 'إغلاق',
@@ -141,6 +151,8 @@ export default {
 
   'nowplaying.title': 'قيد التشغيل الآن',
   'nowplaying.label': 'قيد التشغيل الآن',
+  'nowplaying.metadataLabel': 'درجة موثوقية بيانات المقطع',
+  'nowplaying.metadataWaiting': 'بانتظار بيانات المحطة المباشرة',
   'nowplaying.dismiss': 'إغلاق قيد التشغيل الآن',
   'nowplaying.live': 'محطة مباشرة',
   'nowplaying.more': 'مزيد من إجراءات المحطة',
@@ -154,6 +166,9 @@ export default {
   'nowplaying.onAir': 'على الهواء',
 
   'sleep.minutes': '{minutes} د',
+  'sleep.15': '15 د',
+  'sleep.30': '30 د',
+  'sleep.60': '60 د',
   'sleep.off': 'إيقاف',
 
   'desktop.separator': 'تغيير حجم قائمة المحطات والخريطة',
