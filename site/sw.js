@@ -1,4 +1,4 @@
-const CACHE_NAME = 'earth-radio-shell-v25-responsive-6';
+const CACHE_NAME = 'earth-radio-shell-v25-responsive-7';
 const SHELL_ASSETS = [
   './',
   './index.html',
@@ -20,8 +20,12 @@ const SHELL_ASSETS = [
 ];
 
 self.addEventListener('install', event => {
-  event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(SHELL_ASSETS)).catch(() => undefined));
-  self.skipWaiting();
+  const shellRequests = SHELL_ASSETS.map(asset => new Request(asset, { cache: 'reload' }));
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then(cache => cache.addAll(shellRequests))
+      .then(() => self.skipWaiting())
+  );
 });
 
 self.addEventListener('activate', event => {
