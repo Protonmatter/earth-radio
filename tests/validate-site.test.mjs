@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdtemp, mkdir, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, mkdir, rm, unlink, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
@@ -74,6 +74,64 @@ test('validateSite rejects immutable caching inherited by a mutable asset', asyn
     await assert.rejects(
       () => validateSite(root),
       /non-fingerprinted asset assets\/app\.js inherits immutable caching/i
+    );
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test('validateSite rejects immutable caching inherited by a long-suffix overlay', async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), 'earth-radio-overlay-fingerprint-site-'));
+  try {
+    await createSite(root, {
+      headers: `/*
+  X-Content-Type-Options: nosniff
+
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/assets/app-B4rKOAHV.js
+  Cache-Control: public, max-age=31536000, immutable
+
+/assets/metadata-enrichment.css
+  Cache-Control: public, max-age=300, must-revalidate
+`
+    });
+    await writeFile(
+      path.join(root, 'index.html'),
+      '<link rel="manifest" href="./manifest.webmanifest"><link rel="stylesheet" href="./assets/metadata-enrichment.css"><script src="./config.js"></script><script src="./assets/app-B4rKOAHV.js"></script>'
+    );
+    await unlink(path.join(root, 'assets', 'app.js'));
+    await writeFile(path.join(root, 'assets', 'app-B4rKOAHV.js'), 'export {};\n');
+    await writeFile(path.join(root, 'assets', 'metadata-enrichment.css'), '/* overlay */\n');
+    await writeFile(
+      path.join(root, 'sw.js'),
+      "const SHELL_ASSETS=['./','./config.js','./assets/app-B4rKOAHV.js','./assets/metadata-enrichment.css'];\n"
+    );
+    await assert.rejects(
+      () => validateSite(root),
+      /non-fingerprinted asset assets\/metadata-enrichment\.css inherits immutable caching/i
+    );
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test('validateSite rejects immutable caching on a versionless file outside assets', async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), 'earth-radio-config-immutable-site-'));
+  try {
+    await mkdir(path.join(root, 'i18n'), { recursive: true });
+    await createSite(root, {
+      headers: `/*
+  X-Content-Type-Options: nosniff
+
+/config.js
+  Cache-Control: public, max-age=31536000, immutable
+
+/i18n/*
+  Cache-Control: public, max-age=31536000, immutable
+`
+    });
+    await writeFile(path.join(root, 'i18n', 'en.js'), 'export default {};\n');
+    await assert.rejects(
+      () => validateSite(root),
+      /non-fingerprinted asset (?:config\.js|i18n\/en\.js) inherits immutable caching/i
     );
   } finally { await rm(root, { recursive: true, force: true }); }
 });

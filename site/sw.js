@@ -21,8 +21,11 @@ const SHELL_ASSETS = [
 
 self.addEventListener('install', event => {
   const shellRequests = SHELL_ASSETS.map(asset => new Request(asset, { cache: 'reload' }));
-  event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(shellRequests)).catch(() => undefined));
-  self.skipWaiting();
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then(cache => cache.addAll(shellRequests))
+      .then(() => self.skipWaiting())
+  );
 });
 
 self.addEventListener('activate', event => {

@@ -10,8 +10,8 @@
     },
     {
       "path": "docs/ARCHITECTURE.md",
-      "bytes": 4178,
-      "sha256": "43c016499adc72e027d47d1610fc4d744ae15f20fec619b0c877d69ce8ab6865"
+      "bytes": 4271,
+      "sha256": "7cd7f6a7c9d26b8fd6cb0c60729c791145b4b3cf0339821dc1740e2c05445938"
     },
     {
       "path": "docs/BUILD_STATE.md",
@@ -20,8 +20,8 @@
     },
     {
       "path": "docs/OPERATIONS.md",
-      "bytes": 3319,
-      "sha256": "566d6a64d5ef13c6a73fbfcf07db9aeb5e5d4b276c04854046a3c4e23569e2a9"
+      "bytes": 3419,
+      "sha256": "ae04b4bbabe4827fad8783a58dab17e4aed8340f01fb09652d438d0087ea6643"
     },
     {
       "path": "docs/PROVENANCE.md",
@@ -30,8 +30,8 @@
     },
     {
       "path": "docs/provenance/hardening-overlays.json",
-      "bytes": 4434,
-      "sha256": "ce4a7fbdf1aa8d76464d197dbbc2e2c8443318c49e1970445101225464481c69"
+      "bytes": 4489,
+      "sha256": "194a45888c0aa67cbc5efd60e4b9485686ac92817a0f364fa01c9ea726bdbef2"
     },
     {
       "path": "docs/provenance/recovery-manifest.json",
@@ -145,8 +145,8 @@
     },
     {
       "path": "scripts/validate-site.mjs",
-      "bytes": 4944,
-      "sha256": "79c59686454415ee8dfb64fd0b9df4b9a2b9ef60e9f79ebbc84dc0f0267bd41e"
+      "bytes": 5058,
+      "sha256": "387c40e3be3bfb4dd41f0ba5496e3eab88c07b7e803baeea842834b697d00dc5"
     },
     {
       "path": "server/desktop-proxy.mjs",
@@ -280,8 +280,8 @@
     },
     {
       "path": "site/sw.js",
-      "bytes": 2443,
-      "sha256": "921f2efeb49bd08536a5d9de52483b920891951ced201c3765c6f5007a22bae9"
+      "bytes": 2451,
+      "sha256": "975a5227b0ce8c077ecf9455d923291623b81f59e1e6031343e2361abd9a9f8a"
     },
     {
       "path": "src-recovered/core/config.ts",
@@ -555,8 +555,8 @@
     },
     {
       "path": "tests/service-worker.test.mjs",
-      "bytes": 2139,
-      "sha256": "c43571882da1c9f9053194c95fe6480eb50fc63d0b52be502b44a1836c53ed17"
+      "bytes": 2562,
+      "sha256": "1061ffe7ba2fe0f6d8b55c22825d6741392377da8e71825987bf5f99813478da"
     },
     {
       "path": "tests/smoke-desktop.mjs",
@@ -585,8 +585,8 @@
     },
     {
       "path": "tests/validate-site.test.mjs",
-      "bytes": 3440,
-      "sha256": "a3fea6edfaa0f9f82d1ffed7128c0437a66923dd5203ced97cb4dff46e204d71"
+      "bytes": 5656,
+      "sha256": "b725bca0dc4c9f2fc5f43983c8be5f82dd91adddd8bd0d272bf6ddb7daebd49d"
     },
     {
       "path": "tests/workflow.test.mjs",

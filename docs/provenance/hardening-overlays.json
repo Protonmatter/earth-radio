@@ -105,10 +105,10 @@
         "sha256": "b09e3207532fe7f47d14e9c53804d7e8caf31cad2fcb2c652b728a93871ea094"
       },
       "current": {
-        "bytes": 2443,
-        "sha256": "921f2efeb49bd08536a5d9de52483b920891951ced201c3765c6f5007a22bae9"
+        "bytes": 2451,
+        "sha256": "975a5227b0ce8c077ecf9455d923291623b81f59e1e6031343e2361abd9a9f8a"
       },
-      "reason": "Use network-first navigation/configuration updates, keep hashed recovered assets cache-first, bump the responsive shell cache generation, and reload installation requests so stale browser HTTP entries cannot seed the new service-worker cache."
+      "reason": "Use network-first navigation/configuration updates, keep hashed recovered assets cache-first, bump the responsive shell cache generation, reload installation requests so stale browser HTTP entries cannot seed the new service-worker cache, and keep the previous worker when reload precaching fails."
     }
   ]
 }

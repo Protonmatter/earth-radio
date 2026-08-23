@@ -46,8 +46,12 @@ function headerPatternMatches(pattern, relative) {
   return new RegExp(`^${escaped}$`).test(`/${relative}`);
 }
 
+function isCloudflareControlFile(relative) {
+  return relative === '_headers' || relative === '_redirects';
+}
+
 function isFingerprintedAsset(relative) {
-  return /-[A-Za-z0-9_-]{8,}\.[^.]+$/.test(path.basename(relative));
+  return /-[A-Za-z0-9_-]{8}\.[^.]+$/.test(path.basename(relative));
 }
 
 export async function validateSite(rootInput) {
@@ -81,7 +85,7 @@ export async function validateSite(rootInput) {
   }
 
   const headerRules = parseHeaderRules(await readFile(path.join(root, '_headers'), 'utf8'));
-  for (const relative of files.filter(file => file.startsWith('assets/') && !isFingerprintedAsset(file))) {
+  for (const relative of files.filter(file => !isCloudflareControlFile(file) && !isFingerprintedAsset(file))) {
     const cacheControl = headerRules
       .filter(rule => headerPatternMatches(rule.pattern, relative))
       .flatMap(rule => rule.headers)

@@ -40,3 +40,13 @@ test('service worker precaches the responsive shell and i18n catalogs under a ne
   assert.match(worker, /\.\/index\.html/);
   assert.match(worker, /networkFirst/);
 });
+
+test('service worker keeps the previous worker when reload precaching fails', async () => {
+  const worker = await readFile(path.join(root, 'site', 'sw.js'), 'utf8');
+  assert.doesNotMatch(worker, /\.catch\(\(\) => undefined\)/);
+  assert.match(
+    worker,
+    /cache\.addAll\(shellRequests\)\)\s*\.then\(\(\) => self\.skipWaiting\(\)\)/
+  );
+  assert.equal((worker.match(/self\.skipWaiting\(\)/g) || []).length, 1);
+});
