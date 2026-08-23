@@ -17,17 +17,20 @@ Status date: 2026-08-22. Candidate version: `0.24.0-recovered.1`.
 - A Chromium smoke test against `.build/site` loaded 3,912 current Radio Browser stations, exercised command-palette search and filters, restored the last station/catalog from local persistence after reload, activated `sw.js`, and played the HTTPS 320 kbps MP3 stream for Classic Vinyl HD on 2026-08-22.
 - The browser audit found and verified a repair for late service-worker registration; the post-fix reload had one active controlling worker and zero console errors/warnings.
 - `npm run pack:desktop` produced a Windows ARM64 unpacked application; ASAR inspection confirmed `electron/proxy-rules.mjs`, `server/desktop-proxy.mjs`, and `site/index.html` are present, while `server/example-proxy.mjs` and production `node_modules/` are absent. The packaged executable SHA-256 was `5FE78FC3C3E533A2C123E9600EC821CD7E0AD2DA496277DB53FB2061BF4356B9`.
-- The public repository is `https://github.com/Protonmatter/earth-radio`. Remote GitHub Actions CI passed on Ubuntu and Windows for `941df96c2c83aacd65af94fa8f511ccee1760189` at https://github.com/Protonmatter/earth-radio/actions/runs/32585713176.
+- The public repository is `https://github.com/Protonmatter/earth-radio`. Pull request #1 merged the responsive, multilingual UI into `main` as `8cb7ba8c594f0c81f975bffd4091db094e1875a3`.
+- GitHub Actions CI passed on Ubuntu and Windows for merge commit `8cb7ba8c594f0c81f975bffd4091db094e1875a3` at https://github.com/Protonmatter/earth-radio/actions/runs/32611077070.
+- Cloudflare Pages production deployment `c9add638-a71e-46c3-a688-d068f9afad83` succeeded for the merge commit. All 22 deployable files in the generated asset manifest matched the public files at `https://earth-radio.pages.dev/` by byte length and SHA-256.
+- A public Chromium smoke test loaded 3,906 live stations on desktop and mobile layouts. Mobile search returned results for `jazz`, scoped them to 22 Canadian stations through the country selector, and selected `Jazz FM CJRT` into the compact player.
 
 ## Not validated
 
-- Cloudflare build/deployment behavior and the intended hostname have not been validated.
 - Desktop installer creation, launch/runtime behavior, Authenticode signing, installation, upgrade, and rollback have not been validated from this recovered repository. The unpacked packaging candidate is unsigned and uses Electron's default icon.
 - Live station behavior depends on current third-party catalogs, CORS, codecs, and stream uptime. Direct iTunes metadata lookup returned HTTP 403 for one raw station label during smoke testing and degraded to raw ICY metadata as designed.
 - The recovered TypeScript tree is not proven to rebuild the selected installed hashed JavaScript bundle.
 - Physical iOS Safari, installed-PWA, VoiceOver, and native-speaker editorial review of the six UI catalogs have not been captured. Catalogs are engineering-authored.
-- The recovered virtual list still windows at 168px; compact 64px row geometry was not overlaid into the hashed bundle.
 
 ## Live deployment
 
-Not created. `https://earth-radio.pages.dev` is an intended URL only and must not be described as live until a Cloudflare deployment succeeds and its served commit/assets are independently verified.
+Production is live at `https://earth-radio.pages.dev/`. The verified baseline is merge commit `8cb7ba8c594f0c81f975bffd4091db094e1875a3`, GitHub Actions run `32611077070`, and Cloudflare Pages deployment `c9add638-a71e-46c3-a688-d068f9afad83`.
+
+Public rendering and search were smoke-tested after deployment. Physical iOS Safari, installed-PWA behavior, VoiceOver, native-speaker translation review, and every third-party station stream remain outside the verified production scope.
