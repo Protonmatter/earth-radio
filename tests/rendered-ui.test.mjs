@@ -87,7 +87,7 @@ test('responsive UI rendered matrix preserves layout, actions, and locale contra
   const palette = byId(payload.results, 'mobile-listen-390x844').probe.palette;
   assert.equal(palette.header, 'rgb(255, 255, 255)');
   assert.equal(palette.body, 'rgb(247, 243, 237)');
-  assert.equal(palette.primary, 'rgb(222, 91, 56)');
+  assert.equal(palette.primary, 'rgb(191, 69, 32)');
   assert.equal(palette.map, 'rgb(227, 228, 234)');
 
   const darkPalette = byId(payload.results, 'mobile-dark-390x844').probe.palette;

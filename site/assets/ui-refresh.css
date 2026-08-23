@@ -32,11 +32,13 @@ html.er-root {
   --er2-ink: #1b1924;
   --er2-muted: #625c6b;
   --er2-faint: #6e6779;
-  --er2-action: #de5b38;
-  --er2-action-hover: #c14a2a;
+  /* 5.14:1 against the white action ink and 4.65:1 as text on the light
+     surfaces; the small labels this paints need the full 4.5:1. */
+  --er2-action: #bf4520;
+  --er2-action-hover: #a83d1f;
   --er2-action-ink: #ffffff;
-  --er2-action-soft: rgba(222, 91, 56, 0.10);
-  --er2-action-edge: rgba(222, 91, 56, 0.34);
+  --er2-action-soft: rgba(191, 69, 32, 0.10);
+  --er2-action-edge: rgba(191, 69, 32, 0.34);
   --er2-shadow: 0 14px 34px rgba(60, 45, 35, 0.14);
   --er2-shadow-lg: 0 24px 56px rgba(60, 45, 35, 0.20);
 
@@ -62,7 +64,7 @@ html.er-root {
   --accent-hover: var(--er2-action-hover);
   --accent-soft: var(--er2-action-soft);
   --accent-contrast: var(--er2-action-ink);
-  --ring: 0 0 0 3px rgba(222, 91, 56, 0.34);
+  --ring: 0 0 0 3px rgba(191, 69, 32, 0.34);
   --radius: 12px;
   --radius-sm: 8px;
 }
@@ -225,6 +227,9 @@ html.er-root .btn-primary:hover {
     justify-content: flex-start;
     gap: 3px;
     padding: 12px;
+    /* responsive-ui's RTL strip rule sets margin-inline-start: auto, which
+       stops the cross-axis stretch once this becomes a column. */
+    margin-inline: 0;
     min-height: 0;
     overflow-y: auto;
     overscroll-behavior: contain;
@@ -240,17 +245,9 @@ html.er-root .btn-primary:hover {
     font-size: 13.5px;
   }
 
-  /* Reading order in the rail: act, then browse, then house-keeping. */
-  html.er-root #surprise { order: 1; }
-  html.er-root #favorites-toggle { order: 2; }
-  html.er-root #recent-toggle { order: 3; }
-  html.er-root #filters-toggle { order: 4; }
-  html.er-root #refresh-stations { order: 5; }
-  html.er-root #export-data { order: 7; }
-  html.er-root #import-data { order: 8; }
-  html.er-root #theme-toggle { order: 9; }
-  html.er-root #settings-toggle { order: 10; }
-
+  /* Reading order in the rail (act, then browse, then house-keeping) is the
+     markup order in index.html, so focus follows the visual sequence; CSS
+     `order` would detach the two. */
   html.er-root .header-right #theme-toggle,
   html.er-root .header-right #settings-toggle {
     width: 38px;
@@ -346,18 +343,21 @@ html.er-root .btn-primary:hover {
     padding: 0 20px;
   }
 
-  /* Pointer-fine desktop sizing; every touch mode keeps the 44px floor that
-     responsive-ui.css enforces. */
+  html.er-root .filter-sidebar {
+    z-index: 130;
+  }
+}
+
+/* Compact card controls only when a fine pointer is present; wide touch
+   devices (large tablets, touch laptops) keep the 44px floor that
+   responsive-ui.css enforces. */
+@media (min-width: 1100px) and (pointer: fine) {
   html.er-root .station-card__play,
   html.er-root .station-card__favorite {
     width: 38px;
     min-width: 38px;
     height: 38px;
     min-height: 38px;
-  }
-
-  html.er-root .filter-sidebar {
-    z-index: 130;
   }
 }
 
@@ -585,7 +585,9 @@ html.er-root .station-grid .station-card:hover {
   background: var(--er2-raised);
 }
 
-html.er-root .station-card--active {
+/* Match the base selector's .station-grid ancestor or the base border and
+   background (0,3,1) outrank this state. */
+html.er-root .station-grid .station-card--active {
   border-color: var(--er2-action-edge);
   background: var(--er2-action-soft);
 }
@@ -628,7 +630,8 @@ html.er-root .station-card__favorite {
 
 html.er-root .station-card__favorite {
   top: 12px;
-  right: 12px;
+  inset-inline-end: 12px;
+  inset-inline-start: auto;
   border: 0;
   background: transparent;
   color: var(--er2-faint);
@@ -647,7 +650,8 @@ html.er-root .station-card__favorite--active {
 html.er-root .station-card__play {
   top: auto;
   bottom: 12px;
-  right: 12px;
+  inset-inline-end: 12px;
+  inset-inline-start: auto;
   border: 1px solid var(--er2-line-strong);
   background: transparent;
   color: var(--er2-ink);
@@ -691,6 +695,9 @@ html.er-root .station-card--active .station-card__name {
   color: var(--er2-action);
 }
 
+/* One line only: a second metadata line plus the pills row does not fit the
+   72px the fixed 156px stride leaves under the name, and the card clips. The
+   full metadata lives in Now Playing. */
 html.er-root .station-card__meta {
   grid-column: 1 / -1;
   font-family: var(--er2-mono);
@@ -698,10 +705,8 @@ html.er-root .station-card__meta {
   line-height: 1.4;
   color: var(--er2-muted);
   overflow: hidden;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  white-space: normal;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 html.er-root .station-card__pills {
@@ -902,6 +907,15 @@ html.er-root .player-bar {
   background: var(--er2-surface);
   border-top: 1px solid var(--er2-line);
   box-shadow: none;
+}
+
+/* responsive-ui paints these with --er-chrome-ink for its dark chrome bar;
+   on the refresh's light surface that is near-white on white. Same selector,
+   later sheet. */
+html.er-root .player-bar .player-btn:not(.player-btn--large),
+html.er-root .player-bar .player-extras,
+html.er-root .player-bar .volume-label {
+  color: var(--er2-muted);
 }
 
 html.er-root .player-info {
@@ -1153,13 +1167,6 @@ html.er-root #toast-container > * {
 
   html.er-root .daily-dashboard {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  /* One line of metadata on a card this wide; the rest lives in Now Playing. */
-  html.er-root .station-card__meta {
-    -webkit-line-clamp: 1;
-    white-space: nowrap;
-    text-overflow: ellipsis;
   }
 
   html.er-root .station-grid .station-card {

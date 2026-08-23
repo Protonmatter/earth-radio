@@ -82,9 +82,9 @@
       },
       "current": {
         "bytes": 21977,
-        "sha256": "7595178af6436409b1fe3e2895465bedd25a7dbd963dcf7ac75e2b59e00c2265"
+        "sha256": "fb3146b5f9594c643bd904a1441dd7c63c82a0b4502923f72eef2539fdf498b9"
       },
-      "reason": "Move frame-ancestors enforcement to the deployable response header policy, then add responsive landmarks, iOS viewport/audio attributes, mobile destinations, compact header icons, additive responsive assets, country and station search controls, complete Now Playing metadata and sleep actions, and the additive UI refresh stylesheet."
+      "reason": "Move frame-ancestors enforcement to the deployable response header policy, then add responsive landmarks, iOS viewport/audio attributes, mobile destinations, compact header icons, additive responsive assets, country and station search controls, complete Now Playing metadata and sleep actions, the additive UI refresh stylesheet, and header actions ordered in the rail's reading sequence so keyboard focus follows the visual order."
     },
     {
       "path": "site/manifest.webmanifest",
@@ -106,7 +106,7 @@
       },
       "current": {
         "bytes": 2480,
-        "sha256": "dc4b369d62212d511efce42835ca0a14940041114c39f5eaa351f434b04be90c"
+        "sha256": "61de99615e3fb7b25426c899f69fb48105d9fc780870e67d914d5c2e6d2e4746"
       },
       "reason": "Use network-first navigation/configuration updates, keep hashed recovered assets cache-first, reload installation requests so stale browser HTTP entries cannot seed the new service-worker cache, keep the previous worker when reload precaching fails, and precache the UI refresh stylesheet under cache generation v26."
     }
