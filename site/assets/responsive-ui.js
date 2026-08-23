@@ -1,8 +1,27 @@
+/*
+ * Earth Radio responsive presentation layer.
+ *
+ * Additive only. This module never creates a second audio element, catalog,
+ * favorites store, filter engine, metadata engine, or Leaflet map. It owns
+ * presentation state (destination, Now Playing visibility, desktop split,
+ * collapsed panel, Saved segment, focus-return targets, viewport class) and
+ * routes every new control to an existing runtime control.
+ *
+ * It loads after the recovered runtime bundle, whose i18n catalog only covers
+ * `en`, `es`, and `ar` and which collapses locale tags to their base subtag.
+ * Korean and both Chinese variants are therefore localized here, from the
+ * maintained catalogs, over a bounded list of known runtime-owned elements.
+ */
+
 import {
   applyDeclarativeI18n,
   applyDocumentLocale,
   detectBrowserLocale,
+  isRtlLocale,
   normalizeLocale,
+  CATALOGS,
+  DEFAULT_LOCALE,
+  FONT_PROFILES,
   t
 } from '../i18n/index.js';
 
@@ -13,6 +32,114 @@ export const MIN_MAP_PX = 360;
 export const MOBILE_MAX = 767;
 export const TABLET_MAX = 1099;
 export const DESTINATIONS = Object.freeze(['listen', 'search', 'map', 'saved']);
+
+/** Column gap used by the recovered virtual list (`gap: 12`). */
+export const GRID_GAP_PX = 12;
+
+const COUNTRY_CODES = Object.freeze({
+  'south korea': 'KR',
+  'united kingdom': 'GB',
+  'united states': 'US'
+});
+
+const COUNTRY_ALIASES = Object.freeze({
+  britain: 'united kingdom',
+  england: 'united kingdom',
+  gb: 'united kingdom',
+  kr: 'south korea',
+  korea: 'south korea',
+  uk: 'united kingdom',
+  us: 'united states',
+  usa: 'united states'
+});
+
+const COUNTRY_DISPLAY_NAMES = Object.freeze({
+  'the republic of korea': 'South Korea',
+  'republic of korea': 'South Korea',
+  'the united states of america': 'United States',
+  'united states of america': 'United States',
+  'the united kingdom': 'United Kingdom',
+  'united kingdom of great britain and northern ireland': 'United Kingdom'
+});
+
+function normalizeSearchTerm(value) {
+  return String(value ?? '')
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .toLocaleLowerCase('en')
+    .replace(/[^\p{L}\p{N}]+/gu, ' ')
+    .trim();
+}
+
+function countryFlag(code) {
+  const normalized = String(code ?? '').toUpperCase();
+  if (!/^[A-Z]{2}$/.test(normalized)) return '';
+  return String.fromCodePoint(...[...normalized].map(letter => 0x1f1e6 + letter.charCodeAt(0) - 65));
+}
+
+function displayCountryName(value) {
+  const name = String(value ?? '').trim();
+  return COUNTRY_DISPLAY_NAMES[normalizeSearchTerm(name)] || name;
+}
+
+const DISPLAY_REGION_CODES = (() => {
+  const lookup = new Map(Object.entries(COUNTRY_CODES));
+  try {
+    const names = new Intl.DisplayNames(['en'], { type: 'region' });
+    for (let first = 65; first <= 90; first += 1) {
+      for (let second = 65; second <= 90; second += 1) {
+        const code = String.fromCharCode(first, second);
+        const name = names.of(code);
+        if (name && name !== code) lookup.set(normalizeSearchTerm(name), code);
+      }
+    }
+  } catch {
+    /* Older WebViews still receive the explicitly supported aliases above. */
+  }
+  return lookup;
+})();
+
+export function buildCountryOptions(entries) {
+  const combined = new Map();
+  for (const entry of Array.isArray(entries) ? entries : []) {
+    const name = displayCountryName(entry?.name);
+    if (!name) continue;
+    const key = normalizeSearchTerm(name);
+    const count = Number.parseInt(String(entry?.count ?? 0).replace(/[^\d-]/g, ''), 10);
+    const current = combined.get(key) || { name, count: 0 };
+    current.count += Number.isFinite(count) ? Math.max(0, count) : 0;
+    combined.set(key, current);
+  }
+  return [...combined.entries()]
+    .map(([key, value]) => {
+      const code = DISPLAY_REGION_CODES.get(key) || '';
+      return { name: value.name, code, flag: countryFlag(code), count: value.count };
+    })
+    .sort((a, b) => a.name.localeCompare(b.name, 'en', { sensitivity: 'base' }));
+}
+
+export function filterCountryOptions(options, query) {
+  const term = normalizeSearchTerm(query);
+  if (!term) return [...(Array.isArray(options) ? options : [])];
+  const canonical = COUNTRY_ALIASES[term] || term;
+  return (Array.isArray(options) ? options : []).filter(option => {
+    const name = normalizeSearchTerm(option?.name);
+    const code = normalizeSearchTerm(option?.code);
+    return name.includes(canonical) || code === term;
+  });
+}
+
+export function buildCountryStationQuery(country, stationQuery) {
+  return [String(country ?? '').trim(), String(stationQuery ?? '').trim()].filter(Boolean).join(' ');
+}
+
+export function matchesSelectedCountry(metadata, selectedCountry) {
+  const wanted = normalizeSearchTerm(displayCountryName(selectedCountry));
+  if (!wanted) return true;
+  const actual = normalizeSearchTerm(displayCountryName(String(metadata ?? '').split(/\s*[·â€¢]\s*/, 1)[0]));
+  return actual === wanted;
+}
 
 export function parseDestination(hash) {
   const raw = String(hash || '').replace(/^#/, '');
@@ -30,6 +157,17 @@ export function clampSplitPercent(percent, viewportWidth, minList = MIN_LIST_PX,
   const maxPct = 100 - (minMap / width) * 100;
   if (!Number.isFinite(raw)) return DEFAULT_SPLIT;
   return Math.round(Math.min(maxPct, Math.max(minPct, raw)) * 10) / 10;
+}
+
+export function splitBounds(viewportWidth, minList = MIN_LIST_PX, minMap = MIN_MAP_PX) {
+  const width = Number(viewportWidth);
+  if (!Number.isFinite(width) || width < minList + minMap) {
+    return { min: DEFAULT_SPLIT, max: DEFAULT_SPLIT };
+  }
+  return {
+    min: Math.round((minList / width) * 100),
+    max: Math.round(100 - (minMap / width) * 100)
+  };
 }
 
 export function nextCollapse(current, target) {
@@ -67,10 +205,105 @@ export function saveUiState(partial) {
   try {
     globalThis.localStorage?.setItem(UI_STORAGE_KEY, JSON.stringify(next));
   } catch {
-    /* session-only */
+    /* Storage failure degrades to session-only presentation state. */
   }
   return next;
 }
+
+/* ------------------------------------------------------------------ *
+ * Runtime string localization
+ *
+ * The recovered runtime writes English (or Spanish/Arabic) text into a known,
+ * enumerated set of elements. For locales the runtime does not carry, the
+ * layer rewrites only those elements, and only when their current text is an
+ * exact match for an English catalog entry or one of its placeholder
+ * templates. No whole-document observation and no open-ended text scraping.
+ * ------------------------------------------------------------------ */
+
+const RUNTIME_TEXT_SCOPES = Object.freeze([
+  { id: 'status-line', keys: ['status.'] },
+  { id: 'grid-title', keys: ['grid.all', 'grid.favorites', 'grid.filtered', 'grid.recent', 'grid.similar'] },
+  { id: 'grid-subtitle', keys: ['grid.subtitle'] },
+  { id: 'grid-count', keys: ['grid.count', 'grid.countOne'] },
+  { id: 'filter-summary', keys: ['filters.none', 'filters.active', 'filters.activeOne'] },
+  { id: 'empty-state', keys: ['empty.'] },
+  { id: 'toast-container', keys: ['toast.'] },
+  { id: 'player-station', keys: ['player.select'] },
+  { id: 'nowcard-eyebrow', keys: ['nowplaying.onAir'] },
+  { id: 'sleep-menu', keys: ['sleep.'] }
+]);
+
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+const REVERSE_INDEX = (() => {
+  const entries = [];
+  for (const [key, template] of Object.entries(CATALOGS[DEFAULT_LOCALE])) {
+    const source = String(template);
+    const names = [...source.matchAll(/\{(\w+)\}/g)].map(match => match[1]);
+    if (!names.length) {
+      entries.push({ key, names, literal: source, pattern: null });
+      continue;
+    }
+    const pattern = new RegExp(`^${source.split(/\{\w+\}/).map(escapeRegExp).join('(.+?)')}$`);
+    entries.push({ key, names, literal: null, pattern });
+  }
+  // Literals first, and longer literals before shorter ones, so that specific
+  // strings win over generic single-word entries.
+  entries.sort((a, b) => (b.literal?.length ?? 0) - (a.literal?.length ?? 0));
+  return entries;
+})();
+
+function scopeAllows(scope, key) {
+  return scope.keys.some(allowed => (allowed.endsWith('.') ? key.startsWith(allowed) : key === allowed));
+}
+
+function translateRuntimeText(text, scope, locale) {
+  const value = text.trim();
+  if (!value) return null;
+  for (const entry of REVERSE_INDEX) {
+    if (!scopeAllows(scope, entry.key)) continue;
+    if (entry.literal !== null) {
+      if (entry.literal !== value) continue;
+      return t(entry.key, undefined, locale);
+    }
+    const match = entry.pattern.exec(value);
+    if (!match) continue;
+    const params = {};
+    entry.names.forEach((name, index) => {
+      params[name] = match[index + 1];
+    });
+    return t(entry.key, params, locale);
+  }
+  return null;
+}
+
+function localizeRuntimeScope(scope, locale) {
+  if (locale === DEFAULT_LOCALE) return;
+  const root = byId(scope.id);
+  if (!root) return;
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  const pending = [];
+  for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+    const translated = translateRuntimeText(node.nodeValue, scope, locale);
+    if (translated && translated !== node.nodeValue.trim()) pending.push([node, translated]);
+  }
+  for (const [node, translated] of pending) node.nodeValue = translated;
+}
+
+function localizeRuntime(locale) {
+  for (const scope of RUNTIME_TEXT_SCOPES) localizeRuntimeScope(scope, locale);
+}
+
+/* ------------------------------------------------------------------ *
+ * DOM helpers
+ * ------------------------------------------------------------------ */
+
+const FOCUSABLE = 'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])';
+
+let mapInvalidateFrame = 0;
+let focusReturn = null;
 
 function byId(id) {
   return document.getElementById(id);
@@ -93,188 +326,115 @@ function clickExisting(id) {
   byId(id)?.click();
 }
 
-function invalidateMap() {
-  window.dispatchEvent(new Event('resize'));
+/**
+ * Ask Leaflet to re-measure. The recovered map enables `trackResize`, so a
+ * window resize is the supported additive route to `invalidateSize()`.
+ * Throttled to one frame while dragging; `flush` runs it immediately.
+ */
+function invalidateMap(flush = false) {
+  if (flush) {
+    if (mapInvalidateFrame) cancelAnimationFrame(mapInvalidateFrame);
+    mapInvalidateFrame = 0;
+    window.dispatchEvent(new Event('resize'));
+    return;
+  }
+  if (mapInvalidateFrame) return;
+  mapInvalidateFrame = requestAnimationFrame(() => {
+    mapInvalidateFrame = 0;
+    window.dispatchEvent(new Event('resize'));
+  });
 }
 
+function focusFirst(container) {
+  const target = container?.querySelector(FOCUSABLE);
+  // Run after the activating button's default focus behavior, otherwise a
+  // trusted pointer click can immediately steal focus back from the surface.
+  if (target) requestAnimationFrame(() => target.focus());
+  return Boolean(target);
+}
+
+function restoreFocus(fallbackId) {
+  const target = focusReturn && document.contains(focusReturn) ? focusReturn : byId(fallbackId);
+  focusReturn = null;
+  if (target) queueMicrotask(() => target.focus?.());
+}
+
+/* ------------------------------------------------------------------ *
+ * Locale
+ * ------------------------------------------------------------------ */
+
 function readLocale(state) {
-  const stored = state.locale && state.locale !== 'en' ? state.locale : '';
+  const stored = state.locale && state.locale !== DEFAULT_LOCALE ? state.locale : '';
   if (stored) return stored;
   const select = byId('setting-locale');
-  if (select?.value) return normalizeLocale(select.value);
+  if (select?.value) {
+    const fromSelect = normalizeLocale(select.value);
+    if (fromSelect !== DEFAULT_LOCALE) return fromSelect;
+  }
   return detectBrowserLocale([navigator.language, ...(navigator.languages || [])]);
 }
 
-function applyLocale(state) {
-  const locale = readLocale(state);
-  applyDocumentLocale(locale);
-  applyDeclarativeI18n(document, locale);
+/**
+ * Own `lang`, `dir`, and the locale font variable. The runtime rewrites both
+ * attributes from its own three-locale table, so they are re-asserted here and
+ * defended by a narrowly scoped attribute observer.
+ */
+function applyLocale(locale) {
+  const resolved = normalizeLocale(locale);
+  applyDocumentLocale(resolved);
+  document.documentElement.lang = resolved;
+  document.documentElement.dir = isRtlLocale(resolved) ? 'rtl' : 'ltr';
+  document.documentElement.dataset.fontProfile = resolved;
+  document.documentElement.style.setProperty('--er-font', FONT_PROFILES[resolved]);
+  applyDeclarativeI18n(document, resolved);
+  localizeRuntime(resolved);
+  refreshCountryPresentation();
+
   const select = byId('setting-locale');
-  if (select && [...select.options].some(option => option.value === locale)) select.value = locale;
-  return saveUiState({ locale });
+  if (select && [...select.options].some(option => option.value === resolved)) select.value = resolved;
+  return saveUiState({ locale: resolved });
 }
 
-function applyViewport(state) {
-  const mode = classifyViewport();
-  document.documentElement.classList.toggle('er-mobile', mode === 'mobile');
-  document.documentElement.classList.toggle('er-tablet', mode === 'tablet');
-  document.documentElement.classList.toggle('er-desktop', mode === 'desktop');
-  document.documentElement.classList.toggle('er-standalone', isStandalone());
-  document.documentElement.dataset.erDest = state.destination;
-  document.documentElement.dataset.erSaved = state.savedSegment;
-  document.documentElement.dataset.erCollapsed = state.collapsed || '';
-  document.documentElement.style.setProperty('--er-list-pct', `${state.split}%`);
-  for (const button of document.querySelectorAll('[data-er-dest]')) {
-    const active = button.getAttribute('data-er-dest') === state.destination;
-    button.setAttribute('aria-current', active ? 'page' : 'false');
-    button.classList.toggle('is-active', active);
-  }
-  for (const button of document.querySelectorAll('[data-er-saved]')) {
-    button.setAttribute('aria-pressed', String(button.getAttribute('data-er-saved') === state.savedSegment));
-  }
-  applyWorkspace(state, mode);
+function syncThemeColor() {
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.content = document.documentElement.dataset.theme === 'dark' ? '#171626' : '#25243D';
 }
 
-function applyWorkspace(state, mode) {
-  const list = byId('grid-panel');
-  const map = byId('map-panel');
-  const search = byId('search-modal');
-  if (!list || !map) return;
-
-  if (mode === 'mobile') {
-    list.hidden = state.destination === 'map' || state.destination === 'search';
-    map.hidden = state.destination !== 'map';
-    presentSearch(state.destination === 'search');
-    return;
+function readStoredTheme() {
+  let theme = 'light';
+  try {
+    const preferences = JSON.parse(globalThis.localStorage?.getItem('earthRadio.preferences.v1') || 'null');
+    if (preferences?.theme === 'dark') theme = 'dark';
+  } catch {
+    /* Invalid recovered preferences safely fall back to the light palette. */
   }
-
-  presentSearch(false);
-  if (mode === 'tablet') {
-    const showMap = state.destination === 'map' || state.collapsed === 'list';
-    list.hidden = showMap;
-    map.hidden = !showMap;
-    return;
-  }
-
-  list.hidden = state.collapsed === 'list';
-  map.hidden = state.collapsed === 'map';
-  const separator = byId('er-separator');
-  if (separator) separator.hidden = Boolean(state.collapsed);
-  const restore = byId('er-restore-panel');
-  if (restore) {
-    restore.hidden = !state.collapsed || mode === 'mobile';
-    restore.setAttribute('data-er-collapse', state.collapsed || 'map');
-    restore.textContent = state.collapsed === 'list' ? t('desktop.restoreStations') : t('desktop.restoreMap');
-  }
+  return theme;
 }
 
-function presentSearch(active, focusInput = false) {
-  const modal = byId('search-modal');
-  if (!modal) return;
-  modal.classList.toggle('er-search-destination', active);
-  if (active) {
-    modal.hidden = false;
-    modal.style.display = 'flex';
-    modal.setAttribute('aria-hidden', 'false');
-    modal.setAttribute('aria-modal', 'false');
-    if (focusInput) queueMicrotask(() => byId('search-input')?.focus());
-  } else if (modal.classList.contains('er-search-destination') || classifyViewport() === 'mobile') {
-    modal.classList.remove('er-search-destination');
-    if (classifyViewport() === 'mobile') {
-      modal.hidden = true;
-      modal.style.display = 'none';
-      modal.setAttribute('aria-hidden', 'true');
+function restoreStoredTheme() {
+  const theme = readStoredTheme();
+  document.documentElement.dataset.theme = theme;
+  syncThemeColor();
+}
+
+function guardDocumentLocale() {
+  const observer = new MutationObserver(() => {
+    const wanted = normalizeLocale(loadUiState().locale);
+    const dir = isRtlLocale(wanted) ? 'rtl' : 'ltr';
+    if (document.documentElement.lang !== wanted) document.documentElement.lang = wanted;
+    if (document.documentElement.dir !== dir) document.documentElement.dir = dir;
+    if (document.documentElement.dataset.fontProfile !== wanted) {
+      document.documentElement.dataset.fontProfile = wanted;
+      document.documentElement.style.setProperty('--er-font', FONT_PROFILES[wanted]);
     }
-  }
-}
-
-function setOverflowOpen(open) {
-  const sheet = byId('er-overflow');
-  const toggle = document.querySelector('[data-er-overflow]');
-  if (!sheet) return;
-  sheet.hidden = !open;
-  sheet.setAttribute('aria-hidden', String(!open));
-  toggle?.setAttribute('aria-expanded', String(open));
-}
-
-function setDestination(destination, persistHash = false) {
-  const next = saveUiState({ destination });
-  if (destination === 'saved') applySavedSegment(next.savedSegment);
-  if (destination === 'listen') {
-    const recent = byId('recent-toggle');
-    const favorites = byId('favorites-toggle');
-    if (recent?.classList.contains('header-btn--active')) recent.click();
-    if (favorites?.classList.contains('header-btn--active')) favorites.click();
-  }
-  applyViewport(next);
-  setOverflowOpen(false);
-  if (destination === 'search' && persistHash) presentSearch(true, true);
-  if (persistHash) {
-    const current = location.hash.replace(/^#/, '');
-    if (!current.includes('=')) history.replaceState(history.state, '', `#${destination}`);
-  }
-  queueMicrotask(invalidateMap);
-  return next;
-}
-
-function applySavedSegment(segment) {
-  const wanted = segment === 'recent' ? 'recent' : 'favorites';
-  const recent = byId('recent-toggle');
-  const favorites = byId('favorites-toggle');
-  const recentOn = recent?.classList.contains('header-btn--active') || recent?.getAttribute('aria-pressed') === 'true';
-  const favOn = favorites?.classList.contains('header-btn--active') || favorites?.getAttribute('aria-pressed') === 'true';
-  if (wanted === 'recent' && !recentOn) recent?.click();
-  if (wanted === 'favorites' && !favOn) favorites?.click();
-  saveUiState({ savedSegment: wanted, destination: 'saved' });
-}
-
-function openNowPlaying(push = true) {
-  const panel = byId('er-nowplaying');
-  if (!panel || !panel.hidden && panel.classList.contains('is-open')) return;
-  syncNowPlaying();
-  panel.hidden = false;
-  panel.classList.add('is-open');
-  document.documentElement.classList.add('er-nowplaying-open');
-  if (push) history.pushState({ ...(history.state || {}), erNowPlaying: true }, '');
-  byId('er-nowplaying-dismiss')?.focus();
-}
-
-function closeNowPlaying() {
-  const panel = byId('er-nowplaying');
-  if (!panel) return;
-  panel.hidden = true;
-  panel.classList.remove('is-open');
-  document.documentElement.classList.remove('er-nowplaying-open');
-  byId('player-bar')?.querySelector('#er-open-nowplaying, .player-info')?.focus?.();
-}
-
-function syncNowPlaying() {
-  const title = byId('er-nowplaying-title');
-  const meta = byId('er-nowplaying-meta');
-  const live = byId('er-nowplaying-live');
-  const art = byId('er-nowplaying-art');
-  if (title) title.textContent = byId('player-station')?.textContent || t('player.select');
-  if (meta) meta.textContent = byId('player-meta')?.textContent || '';
-  if (live) live.textContent = t('nowplaying.live');
-  const sourceArt = byId('nowcard-art');
-  if (art && sourceArt) art.replaceChildren(...[...sourceArt.cloneNode(true).childNodes]);
-}
-
-function bindSearchIme() {
-  const original = byId('search-input');
-  if (!original || original.dataset.erIme === '1') return;
-  original.dataset.erIme = '1';
-  let composing = false;
-  original.addEventListener('compositionstart', () => {
-    composing = true;
+    const wantedTheme = readStoredTheme();
+    if (document.documentElement.dataset.theme !== wantedTheme) {
+      document.documentElement.dataset.theme = wantedTheme;
+    }
+    syncThemeColor();
   });
-  original.addEventListener('compositionend', () => {
-    composing = false;
-    original.dispatchEvent(new Event('input', { bubbles: true }));
-  });
-  original.addEventListener('input', event => {
-    if (composing) event.stopImmediatePropagation();
-  }, true);
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ['lang', 'dir', 'data-theme'] });
+  syncThemeColor();
 }
 
 function bindLocaleOptions() {
@@ -296,17 +456,616 @@ function bindLocaleOptions() {
     option.textContent = label;
     select.append(option);
   }
+  // The runtime persists a lowercased locale, which no longer matches the
+  // canonical `zh-Hans` / `zh-Hant` option values. Restore the canonical id.
+  const normalized = normalizeLocale(select.value || loadUiState().locale);
+  if ([...select.options].some(option => option.value === normalized)) select.value = normalized;
+
+  select.addEventListener('change', () => {
+    applyLocale(select.value);
+    applyViewport(loadUiState());
+  });
 }
 
+/* ------------------------------------------------------------------ *
+ * Viewport, safe areas, chrome metrics
+ * ------------------------------------------------------------------ */
+
+function measureSafeAreaBottom() {
+  const probe = document.createElement('div');
+  probe.style.cssText = 'position:fixed;left:-9999px;bottom:0;width:1px;visibility:hidden;pointer-events:none;padding-bottom:env(safe-area-inset-bottom,0px);';
+  document.body.append(probe);
+  const inset = probe.getBoundingClientRect().height;
+  probe.remove();
+  return Number.isFinite(inset) ? Math.round(inset) : 0;
+}
+
+function applyModeClasses(mode) {
+  const root = document.documentElement;
+  root.classList.toggle('er-mobile', mode === 'mobile');
+  root.classList.toggle('er-tablet', mode === 'tablet');
+  root.classList.toggle('er-desktop', mode === 'desktop');
+  root.classList.toggle('er-standalone', isStandalone());
+  root.classList.toggle('er-desktop-app', Boolean(window.earthRadio?.isDesktop));
+  const landscape = window.innerWidth > window.innerHeight;
+  root.classList.toggle('er-landscape', landscape);
+  root.classList.toggle('er-portrait', !landscape);
+  const safeBottom = measureSafeAreaBottom();
+  root.classList.toggle('er-has-safe-bottom', safeBottom > 0);
+  root.style.setProperty('--er-safe-bottom-px', `${safeBottom}px`);
+}
+
+/**
+ * Publish the real chrome heights so the fixed Search destination, the
+ * overflow sheet, and the workspace height math stay in sync with whatever the
+ * runtime and the current locale actually render. Values are only written when
+ * they move by more than a pixel, which keeps the measurement stable even
+ * though the measured elements size themselves from the same variables.
+ */
+function syncChromeMetrics() {
+  const root = document.documentElement;
+  const rootStyle = getComputedStyle(root);
+  const measurements = [
+    ['--er-header', document.querySelector('header.header'), '--er-safe-top'],
+    ['--er-nav', document.querySelector('.er-mobile-nav'), '--er-safe-bottom']
+  ];
+  for (const [name, element, insetName] of measurements) {
+    if (!element || element.hidden) continue;
+    const inset = parseFloat(rootStyle.getPropertyValue(insetName)) || 0;
+    const height = Math.round(element.getBoundingClientRect().height - inset);
+    if (!height) continue;
+    const current = parseFloat(root.style.getPropertyValue(name));
+    if (Number.isFinite(current) && Math.abs(current - height) <= 1) continue;
+    root.style.setProperty(name, `${height}px`);
+  }
+  root.style.setProperty('--er-vh', `${window.innerHeight}px`);
+}
+
+/**
+ * Keep the presentation layer's card sizing aligned with the recovered virtual
+ * list, which positions cards absolutely on a fixed row stride. The stride is
+ * read back from the rendered rows rather than assumed, so a runtime change to
+ * `rowHeight` cannot leave the cards overlapping.
+ */
+function syncVirtualRows() {
+  const grid = byId('station-grid');
+  const root = document.documentElement;
+  const cards = grid ? [...grid.querySelectorAll('.station-card')] : [];
+  if (cards.length < 2) return;
+  const tops = [...new Set(cards.map(card => Math.round(card.offsetTop)))].sort((a, b) => a - b);
+  let stride = 0;
+  for (let index = 1; index < tops.length; index += 1) {
+    const delta = tops[index] - tops[index - 1];
+    if (delta > 0 && (!stride || delta < stride)) stride = delta;
+  }
+  const columns = cards.filter(card => Math.round(card.offsetTop) === tops[0]).length;
+  root.style.setProperty('--er-row-cols', String(Math.max(1, columns)));
+  if (!stride) return;
+  root.style.setProperty('--er-row-h', `${stride}px`);
+  root.style.setProperty('--er-card-h', `${Math.max(64, stride - GRID_GAP_PX)}px`);
+}
+
+function applyViewport(state) {
+  const mode = classifyViewport();
+  applyModeClasses(mode);
+  const root = document.documentElement;
+  root.dataset.erDest = state.destination;
+  root.dataset.erSaved = state.savedSegment;
+  root.dataset.erCollapsed = state.collapsed || '';
+  root.dataset.erMode = mode;
+  root.style.setProperty('--er-list-pct', `${state.split}%`);
+
+  for (const button of document.querySelectorAll('[data-er-dest]')) {
+    const active = button.getAttribute('data-er-dest') === state.destination;
+    // `aria-current` belongs to the bottom navigation only; the Now Playing
+    // "Show on map" shortcut reuses the attribute hook but is not a destination.
+    if (button.closest('.er-mobile-nav') || button.classList.contains('er-icon-btn')) {
+      button.setAttribute('aria-current', active ? 'page' : 'false');
+    }
+    button.classList.toggle('is-active', active);
+  }
+  for (const button of document.querySelectorAll('[data-er-saved]')) {
+    button.setAttribute('aria-pressed', String(button.getAttribute('data-er-saved') === state.savedSegment));
+  }
+
+  applyWorkspace(state, mode);
+  syncChromeMetrics();
+  syncVirtualRows();
+}
+
+function applyWorkspace(state, mode) {
+  const list = byId('grid-panel');
+  const map = byId('map-panel');
+  const separator = byId('er-separator');
+  const restore = byId('er-restore-panel');
+  if (!list || !map) return;
+
+  const showRestore = target => {
+    if (!restore) return;
+    restore.hidden = !target;
+    restore.setAttribute('data-er-collapse', target || 'map');
+    restore.textContent = target === 'list' ? t('desktop.restoreStations') : t('desktop.restoreMap');
+  };
+
+  if (mode === 'mobile') {
+    list.hidden = state.destination === 'map' || state.destination === 'search';
+    map.hidden = state.destination !== 'map';
+    if (separator) {
+      separator.hidden = true;
+      separator.setAttribute('aria-hidden', 'true');
+    }
+    showRestore(null);
+    presentSearch(state.destination === 'search');
+    return;
+  }
+
+  presentSearch(false);
+
+  if (mode === 'tablet') {
+    // Below the split threshold the panels become explicit List/Map modes.
+    const showMap = state.destination === 'map' || state.collapsed === 'list';
+    list.hidden = showMap;
+    map.hidden = !showMap;
+    if (separator) {
+      separator.hidden = true;
+      separator.setAttribute('aria-hidden', 'true');
+    }
+    showRestore(null);
+    return;
+  }
+
+  list.hidden = state.collapsed === 'list';
+  map.hidden = state.collapsed === 'map';
+  if (separator) {
+    // A collapsed studio has nothing to resize: the separator leaves the
+    // accessibility tree entirely rather than exposing a dead control.
+    separator.hidden = Boolean(state.collapsed);
+    separator.setAttribute('aria-hidden', String(Boolean(state.collapsed)));
+    const bounds = splitBounds(window.innerWidth);
+    separator.setAttribute('aria-valuemin', String(bounds.min));
+    separator.setAttribute('aria-valuemax', String(bounds.max));
+    separator.setAttribute('aria-valuenow', String(Math.round(state.split)));
+    separator.setAttribute('aria-valuetext', `${Math.round(state.split)}%`);
+  }
+  showRestore(state.collapsed);
+}
+
+/* ------------------------------------------------------------------ *
+ * Search destination and IME
+ * ------------------------------------------------------------------ */
+
+function presentSearch(active, focusInput = false) {
+  const modal = byId('search-modal');
+  if (!modal) return;
+  const wasDestination = modal.classList.contains('er-search-destination');
+  modal.classList.toggle('er-search-destination', active);
+  if (active) {
+    modal.hidden = false;
+    modal.style.display = 'flex';
+    modal.setAttribute('aria-hidden', 'false');
+    // The Search destination is a region, not a modal dialog.
+    modal.setAttribute('aria-modal', 'false');
+    modal.setAttribute('role', 'region');
+    // The iOS keyboard rises only on an explicit Search activation.
+    if (focusInput) queueMicrotask(() => byId('er-station-query')?.focus());
+    return;
+  }
+  if (!wasDestination) return;
+  modal.setAttribute('role', 'dialog');
+  modal.setAttribute('aria-modal', 'true');
+  modal.hidden = true;
+  modal.style.display = 'none';
+  modal.setAttribute('aria-hidden', 'true');
+  byId('er-station-query')?.blur();
+  byId('er-country-query')?.blur();
+}
+
+/**
+ * Korean and Chinese IME input must not filter mid-composition: the runtime's
+ * `input` handler is suppressed in the capture phase until `compositionend`,
+ * then replayed once with the settled value.
+ */
+function bindSearchIme() {
+  const input = byId('search-input');
+  if (!input || input.dataset.erIme === '1') return;
+  input.dataset.erIme = '1';
+  let composing = false;
+
+  input.addEventListener('compositionstart', () => {
+    composing = true;
+  }, true);
+
+  input.addEventListener('compositionend', () => {
+    composing = false;
+    queueMicrotask(() => input.dispatchEvent(new Event('input', { bubbles: true })));
+  }, true);
+
+  input.addEventListener('input', event => {
+    if (composing || event.isComposing) event.stopImmediatePropagation();
+  }, true);
+
+  // Enter and the arrow keys select search results; while an IME candidate
+  // window is open they belong to the IME, not to the result list.
+  input.addEventListener('keydown', event => {
+    if (composing || event.isComposing || event.keyCode === 229) event.stopImmediatePropagation();
+  }, true);
+}
+
+let countryOptions = [];
+let countryRuntimeNames = new Map();
+let selectedCountry = '';
+let stationQuery = '';
+let activeCountryIndex = -1;
+let countrySearchBound = false;
+
+function countryFilterEntries() {
+  return [...document.querySelectorAll('#filter-countries .filter-item')].map(item => ({
+    name: item.querySelector('input')?.value || item.querySelector('span')?.textContent || '',
+    count: item.querySelector('.filter-count')?.textContent || 0
+  }));
+}
+
+function setCountryOptionsOpen(open) {
+  const input = byId('er-country-query');
+  const list = byId('er-country-options');
+  if (!input || !list) return;
+  list.hidden = !open;
+  input.setAttribute('aria-expanded', String(open));
+  if (!open) {
+    activeCountryIndex = -1;
+    input.removeAttribute('aria-activedescendant');
+  }
+}
+
+function renderCountryOptions(query = '') {
+  const list = byId('er-country-options');
+  const input = byId('er-country-query');
+  if (!list || !input) return;
+  const filtered = filterCountryOptions(countryOptions, query);
+  const visible = query ? filtered : [{ name: '', code: '', flag: '🌐', count: countryOptions.reduce((sum, option) => sum + option.count, 0) }, ...filtered];
+  activeCountryIndex = visible.length ? Math.min(Math.max(activeCountryIndex, 0), visible.length - 1) : -1;
+  list.replaceChildren();
+
+  if (!visible.length) {
+    const empty = document.createElement('p');
+    empty.className = 'er-country-no-match';
+    empty.textContent = t('search.countryNoMatch');
+    list.append(empty);
+    return;
+  }
+
+  visible.forEach((option, index) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.id = `er-country-option-${index}`;
+    button.className = `er-country-option${index === activeCountryIndex ? ' is-active' : ''}`;
+    button.setAttribute('role', 'option');
+    button.setAttribute('aria-selected', String(option.name === selectedCountry));
+    button.dataset.country = option.name;
+
+    const flag = document.createElement('span');
+    flag.setAttribute('aria-hidden', 'true');
+    flag.textContent = option.flag || '•';
+    const name = document.createElement('span');
+    name.className = 'er-country-option-name';
+    name.textContent = option.name || t('search.allCountries');
+    const code = document.createElement('span');
+    code.className = 'er-country-option-code';
+    code.textContent = option.code;
+    const count = document.createElement('span');
+    count.className = 'er-country-option-count';
+    count.textContent = String(option.count);
+    button.append(flag, name, code, count);
+    button.addEventListener('click', () => selectCountry(option.name));
+    list.append(button);
+  });
+}
+
+function updateCountryActive(delta) {
+  const options = [...document.querySelectorAll('#er-country-options [role="option"]')];
+  if (!options.length) return;
+  activeCountryIndex = (activeCountryIndex + delta + options.length) % options.length;
+  options.forEach((option, index) => option.classList.toggle('is-active', index === activeCountryIndex));
+  const active = options[activeCountryIndex];
+  byId('er-country-query')?.setAttribute('aria-activedescendant', active.id);
+  active.scrollIntoView({ block: 'nearest' });
+}
+
+function updateCountrySummary() {
+  const summary = byId('er-country-summary');
+  if (!summary) return;
+  if (!selectedCountry) {
+    summary.textContent = '';
+    return;
+  }
+  const count = [...document.querySelectorAll('#search-results .search-result-item:not([hidden])')].length;
+  if (count) summary.textContent = t('search.resultSummary', { count, country: selectedCountry });
+  else summary.textContent = t(stationQuery ? 'search.noStationsForQuery' : 'search.noStationsInCountry', { country: selectedCountry });
+}
+
+function applyCountryScope() {
+  for (const result of document.querySelectorAll('#search-results .search-result-item')) {
+    const meta = result.querySelector('.search-result-item__meta')?.textContent || '';
+    const shouldHide = !matchesSelectedCountry(meta, selectedCountry);
+    if (result.hidden !== shouldHide) result.hidden = shouldHide;
+  }
+  updateCountrySummary();
+}
+
+function syncRuntimeSearch() {
+  const engine = byId('search-input');
+  if (!engine) return;
+  engine.value = buildCountryStationQuery(countryRuntimeNames.get(selectedCountry) || selectedCountry, stationQuery);
+  engine.dispatchEvent(new Event('input', { bubbles: true }));
+  queueMicrotask(applyCountryScope);
+}
+
+function selectCountry(country) {
+  selectedCountry = String(country || '').trim();
+  const input = byId('er-country-query');
+  const clear = byId('er-country-clear');
+  if (input) input.value = selectedCountry;
+  if (clear) clear.hidden = !selectedCountry;
+  setCountryOptionsOpen(false);
+  syncRuntimeSearch();
+  byId('er-station-query')?.focus();
+}
+
+function refreshCountryPresentation() {
+  if (!countrySearchBound) return;
+  renderCountryOptions('');
+  const input = byId('er-country-query');
+  if (input && !selectedCountry) input.placeholder = t('search.countryPlaceholder');
+  updateCountrySummary();
+}
+
+function bindSettledInput(input, callback) {
+  let composing = false;
+  input.addEventListener('compositionstart', () => { composing = true; });
+  input.addEventListener('compositionend', () => {
+    composing = false;
+    callback();
+  });
+  input.addEventListener('input', event => {
+    if (!composing && !event.isComposing) callback();
+  });
+  return () => composing;
+}
+
+function bindCountrySearch() {
+  if (countrySearchBound) return;
+  const engine = byId('search-input');
+  const station = byId('er-station-query');
+  const country = byId('er-country-query');
+  const options = byId('er-country-options');
+  const countries = byId('filter-countries');
+  if (!engine || !station || !country || !options || !countries) return;
+  countrySearchBound = true;
+
+  const syncCountries = () => {
+    const entries = countryFilterEntries();
+    countryRuntimeNames = new Map(entries.map(entry => [displayCountryName(entry.name), entry.name]));
+    countryOptions = buildCountryOptions(entries);
+    renderCountryOptions(country.value && country.value !== selectedCountry ? country.value : '');
+  };
+  syncCountries();
+  new MutationObserver(syncCountries).observe(countries, { childList: true, subtree: true });
+  let countryScopeQueued = false;
+  new MutationObserver(() => {
+    if (countryScopeQueued) return;
+    countryScopeQueued = true;
+    queueMicrotask(() => {
+      countryScopeQueued = false;
+      applyCountryScope();
+    });
+  }).observe(byId('search-results'), { childList: true, subtree: true });
+
+  const stationIsComposing = bindSettledInput(station, () => {
+    stationQuery = station.value;
+    syncRuntimeSearch();
+  });
+  bindSettledInput(country, () => {
+    if (country.value === selectedCountry) return;
+    activeCountryIndex = 0;
+    renderCountryOptions(country.value);
+    setCountryOptionsOpen(true);
+  });
+
+  station.addEventListener('keydown', event => {
+    if (stationIsComposing() || event.isComposing || event.keyCode === 229) return;
+    if (!['ArrowDown', 'ArrowUp', 'Enter', 'Escape'].includes(event.key)) return;
+    if (event.key === 'Escape' && station.value) {
+      event.preventDefault();
+      station.value = '';
+      stationQuery = '';
+      syncRuntimeSearch();
+      return;
+    }
+    engine.dispatchEvent(new KeyboardEvent('keydown', { key: event.key, bubbles: true, cancelable: true }));
+  });
+
+  country.addEventListener('focus', () => {
+    renderCountryOptions(country.value === selectedCountry ? '' : country.value);
+    setCountryOptionsOpen(true);
+  });
+  country.addEventListener('keydown', event => {
+    if (event.isComposing || event.keyCode === 229) return;
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      event.preventDefault();
+      setCountryOptionsOpen(true);
+      updateCountryActive(event.key === 'ArrowDown' ? 1 : -1);
+    } else if (event.key === 'Enter') {
+      const active = options.querySelectorAll('[role="option"]')[activeCountryIndex];
+      const typed = displayCountryName(country.value);
+      if (active || typed) {
+        event.preventDefault();
+        selectCountry(active?.dataset.country || typed);
+      }
+    } else if (event.key === 'Escape') {
+      event.preventDefault();
+      country.value = selectedCountry;
+      setCountryOptionsOpen(false);
+    }
+  });
+
+  byId('er-country-clear')?.addEventListener('click', () => selectCountry(''));
+  document.addEventListener('pointerdown', event => {
+    if (!(event.target instanceof Element) || !event.target.closest('.er-country-picker')) setCountryOptionsOpen(false);
+  });
+}
+
+/* ------------------------------------------------------------------ *
+ * Overflow sheet
+ * ------------------------------------------------------------------ */
+
+function setOverflowOpen(open, invoker = null) {
+  const sheet = byId('er-overflow');
+  const toggle = document.querySelector('[data-er-overflow]');
+  if (!sheet) return;
+  const wasOpen = !sheet.hidden;
+  sheet.hidden = !open;
+  sheet.setAttribute('aria-hidden', String(!open));
+  toggle?.setAttribute('aria-expanded', String(open));
+  if (open) {
+    focusReturn = invoker || toggle;
+    focusFirst(sheet);
+  } else if (wasOpen) {
+    restoreFocus('er-overflow-toggle');
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Destinations
+ * ------------------------------------------------------------------ */
+
+function setDestination(destination, explicit = false) {
+  const next = saveUiState({ destination });
+  if (destination === 'saved') applySavedSegment(next.savedSegment);
+  if (destination === 'listen') {
+    // Listen is the unfiltered feed: release the Saved segment toggles.
+    const recent = byId('recent-toggle');
+    const favorites = byId('favorites-toggle');
+    if (recent?.classList.contains('header-btn--active')) recent.click();
+    if (favorites?.classList.contains('header-btn--active')) favorites.click();
+  }
+  applyViewport(next);
+  setOverflowOpen(false);
+  if (destination === 'search' && explicit) presentSearch(true, true);
+  if (explicit) {
+    const current = location.hash.replace(/^#/, '');
+    // Never clobber a runtime-owned hash such as `#station=...`.
+    if (!current.includes('=')) history.replaceState(history.state, '', `#${destination}`);
+  }
+  invalidateMap(true);
+  queueMicrotask(syncVirtualRows);
+  return next;
+}
+
+function applySavedSegment(segment) {
+  const wanted = segment === 'recent' ? 'recent' : 'favorites';
+  const recent = byId('recent-toggle');
+  const favorites = byId('favorites-toggle');
+  const isOn = element => element?.classList.contains('header-btn--active')
+    || element?.getAttribute('aria-pressed') === 'true';
+  if (wanted === 'recent') {
+    if (isOn(favorites)) favorites?.click();
+    if (!isOn(recent)) recent?.click();
+  } else {
+    if (isOn(recent)) recent?.click();
+    if (!isOn(favorites)) favorites?.click();
+  }
+  saveUiState({ savedSegment: wanted, destination: 'saved' });
+}
+
+/* ------------------------------------------------------------------ *
+ * Now Playing
+ * ------------------------------------------------------------------ */
+
+function openNowPlaying(invoker = null, push = true) {
+  const panel = byId('er-nowplaying');
+  if (!panel || panel.classList.contains('is-open')) return;
+  focusReturn = invoker || document.activeElement;
+  syncNowPlaying();
+  panel.hidden = false;
+  panel.classList.add('is-open');
+  panel.setAttribute('role', 'dialog');
+  panel.setAttribute('aria-modal', classifyViewport() === 'mobile' ? 'true' : 'false');
+  panel.setAttribute('aria-label', t('nowplaying.label'));
+  document.documentElement.classList.add('er-nowplaying-open');
+  // Transient history state so Back closes Now Playing before leaving the app.
+  if (push) history.pushState({ ...(history.state || {}), erNowPlaying: true }, '');
+  queueMicrotask(() => byId('er-nowplaying-dismiss')?.focus());
+}
+
+function closeNowPlaying() {
+  const panel = byId('er-nowplaying');
+  if (!panel) return;
+  const wasOpen = panel.classList.contains('is-open');
+  panel.hidden = true;
+  panel.classList.remove('is-open');
+  panel.setAttribute('aria-modal', 'false');
+  document.documentElement.classList.remove('er-nowplaying-open');
+  if (wasOpen) restoreFocus('er-open-nowplaying');
+}
+
+function syncNowPlaying() {
+  const title = byId('er-nowplaying-title');
+  const meta = byId('er-nowplaying-meta');
+  const live = byId('er-nowplaying-live');
+  const art = byId('er-nowplaying-art');
+  if (title) title.textContent = byId('player-station')?.textContent?.trim() || t('player.select');
+  if (meta) meta.textContent = byId('player-meta')?.textContent?.trim() || '';
+  if (live) {
+    const audio = byId('audio-player');
+    live.textContent = audio && !audio.paused ? t('nowplaying.live') : t('player.live');
+  }
+  const sourceArt = byId('nowcard-art');
+  if (art && sourceArt) art.replaceChildren(...[...sourceArt.cloneNode(true).childNodes]);
+  const favorite = byId('btn-favorite');
+  const proxy = document.querySelector('#er-nowplaying [data-click-id="btn-favorite"]');
+  if (favorite && proxy) proxy.setAttribute('aria-pressed', favorite.getAttribute('aria-pressed') || 'false');
+}
+
+function trapNowPlayingFocus(event) {
+  const panel = byId('er-nowplaying');
+  if (event.key !== 'Tab' || !panel?.classList.contains('is-open')) return;
+  if (panel.getAttribute('aria-modal') !== 'true') return;
+  const focusable = [...panel.querySelectorAll(FOCUSABLE)].filter(element => element.offsetParent !== null);
+  if (!focusable.length) return;
+  const first = focusable[0];
+  const last = focusable[focusable.length - 1];
+  if (event.shiftKey && document.activeElement === first) {
+    event.preventDefault();
+    last.focus();
+  } else if (!event.shiftKey && document.activeElement === last) {
+    event.preventDefault();
+    first.focus();
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Action routing
+ * ------------------------------------------------------------------ */
+
 function bindActions() {
+  // Capture before the recovered runtime's target handlers. Some runtime
+  // controls stop bubbling, while this presentation layer still needs to
+  // route the additive shell controls consistently.
   document.addEventListener('click', event => {
-    const dest = event.target.closest('[data-er-dest]');
+    const target = event.target instanceof Element ? event.target : null;
+    if (!target) return;
+    const dest = target.closest('button[data-er-dest]');
     if (dest) {
       event.preventDefault();
+      if (document.documentElement.classList.contains('er-nowplaying-open')) {
+        if (parseNowPlayingHistory(history.state)) history.back();
+        else closeNowPlaying();
+      }
       setDestination(dest.getAttribute('data-er-dest'), true);
       return;
     }
-    const saved = event.target.closest('[data-er-saved]');
+
+    const saved = target.closest('button[data-er-saved]');
     if (saved) {
       event.preventDefault();
       const segment = saved.getAttribute('data-er-saved');
@@ -315,120 +1074,252 @@ function bindActions() {
       applyViewport(loadUiState());
       return;
     }
-    if (event.target.closest('[data-er-open-search]')) {
-      if (classifyViewport() === 'mobile') setDestination('search', true);
-      else {
-        const eventK = new KeyboardEvent('keydown', { key: 'k', metaKey: true, bubbles: true });
-        document.dispatchEvent(eventK);
-        clickExisting('search-input');
-        byId('search-input')?.focus();
+
+    if (target.closest('[data-er-open-search]')) {
+      if (classifyViewport() === 'mobile') {
+        setDestination('search', true);
+      } else {
+        // Desktop keeps the runtime's command palette and its Ctrl/Cmd+K path.
+        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true, bubbles: true }));
+        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true, bubbles: true }));
+        queueMicrotask(() => byId('er-station-query')?.focus());
       }
       return;
     }
-    if (event.target.closest('[data-er-overflow]')) {
+
+    if (target.closest('[data-er-overflow]')) {
       const sheet = byId('er-overflow');
-      setOverflowOpen(Boolean(sheet?.hidden));
+      setOverflowOpen(Boolean(sheet?.hidden), target.closest('[data-er-overflow]'));
       return;
     }
-    if (event.target.closest('[data-click-id]')) {
-      clickExisting(event.target.closest('[data-click-id]').getAttribute('data-click-id'));
-      setOverflowOpen(false);
+
+    const proxy = target.closest('[data-click-id]');
+    if (proxy) {
+      clickExisting(proxy.getAttribute('data-click-id'));
+      if (proxy.closest('#er-overflow')) setOverflowOpen(false);
+      queueMicrotask(syncNowPlaying);
       return;
     }
-    if (!event.target.closest('#er-overflow')) setOverflowOpen(false);
-    if (event.target.closest('[data-er-collapse]')) {
-      const target = event.target.closest('[data-er-collapse]').getAttribute('data-er-collapse');
+
+    const collapse = target.closest('[data-er-collapse]');
+    if (collapse) {
+      const wanted = collapse.getAttribute('data-er-collapse');
       const state = loadUiState();
-      applyViewport(saveUiState({ collapsed: nextCollapse(state.collapsed, target) }));
-      queueMicrotask(invalidateMap);
+      const next = saveUiState({ collapsed: nextCollapse(state.collapsed, wanted) });
+      applyViewport(next);
+      // The invoking Hide control disappears with its panel: move focus to the
+      // Restore control that replaced it, or back to the separator.
+      const restore = byId('er-restore-panel');
+      if (next.collapsed && restore && !restore.hidden) queueMicrotask(() => restore.focus());
+      else queueMicrotask(() => byId('er-separator')?.focus());
+      invalidateMap(true);
       return;
     }
-    if (event.target.closest('#er-open-nowplaying') || event.target.closest('#player-station')) {
-      if (classifyViewport() === 'mobile' || classifyViewport() === 'tablet') openNowPlaying();
-      else openNowPlaying();
+
+    if (target.closest('#er-open-nowplaying')) {
+      openNowPlaying(target.closest('button'));
       return;
     }
-    if (event.target.closest('#er-nowplaying-dismiss')) {
+
+    if (target.closest('#er-nowplaying-dismiss')) {
       if (parseNowPlayingHistory(history.state)) history.back();
       else closeNowPlaying();
+      return;
     }
-  });
+
+    if (!target.closest('#er-overflow') && !byId('er-overflow')?.hidden) setOverflowOpen(false);
+  }, true);
 
   byId('settings-save')?.addEventListener('click', () => {
-    const locale = normalizeLocale(byId('setting-locale')?.value);
+    const select = byId('setting-locale');
+    const locale = normalizeLocale(select?.value);
     saveUiState({ locale });
+    applyLocale(locale);
   }, true);
 
   window.addEventListener('popstate', event => {
     if (!parseNowPlayingHistory(event.state) && document.documentElement.classList.contains('er-nowplaying-open')) {
       closeNowPlaying();
     }
+    const dest = parseDestination(location.hash);
+    if (dest && dest !== loadUiState().destination) setDestination(dest, false);
   });
 
-  window.addEventListener('resize', () => {
-    const state = sanitizeUiState({ ...loadUiState(), split: loadUiState().split, viewportWidth: window.innerWidth });
-    saveUiState(state);
-    applyViewport(state);
+  window.addEventListener('hashchange', () => {
+    const dest = parseDestination(location.hash);
+    if (dest && dest !== loadUiState().destination) setDestination(dest, false);
   });
+
+  let resizeFrame = 0;
+  const onResize = () => {
+    if (resizeFrame) return;
+    resizeFrame = requestAnimationFrame(() => {
+      resizeFrame = 0;
+      const state = saveUiState({});
+      applyViewport(state);
+    });
+  };
+  window.addEventListener('resize', onResize);
+  window.addEventListener('orientationchange', () => {
+    onResize();
+    // iOS reports stale metrics immediately after rotation.
+    setTimeout(() => {
+      applyViewport(loadUiState());
+      invalidateMap(true);
+    }, 250);
+  });
+  window.matchMedia?.('(display-mode: standalone)')?.addEventListener?.('change', onResize);
 
   document.addEventListener('keydown', event => {
-    if (event.key === 'Escape') setOverflowOpen(false);
+    if (event.key === 'Escape') {
+      if (!byId('er-overflow')?.hidden) {
+        setOverflowOpen(false);
+        return;
+      }
+      if (document.documentElement.classList.contains('er-nowplaying-open')) {
+        if (parseNowPlayingHistory(history.state)) history.back();
+        else closeNowPlaying();
+      }
+      return;
+    }
+    trapNowPlayingFocus(event);
   });
+
+  const audio = byId('audio-player');
+  for (const type of ['play', 'pause', 'loadstart', 'error', 'emptied']) {
+    audio?.addEventListener(type, () => {
+      if (document.documentElement.classList.contains('er-nowplaying-open')) syncNowPlaying();
+    });
+  }
 }
+
+/* ------------------------------------------------------------------ *
+ * Desktop separator
+ * ------------------------------------------------------------------ */
 
 function bindSeparator() {
   const separator = byId('er-separator');
   if (!separator) return;
-  const applyValue = value => {
+
+  const applyValue = (value, flush = false) => {
     const split = clampSplitPercent(value, window.innerWidth);
-    separator.setAttribute('aria-valuenow', String(Math.round(split)));
     applyViewport(saveUiState({ split }));
-    invalidateMap();
+    invalidateMap(flush);
   };
+
   separator.addEventListener('keydown', event => {
     const current = loadUiState().split;
     const step = event.shiftKey ? 8 : 2;
-    if (event.key === 'ArrowLeft') applyValue(current - step);
-    if (event.key === 'ArrowRight') applyValue(current + step);
-    if (event.key === 'Home') applyValue(0);
-    if (event.key === 'End') applyValue(100);
-    if (event.key === 'Enter' && event.detail === 0 && event.repeat === false && event.altKey) applyValue(DEFAULT_SPLIT);
+    const bounds = splitBounds(window.innerWidth);
+    const handled = {
+      ArrowLeft: () => applyValue(current - step, true),
+      ArrowRight: () => applyValue(current + step, true),
+      ArrowUp: () => applyValue(current - step, true),
+      ArrowDown: () => applyValue(current + step, true),
+      Home: () => applyValue(bounds.min, true),
+      End: () => applyValue(bounds.max, true),
+      Enter: () => applyValue(DEFAULT_SPLIT, true),
+      ' ': () => applyValue(DEFAULT_SPLIT, true)
+    }[event.key];
+    if (!handled) return;
+    event.preventDefault();
+    handled();
   });
-  separator.addEventListener('dblclick', () => applyValue(DEFAULT_SPLIT));
+
+  separator.addEventListener('dblclick', () => applyValue(DEFAULT_SPLIT, true));
+
   let dragging = false;
   separator.addEventListener('pointerdown', event => {
     dragging = true;
+    document.documentElement.classList.add('er-resizing');
     separator.setPointerCapture(event.pointerId);
+    event.preventDefault();
   });
   separator.addEventListener('pointermove', event => {
     if (!dragging) return;
     const main = document.querySelector('main.main');
     if (!main) return;
     const rect = main.getBoundingClientRect();
-    applyValue(((event.clientX - rect.left) / rect.width) * 100);
+    const offset = document.documentElement.dir === 'rtl'
+      ? rect.right - event.clientX
+      : event.clientX - rect.left;
+    // Throttled to one frame while dragging.
+    applyValue((offset / rect.width) * 100, false);
   });
-  separator.addEventListener('pointerup', () => {
+  const endDrag = event => {
+    if (!dragging) return;
     dragging = false;
-    invalidateMap();
-  });
+    document.documentElement.classList.remove('er-resizing');
+    if (event?.pointerId !== undefined && separator.hasPointerCapture?.(event.pointerId)) {
+      separator.releasePointerCapture(event.pointerId);
+    }
+    // One unthrottled invalidation once the resize ends.
+    invalidateMap(true);
+    syncVirtualRows();
+  };
+  separator.addEventListener('pointerup', endDrag);
+  separator.addEventListener('pointercancel', endDrag);
 }
 
+/* ------------------------------------------------------------------ *
+ * Runtime observation (narrowly scoped)
+ * ------------------------------------------------------------------ */
+
 function observeRuntime() {
-  const watched = ['player-station', 'player-meta', 'nowcard-art'];
-  applyDeclarativeI18n(document, loadUiState().locale);
-  const observer = new MutationObserver(() => {
-    if (document.documentElement.classList.contains('er-nowplaying-open')) syncNowPlaying();
-  });
-  for (const id of watched) {
+  let frame = 0;
+  const schedule = () => {
+    if (frame) return;
+    frame = requestAnimationFrame(() => {
+      frame = 0;
+      const locale = normalizeLocale(loadUiState().locale);
+      applyDeclarativeI18n(document, locale);
+      localizeRuntime(locale);
+      if (document.documentElement.classList.contains('er-nowplaying-open')) syncNowPlaying();
+    });
+  };
+
+  const observer = new MutationObserver(schedule);
+  const watched = [
+    ...RUNTIME_TEXT_SCOPES.map(scope => scope.id),
+    'player-station',
+    'player-meta',
+    'nowcard-art'
+  ];
+  for (const id of new Set(watched)) {
     const node = byId(id);
     if (node) observer.observe(node, { childList: true, characterData: true, subtree: true });
   }
+
+  const grid = byId('station-grid');
+  if (grid) {
+    let gridFrame = 0;
+    new MutationObserver(() => {
+      if (gridFrame) return;
+      gridFrame = requestAnimationFrame(() => {
+        gridFrame = 0;
+        syncVirtualRows();
+      });
+    }).observe(grid, { childList: true, subtree: true });
+  }
+
+  if (typeof ResizeObserver === 'function') {
+    const resizeObserver = new ResizeObserver(() => syncChromeMetrics());
+    for (const element of [document.querySelector('header.header'), document.querySelector('.er-mobile-nav')]) {
+      if (element) resizeObserver.observe(element);
+    }
+  }
 }
+
+/* ------------------------------------------------------------------ *
+ * Startup
+ * ------------------------------------------------------------------ */
 
 function start() {
   document.documentElement.classList.add('er-root');
   bindLocaleOptions();
   bindSearchIme();
+  bindCountrySearch();
+
   const hashDest = parseDestination(location.hash);
   const loaded = loadUiState();
   const state = saveUiState({
@@ -436,11 +1327,22 @@ function start() {
     destination: hashDest || loaded.destination,
     locale: readLocale(loaded)
   });
-  applyLocale(state);
-  applyViewport(state);
+
+  restoreStoredTheme();
+  applyLocale(state.locale);
+  guardDocumentLocale();
+  applyViewport(loadUiState());
   bindActions();
   bindSeparator();
   observeRuntime();
+  document.documentElement.dataset.erUiReady = 'true';
+
+  // The recovered runtime renders its first catalog asynchronously.
+  window.addEventListener('load', () => {
+    applyViewport(loadUiState());
+    localizeRuntime(normalizeLocale(loadUiState().locale));
+    invalidateMap(true);
+  }, { once: true });
 }
 
 if (typeof document !== 'undefined') {
