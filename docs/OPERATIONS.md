@@ -22,9 +22,9 @@ python -m http.server 8788 --directory .build/site
 
 Open `http://127.0.0.1:8788/` in a real browser. Inspect the console/network log for missing assets, verify catalog loading and search/filter behavior, reload to test persistence and service-worker activation, and try a known compatible HTTPS MP3/AAC stream. On a narrow viewport confirm Listen/Search/Map/Saved, the mini-player, and Now Playing Back behavior; on a wide viewport confirm the adjustable list/map split. Station failure alone is not proof of an application defect; capture the URL, status, content type, CORS result, and codec.
 
-## Deploy (future, not yet authorized or created)
+## Deploy
 
-The approved candidate model is a Git-integrated Cloudflare Pages project using:
+Production uses a Git-integrated Cloudflare Pages project with:
 
 ```text
 Production branch: main
@@ -33,9 +33,9 @@ Output directory: .build/site
 Node: 24.18.0
 ```
 
-Before connection, scope the Cloudflare GitHub App to **Only select repositories** and select only the Earth Radio repository. Confirm the intended GitHub owner and Cloudflare account before creating anything. Do not use broad organization access and do not persist an API token in this repository.
+The Cloudflare GitHub App must remain scoped to **Only select repositories**, with only the Earth Radio repository selected. Do not broaden organization access or persist an API token in this repository.
 
-After a deploy, match the Cloudflare deployment commit to the tested Git commit, inspect build logs, then run the browser smoke procedure against the actual HTTPS URL. Update `docs/BUILD_STATE.md` only with verified commit/run/deployment identities.
+Every merge to `main` triggers a production deployment. Match the Cloudflare deployment commit to the tested Git commit, inspect build logs, and then run the browser smoke procedure against `https://earth-radio.pages.dev/`. Update `docs/BUILD_STATE.md` only with verified commit, CI run, and deployment identities.
 
 ## CI inspection
 

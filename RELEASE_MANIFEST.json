@@ -15,13 +15,13 @@
     },
     {
       "path": "docs/BUILD_STATE.md",
-      "bytes": 3761,
-      "sha256": "2015ad487e4a1833c5dc544d728ffb9ba8ad0c16981441091223caa45f1b3092"
+      "bytes": 4465,
+      "sha256": "e815ce957e61ea00079fe14af1bc2b7b958b3d1dc0e8f9d27abbcd5dd42d3571"
     },
     {
       "path": "docs/OPERATIONS.md",
-      "bytes": 2855,
-      "sha256": "f4352caf313f6939026a80a09be1c748cfd11fe7ea732c5786cc697ddc6e6d8a"
+      "bytes": 2768,
+      "sha256": "69ed7e3abb6ae0af5b816e169022a367ba5094e0227203d4330106abdb31fe8f"
     },
     {
       "path": "docs/PROVENANCE.md",
@@ -510,8 +510,8 @@
     },
     {
       "path": "tests/documentation.test.mjs",
-      "bytes": 4351,
-      "sha256": "0d1021b21185df079d51f220d5a7572a22f77ba4ad4ef2083065980d33a978c5"
+      "bytes": 4571,
+      "sha256": "d205135137a0280bf921da7ee990a751309cd22abb0294eab3cff8f691f944f7"
     },
     {
       "path": "tests/fixtures/inventory/a.txt",

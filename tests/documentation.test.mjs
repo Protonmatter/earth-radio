@@ -31,7 +31,10 @@ test('build state distinguishes evidence from outstanding work', async () => {
   for (const heading of ['Validated', 'Not validated', 'Live deployment']) {
     assert.match(state, new RegExp(`^## ${heading}`, 'mi'));
   }
-  assert.match(state, /not created/i);
+  assert.match(state, /Production is live at `https:\/\/earth-radio\.pages\.dev\/`/i);
+  assert.match(state, /merge commit `[0-9a-f]{40}`/i);
+  assert.match(state, /Cloudflare Pages deployment `[0-9a-f-]{36}`/i);
+  assert.doesNotMatch(state, /not created/i);
 });
 
 test('required public documentation set exists and is non-empty', async () => {
