@@ -53,7 +53,7 @@ async function startStaticServer() {
   const server = createServer(async (request, response) => {
     const url = new URL(request.url, 'http://127.0.0.1');
     if (url.pathname === '/__seed') {
-      response.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
+      response.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' });
       response.end(SEED_PAGE);
       return;
     }
@@ -61,7 +61,7 @@ async function startStaticServer() {
     // current working tree directly. Service-worker caching is covered by its
     // own unit tests and would otherwise mask local JavaScript edits.
     if (url.pathname === '/sw.js') {
-      response.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' });
+      response.writeHead(404, { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'no-store' });
       response.end('disabled in rendered UI harness');
       return;
     }
@@ -73,7 +73,10 @@ async function startStaticServer() {
     }
     try {
       const body = await readFile(absolute);
-      response.writeHead(200, { 'content-type': CONTENT_TYPES[path.extname(absolute)] || 'application/octet-stream' });
+      response.writeHead(200, {
+        'content-type': CONTENT_TYPES[path.extname(absolute)] || 'application/octet-stream',
+        'cache-control': 'no-store'
+      });
       response.end(body);
     } catch {
       response.writeHead(404, { 'content-type': 'text/plain' }).end('not found');
@@ -154,6 +157,7 @@ const PROBE = `(() => {
   return {
     viewport: { width: window.innerWidth, height: window.innerHeight },
     documentElementClass: document.documentElement.className,
+    theme: document.documentElement.dataset.theme || '',
     destination: document.documentElement.dataset.erDest || '',
     collapsed: document.documentElement.dataset.erCollapsed || '',
     savedSegment: document.documentElement.dataset.erSaved || '',
@@ -162,6 +166,10 @@ const PROBE = `(() => {
     fontProfile: document.documentElement.dataset.fontProfile || '',
     bodyFontFamily: style.fontFamily,
     rowHeightVariable: rootStyle.getPropertyValue('--er-row-h').trim(),
+    safeAreaVariables: {
+      start: rootStyle.getPropertyValue('--er-safe-start').trim(),
+      end: rootStyle.getPropertyValue('--er-safe-end').trim()
+    },
     horizontalOverflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
     bodyOverflow: document.body.scrollWidth - document.body.clientWidth,
     stationCount: document.querySelectorAll('#station-grid .station-card').length,
@@ -187,6 +195,9 @@ const PROBE = `(() => {
     nowPlaying: query('#er-nowplaying'),
     nowPlayingDismiss: query('#er-nowplaying-dismiss'),
     nowPlayingTitle: query('#er-nowplaying-title'),
+    nowPlayingPlay: query('#er-nowplaying [data-er-nowplaying-play]'),
+    nowPlayingMetadata: query('#er-nowplaying-metadata'),
+    nowPlayingSleepButtons: queryAll('#er-nowplaying [data-er-sleep-min]'),
     searchPanel: query('#search-modal'),
     searchInput: query('#search-input'),
     stationQuery: query('#er-station-query'),
@@ -194,18 +205,26 @@ const PROBE = `(() => {
     countryOptions: queryAll('#er-country-options [role="option"]'),
     countrySummary: query('#er-country-summary'),
     searchResults: queryAll('#search-results .search-result-item'),
+    visibleSearchResultNames: [...document.querySelectorAll('#search-results .search-result-item:not([hidden]) .search-result-item__name')]
+      .map(node => (node.textContent || '').trim()),
+    settledSearchNames: Array.isArray(window.__erSettledSearchNames) ? window.__erSettledSearchNames : null,
+    activatedSearchName: (document.querySelector('#search-results [data-er-activated] .search-result-item__name')?.textContent || '').trim(),
     searchResultMetadata: [...document.querySelectorAll('#search-results .search-result-item:not([hidden]) .search-result-item__meta')]
       .map(node => (node.textContent || '').trim()),
     palette: {
       header: getComputedStyle(document.querySelector('header.header')).backgroundColor,
       body: style.backgroundColor,
       primary: getComputedStyle(document.querySelector('#btn-play')).backgroundColor,
+      primaryVariable: getComputedStyle(document.querySelector('#btn-play')).getPropertyValue('--er-coral').trim(),
+      primaryInline: document.querySelector('#btn-play').getAttribute('style') || '',
       map: getComputedStyle(document.querySelector('#map-panel')).backgroundColor
     },
     savedSegmentButtons: queryAll('[data-er-saved]'),
     collections: queryAll('#collections .collection-chip'),
     dashboard: query('#daily-dashboard'),
     dashboardActions: queryAll('#daily-dashboard [data-dashboard-action]'),
+    settingsModal: query('#settings-modal'),
+    filterSidebar: query('#filter-sidebar'),
     stationRows: [...document.querySelectorAll('#station-grid .station-card')].slice(0, 4).map(card => ({
       rect: rectOf(card),
       name: (card.querySelector('.station-card__name')?.textContent || '').trim(),
@@ -306,7 +325,7 @@ function safeAreaScript(scenario) {
   return `(() => {
     const style = document.createElement('style');
     style.id = 'er-test-safe-area';
-    style.textContent = ':root{--er-safe-top:${inset.top}px;--er-safe-right:${inset.right}px;--er-safe-bottom:${inset.bottom}px;--er-safe-left:${inset.left}px;}';
+    style.textContent = ':root{--er-safe-top:${inset.top}px;--er-safe-end:${inset.right}px;--er-safe-bottom:${inset.bottom}px;--er-safe-start:${inset.left}px;}';
     document.head.append(style);
     return true;
   })()`;
@@ -550,6 +569,7 @@ app.commandLine.appendSwitch('force-device-scale-factor', '1');
 app.commandLine.appendSwitch('disable-lcd-text');
 
 app.whenReady().then(async () => {
+  await session.defaultSession.clearCache();
   await mkdir(outputDirectory, { recursive: true });
   installHttpsFixtures();
   const { server, port } = await startStaticServer();

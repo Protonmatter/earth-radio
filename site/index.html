@@ -171,7 +171,6 @@
     <div class="er-nowplaying-head">
       <button id="er-nowplaying-dismiss" class="er-nowplaying-dismiss" type="button" data-i18n="nowplaying.dismiss">Close Now Playing</button>
       <strong data-i18n="nowplaying.title">Now Playing</strong>
-      <button type="button" data-click-id="btn-sleep" data-i18n="nowplaying.more">More station actions</button>
     </div>
     <div id="er-nowplaying-art" class="er-nowplaying-art" aria-hidden="true"></div>
     <p id="er-nowplaying-live" data-i18n="nowplaying.live">Live station</p>
@@ -179,7 +178,7 @@
     <p id="er-nowplaying-meta"></p>
     <div class="er-nowplaying-actions">
       <button type="button" data-click-id="btn-prev" data-i18n="player.prev">Previous station</button>
-      <button type="button" data-click-id="btn-play" data-i18n="player.play">Play</button>
+      <button type="button" data-click-id="btn-play" data-er-nowplaying-play data-i18n="player.play">Play</button>
       <button type="button" data-click-id="btn-next" data-i18n="player.next">Next station</button>
     </div>
     <div class="er-nowplaying-actions">
@@ -187,6 +186,14 @@
       <button type="button" data-click-id="btn-similar" data-i18n="player.similar">Find similar stations</button>
       <button type="button" data-er-dest="map" data-i18n="nowplaying.map">Show on map</button>
     </div>
+    <div class="er-nowplaying-sleep" role="group" data-i18n="player.sleep" data-i18n-attr="aria-label" aria-label="Sleep timer">
+      <strong data-i18n="player.sleep">Sleep timer</strong>
+      <button type="button" data-er-sleep-min="15" data-i18n="sleep.15">15 min</button>
+      <button type="button" data-er-sleep-min="30" data-i18n="sleep.30">30 min</button>
+      <button type="button" data-er-sleep-min="60" data-i18n="sleep.60">60 min</button>
+      <button type="button" data-er-sleep-min="0" data-i18n="sleep.off">Off</button>
+    </div>
+    <section id="er-nowplaying-metadata" class="er-nowplaying-metadata" data-i18n="nowplaying.metadata" data-i18n-attr="aria-label" aria-label="Track metadata confidence"></section>
   </section>
 
   <div class="search-modal" id="search-modal" role="dialog" aria-modal="true" aria-labelledby="search-title" aria-hidden="true" hidden style="display:none;">

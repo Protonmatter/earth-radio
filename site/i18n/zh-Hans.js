@@ -151,6 +151,8 @@ export default {
 
   'nowplaying.title': '正在播放',
   'nowplaying.label': '正在播放',
+  'nowplaying.metadata': '曲目元数据可信度',
+  'nowplaying.metadataWaiting': '正在等待电台实时元数据',
   'nowplaying.dismiss': '关闭正在播放',
   'nowplaying.live': '直播电台',
   'nowplaying.more': '更多电台操作',
@@ -164,6 +166,9 @@ export default {
   'nowplaying.onAir': '播出中',
 
   'sleep.minutes': '{minutes} 分钟',
+  'sleep.15': '15 分钟',
+  'sleep.30': '30 分钟',
+  'sleep.60': '60 分钟',
   'sleep.off': '关闭',
 
   'desktop.separator': '调整电台列表与地图',

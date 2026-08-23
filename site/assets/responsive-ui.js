@@ -182,13 +182,17 @@ export function parseNowPlayingHistory(state) {
 
 export function sanitizeUiState(raw, viewportWidth = 1440) {
   const src = raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {};
+  const localeExplicit = typeof src.localeExplicit === 'boolean'
+    ? src.localeExplicit
+    : Object.prototype.hasOwnProperty.call(src, 'locale');
   return {
     version: 1,
     destination: DESTINATIONS.includes(src.destination) ? src.destination : 'listen',
     savedSegment: src.savedSegment === 'recent' ? 'recent' : 'favorites',
     collapsed: src.collapsed === 'map' || src.collapsed === 'list' ? src.collapsed : null,
     split: clampSplitPercent(src.split, Number(src.viewportWidth) || viewportWidth),
-    locale: normalizeLocale(src.locale)
+    locale: normalizeLocale(src.locale),
+    localeExplicit
   };
 }
 
@@ -201,7 +205,14 @@ export function loadUiState() {
 }
 
 export function saveUiState(partial) {
-  const next = sanitizeUiState({ ...loadUiState(), ...partial, viewportWidth: globalThis.innerWidth || 1440 });
+  const localeWasProvided = partial && Object.prototype.hasOwnProperty.call(partial, 'locale');
+  const localeExplicitWasProvided = partial && Object.prototype.hasOwnProperty.call(partial, 'localeExplicit');
+  const next = sanitizeUiState({
+    ...loadUiState(),
+    ...partial,
+    ...(localeWasProvided && !localeExplicitWasProvided ? { localeExplicit: true } : {}),
+    viewportWidth: globalThis.innerWidth || 1440
+  });
   try {
     globalThis.localStorage?.setItem(UI_STORAGE_KEY, JSON.stringify(next));
   } catch {
@@ -349,7 +360,7 @@ function focusFirst(container) {
   const target = container?.querySelector(FOCUSABLE);
   // Run after the activating button's default focus behavior, otherwise a
   // trusted pointer click can immediately steal focus back from the surface.
-  if (target) requestAnimationFrame(() => target.focus());
+  if (target) setTimeout(() => target.focus(), 0);
   return Boolean(target);
 }
 
@@ -363,15 +374,19 @@ function restoreFocus(fallbackId) {
  * Locale
  * ------------------------------------------------------------------ */
 
+export function resolveInitialLocale(state, browserLocales = []) {
+  if (state?.localeExplicit) return normalizeLocale(state.locale);
+  return detectBrowserLocale(browserLocales);
+}
+
 function readLocale(state) {
-  const stored = state.locale && state.locale !== DEFAULT_LOCALE ? state.locale : '';
-  if (stored) return stored;
+  if (state?.localeExplicit) return normalizeLocale(state.locale);
   const select = byId('setting-locale');
   if (select?.value) {
     const fromSelect = normalizeLocale(select.value);
     if (fromSelect !== DEFAULT_LOCALE) return fromSelect;
   }
-  return detectBrowserLocale([navigator.language, ...(navigator.languages || [])]);
+  return resolveInitialLocale(state, [navigator.language, ...(navigator.languages || [])]);
 }
 
 /**
@@ -379,7 +394,7 @@ function readLocale(state) {
  * attributes from its own three-locale table, so they are re-asserted here and
  * defended by a narrowly scoped attribute observer.
  */
-function applyLocale(locale) {
+function applyLocale(locale, persist = true) {
   const resolved = normalizeLocale(locale);
   applyDocumentLocale(resolved);
   document.documentElement.lang = resolved;
@@ -392,7 +407,7 @@ function applyLocale(locale) {
 
   const select = byId('setting-locale');
   if (select && [...select.options].some(option => option.value === resolved)) select.value = resolved;
-  return saveUiState({ locale: resolved });
+  return persist ? saveUiState({ locale: resolved, localeExplicit: true }) : loadUiState();
 }
 
 function syncThemeColor() {
@@ -400,15 +415,21 @@ function syncThemeColor() {
   if (meta) meta.content = document.documentElement.dataset.theme === 'dark' ? '#171626' : '#25243D';
 }
 
+export function resolveThemePreference(preference, systemDark = false) {
+  if (preference === 'dark') return 'dark';
+  if (preference === 'light') return 'light';
+  return systemDark ? 'dark' : 'light';
+}
+
 function readStoredTheme() {
-  let theme = 'light';
+  let preference = 'system';
   try {
     const preferences = JSON.parse(globalThis.localStorage?.getItem('earthRadio.preferences.v1') || 'null');
-    if (preferences?.theme === 'dark') theme = 'dark';
+    if (['system', 'light', 'dark'].includes(preferences?.theme)) preference = preferences.theme;
   } catch {
-    /* Invalid recovered preferences safely fall back to the light palette. */
+    /* Invalid recovered preferences safely fall back to the system palette. */
   }
-  return theme;
+  return resolveThemePreference(preference, Boolean(globalThis.matchMedia?.('(prefers-color-scheme: dark)')?.matches));
 }
 
 function restoreStoredTheme() {
@@ -434,6 +455,7 @@ function guardDocumentLocale() {
     syncThemeColor();
   });
   observer.observe(document.documentElement, { attributes: true, attributeFilter: ['lang', 'dir', 'data-theme'] });
+  globalThis.matchMedia?.('(prefers-color-scheme: dark)')?.addEventListener?.('change', () => restoreStoredTheme());
   syncThemeColor();
 }
 
@@ -723,7 +745,9 @@ function renderCountryOptions(query = '') {
   if (!list || !input) return;
   const filtered = filterCountryOptions(countryOptions, query);
   const visible = query ? filtered : [{ name: '', code: '', flag: '🌐', count: countryOptions.reduce((sum, option) => sum + option.count, 0) }, ...filtered];
-  activeCountryIndex = visible.length ? Math.min(Math.max(activeCountryIndex, 0), visible.length - 1) : -1;
+  activeCountryIndex = visible.length && activeCountryIndex >= 0
+    ? Math.min(activeCountryIndex, visible.length - 1)
+    : -1;
   list.replaceChildren();
 
   if (!visible.length) {
@@ -775,7 +799,8 @@ function updateCountrySummary() {
   const summary = byId('er-country-summary');
   if (!summary) return;
   if (!selectedCountry) {
-    summary.textContent = '';
+    const count = [...document.querySelectorAll('#search-results .search-result-item:not([hidden]):not(.search-result-item--empty)')].length;
+    summary.textContent = stationQuery && !count ? t('search.noMatch') : '';
     return;
   }
   const count = [...document.querySelectorAll('#search-results .search-result-item:not([hidden])')].length;
@@ -783,10 +808,23 @@ function updateCountrySummary() {
   else summary.textContent = t(stationQuery ? 'search.noStationsForQuery' : 'search.noStationsInCountry', { country: selectedCountry });
 }
 
-function applyCountryScope() {
+function stationResultMatches(result) {
+  const wanted = normalizeSearchTerm(stationQuery);
+  if (!wanted) return true;
+  const resultName = result.querySelector('.search-result-item__name')?.textContent || '';
+  const stationCard = [...document.querySelectorAll('#station-grid .station-card')].find(card => (
+    card.querySelector('.station-card__name')?.textContent || ''
+  ).trim() === resultName.trim());
+  const haystack = normalizeSearchTerm(`${result.textContent || ''} ${stationCard?.textContent || ''}`);
+  return wanted.split(' ').every(term => haystack.includes(term));
+}
+
+function applySearchScope() {
   for (const result of document.querySelectorAll('#search-results .search-result-item')) {
     const meta = result.querySelector('.search-result-item__meta')?.textContent || '';
-    const shouldHide = !matchesSelectedCountry(meta, selectedCountry);
+    const shouldHide = result.classList.contains('search-result-item--empty')
+      ? Boolean(selectedCountry || stationQuery)
+      : !matchesSelectedCountry(meta, selectedCountry) || !stationResultMatches(result);
     if (result.hidden !== shouldHide) result.hidden = shouldHide;
   }
   updateCountrySummary();
@@ -797,7 +835,43 @@ function syncRuntimeSearch() {
   if (!engine) return;
   engine.value = buildCountryStationQuery(countryRuntimeNames.get(selectedCountry) || selectedCountry, stationQuery);
   engine.dispatchEvent(new Event('input', { bubbles: true }));
-  queueMicrotask(applyCountryScope);
+  queueMicrotask(applySearchScope);
+}
+
+function visibleSearchResults() {
+  return [...document.querySelectorAll('#search-results .search-result-item:not([hidden]):not(.search-result-item--empty)')];
+}
+
+function activateSearchResult(result) {
+  const name = result?.querySelector('.search-result-item__name')?.textContent?.trim();
+  if (!name) return false;
+  for (const item of document.querySelectorAll('#search-results [data-er-activated]')) {
+    item.removeAttribute('data-er-activated');
+  }
+  result.setAttribute('data-er-activated', 'true');
+  const card = [...document.querySelectorAll('#station-grid .station-card')].find(item => (
+    item.querySelector('.station-card__name')?.textContent || ''
+  ).trim() === name);
+  const action = card?.querySelector('.station-card__play');
+  if (!action) return false;
+  action.click();
+  setDestination('listen', true);
+  return true;
+}
+
+function navigateVisibleSearchResults(delta) {
+  const results = visibleSearchResults();
+  if (!results.length) return;
+  const current = results.findIndex(result => result.classList.contains('search-result-item--active'));
+  const next = current < 0
+    ? (delta > 0 ? 0 : results.length - 1)
+    : (current + delta + results.length) % results.length;
+  for (const result of document.querySelectorAll('#search-results .search-result-item')) {
+    const active = result === results[next];
+    result.classList.toggle('search-result-item--active', active);
+    result.setAttribute('aria-selected', String(active));
+  }
+  results[next].scrollIntoView({ block: 'nearest' });
 }
 
 function selectCountry(country) {
@@ -856,7 +930,7 @@ function bindCountrySearch() {
     countryScopeQueued = true;
     queueMicrotask(() => {
       countryScopeQueued = false;
-      applyCountryScope();
+      applySearchScope();
     });
   }).observe(byId('search-results'), { childList: true, subtree: true });
 
@@ -866,7 +940,7 @@ function bindCountrySearch() {
   });
   bindSettledInput(country, () => {
     if (country.value === selectedCountry) return;
-    activeCountryIndex = 0;
+    activeCountryIndex = -1;
     renderCountryOptions(country.value);
     setCountryOptionsOpen(true);
   });
@@ -881,7 +955,19 @@ function bindCountrySearch() {
       syncRuntimeSearch();
       return;
     }
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      event.preventDefault();
+      navigateVisibleSearchResults(event.key === 'ArrowDown' ? 1 : -1);
+      return;
+    }
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      const results = visibleSearchResults();
+      activateSearchResult(results.find(result => result.classList.contains('search-result-item--active')) || results[0]);
+      return;
+    }
     engine.dispatchEvent(new KeyboardEvent('keydown', { key: event.key, bubbles: true, cancelable: true }));
+    if (event.key === 'Escape') queueMicrotask(() => presentSearch(true));
   });
 
   country.addEventListener('focus', () => {
@@ -918,7 +1004,7 @@ function bindCountrySearch() {
  * Overflow sheet
  * ------------------------------------------------------------------ */
 
-function setOverflowOpen(open, invoker = null) {
+function setOverflowOpen(open, invoker = null, restore = true) {
   const sheet = byId('er-overflow');
   const toggle = document.querySelector('[data-er-overflow]');
   if (!sheet) return;
@@ -929,9 +1015,19 @@ function setOverflowOpen(open, invoker = null) {
   if (open) {
     focusReturn = invoker || toggle;
     focusFirst(sheet);
-  } else if (wasOpen) {
+  } else if (wasOpen && restore) {
     restoreFocus('er-overflow-toggle');
+  } else if (wasOpen) {
+    focusReturn = null;
   }
+}
+
+function focusProxySurface(targetId) {
+  const surface = targetId === 'settings-toggle' ? byId('settings-modal')
+    : targetId === 'filters-toggle' ? byId('filter-sidebar')
+      : null;
+  if (!surface) return;
+  queueMicrotask(() => surface.querySelector(FOCUSABLE)?.focus?.({ preventScroll: true }));
 }
 
 /* ------------------------------------------------------------------ *
@@ -981,6 +1077,8 @@ function applySavedSegment(segment) {
  * Now Playing
  * ------------------------------------------------------------------ */
 
+let pendingNowPlayingDestination = null;
+
 function openNowPlaying(invoker = null, push = true) {
   const panel = byId('er-nowplaying');
   if (!panel || panel.classList.contains('is-open')) return;
@@ -1024,6 +1122,39 @@ function syncNowPlaying() {
   const favorite = byId('btn-favorite');
   const proxy = document.querySelector('#er-nowplaying [data-click-id="btn-favorite"]');
   if (favorite && proxy) proxy.setAttribute('aria-pressed', favorite.getAttribute('aria-pressed') || 'false');
+  const play = byId('btn-play');
+  const playProxy = document.querySelector('#er-nowplaying [data-er-nowplaying-play]');
+  if (play && playProxy) {
+    const label = play.getAttribute('aria-label') || t('player.play');
+    playProxy.textContent = label;
+    playProxy.setAttribute('aria-label', label);
+  }
+  syncNowPlayingMetadata();
+}
+
+function cloneWithoutIds(source) {
+  const clone = source.cloneNode(true);
+  if (clone instanceof Element) {
+    clone.removeAttribute('id');
+    for (const element of clone.querySelectorAll('[id]')) element.removeAttribute('id');
+  }
+  return clone;
+}
+
+function syncNowPlayingMetadata() {
+  const destination = byId('er-nowplaying-metadata');
+  if (!destination) return;
+  const card = byId('metadata-card');
+  const links = byId('nowcard-links');
+  const nodes = [];
+  if (card) nodes.push(cloneWithoutIds(card));
+  if (links?.childElementCount) nodes.push(cloneWithoutIds(links));
+  if (!nodes.length) {
+    const status = document.createElement('p');
+    status.textContent = t('nowplaying.metadataWaiting');
+    nodes.push(status);
+  }
+  destination.replaceChildren(...nodes);
 }
 
 function trapNowPlayingFocus(event) {
@@ -1054,14 +1185,26 @@ function bindActions() {
   document.addEventListener('click', event => {
     const target = event.target instanceof Element ? event.target : null;
     if (!target) return;
+    const searchResult = target.closest('#search-results .search-result-item:not(.search-result-item--empty)');
+    if (searchResult && loadUiState().destination === 'search') {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      activateSearchResult(searchResult);
+      return;
+    }
     const dest = target.closest('button[data-er-dest]');
     if (dest) {
       event.preventDefault();
+      const destination = dest.getAttribute('data-er-dest');
       if (document.documentElement.classList.contains('er-nowplaying-open')) {
-        if (parseNowPlayingHistory(history.state)) history.back();
-        else closeNowPlaying();
+        if (parseNowPlayingHistory(history.state)) {
+          pendingNowPlayingDestination = destination;
+          history.back();
+          return;
+        }
+        closeNowPlaying();
       }
-      setDestination(dest.getAttribute('data-er-dest'), true);
+      setDestination(destination, true);
       return;
     }
 
@@ -1095,9 +1238,21 @@ function bindActions() {
 
     const proxy = target.closest('[data-click-id]');
     if (proxy) {
-      clickExisting(proxy.getAttribute('data-click-id'));
-      if (proxy.closest('#er-overflow')) setOverflowOpen(false);
+      const targetId = proxy.getAttribute('data-click-id');
+      clickExisting(targetId);
+      if (proxy.closest('#er-overflow')) {
+        const transfersFocus = targetId === 'settings-toggle' || targetId === 'filters-toggle';
+        setOverflowOpen(false, null, !transfersFocus);
+        if (transfersFocus) focusProxySurface(targetId);
+      }
       queueMicrotask(syncNowPlaying);
+      return;
+    }
+
+    const sleep = target.closest('[data-er-sleep-min]');
+    if (sleep) {
+      const minutes = sleep.getAttribute('data-er-sleep-min');
+      document.querySelector(`#sleep-menu [data-min="${CSS.escape(minutes)}"]`)?.click();
       return;
     }
 
@@ -1140,6 +1295,12 @@ function bindActions() {
   window.addEventListener('popstate', event => {
     if (!parseNowPlayingHistory(event.state) && document.documentElement.classList.contains('er-nowplaying-open')) {
       closeNowPlaying();
+    }
+    if (!parseNowPlayingHistory(event.state) && pendingNowPlayingDestination) {
+      const destination = pendingNowPlayingDestination;
+      pendingNowPlayingDestination = null;
+      setDestination(destination, true);
+      return;
     }
     const dest = parseDestination(location.hash);
     if (dest && dest !== loadUiState().destination) setDestination(dest, false);
@@ -1283,11 +1444,14 @@ function observeRuntime() {
     ...RUNTIME_TEXT_SCOPES.map(scope => scope.id),
     'player-station',
     'player-meta',
-    'nowcard-art'
+    'nowcard-art',
+    'nowcard',
+    'btn-play',
+    'btn-favorite'
   ];
   for (const id of new Set(watched)) {
     const node = byId(id);
-    if (node) observer.observe(node, { childList: true, characterData: true, subtree: true });
+    if (node) observer.observe(node, { childList: true, characterData: true, attributes: true, subtree: true });
   }
 
   const grid = byId('station-grid');
@@ -1325,11 +1489,12 @@ function start() {
   const state = saveUiState({
     ...loaded,
     destination: hashDest || loaded.destination,
-    locale: readLocale(loaded)
+    locale: readLocale(loaded),
+    localeExplicit: loaded.localeExplicit
   });
 
   restoreStoredTheme();
-  applyLocale(state.locale);
+  applyLocale(state.locale, false);
   guardDocumentLocale();
   applyViewport(loadUiState());
   bindActions();

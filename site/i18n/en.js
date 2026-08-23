@@ -151,6 +151,8 @@ export default {
 
   'nowplaying.title': 'Now Playing',
   'nowplaying.label': 'Now playing',
+  'nowplaying.metadata': 'Track metadata confidence',
+  'nowplaying.metadataWaiting': 'Waiting for live station metadata',
   'nowplaying.dismiss': 'Close Now Playing',
   'nowplaying.live': 'Live station',
   'nowplaying.more': 'More station actions',
@@ -164,6 +166,9 @@ export default {
   'nowplaying.onAir': 'On air',
 
   'sleep.minutes': '{minutes} min',
+  'sleep.15': '15 min',
+  'sleep.30': '30 min',
+  'sleep.60': '60 min',
   'sleep.off': 'Off',
 
   'desktop.separator': 'Resize station list and map',

@@ -151,6 +151,8 @@ export default {
 
   'nowplaying.title': 'Reproduciendo ahora',
   'nowplaying.label': 'Reproduciendo ahora',
+  'nowplaying.metadata': 'Confianza de los metadatos de la pista',
+  'nowplaying.metadataWaiting': 'Esperando metadatos en vivo de la emisora',
   'nowplaying.dismiss': 'Cerrar Reproduciendo ahora',
   'nowplaying.live': 'Emisora en vivo',
   'nowplaying.more': 'Más acciones de la emisora',
@@ -164,6 +166,9 @@ export default {
   'nowplaying.onAir': 'En antena',
 
   'sleep.minutes': '{minutes} min',
+  'sleep.15': '15 min',
+  'sleep.30': '30 min',
+  'sleep.60': '60 min',
   'sleep.off': 'Off',
 
   'desktop.separator': 'Redimensionar lista y mapa',

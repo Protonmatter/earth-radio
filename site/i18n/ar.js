@@ -151,6 +151,8 @@ export default {
 
   'nowplaying.title': 'قيد التشغيل الآن',
   'nowplaying.label': 'قيد التشغيل الآن',
+  'nowplaying.metadata': 'درجة موثوقية بيانات المقطع',
+  'nowplaying.metadataWaiting': 'بانتظار بيانات المحطة المباشرة',
   'nowplaying.dismiss': 'إغلاق قيد التشغيل الآن',
   'nowplaying.live': 'محطة مباشرة',
   'nowplaying.more': 'مزيد من إجراءات المحطة',
@@ -164,6 +166,9 @@ export default {
   'nowplaying.onAir': 'على الهواء',
 
   'sleep.minutes': '{minutes} د',
+  'sleep.15': '15 د',
+  'sleep.30': '30 د',
+  'sleep.60': '60 د',
   'sleep.off': 'إيقاف',
 
   'desktop.separator': 'تغيير حجم قائمة المحطات والخريطة',

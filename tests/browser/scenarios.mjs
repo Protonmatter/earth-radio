@@ -61,6 +61,63 @@ export const SCENARIOS = [
     ]
   },
   {
+    id: 'mobile-search-select-390x844',
+    title: 'iPhone 14 portrait — select a station from Search',
+    width: 390,
+    height: 844,
+    destination: 'listen',
+    safeArea: IPHONE_SAFE_AREA,
+    seed: SEEDED,
+    actions: [
+      { type: 'click', selector: '[data-er-dest="search"]' },
+      {
+        type: 'script',
+        code: `(() => {
+          const input = document.querySelector('#er-station-query');
+          input.value = 'Atlas';
+          input.dispatchEvent(new Event('input', { bubbles: true }));
+          return true;
+        })()`
+      },
+      { type: 'wait', ms: 200 },
+      {
+        type: 'script',
+        code: `(() => {
+          window.__erSettledSearchNames = [...document.querySelectorAll('#search-results .search-result-item:not([hidden]) .search-result-item__name')]
+            .map(node => (node.textContent || '').trim());
+          return window.__erSettledSearchNames.length;
+        })()`
+      },
+      { type: 'click', selector: '#search-results .search-result-item:not([hidden])' },
+      { type: 'wait', ms: 250 }
+    ]
+  },
+  {
+    id: 'mobile-search-keyboard-select-390x844',
+    title: 'iPhone 14 portrait — keyboard station selection from Search',
+    width: 390,
+    height: 844,
+    destination: 'listen',
+    safeArea: IPHONE_SAFE_AREA,
+    seed: SEEDED,
+    actions: [
+      { type: 'click', selector: '[data-er-dest="search"]' },
+      {
+        type: 'script',
+        code: `(() => {
+          const input = document.querySelector('#er-station-query');
+          input.value = 'Atlas';
+          input.dispatchEvent(new Event('input', { bubbles: true }));
+          return true;
+        })()`
+      },
+      { type: 'wait', ms: 200 },
+      { type: 'key', key: 'ArrowDown' },
+      { type: 'key', key: 'Enter' },
+      { type: 'wait', ms: 250 }
+    ]
+  },
+  {
     id: 'mobile-map-390x844',
     title: 'iPhone 14 portrait — Map destination',
     width: 390,
@@ -87,8 +144,25 @@ export const SCENARIOS = [
     safeArea: IPHONE_SAFE_AREA,
     seed: SEEDED,
     actions: [
+      { type: 'click', selector: '#station-grid .station-card__play' },
+      { type: 'wait', ms: 200 },
       { type: 'click', selector: '#er-open-nowplaying' },
       { type: 'wait', ms: 200 }
+    ]
+  },
+  {
+    id: 'mobile-nowplaying-map-390x844',
+    title: 'iPhone 14 portrait — Now Playing map shortcut',
+    width: 390,
+    height: 844,
+    destination: 'listen',
+    safeArea: IPHONE_SAFE_AREA,
+    seed: SEEDED,
+    actions: [
+      { type: 'click', selector: '#station-grid .station-card__play' },
+      { type: 'click', selector: '#er-open-nowplaying' },
+      { type: 'click', selector: '#er-nowplaying [data-er-dest="map"]' },
+      { type: 'wait', ms: 300 }
     ]
   },
   {
@@ -102,6 +176,20 @@ export const SCENARIOS = [
     actions: [
       { type: 'click', selector: '[data-er-overflow]' },
       { type: 'wait', ms: 150 }
+    ]
+  },
+  {
+    id: 'mobile-overflow-settings-390x844',
+    title: 'iPhone 14 portrait — overflow opens Settings with focus',
+    width: 390,
+    height: 844,
+    destination: 'listen',
+    safeArea: IPHONE_SAFE_AREA,
+    seed: SEEDED,
+    actions: [
+      { type: 'click', selector: '[data-er-overflow]' },
+      { type: 'click', selector: '#er-overflow [data-click-id="settings-toggle"]' },
+      { type: 'wait', ms: 200 }
     ]
   },
   {

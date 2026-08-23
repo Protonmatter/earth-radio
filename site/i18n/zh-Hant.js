@@ -151,6 +151,8 @@ export default {
 
   'nowplaying.title': '正在播放',
   'nowplaying.label': '正在播放',
+  'nowplaying.metadata': '曲目中繼資料可信度',
+  'nowplaying.metadataWaiting': '正在等待電台即時中繼資料',
   'nowplaying.dismiss': '關閉正在播放',
   'nowplaying.live': '直播電臺',
   'nowplaying.more': '更多電臺動作',
@@ -164,6 +166,9 @@ export default {
   'nowplaying.onAir': '播出中',
 
   'sleep.minutes': '{minutes} 分鐘',
+  'sleep.15': '15 分鐘',
+  'sleep.30': '30 分鐘',
+  'sleep.60': '60 分鐘',
   'sleep.off': '關閉',
 
   'desktop.separator': '調整電臺列表與地圖',

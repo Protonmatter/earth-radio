@@ -43,6 +43,19 @@ test('responsive UI rendered matrix preserves layout, actions, and locale contra
   assert.equal(search.probe.activeElement.id, 'er-station-query');
   assert.equal(search.imeDuringComposition, 0, 'IME input filtered before compositionend');
 
+  const selectedSearch = byId(payload.results, 'mobile-search-select-390x844').probe;
+  assert.equal(selectedSearch.destination, 'listen');
+  assert.equal(selectedSearch.searchPanel.visible, false);
+  assert.equal(selectedSearch.activatedSearchName, 'Atlas Editorial FM');
+  assert.ok(selectedSearch.settledSearchNames.length > 0);
+  assert.ok(selectedSearch.settledSearchNames.length < selectedSearch.stationCount);
+  assert.equal(selectedSearch.settledSearchNames.every(name => /atlas/i.test(name)), true);
+
+  const keyboardSearch = byId(payload.results, 'mobile-search-keyboard-select-390x844').probe;
+  assert.equal(keyboardSearch.destination, 'listen');
+  assert.equal(keyboardSearch.searchPanel.visible, false);
+  assert.equal(keyboardSearch.activatedSearchName, 'Atlas Editorial FM');
+
   const countrySearch = byId(payload.results, 'mobile-country-search-390x844').probe;
   assert.equal(countrySearch.stationQuery.visible, true);
   assert.equal(countrySearch.countryQuery.visible, true);
@@ -71,12 +84,36 @@ test('responsive UI rendered matrix preserves layout, actions, and locale contra
   assert.equal(nowPlaying.nowPlaying.visible, true);
   assert.equal(nowPlaying.nowPlayingDismiss.actionable, true);
   assert.equal(nowPlaying.activeElement.id, 'er-nowplaying-dismiss');
+  assert.notEqual(nowPlaying.nowPlayingTitle.text, 'Select a station');
+  assert.equal(nowPlaying.nowPlayingMetadata.visible, true);
+  assert.match(nowPlaying.nowPlayingMetadata.text, /Station metadata only|Identifying|Identified|Raw ICY/i);
+  assert.equal(nowPlaying.nowPlayingPlay.ariaLabel, nowPlaying.playerPlay.ariaLabel);
+  assert.ok(nowPlaying.nowPlayingSleepButtons.length >= 4);
+  assert.equal(nowPlaying.nowPlayingSleepButtons.every(item => item.actionable), true);
+
+  const nowPlayingMap = byId(payload.results, 'mobile-nowplaying-map-390x844').probe;
+  assert.equal(nowPlayingMap.destination, 'map');
+  assert.equal(nowPlayingMap.nowPlaying.visible, false);
 
   const overflow = byId(payload.results, 'mobile-overflow-390x844').probe;
   assert.equal(overflow.overflowSheet.visible, true);
   assert.equal(overflow.headerOverflow.ariaExpanded, 'true');
   assert.equal(overflow.overflowItems.every(item => item.actionable), true);
   assert.equal(overflow.activeElement.tag, 'BUTTON');
+
+  const overflowSettings = byId(payload.results, 'mobile-overflow-settings-390x844').probe;
+  assert.equal(overflowSettings.overflowSheet.visible, false);
+  assert.equal(overflowSettings.settingsModal.visible, true);
+  assert.equal(
+    ['INPUT', 'BUTTON', 'SELECT'].includes(overflowSettings.activeElement.tag),
+    true,
+    'Settings did not receive focus after opening from overflow'
+  );
+  assert.notEqual(overflowSettings.activeElement.id, 'er-overflow-toggle');
+
+  const landscape = byId(payload.results, 'mobile-landscape-844x390').probe;
+  assert.equal(landscape.safeAreaVariables.start, '50px');
+  assert.equal(landscape.safeAreaVariables.end, '50px');
 
   const desktop = byId(payload.results, 'desktop-1440x900').probe;
   assert.match(desktop.documentElementClass, /\ber-desktop\b/);

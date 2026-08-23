@@ -413,6 +413,16 @@ html.er-root .player-btn--large {
   border-color: transparent;
 }
 
+html.er-root .player-btn--large {
+  transition: none;
+}
+
+html[data-theme="dark"].er-root .daily-action--primary,
+html[data-theme="dark"].er-root .er-mobile-nav .is-active,
+html[data-theme="dark"].er-root .player-btn--large {
+  background: var(--er-coral);
+}
+
 /* ------------------------------------------------------------------ *
  * Layer controls
  * ------------------------------------------------------------------ */
@@ -1089,12 +1099,40 @@ html.er-desktop .er-nowplaying {
 }
 
 .er-nowplaying-head,
-.er-nowplaying-actions {
+.er-nowplaying-actions,
+.er-nowplaying-sleep {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
+}
+
+.er-nowplaying-sleep {
+  padding: 12px;
+  border: 1px solid var(--er-stroke);
+  border-radius: 14px;
+  background: var(--er-paper-2);
+}
+
+.er-nowplaying-sleep button {
+  min-width: 44px;
+  min-height: 44px;
+  border: 1px solid var(--er-stroke);
+  border-radius: 999px;
+  padding: 0 14px;
+  background: var(--er-paper);
+  color: var(--er-ink);
+  font: inherit;
+}
+
+.er-nowplaying-metadata {
+  width: min(100%, 720px);
+  margin-inline: auto;
+}
+
+.er-nowplaying-metadata:empty {
+  display: none;
 }
 
 .er-nowplaying-art {

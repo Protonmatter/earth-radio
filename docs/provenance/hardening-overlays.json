@@ -81,10 +81,10 @@
         "sha256": "c007984ee6349eaee532c1b3e2297e7fdac81610d4fae167c7595e127cef2d42"
       },
       "current": {
-        "bytes": 21270,
-        "sha256": "6189f06147711afa2d62e05e48a233e9a674cf3be05b60fefb8f54ac86173787"
+        "bytes": 21913,
+        "sha256": "51cd8184179550059d546889d2029d3aa525dc66b6b69e623ee61fb1829ac01b"
       },
-      "reason": "Move frame-ancestors enforcement to the deployable response header policy, then add responsive landmarks, iOS viewport/audio attributes, mobile destinations, compact header icons, additive responsive assets, and the country-scoped search controls."
+      "reason": "Move frame-ancestors enforcement to the deployable response header policy, then add responsive landmarks, iOS viewport/audio attributes, mobile destinations, compact header icons, additive responsive assets, country and station search controls, and complete Now Playing metadata and sleep actions."
     },
     {
       "path": "site/manifest.webmanifest",
@@ -106,7 +106,7 @@
       },
       "current": {
         "bytes": 2350,
-        "sha256": "30e06686a0861d9711af7500662365e86c4f043944036f82077f61ef943803f8"
+        "sha256": "20b244c08436b0948bf7b2ae941f6bb9b95134fab129d4ade2c1ecb264421731"
       },
       "reason": "Use network-first navigation/configuration updates, cache the responsive shell and i18n catalogs under a bumped UI cache version, and keep hashed recovered assets cache-first."
     }
