@@ -55,19 +55,20 @@ test('responsive UI rendered matrix preserves layout, actions, and locale contra
   const selectedSearch = byId(payload.results, 'mobile-search-select-390x844').probe;
   assert.equal(selectedSearch.destination, 'listen');
   assert.equal(selectedSearch.searchPanel.visible, false);
+  assert.equal(selectedSearch.countryQuery.value, 'Canada');
   assert.equal(selectedSearch.activatedSearchName, 'Atlas Editorial FM');
-  assert.ok(selectedSearch.settledSearchNames.length > 0);
+  assert.equal(selectedSearch.settledSearchNames.length, 1);
   assert.ok(selectedSearch.settledSearchNames.length < selectedSearch.stationCount);
   assert.equal(selectedSearch.settledSearchNames.every(name => /atlas/i.test(name)), true);
   const selectedSearchResult = byId(payload.results, 'mobile-search-select-390x844');
   assert.equal(selectedSearchResult.actionLog.find(entry => entry.action.type === 'pointer')?.result.trustedPointer?.received?.isTrusted, true);
-  assert.ok(selectedSearchResult.streamHosts.includes('stream49.example.invalid'));
+  assert.equal(selectedSearchResult.streamHosts[0], 'stream49.example.invalid');
 
   const keyboardSearch = byId(payload.results, 'mobile-search-keyboard-select-390x844').probe;
   assert.equal(keyboardSearch.destination, 'listen');
   assert.equal(keyboardSearch.searchPanel.visible, false);
   assert.equal(keyboardSearch.activatedSearchName, 'Praha Vinyl');
-  assert.ok(byId(payload.results, 'mobile-search-keyboard-select-390x844').streamHosts.includes('stream44.example.invalid'));
+  assert.equal(byId(payload.results, 'mobile-search-keyboard-select-390x844').streamHosts[0], 'stream44.example.invalid');
 
   const countrySearch = byId(payload.results, 'mobile-country-search-390x844').probe;
   assert.equal(countrySearch.stationQuery.visible, true);

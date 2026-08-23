@@ -500,8 +500,8 @@
     },
     {
       "path": "tests/browser/scenarios.mjs",
-      "bytes": 11126,
-      "sha256": "0568e1fe7bd99c5f90c38f90926032a3222ccd861fecb0f0f306542ee8495fcd"
+      "bytes": 11479,
+      "sha256": "65840d2fb741208adec30dceed49774236b3813e98e748987c8883ee964d0d25"
     },
     {
       "path": "tests/country-search.test.mjs",
@@ -545,8 +545,8 @@
     },
     {
       "path": "tests/rendered-ui.test.mjs",
-      "bytes": 9251,
-      "sha256": "9e87f6e47a26a52ce95d09e83bbbbdc1e2bd464b0b852f80f402e17ced303581"
+      "bytes": 9308,
+      "sha256": "b297a18c59906b8d5db0ecad12beec6ea87408f1c12043b3fde655d9b7ed0545"
     },
     {
       "path": "tests/responsive-ui.test.mjs",

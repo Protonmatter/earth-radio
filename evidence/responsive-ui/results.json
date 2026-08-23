@@ -13344,6 +13344,36 @@
         },
         {
           "action": {
+            "type": "focus",
+            "selector": "#er-country-query"
+          },
+          "result": {
+            "destination": "search",
+            "collapsed": "",
+            "split": "42",
+            "overflowOpen": false,
+            "nowPlayingOpen": false,
+            "activeElement": "er-country-query",
+            "trustedPointer": null
+          }
+        },
+        {
+          "action": {
+            "type": "script",
+            "code": "(() => {\n          const option = [...document.querySelectorAll('#er-country-options [role=\"option\"]')]\n            .find(node => node.dataset.country === 'Canada');\n          option?.click();\n          return Boolean(option);\n        })()"
+          },
+          "result": {
+            "destination": "search",
+            "collapsed": "",
+            "split": "42",
+            "overflowOpen": false,
+            "nowPlayingOpen": false,
+            "activeElement": "er-station-query",
+            "trustedPointer": null
+          }
+        },
+        {
+          "action": {
             "type": "script",
             "code": "(() => {\n          const input = document.querySelector('#er-station-query');\n          input.value = 'duplicate';\n          input.dispatchEvent(new Event('input', { bubbles: true }));\n          return true;\n        })()"
           },
@@ -15507,7 +15537,7 @@
           "ariaPressed": null,
           "ariaExpanded": "false",
           "ariaLabel": null,
-          "value": "",
+          "value": "Canada",
           "id": "er-country-query",
           "className": ""
         },
@@ -16252,7 +16282,7 @@
           },
           "visible": false,
           "actionable": false,
-          "text": "",
+          "text": "1 stations in Canada",
           "ariaCurrent": null,
           "ariaPressed": null,
           "ariaExpanded": null,
@@ -16283,6 +16313,28 @@
             "value": "",
             "id": "",
             "className": "search-result-item search-result-item--active"
+          },
+          {
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 0,
+              "height": 0,
+              "top": 0,
+              "left": 0,
+              "right": 0,
+              "bottom": 0
+            },
+            "visible": false,
+            "actionable": false,
+            "text": "🇨🇦Radio Paper TrailCanada · MP3 · 128 kbps · strong",
+            "ariaCurrent": null,
+            "ariaPressed": null,
+            "ariaExpanded": null,
+            "ariaLabel": null,
+            "value": "",
+            "id": "",
+            "className": "search-result-item"
           },
           {
             "rect": {
@@ -16716,28 +16768,6 @@
             "visible": false,
             "actionable": false,
             "text": "🇮🇹Radio OstinatoItaly · MP3 · 192 kbps · strong",
-            "ariaCurrent": null,
-            "ariaPressed": null,
-            "ariaExpanded": null,
-            "ariaLabel": null,
-            "value": "",
-            "id": "",
-            "className": "search-result-item"
-          },
-          {
-            "rect": {
-              "x": 0,
-              "y": 0,
-              "width": 0,
-              "height": 0,
-              "top": 0,
-              "left": 0,
-              "right": 0,
-              "bottom": 0
-            },
-            "visible": false,
-            "actionable": false,
-            "text": "🇨🇦Radio Paper TrailCanada · MP3 · 128 kbps · strong",
             "ariaCurrent": null,
             "ariaPressed": null,
             "ariaExpanded": null,
@@ -45224,7 +45254,7 @@
         },
         "horizontalOverflow": 0,
         "bodyOverflow": 0,
-        "stationCount": 6,
+        "stationCount": 5,
         "header": {
           "rect": {
             "x": 0,

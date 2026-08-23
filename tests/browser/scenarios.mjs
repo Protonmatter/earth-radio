@@ -70,6 +70,16 @@ export const SCENARIOS = [
     seed: SEEDED,
     actions: [
       { type: 'click', selector: '[data-er-dest="search"]' },
+      { type: 'focus', selector: '#er-country-query' },
+      {
+        type: 'script',
+        code: `(() => {
+          const option = [...document.querySelectorAll('#er-country-options [role="option"]')]
+            .find(node => node.dataset.country === 'Canada');
+          option?.click();
+          return Boolean(option);
+        })()`
+      },
       {
         type: 'script',
         code: `(() => {
