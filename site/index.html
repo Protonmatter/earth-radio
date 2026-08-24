@@ -20,6 +20,7 @@
   <link rel="stylesheet" crossorigin href="./assets/index-CSoL7F-Y.css">
   <link rel="stylesheet" href="./assets/responsive-ui.css" />
   <script type="module" src="./assets/responsive-ui.js"></script>
+  <link rel="stylesheet" href="./assets/ui-refresh.css" />
 </head>
 <body>
   <a class="er-skip" href="#grid-panel" data-i18n="app.skip">Skip to station list</a>
@@ -38,17 +39,17 @@
       <button id="er-restore-panel" class="er-collapse" type="button" hidden data-er-collapse="map" data-i18n="desktop.restoreMap">Show map</button>
     </div>
     <div class="header-right">
-      <button class="header-btn" id="refresh-stations" type="button" data-i18n="header.refresh" aria-label="Refresh station directory">Refresh</button>
       <button class="header-btn" id="surprise" type="button" data-i18n="header.surprise" aria-label="Surprise me with a station">World Scan</button>
-      <button class="header-btn" id="recent-toggle" type="button" aria-pressed="false" data-i18n="saved.recent" aria-label="Show recently played">Recent</button>
-      <button class="header-btn header-btn--utility" id="export-data" type="button" data-i18n="header.export" aria-label="Export favorites and preferences">Export</button>
-      <button class="header-btn header-btn--utility" id="import-data" type="button" data-i18n="header.import" aria-label="Import favorites and preferences from JSON">Import</button>
-      <input id="import-data-input" type="file" accept="application/json,.json" hidden aria-hidden="true" />
       <button class="header-btn" id="favorites-toggle" type="button" aria-pressed="false" data-i18n="header.favorites" data-i18n-attr="aria-label" aria-label="Show favorites only">
         <span class="heart-icon" aria-hidden="true">&#9829;</span>
         <span class="favorites-count">0</span>
       </button>
+      <button class="header-btn" id="recent-toggle" type="button" aria-pressed="false" data-i18n="saved.recent" aria-label="Show recently played">Recent</button>
       <button class="header-btn" id="filters-toggle" data-open-filters type="button" aria-controls="filter-sidebar" aria-expanded="false" data-i18n="header.filters">Filters</button>
+      <button class="header-btn" id="refresh-stations" type="button" data-i18n="header.refresh" aria-label="Refresh station directory">Refresh</button>
+      <button class="header-btn header-btn--utility" id="export-data" type="button" data-i18n="header.export" aria-label="Export favorites and preferences">Export</button>
+      <button class="header-btn header-btn--utility" id="import-data" type="button" data-i18n="header.import" aria-label="Import favorites and preferences from JSON">Import</button>
+      <input id="import-data-input" type="file" accept="application/json,.json" hidden aria-hidden="true" />
       <button class="header-btn header-btn--icon" id="theme-toggle" type="button" data-i18n="header.theme" data-i18n-attr="aria-label" aria-label="Toggle theme"></button>
       <button class="header-btn header-btn--icon" id="settings-toggle" type="button" data-i18n="header.settings" data-i18n-attr="aria-label" aria-label="Settings"></button>
       <span class="kbd-hint" aria-hidden="true"><kbd>&#8984;</kbd><kbd>K</kbd></span>

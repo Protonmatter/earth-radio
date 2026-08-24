@@ -10,8 +10,8 @@
     },
     {
       "path": "docs/ARCHITECTURE.md",
-      "bytes": 4271,
-      "sha256": "7cd7f6a7c9d26b8fd6cb0c60729c791145b4b3cf0339821dc1740e2c05445938"
+      "bytes": 4681,
+      "sha256": "b8091c98b79f66699510b74e284336d4feadca68db713cff65a0016c3a93d8ec"
     },
     {
       "path": "docs/BUILD_STATE.md",
@@ -20,8 +20,8 @@
     },
     {
       "path": "docs/OPERATIONS.md",
-      "bytes": 3419,
-      "sha256": "ae04b4bbabe4827fad8783a58dab17e4aed8340f01fb09652d438d0087ea6643"
+      "bytes": 3437,
+      "sha256": "309d799ade9f23e7ca952f9d78f07860ff09bca16aa048464c7e072b0a99516e"
     },
     {
       "path": "docs/PROVENANCE.md",
@@ -30,8 +30,8 @@
     },
     {
       "path": "docs/provenance/hardening-overlays.json",
-      "bytes": 4489,
-      "sha256": "194a45888c0aa67cbc5efd60e4b9485686ac92817a0f364fa01c9ea726bdbef2"
+      "bytes": 4642,
+      "sha256": "96b6365db7c9fee44b8be082a62d970c96cd5e84608300fbdc992b7e629969b9"
     },
     {
       "path": "docs/provenance/recovery-manifest.json",
@@ -170,8 +170,8 @@
     },
     {
       "path": "site/_headers",
-      "bytes": 1252,
-      "sha256": "40eeecfb9fb3b45d6cecfe3dd933a0d2f0200797febe9c28ac708ef9f787d8c7"
+      "bytes": 1330,
+      "sha256": "ce315362d625b237018fa47f22c70d2667cd207c4bb7cee2b330546b2a7e639e"
     },
     {
       "path": "site/assets/hls.light-Dr1Fv81C.js",
@@ -205,8 +205,13 @@
     },
     {
       "path": "site/assets/responsive-ui.js",
-      "bytes": 59345,
-      "sha256": "3862f209ed596900a154e78aa14cff098be734ff1db97959aa429b8079e7cdf5"
+      "bytes": 60133,
+      "sha256": "31dbdbd0f3c9c0f46aeacbff209cfc9ab61b47629a61170d9fa77c5a5b9026ba"
+    },
+    {
+      "path": "site/assets/ui-refresh.css",
+      "bytes": 32884,
+      "sha256": "8faba6bf1b0be3d75eab8abd9d07cc707f758dc110be8a6238529e2319d2a61a"
     },
     {
       "path": "site/config.js",
@@ -270,8 +275,8 @@
     },
     {
       "path": "site/index.html",
-      "bytes": 21918,
-      "sha256": "2da59c3ac553ac88ecbfde6a2b570510d11edf1710d2317683f7b3e038db2bfe"
+      "bytes": 21977,
+      "sha256": "fb3146b5f9594c643bd904a1441dd7c63c82a0b4502923f72eef2539fdf498b9"
     },
     {
       "path": "site/manifest.webmanifest",
@@ -280,8 +285,8 @@
     },
     {
       "path": "site/sw.js",
-      "bytes": 2451,
-      "sha256": "975a5227b0ce8c077ecf9455d923291623b81f59e1e6031343e2361abd9a9f8a"
+      "bytes": 2480,
+      "sha256": "521342ede127b7974bc39b8e24b195cc61e7cbb881a2d5b4a4643f25add250e2"
     },
     {
       "path": "src-recovered/core/config.ts",
@@ -545,8 +550,8 @@
     },
     {
       "path": "tests/rendered-ui.test.mjs",
-      "bytes": 9308,
-      "sha256": "b297a18c59906b8d5db0ecad12beec6ea87408f1c12043b3fde655d9b7ed0545"
+      "bytes": 9467,
+      "sha256": "abdfb33c792a6ee3976b5f392583623fb0229598708bd4c9a51118334f19b8b6"
     },
     {
       "path": "tests/responsive-ui.test.mjs",
@@ -555,8 +560,8 @@
     },
     {
       "path": "tests/service-worker.test.mjs",
-      "bytes": 2562,
-      "sha256": "1061ffe7ba2fe0f6d8b55c22825d6741392377da8e71825987bf5f99813478da"
+      "bytes": 2607,
+      "sha256": "490497222133ffe03c77b37d5e9452d6c68d82c7d7c671b43a2ab77f8a1235a3"
     },
     {
       "path": "tests/smoke-desktop.mjs",
