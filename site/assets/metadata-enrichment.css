@@ -1,4 +1,4 @@
-/* Earth Radio metadata enrichment v0.24.0 */
+/* Earth Radio metadata enrichment v0.25.0 */
 .nowcard--metadata-enhanced .nowcard-links {
   margin-bottom: 0.5rem;
 }
@@ -125,6 +125,29 @@
   margin-top: 0.5rem;
   font-size: 0.72rem;
   opacity: 0.62;
+  overflow-wrap: anywhere;
+}
+.metadata-pill--fingerprint {
+  background: rgba(155, 110, 255, 0.2);
+}
+.metadata-pill--feed {
+  background: rgba(31, 185, 113, 0.16);
+}
+.metadata-fingerprint-row {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-top: 0.55rem;
+}
+.metadata-fingerprint-row[hidden] {
+  display: none;
+}
+.metadata-fingerprint-row .nowcard-action {
+  flex: 0 0 auto;
+}
+.metadata-fingerprint-status {
+  font-size: 0.72rem;
+  opacity: 0.72;
   overflow-wrap: anywhere;
 }
 @media (max-width: 820px) {

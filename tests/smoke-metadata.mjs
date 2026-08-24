@@ -17,7 +17,11 @@ const required = [
   'site/assets/metadata-enrichment.css',
   'server/metadata-providers.mjs',
   'server/metadata-api.mjs',
-  'docs/recovered/METADATA_ENRICHMENT_IMPLEMENTATION.md'
+  'server/net-guard.mjs',
+  'server/platform-nowplaying.mjs',
+  'server/fingerprint-providers.mjs',
+  'docs/recovered/METADATA_ENRICHMENT_IMPLEMENTATION.md',
+  'docs/LIVE_METADATA.md'
 ];
 
 for (const file of required) {
@@ -30,6 +34,14 @@ if (!index.includes('metadata-enrichment.css')) throw new Error('index.html does
 
 const config = fs.readFileSync(path.join(root, 'site/config.js'), 'utf8');
 if (!config.includes('metadataEnrichment')) throw new Error('config.js lacks metadataEnrichment config block');
+for (const key of ['platformNowPlayingEnabled', 'hlsId3Enabled', 'fingerprintEnabled', 'fingerprintAutoOnRawIcy']) {
+  if (!config.includes(key)) throw new Error(`config.js lacks live-metadata option ${key}`);
+}
+
+const overlay = fs.readFileSync(path.join(root, 'site/assets/metadata-enrichment.js'), 'utf8');
+for (const symbol of ['detectPlatformEndpoints', 'watchHlsMetadataTracks', 'runFingerprint', 'applyTrustedTrack', 'metadata-fingerprint-btn']) {
+  if (!overlay.includes(symbol)) throw new Error(`metadata overlay lacks live-metadata integration: ${symbol}`);
+}
 
 const parsed = parseNowPlaying('Kate Bush - Running Up That Hill');
 if (parsed.artist !== 'Kate Bush' || parsed.title !== 'Running Up That Hill') {

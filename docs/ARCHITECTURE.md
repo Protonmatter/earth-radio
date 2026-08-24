@@ -18,6 +18,8 @@ The desktop process starts `server/desktop-proxy.mjs` on an ephemeral IPv4 loopb
 
 Metadata identification is server-side. iTunes lookup needs no credential. Optional Spotify lookup reads credentials only from the process environment. Identification results are confidence-scored, explain reasons, preserve raw ICY metadata, and use a bounded in-memory cache.
 
+Because raw ICY text is unreliable, higher-trust live-metadata feeds layer above it (see `docs/LIVE_METADATA.md`): hosting-platform now-playing APIs resolved from the stream URL, HLS timed ID3 read in the renderer, and opt-in on-demand audio fingerprinting (ACRCloud or AudD credentials from the process environment only; metered, rate-limited, cached). All proxy-side stream and platform fetches share the `server/net-guard.mjs` public-target guard — the same private/loopback/link-local/CGNAT rejection and pinned lookups described above.
+
 ## Recovered source and provenance
 
 `src-recovered/` is an older source snapshot selected from the hardened archive. It is useful for maintenance intent and domain logic but does not compile to the selected installed hashed bundle without the missing original toolchain/state. `docs/recovered/` has the same evidence-only status.

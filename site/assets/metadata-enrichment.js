@@ -1,8 +1,13 @@
-// Earth Radio metadata enrichment overlay v0.24.0
+// Earth Radio metadata enrichment overlay v0.25.0
 // Adds confidence-scored ICY -> iTunes/Spotify metadata identity without requiring a renderer rebuild.
+// v0.25.0 layers three live-metadata feeds above raw ICY text:
+//   1. Hosting-platform now-playing APIs (AzuraCast, Zeno.FM, Radio.co, Laut.fm, Radiojar,
+//      Icecast/Shoutcast status) - browser-direct where CORS allows, via the desktop proxy otherwise.
+//   2. HLS timed ID3 metadata exposed by hls.js as a hidden metadata text track.
+//   3. On-demand audio fingerprinting through the desktop proxy (ACRCloud/AudD), user-triggered.
 // The canonical source implementation is mirrored under recovered_src/ for the next full desktop build.
 
-const VERSION = '0.24.0-metadata-overlay';
+const VERSION = '0.25.0-metadata-overlay';
 const CACHE_KEY = 'earth-radio-track-identity-cache-v1';
 const RECENT_RAW_KEY = 'earth-radio-last-raw-title-v1';
 const JUNK_TITLE = /^(unknown|n\/?a|advert(isement)?|commercial|station\s?id|live stream|loading\.{0,3}|no title|news|weather|traffic)$/i;
@@ -24,8 +29,16 @@ const DEFAULTS = {
   cacheTtlLowMs: 24 * 60 * 60 * 1000,
   cacheTtlMissMs: 6 * 60 * 60 * 1000,
   requestTimeoutMs: 6500,
-  maxCandidates: 8
+  maxCandidates: 8,
+  platformNowPlayingEnabled: true,
+  platformPollMs: 30000,
+  hlsId3Enabled: true,
+  fingerprintEnabled: true,
+  fingerprintAutoOnRawIcy: false,
+  fingerprintMinIntervalMs: 30000
 };
+
+const TRUSTED_TRACK_FRESH_MS = 45 * 1000;
 
 const state = {
   initialized: false,
@@ -33,7 +46,15 @@ const state = {
   lastTrackKey: '',
   inFlight: null,
   timer: null,
-  currentIdentity: null
+  currentIdentity: null,
+  trustedTrack: null,
+  platformTimer: null,
+  platformStreamUrl: '',
+  hlsWatchedTracks: new WeakSet(),
+  fingerprintAvailable: null,
+  fingerprintBusy: false,
+  fingerprintLastAt: 0,
+  fingerprintAutoKey: ''
 };
 
 function config() {
@@ -458,10 +479,16 @@ function ensureMetadataUI() {
       <div class="metadata-providers" id="metadata-providers" aria-label="Metadata providers"></div>
       <dl class="metadata-details" id="metadata-details"></dl>
       <div class="metadata-raw" id="metadata-raw"></div>
+      <div class="metadata-fingerprint-row" id="metadata-fingerprint-row" hidden>
+        <button type="button" class="nowcard-action" id="metadata-fingerprint-btn">Identify song</button>
+        <span class="metadata-fingerprint-status" id="metadata-fingerprint-status" role="status"></span>
+      </div>
     `;
     (actions || links).insertAdjacentElement('afterend', card);
+    card.querySelector('#metadata-fingerprint-btn')?.addEventListener('click', () => void runFingerprint('manual'));
   }
   syncWorkflowButtons();
+  syncFingerprintButton();
   return card;
 }
 
@@ -595,7 +622,11 @@ function renderIdentity(track, identity) {
   }
   if (providersEl) {
     const providers = (identity.sources || []).map(s => s.provider).filter(Boolean);
-    providersEl.replaceChildren(...[...new Set(providers)].map(provider => pill(provider, provider === 'icy' ? 'metadata-pill--live' : '')));
+    if (identity.sourceFeed && identity.sourceFeed !== 'fingerprint') providers.unshift(identity.sourceFeed);
+    providersEl.replaceChildren(...[...new Set(providers)].map(provider => pill(provider,
+      provider === 'icy' ? 'metadata-pill--live'
+        : /^fingerprint/.test(provider) ? 'metadata-pill--fingerprint'
+          : /^(platform:|hls-id3)/.test(provider) ? 'metadata-pill--feed' : '')));
   }
 
   const linkWrap = document.createElement('span');
@@ -615,6 +646,7 @@ function renderIdentity(track, identity) {
       ...detailRow('Album', [identity.album, identity.releaseYear].filter(Boolean).join(' | ')),
       ...detailRow('Genre', identity.genre),
       ...detailRow('ISRC', identity.isrc),
+      ...detailRow('Source', describeSourceFeed(identity.sourceFeed)),
       ...detailRow('Links', linkWrap),
       ...detailRow('Why', (identity.reasons || []).slice(0, 4).join(', ')),
       ...detailRow('Cache', identity.cache === 'hit' ? 'cached' : 'fresh lookup')
@@ -643,6 +675,14 @@ function renderIdentity(track, identity) {
   }
 }
 
+function describeSourceFeed(sourceFeed) {
+  if (!sourceFeed) return '';
+  if (sourceFeed === 'fingerprint') return 'Audio fingerprint of the live stream';
+  if (sourceFeed === 'hls-id3') return 'HLS timed ID3 metadata in the stream';
+  if (sourceFeed.startsWith('platform:')) return `Station platform API (${sourceFeed.slice(9)})`;
+  return sourceFeed;
+}
+
 function extractRawCandidate() {
   const eyebrow = text(byId('nowcard-eyebrow')).toLowerCase();
   const meta = text(byId('player-meta'));
@@ -661,9 +701,345 @@ function extractRawCandidate() {
   return raw;
 }
 
+// --- Live metadata feeds (platform APIs, HLS ID3, fingerprinting) ---
+
+function audioElement() {
+  return byId('audio-player');
+}
+
+function currentStreamUrl() {
+  const audio = audioElement();
+  const src = String(audio?.currentSrc || audio?.src || '');
+  return /^https?:\/\//i.test(src) ? src : '';
+}
+
+function isPlaying() {
+  const audio = audioElement();
+  return Boolean(audio && !audio.paused && !audio.ended && audio.currentSrc);
+}
+
+// Mirrors server/platform-nowplaying.mjs detection for browser-direct mode; endpoints
+// that do not send CORS headers simply fail the fetch and fall through.
+function detectPlatformEndpoints(streamUrl) {
+  let url;
+  try { url = new URL(streamUrl); } catch { return []; }
+  if (!/^https?:$/.test(url.protocol)) return [];
+  const origin = url.origin;
+  const host = url.hostname.toLowerCase();
+  const pathname = url.pathname;
+  const endpoints = [];
+
+  const zenoMount = host === 'stream.zeno.fm' ? pathname.replace(/^\/+/, '').split('/')[0] : '';
+  if (zenoMount) endpoints.push({ platform: 'zeno', kind: 'sse', url: `https://api.zeno.fm/mounts/metadata/subscribe/${encodeURIComponent(zenoMount)}` });
+
+  const radioCoStation = host.endsWith('.radio.co') ? (pathname.match(/^\/(s[0-9a-f]{9})\b/i)?.[1] || '') : '';
+  if (radioCoStation) endpoints.push({ platform: 'radioco', kind: 'json', url: `https://public.radio.co/stations/${encodeURIComponent(radioCoStation)}/status` });
+
+  const lautStation = (host === 'stream.laut.fm' || host.endsWith('.stream.laut.fm')) ? pathname.replace(/^\/+/, '').split('/')[0] : '';
+  if (lautStation) endpoints.push({ platform: 'lautfm', kind: 'json', url: `https://api.laut.fm/station/${encodeURIComponent(lautStation)}/current_song` });
+
+  const radiojarMount = host.endsWith('.radiojar.com') ? pathname.replace(/^\/+/, '').split('/')[0] : '';
+  if (radiojarMount) endpoints.push({ platform: 'radiojar', kind: 'json', url: `https://www.radiojar.com/api/stations/${encodeURIComponent(radiojarMount)}/now_playing/` });
+
+  const azuracastStation = pathname.match(/^\/listen\/([^/]+)\//)?.[1] || '';
+  if (azuracastStation) endpoints.push({ platform: 'azuracast', kind: 'json', url: `${origin}/api/nowplaying/${encodeURIComponent(azuracastStation)}` });
+
+  endpoints.push({ platform: 'icecast', kind: 'json', url: `${origin}/status-json.xsl`, mount: pathname });
+  endpoints.push({ platform: 'shoutcast', kind: 'json', url: `${origin}/stats?json=1` });
+  return endpoints;
+}
+
+function parsePlatformPayload(endpoint, data) {
+  if (endpoint.platform === 'azuracast') {
+    const song = data?.now_playing?.song;
+    if (!song) return null;
+    return platformTrack('azuracast', song.artist, song.title, song.text, song.art);
+  }
+  if (endpoint.platform === 'radioco') return platformTrack('radioco', '', '', data?.current_track?.title, data?.current_track?.artwork_url);
+  if (endpoint.platform === 'lautfm') {
+    const artist = typeof data?.artist === 'object' ? data?.artist?.name : data?.artist;
+    if (!data?.title) return null;
+    return platformTrack('lautfm', artist, data.title, '');
+  }
+  if (endpoint.platform === 'radiojar') return platformTrack('radiojar', data?.artist, data?.title, '', data?.thumb);
+  if (endpoint.platform === 'icecast') {
+    let sources = data?.icestats?.source;
+    if (!sources) return null;
+    if (!Array.isArray(sources)) sources = [sources];
+    const wanted = String(endpoint.mount || '').replace(/\/+$/, '');
+    const match = sources.find(source => {
+      try { return new URL(String(source?.listenurl || '')).pathname.replace(/\/+$/, '') === wanted; } catch { return false; }
+    }) || (sources.length === 1 ? sources[0] : null);
+    if (!match) return null;
+    return platformTrack('icecast', match.artist, match.title, '');
+  }
+  if (endpoint.platform === 'shoutcast') return platformTrack('shoutcast', '', '', data?.songtitle);
+  return null;
+}
+
+function platformTrack(platform, artist, title, combined, artworkUrl) {
+  const cleanArtist = String(artist || '').trim();
+  const cleanTitle = String(title || '').trim();
+  const raw = String(combined || '').trim() || [cleanArtist, cleanTitle].filter(Boolean).join(' - ');
+  let track = cleanArtist && cleanTitle ? { artist: cleanArtist, title: cleanTitle, raw: raw || `${cleanArtist} - ${cleanTitle}` } : parseNowPlaying(raw);
+  if (!track?.title) return null;
+  const art = String(artworkUrl || '').trim();
+  return { platform, track, artworkUrl: /^https:\/\//i.test(art) ? art : '' };
+}
+
+async function fetchPlatformDirect(endpoint, timeoutMs) {
+  if (endpoint.kind === 'sse') {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const response = await fetch(endpoint.url, { signal: controller.signal, headers: { Accept: 'text/event-stream' } });
+      if (!response.ok || !response.body) return null;
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffered = '';
+      while (buffered.length < 16384) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buffered += decoder.decode(value, { stream: true });
+        const match = buffered.match(/^data:(.*)$/m);
+        if (match) {
+          try {
+            const payload = JSON.parse(match[1].trim());
+            const raw = String(payload?.streamTitle || '').trim();
+            if (raw) return platformTrack('zeno', '', '', raw);
+          } catch { /* keep reading */ }
+        }
+        if (buffered.includes('\n\n')) break;
+      }
+      return null;
+    } finally {
+      clearTimeout(timer);
+      controller.abort();
+    }
+  }
+  const data = await fetchJson(endpoint.url, timeoutMs);
+  return data ? parsePlatformPayload(endpoint, data) : null;
+}
+
+async function resolvePlatformNowPlaying(streamUrl) {
+  const cfg = config();
+  if (cfg.proxyBaseUrl) {
+    const data = await fetchJson(`${cfg.proxyBaseUrl}/api/streams/platform-nowplaying?url=${encodeURIComponent(streamUrl)}`, cfg.requestTimeoutMs);
+    if (!data?.found || !data.title && !data.raw) return null;
+    return platformTrack(data.platform || 'platform', data.artist, data.title, data.raw, data.artworkUrl);
+  }
+  for (const endpoint of detectPlatformEndpoints(streamUrl)) {
+    try {
+      const result = await fetchPlatformDirect(endpoint, Math.min(cfg.requestTimeoutMs, 5000));
+      if (result) return result;
+    } catch { /* endpoint without CORS or offline; try the next candidate */ }
+  }
+  return null;
+}
+
+async function pollPlatformNowPlaying() {
+  const cfg = config();
+  if (!cfg.enabled || !cfg.platformNowPlayingEnabled) return;
+  if (document.hidden || !isPlaying()) return;
+  const streamUrl = currentStreamUrl();
+  if (!streamUrl) return;
+  state.platformStreamUrl = streamUrl;
+  try {
+    const result = await resolvePlatformNowPlaying(streamUrl);
+    if (!result || streamUrl !== currentStreamUrl()) return;
+    await applyTrustedTrack(result.track, `platform:${result.platform}`, { artworkUrl: result.artworkUrl });
+  } catch { /* best effort */ }
+}
+
+function startPlatformPolling() {
+  const cfg = config();
+  if (!cfg.platformNowPlayingEnabled || state.platformTimer) return;
+  state.platformTimer = setInterval(() => { void pollPlatformNowPlaying(); }, Math.max(15000, cfg.platformPollMs));
+}
+
+// hls.js exposes in-stream timed ID3 as a hidden metadata text track on the media element.
+function watchHlsMetadataTracks() {
+  if (!config().hlsId3Enabled) return;
+  const audio = audioElement();
+  if (!audio?.textTracks) return;
+  const attach = track => {
+    if (track.kind !== 'metadata' || state.hlsWatchedTracks.has(track)) return;
+    state.hlsWatchedTracks.add(track);
+    track.mode = 'hidden';
+    track.addEventListener('cuechange', () => handleId3CueChange(track));
+  };
+  for (const track of audio.textTracks) attach(track);
+  audio.textTracks.addEventListener?.('addtrack', event => event.track && attach(event.track));
+}
+
+function handleId3CueChange(track) {
+  const cues = track.activeCues && track.activeCues.length ? track.activeCues : null;
+  if (!cues) return;
+  let title = '';
+  let artist = '';
+  let combined = '';
+  for (const cue of cues) {
+    const value = cue?.value;
+    if (!value?.key) continue;
+    const data = typeof value.data === 'string' ? value.data.trim() : '';
+    if (value.key === 'TIT2' && data) title = data;
+    else if (value.key === 'TPE1' && data) artist = data;
+    else if (value.key === 'TXXX' && /streamtitle|nowplaying|song/i.test(String(value.info || '')) && data) combined = data;
+  }
+  const trackInfo = artist && title
+    ? { artist, title, raw: `${artist} - ${title}` }
+    : parseNowPlaying(title || combined);
+  if (!trackInfo?.title) return;
+  void applyTrustedTrack(trackInfo, 'hls-id3');
+}
+
+// Feeds artist/title from a higher-trust live source through the normal identify
+// pipeline; the catalog match still decides promotion, but the raw text no longer
+// depends on scraping the DOM for ICY fragments.
+async function applyTrustedTrack(track, source, extras = {}) {
+  const key = trackKey(track);
+  const previous = state.trustedTrack;
+  if (previous && previous.key === key && Date.now() - previous.at < TRUSTED_TRACK_FRESH_MS) {
+    previous.at = Date.now();
+    return;
+  }
+  // A fingerprint identity outranks text feeds until it goes stale.
+  if (previous && previous.source === 'fingerprint' && source !== 'fingerprint' && Date.now() - previous.at < TRUSTED_TRACK_FRESH_MS) return;
+  state.trustedTrack = { key, source, at: Date.now(), artworkUrl: extras.artworkUrl || '' };
+
+  state.lastTrackKey = key;
+  renderIdentifying(track);
+  const token = Symbol('metadata-request');
+  state.inFlight = token;
+  const identity = await identify(track);
+  if (state.inFlight !== token) return;
+  identity.sourceFeed = source;
+  if (!identity.artworkUrl && extras.artworkUrl) identity.artworkUrl = extras.artworkUrl;
+  state.currentIdentity = identity;
+  renderIdentity(track, identity);
+  maybeAutoFingerprint(identity);
+}
+
+// --- On-demand fingerprinting through the proxy ---
+
+function fingerprintConfigured() {
+  const cfg = config();
+  return Boolean(cfg.proxyBaseUrl && cfg.fingerprintEnabled);
+}
+
+async function checkFingerprintAvailability() {
+  if (!fingerprintConfigured()) { state.fingerprintAvailable = false; return false; }
+  if (state.fingerprintAvailable !== null) return state.fingerprintAvailable;
+  const cfg = config();
+  const data = await fetchJson(`${cfg.proxyBaseUrl}/api/track/fingerprint`, cfg.requestTimeoutMs);
+  state.fingerprintAvailable = Boolean(data?.available);
+  syncFingerprintButton();
+  return state.fingerprintAvailable;
+}
+
+function fingerprintButton() {
+  return byId('metadata-fingerprint-btn');
+}
+
+function syncFingerprintButton() {
+  const button = fingerprintButton();
+  if (!button) return;
+  const row = byId('metadata-fingerprint-row');
+  const usable = fingerprintConfigured() && state.fingerprintAvailable !== false;
+  if (row) row.hidden = !usable;
+  button.disabled = state.fingerprintBusy || !isPlaying() || !currentStreamUrl();
+  if (!state.fingerprintBusy) button.textContent = 'Identify song';
+}
+
+function setFingerprintStatus(message) {
+  const statusEl = byId('metadata-fingerprint-status');
+  if (statusEl) statusEl.textContent = message || '';
+}
+
+function maybeAutoFingerprint(identity) {
+  const cfg = config();
+  if (!cfg.fingerprintAutoOnRawIcy || !fingerprintConfigured()) return;
+  if (identity?.state !== 'Raw ICY only' || !isPlaying()) return;
+  const autoKey = `${currentStreamUrl()}::${state.lastTrackKey}`;
+  if (state.fingerprintAutoKey === autoKey) return;
+  state.fingerprintAutoKey = autoKey;
+  setTimeout(() => {
+    if (state.currentIdentity?.state === 'Raw ICY only' && isPlaying()) void runFingerprint('auto');
+  }, 8000);
+}
+
+async function runFingerprint(trigger) {
+  const cfg = config();
+  if (!fingerprintConfigured() || state.fingerprintBusy) return;
+  const streamUrl = currentStreamUrl();
+  if (!streamUrl || !isPlaying()) return;
+  const sinceLast = Date.now() - state.fingerprintLastAt;
+  if (sinceLast < cfg.fingerprintMinIntervalMs) {
+    setFingerprintStatus(`Wait ${Math.ceil((cfg.fingerprintMinIntervalMs - sinceLast) / 1000)}s before identifying again`);
+    return;
+  }
+  if (!(await checkFingerprintAvailability())) return;
+
+  state.fingerprintBusy = true;
+  state.fingerprintLastAt = Date.now();
+  const button = fingerprintButton();
+  if (button) { button.disabled = true; button.textContent = 'Listening…'; }
+  setFingerprintStatus(trigger === 'auto' ? 'Raw ICY only; sampling audio for a fingerprint match' : 'Sampling ~12s of audio…');
+
+  try {
+    const params = new URLSearchParams({ url: streamUrl });
+    const data = await fetchJson(`${cfg.proxyBaseUrl}/api/track/fingerprint?${params}`, 45000);
+    if (!data) { setFingerprintStatus('Fingerprint request failed'); return; }
+    if (data.available === false) {
+      state.fingerprintAvailable = false;
+      setFingerprintStatus('Fingerprinting is not configured on this proxy');
+      return;
+    }
+    if (!data.found) {
+      setFingerprintStatus(data.reason === 'no fingerprint match' ? 'No match; may be talk, ads, or an unreleased mix' : `No match: ${data.reason || 'unknown'}`);
+      return;
+    }
+
+    const track = { artist: data.artist || '', title: data.title || '', raw: [data.artist, data.title].filter(Boolean).join(' - ') };
+    const identity = {
+      version: VERSION,
+      found: true,
+      state: data.state || 'Identified',
+      confidence: clamp(Number(data.confidence) || 90, 0, 100),
+      title: data.title || '',
+      artist: data.artist || '',
+      album: data.album || '',
+      releaseYear: data.releaseYear || '',
+      genre: data.genre || '',
+      isrc: data.isrc || '',
+      artworkUrl: data.artworkUrl || '',
+      previewUrl: data.previewUrl || '',
+      spotifyUrl: data.spotifyUrl || '',
+      appleMusicUrl: data.appleMusicUrl || '',
+      links: data.links && Object.keys(data.links).length ? data.links : buildSearchLinks(track, data),
+      sources: Array.isArray(data.sources) && data.sources.length ? data.sources : [{ provider: `fingerprint:${data.provider || 'unknown'}`, confidence: (Number(data.confidence) || 90) / 100, fetchedAt: nowIso() }],
+      reasons: Array.isArray(data.reasons) && data.reasons.length ? data.reasons : ['audio fingerprint match'],
+      raw: state.lastRaw || track.raw,
+      sourceFeed: 'fingerprint'
+    };
+    state.trustedTrack = { key: trackKey(track), source: 'fingerprint', at: Date.now(), artworkUrl: identity.artworkUrl };
+    state.lastTrackKey = trackKey(track);
+    state.currentIdentity = identity;
+    setCached(trackKey(track), identity, config().cacheTtlLowMs);
+    renderIdentity(track, identity);
+    setFingerprintStatus(`Matched by audio fingerprint (${data.provider || 'provider'})`);
+  } finally {
+    state.fingerprintBusy = false;
+    syncFingerprintButton();
+  }
+}
+
 async function processCurrentMetadata() {
   const cfg = config();
   if (!cfg.enabled) return;
+  // A fresh higher-trust feed (platform API, HLS ID3, fingerprint) owns the panel;
+  // DOM-scraped ICY text only drives identification when nothing better is live.
+  if (state.trustedTrack && Date.now() - state.trustedTrack.at < TRUSTED_TRACK_FRESH_MS) return;
   const raw = extractRawCandidate();
   if (!raw) {
     if (!state.lastRaw) renderStationOnly();
@@ -692,6 +1068,7 @@ async function processCurrentMetadata() {
   if (state.inFlight !== token) return;
   state.currentIdentity = identity;
   renderIdentity(track, identity);
+  maybeAutoFingerprint(identity);
 }
 
 function scheduleProcess() {
@@ -713,6 +1090,26 @@ function init() {
   targets.forEach(target => observer.observe(target, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['aria-pressed'] }));
   document.addEventListener('visibilitychange', () => { if (!document.hidden) scheduleProcess(); });
   window.addEventListener('earthradio:metadata-refresh', scheduleProcess);
+
+  const audio = audioElement();
+  if (audio) {
+    audio.addEventListener('loadstart', () => {
+      // New stream: text feeds from the previous station are no longer trustworthy.
+      state.trustedTrack = null;
+      state.fingerprintAutoKey = '';
+      setFingerprintStatus('');
+      syncFingerprintButton();
+    });
+    audio.addEventListener('play', () => {
+      syncFingerprintButton();
+      void checkFingerprintAvailability();
+      setTimeout(() => void pollPlatformNowPlaying(), 1500);
+    });
+    audio.addEventListener('pause', syncFingerprintButton);
+    audio.addEventListener('emptied', syncFingerprintButton);
+  }
+  watchHlsMetadataTracks();
+  startPlatformPolling();
   scheduleProcess();
 }
 
@@ -720,4 +1117,12 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
 else init();
 
 // Minimal debug hook for smoke tests and local validation. Does not expose secrets.
-window.earthRadioMetadata = Object.freeze({ version: VERSION, parseNowPlaying, scoreCandidate, normalize });
+window.earthRadioMetadata = Object.freeze({
+  version: VERSION,
+  parseNowPlaying,
+  scoreCandidate,
+  normalize,
+  detectPlatformEndpoints,
+  parsePlatformPayload,
+  describeSourceFeed
+});

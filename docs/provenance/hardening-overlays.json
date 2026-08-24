@@ -21,10 +21,10 @@
         "sha256": "329c8af7c7fa7b0921dd2c0028a057e8fea8ff4ac706c0760b8d8de629ede401"
       },
       "current": {
-        "bytes": 26751,
-        "sha256": "02e5017566aee3bf997cf479d6ed77f1498274bbbbaa741f8aa6468e0fb0ce65"
+        "bytes": 23271,
+        "sha256": "34ea752e06bc4498e3ded4a65df2388e2666241ab6cccc5d3f336ed8c8cc857f"
       },
-      "reason": "Require a per-launch capability path and Origin on API routes, and reject mapped IPv6, CGNAT, and other private stream targets."
+      "reason": "Require a per-launch capability path and Origin on API routes, and reject mapped IPv6, CGNAT, and other private stream targets. Mount the combined metadata API (platform now-playing, fingerprint) and import the shared outbound network guard extracted to server/net-guard.mjs."
     },
     {
       "path": "server/example-proxy.mjs",
@@ -33,10 +33,22 @@
         "sha256": "d839161c06ea67188b9573b10bcc2962ccdc692df73be44b7596ff4080bff941"
       },
       "current": {
-        "bytes": 786,
-        "sha256": "7aa65e87a5b6c0dedd323c36c3a7188d5c8ac62a3a8095f1be092f81c67316c4"
+        "bytes": 880,
+        "sha256": "523ce1e056cc12ba178efca3f9b91c8f311acf9d8c3e80abfa1c0297b52198d6"
       },
-      "reason": "Bind the local example metadata proxy to 127.0.0.1 only."
+      "reason": "Bind the local example metadata proxy to 127.0.0.1 only. Mount the combined metadata API so the standalone proxy serves platform now-playing and fingerprint endpoints."
+    },
+    {
+      "path": "server/metadata-api.mjs",
+      "intake": {
+        "bytes": 2375,
+        "sha256": "0c66fa9ea4dcd4689081b9e3220a098a8e8342db96f14f230ecec39b3e39dca3"
+      },
+      "current": {
+        "bytes": 6751,
+        "sha256": "4a572703c48b432f290e69ecfecd644141b72383668a5b3dc369a5ed1b4d3d1b"
+      },
+      "reason": "Add platform now-playing and on-demand fingerprint endpoints with a tighter metered-request rate limit."
     },
     {
       "path": "site/assets/hls.light-Dr1Fv81C.js",
@@ -63,16 +75,40 @@
       "reason": "Register the service worker after asynchronous startup and remove a reference to an excluded source map."
     },
     {
+      "path": "site/assets/metadata-enrichment.css",
+      "intake": {
+        "bytes": 3229,
+        "sha256": "414a84caf03ab56acbe274977475ee72f8dbea3fb1d6526a4fa65dd33f1a8a1d"
+      },
+      "current": {
+        "bytes": 3693,
+        "sha256": "9c6bb916b48a5250880cf896bb40f5129fb0e070837405eb6eadb78fcc7efc40"
+      },
+      "reason": "Style the fingerprint identify row and live-metadata source pills."
+    },
+    {
+      "path": "site/assets/metadata-enrichment.js",
+      "intake": {
+        "bytes": 29141,
+        "sha256": "e213700a1a541139a66542e9bd8e615ad5dfc735d52c59569730d9a021e86009"
+      },
+      "current": {
+        "bytes": 47099,
+        "sha256": "2c75029eb57cbe2be0dcaf85c29f6ccdacf872010c17170d70fbea4e5df78aa8"
+      },
+      "reason": "Layer live-metadata feeds above raw ICY: hosting-platform now-playing APIs, HLS timed ID3 text tracks, and an opt-in fingerprint identify button."
+    },
+    {
       "path": "site/config.js",
       "intake": {
         "bytes": 1408,
         "sha256": "c83167f40ae7df3b389e35707b4abac834b10dc223ecb836d7840f90a7ef92a6"
       },
       "current": {
-        "bytes": 1433,
-        "sha256": "8c9d59221f38f8a86a84fc0ad5008d2015cea4881a45012892bf486b10e234a4"
+        "bytes": 2168,
+        "sha256": "f6d65442b28a265e328192c7771e788ee803cad846e20917f5c54ebfec66b8b0"
       },
-      "reason": "Keep Cloudflare Pages on an empty proxy URL and document that only Electron injects the loopback capability path."
+      "reason": "Keep Cloudflare Pages on an empty proxy URL and document that only Electron injects the loopback capability path. Add live-metadata runtime options (platform now-playing, HLS ID3, fingerprint) with metered fingerprinting off unless a proxy provides credentials."
     },
     {
       "path": "site/index.html",
@@ -105,10 +141,10 @@
         "sha256": "b09e3207532fe7f47d14e9c53804d7e8caf31cad2fcb2c652b728a93871ea094"
       },
       "current": {
-        "bytes": 2480,
-        "sha256": "521342ede127b7974bc39b8e24b195cc61e7cbb881a2d5b4a4643f25add250e2"
+        "bytes": 2483,
+        "sha256": "8335bd8b854d048597928e35775c37687874c99e3705261795245a6603c6122a"
       },
-      "reason": "Use network-first navigation/configuration updates, keep hashed recovered assets cache-first, reload installation requests so stale browser HTTP entries cannot seed the new service-worker cache, keep the previous worker when reload precaching fails, and precache the UI refresh stylesheet under cache generation v26."
+      "reason": "Use network-first navigation/configuration updates, keep hashed recovered assets cache-first, reload installation requests so stale browser HTTP entries cannot seed the new service-worker cache, keep the previous worker when reload precaching fails, and precache the UI refresh stylesheet under cache generation v26. Bump the shell cache generation for the live-metadata overlay update."
     }
   ]
 }

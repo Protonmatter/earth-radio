@@ -48,6 +48,11 @@ const server = fs.readFileSync(path.join(root, 'server/desktop-proxy.mjs'), 'utf
 for (const route of ['/api/stations/federated', '/api/streams/probe', '/api/streams/resolve', '/api/streams/nowplaying']) {
   if (!server.includes(route)) throw new Error(`desktop proxy missing route ${route}`);
 }
+const metadataApi = fs.readFileSync(path.join(root, 'server/metadata-api.mjs'), 'utf8');
+for (const route of ['/api/track/identify', '/api/streams/platform-nowplaying', '/api/track/fingerprint']) {
+  if (!metadataApi.includes(route)) throw new Error(`metadata API missing route ${route}`);
+}
+if (!server.includes('handleMetadataApi')) throw new Error('desktop proxy does not mount the combined metadata API');
 if (!server.includes('assertPublicUrl')) throw new Error('desktop proxy lacks stream URL guard');
 
 const proxy = await createDesktopProxy({ port: 0 });
@@ -95,6 +100,18 @@ try {
     if (mapped.status !== 400 || !/private/i.test(mappedPayload.error || '')) {
       throw new Error(`desktop proxy did not reject private stream representation: ${target}`);
     }
+  }
+
+  const fingerprintProbe = await fetch(`${proxy.baseUrl}/api/track/fingerprint`, requestOptions);
+  const fingerprintPayload = await fingerprintProbe.json();
+  if (fingerprintProbe.status !== 200 || typeof fingerprintPayload.available !== 'boolean') {
+    throw new Error('desktop proxy fingerprint availability probe failed');
+  }
+
+  const platformBlocked = await fetch(`${proxy.baseUrl}/api/streams/platform-nowplaying?url=${encodeURIComponent('http://[::1]:1/mount')}`, requestOptions);
+  const platformPayload = await platformBlocked.json();
+  if (platformBlocked.status !== 200 || platformPayload.found !== false) {
+    throw new Error('desktop proxy platform now-playing did not fail closed for a private stream target');
   }
 } finally {
   await proxy.close();

@@ -4,11 +4,11 @@
 import http from 'node:http';
 import https from 'node:https';
 import { randomBytes } from 'node:crypto';
-import dns from 'node:dns/promises';
 import net from 'node:net';
 import { URL, pathToFileURL } from 'node:url';
 import { TextDecoder } from 'node:util';
-import { handleTrackIdentify } from './metadata-api.mjs';
+import { handleMetadataApi } from './metadata-api.mjs';
+import { createPinnedLookup, isPrivateIp, isRedirect, normalizeHostname, resolvePublicTarget } from './net-guard.mjs';
 
 const USER_AGENT = 'EarthRadio/0.24.0 desktop-proxy (+https://github.com/Protonmatter/EarthRadio)';
 const RADIO_BROWSER_BASES = [
@@ -68,7 +68,7 @@ async function route(req, res, routePrefix) {
   if (req.method === 'OPTIONS') return res.end();
 
   const url = requested;
-  if (await handleTrackIdentify(req, res)) return;
+  if (await handleMetadataApi(req, res)) return;
 
   if (req.method !== 'GET') return sendJson(res, 405, { error: 'method not allowed' });
 
@@ -569,9 +569,6 @@ function isClientInputError(message) {
   return /invalid url|only http\/https|missing stream host|private stream|blocked|did not resolve|localhost|origin not allowed|byte limit/i.test(String(message || ''));
 }
 
-function isRedirect(status) {
-  return [301, 302, 303, 307, 308].includes(Number(status));
-}
 
 function clampInt(value, fallback, min, max) {
   const parsed = Number.parseInt(String(value || ''), 10);
@@ -599,49 +596,6 @@ async function assertPublicUrl(rawUrl) {
   return (await resolvePublicTarget(rawUrl)).href;
 }
 
-async function resolvePublicTarget(rawUrl) {
-  const parsed = new URL(String(rawUrl || '').trim());
-  if (!['http:', 'https:'].includes(parsed.protocol)) throw new Error('only http/https stream URLs are allowed');
-  if (!parsed.hostname) throw new Error('missing stream host');
-
-  const hostname = normalizeHostname(parsed.hostname);
-  if (net.isIP(hostname)) {
-    if (isPrivateIp(hostname)) throw new Error('private stream IPs are blocked');
-    return { href: parsed.toString(), url: parsed, hostname, address: hostname, family: net.isIP(hostname) };
-  }
-
-  const records = await dns.lookup(hostname, { all: true, verbatim: false });
-  if (!records.length) throw new Error('stream host did not resolve');
-  if (records.some(record => isPrivateIp(record.address))) throw new Error('stream host resolves to a private address');
-  const record = records[0];
-  return { href: parsed.toString(), url: parsed, hostname, address: record.address, family: record.family };
-}
-
-function createPinnedLookup(target) {
-  return (hostname, options, callback) => {
-    const cb = typeof options === 'function' ? options : callback;
-    if (!cb) return;
-    if (normalizeHostname(hostname) === target.hostname) {
-      if (isPrivateIp(target.address)) {
-        cb(new Error('stream host resolves to a private address'));
-        return;
-      }
-      cb(null, target.address, target.family);
-      return;
-    }
-    dns.lookup(normalizeHostname(hostname), { all: true, verbatim: false })
-      .then(records => {
-        if (!records.length) throw new Error('stream host did not resolve');
-        if (records.some(record => isPrivateIp(record.address))) throw new Error('stream host resolves to a private address');
-        cb(null, records[0].address, records[0].family);
-      })
-      .catch(error => cb(error));
-  };
-}
-
-function normalizeHostname(hostname) {
-  return String(hostname || '').replace(/^\[/, '').replace(/\]$/, '').toLowerCase();
-}
 
 function isLoopbackHost(hostname) {
   const host = normalizeHostname(hostname);
@@ -655,41 +609,6 @@ function isLoopbackHost(hostname) {
 function corsHeadersFor(req) {
   const allowedOrigin = allowedCorsOrigin(req.headers.origin);
   return allowedOrigin ? { 'access-control-allow-origin': allowedOrigin, vary: 'origin' } : { vary: 'origin' };
-}
-
-function isPrivateIp(address) {
-  const embeddedIpv4 = ipv4FromMappedOrCompatibleIpv6(address);
-  if (embeddedIpv4) return isPrivateIp(embeddedIpv4);
-  const kind = net.isIP(address);
-  if (kind === 4) {
-    const [a, b] = address.split('.').map(Number);
-    if (a === 10 || a === 127 || a === 0) return true;
-    if (a === 100 && b >= 64 && b <= 127) return true;
-    if (a === 169 && b === 254) return true;
-    if (a === 172 && b >= 16 && b <= 31) return true;
-    if (a === 192 && b === 168) return true;
-    if (a >= 224) return true;
-    return false;
-  }
-  if (kind === 6) {
-    const lower = address.toLowerCase().split('%', 1)[0];
-    const firstWord = Number.parseInt(lower.split(':').find(Boolean) || '0', 16);
-    return lower === '::' || lower === '::1' || lower.startsWith('fc') || lower.startsWith('fd') ||
-      (Number.isFinite(firstWord) && (firstWord & 0xffc0) === 0xfe80) || lower.startsWith('ff');
-  }
-  return false;
-}
-
-function ipv4FromMappedOrCompatibleIpv6(address) {
-  const lower = String(address || '').toLowerCase().split('%', 1)[0];
-  if (!lower.includes(':')) return '';
-  const dotted = lower.match(/^(?:::ffff:|::)(\d{1,3}(?:\.\d{1,3}){3})$/);
-  if (dotted && net.isIP(dotted[1]) === 4) return dotted[1];
-  const hexadecimal = lower.match(/^::(?:ffff:)?([0-9a-f]{1,4}):([0-9a-f]{1,4})$/);
-  if (!hexadecimal) return '';
-  const high = Number.parseInt(hexadecimal[1], 16);
-  const low = Number.parseInt(hexadecimal[2], 16);
-  return `${high >>> 8}.${high & 0xff}.${low >>> 8}.${low & 0xff}`;
 }
 
 
