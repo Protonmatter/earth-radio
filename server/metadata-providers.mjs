@@ -21,6 +21,7 @@ const AMBIGUOUS_TITLE_ONLY_TERMS = new Set([
 
 let spotifyToken = null;
 let spotifyTokenExpiresAt = 0;
+let spotifyTokenPromise = null;
 const identifyCache = new Map();
 const identifyInFlight = new Map();
 
@@ -37,7 +38,8 @@ export function parseNowPlaying(streamTitle = '') {
     }
   }
 
-  const byMatch = raw.match(/^(.+?)\s+by\s+(.+?)$/i);
+  // Lowercase "by" only: title-cased "By" ("Stand By Me") is part of the title.
+  const byMatch = raw.match(/^(.+?)\s+by\s+(.+)$/);
   if (byMatch) return { artist: byMatch[2].trim(), title: byMatch[1].trim(), raw };
   return { artist: '', title: raw, raw };
 }
@@ -76,12 +78,12 @@ async function identifyTrackUncached({ artist = '', title = '', raw = '', provid
     return rawIcyIdentity(track, scored, best ? blockedPromotionReason(track, best) : 'no catalog match above confidence threshold');
   }
 
-  const state = best?.confidence >= 78 ? 'Identified' : best?.confidence >= 58 ? 'Likely match' : 'Raw ICY only';
-  const resolvedTrack = best || { provider: 'icy', title: track.title, artist: track.artist, raw: track.raw, reasons: ['no catalog match above confidence threshold'] };
-  const confidence = best?.confidence || (track.artist ? 42 : 28);
+  const state = best.confidence >= 78 ? 'Identified' : 'Likely match';
+  const resolvedTrack = best;
+  const confidence = best.confidence;
 
   return {
-    found: Boolean(best && best.confidence >= 58),
+    found: true,
     state,
     confidence,
     provider: resolvedTrack.provider || 'icy',
@@ -147,7 +149,7 @@ export function getIdentifyCacheSize() {
   return identifyCache.size;
 }
 
-export async function searchItunes(track, { country = 'US', timeoutMs = DEFAULT_TIMEOUT_MS } = {}) {
+async function searchItunes(track, { country = 'US', timeoutMs = DEFAULT_TIMEOUT_MS } = {}) {
   const term = [track.artist, track.title].filter(Boolean).join(' ').trim();
   if (!term) return [];
   const url = new URL(ITUNES_SEARCH_URL);
@@ -160,7 +162,7 @@ export async function searchItunes(track, { country = 'US', timeoutMs = DEFAULT_
   return Array.isArray(data?.results) ? data.results.map(normalizeItunes).filter(Boolean) : [];
 }
 
-export async function searchSpotify(track, { timeoutMs = DEFAULT_TIMEOUT_MS } = {}) {
+async function searchSpotify(track, { country = 'US', timeoutMs = DEFAULT_TIMEOUT_MS } = {}) {
   const token = await getSpotifyToken(timeoutMs);
   if (!token) return [];
   const queryParts = [];
@@ -170,6 +172,7 @@ export async function searchSpotify(track, { timeoutMs = DEFAULT_TIMEOUT_MS } = 
   url.searchParams.set('type', 'track');
   url.searchParams.set('limit', '8');
   url.searchParams.set('q', queryParts.join(' ') || [track.artist, track.title].filter(Boolean).join(' '));
+  if (/^[A-Z]{2}$/i.test(country)) url.searchParams.set('market', country.toUpperCase());
   const data = await fetchJson(url, timeoutMs, { Authorization: `Bearer ${token}` });
   return Array.isArray(data?.tracks?.items) ? data.tracks.items.map(normalizeSpotify).filter(Boolean) : [];
 }
@@ -179,6 +182,13 @@ async function getSpotifyToken(timeoutMs) {
   const secret = process.env.SPOTIFY_CLIENT_SECRET;
   if (!id || !secret) return null;
   if (spotifyToken && spotifyTokenExpiresAt > Date.now() + 30_000) return spotifyToken;
+  if (!spotifyTokenPromise) {
+    spotifyTokenPromise = requestSpotifyToken(id, secret, timeoutMs).finally(() => { spotifyTokenPromise = null; });
+  }
+  return spotifyTokenPromise;
+}
+
+async function requestSpotifyToken(id, secret, timeoutMs) {
   const auth = Buffer.from(`${id}:${secret}`).toString('base64');
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);

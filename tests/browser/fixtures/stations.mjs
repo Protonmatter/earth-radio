@@ -98,4 +98,3 @@ export function fixtureStations() {
   });
 }
 
-export const FIXTURE_STATION_COUNT = SEED.length;

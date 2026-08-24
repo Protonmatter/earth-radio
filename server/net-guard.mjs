@@ -51,11 +51,21 @@ export function createPinnedLookup(target) {
   };
 }
 
-// Byte-capped, timeout-bounded GET against a resolved public target.
-// Returns { statusCode, headers, body (Buffer), text } without following redirects.
-export async function requestLimited(streamTarget, { timeoutMs = DEFAULT_TIMEOUT_MS, headers = {}, maxBytes = DEFAULT_MAX_BYTES, collectBody = true, stopWhen } = {}) {
+// Byte-capped, timeout-bounded GET against a resolved public target. Returns
+// { statusCode, headers, body (Buffer), text, truncated } without following redirects.
+// Hitting the byte cap (or a stopWhen early-stop) is a successful partial read with
+// truncated: true — endless live streams are the normal case here, not an error.
+// stopWhen receives { length, chunk, headers, body() } where body() concatenates the
+// buffered bytes on demand; return true to stop reading.
+export async function requestLimited(streamTarget, { timeoutMs = DEFAULT_TIMEOUT_MS, headers = {}, maxBytes = DEFAULT_MAX_BYTES, stopWhen } = {}) {
   const target = typeof streamTarget === 'string' ? await resolvePublicTarget(streamTarget) : streamTarget;
   return new Promise((resolve, reject) => {
+    let settled = false;
+    const settle = (fn, value) => {
+      if (settled) return;
+      settled = true;
+      fn(value);
+    };
     const client = target.url.protocol === 'https:' ? https : http;
     const request = client.request(target.url, {
       method: 'GET',
@@ -64,51 +74,43 @@ export async function requestLimited(streamTarget, { timeoutMs = DEFAULT_TIMEOUT
       headers
     }, response => {
       const statusCode = Number(response.statusCode || 0);
-      const result = { statusCode, headers: response.headers, body: Buffer.alloc(0), get text() { return this.body.toString('utf8'); } };
+      const result = { statusCode, headers: response.headers, body: Buffer.alloc(0), truncated: false, get text() { return this.body.toString('utf8'); } };
       if (isRedirect(statusCode)) {
         response.resume();
-        resolve(result);
+        settle(resolve, result);
         return;
       }
 
       let received = 0;
       const chunks = [];
+      const finish = truncated => {
+        result.body = Buffer.concat(chunks);
+        result.truncated = truncated;
+        if (truncated) {
+          response.destroy();
+          request.destroy();
+        }
+        settle(resolve, result);
+      };
       response.on('data', chunk => {
+        if (settled) return;
         received += chunk.length;
-        if (received > maxBytes) {
-          // A capped read is still a successful partial read for stream sampling.
-          response.destroy();
-          request.destroy();
-          result.body = collectBody ? Buffer.concat(chunks) : Buffer.alloc(0);
-          result.truncated = true;
-          resolve(result);
-          return;
-        }
-        if (collectBody) chunks.push(chunk);
-        if (collectBody && typeof stopWhen === 'function' && stopWhen(Buffer.concat(chunks), response.headers)) {
-          response.destroy();
-          request.destroy();
-          result.body = Buffer.concat(chunks);
-          result.truncated = true;
-          resolve(result);
+        chunks.push(chunk);
+        if (received >= maxBytes) return finish(true);
+        if (typeof stopWhen === 'function' &&
+            stopWhen({ length: received, chunk, headers: response.headers, body: () => Buffer.concat(chunks) })) {
+          finish(true);
         }
       });
-      response.on('end', () => {
-        result.body = collectBody ? Buffer.concat(chunks) : Buffer.alloc(0);
-        resolve(result);
-      });
+      response.on('end', () => finish(false));
       response.on('error', () => {
-        if (chunks.length) {
-          result.body = Buffer.concat(chunks);
-          result.truncated = true;
-          resolve(result);
-          return;
-        }
-        reject(new Error('response stream error'));
+        // A torn read with bytes in hand is still a usable partial result.
+        if (chunks.length) finish(true);
+        else settle(reject, new Error('response stream error'));
       });
     });
     request.setTimeout(timeoutMs, () => request.destroy(new Error('request timeout')));
-    request.on('error', error => reject(error));
+    request.on('error', error => settle(reject, error));
     request.end();
   });
 }

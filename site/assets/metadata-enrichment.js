@@ -9,7 +9,6 @@
 
 const VERSION = '0.25.0-metadata-overlay';
 const CACHE_KEY = 'earth-radio-track-identity-cache-v1';
-const RECENT_RAW_KEY = 'earth-radio-last-raw-title-v1';
 const JUNK_TITLE = /^(unknown|n\/?a|advert(isement)?|commercial|station\s?id|live stream|loading\.{0,3}|no title|news|weather|traffic)$/i;
 const COVER_OR_TRIBUTE = /\b(karaoke|tribute|cover version|instrumental version|originally performed by|as made famous by|remix tribute)\b/i;
 const ADLIKE = /\b(advertisement|commercial|sponsor|promo|listen live|news update|traffic|weather|sweeper|station id)\b/i;
@@ -49,7 +48,6 @@ const state = {
   currentIdentity: null,
   trustedTrack: null,
   platformTimer: null,
-  platformStreamUrl: '',
   hlsWatchedTracks: new WeakSet(),
   fingerprintAvailable: null,
   fingerprintBusy: false,
@@ -87,7 +85,7 @@ function normalize(value) {
 function stripRadioNoise(value) {
   return String(value || '')
     .replace(/StreamTitle=/i, '')
-    .replace(/^['\"]|['\"];?$/g, '')
+    .replace(/^['"]|['"];?$/g, '')
     .replace(/\s*\|\s*(live|radio).*$/i, '')
     .replace(/\s*[-\u2013\u2014]\s*(live on .*|\d{2,4}\.?\d?\s?fm|\w+ radio)$/i, '')
     .replace(/\s+/g, ' ')
@@ -108,8 +106,9 @@ function parseNowPlaying(rawInput) {
     }
   }
 
-  // Some stations send "Title by Artist".
-  const byMatch = raw.match(/^(.+?)\s+by\s+(.+?)$/i);
+  // Some stations send "Title by Artist". Lowercase "by" only: title-cased "By"
+  // ("Stand By Me") is part of the title, not an artist separator.
+  const byMatch = raw.match(/^(.+?)\s+by\s+(.+)$/);
   if (byMatch) return { artist: byMatch[2].trim(), title: byMatch[1].trim(), raw };
 
   return { artist: '', title: raw, raw };
@@ -367,18 +366,16 @@ async function identify(track) {
   }
 
   if (!canPromoteCandidate(track, best, merged)) {
-    const identity = rawIcyIdentity(track, best ? blockedPromotionReason(track, best) : 'no catalog match above confidence threshold');
+    const identity = rawIcyIdentity(track, best ? blockedPromotionReason(track) : 'no catalog match above confidence threshold');
     setCached(key, identity, cfg.cacheTtlMissMs);
     return { ...identity, cache: 'miss' };
   }
 
-  let stateLabel = 'Raw ICY only';
-  if (best && best.confidence >= cfg.minIdentifiedConfidence) stateLabel = 'Identified';
-  else if (best && best.confidence >= cfg.minLikelyConfidence) stateLabel = 'Likely match';
+  const stateLabel = best.confidence >= cfg.minIdentifiedConfidence ? 'Identified' : 'Likely match';
 
-  const identity = best ? {
+  const identity = {
     version: VERSION,
-    found: best.confidence >= cfg.minLikelyConfidence,
+    found: true,
     state: stateLabel,
     confidence: best.confidence,
     title: best.title || track.title,
@@ -398,20 +395,9 @@ async function identify(track) {
     ],
     reasons: best.reasons,
     raw: track.raw
-  } : {
-    version: VERSION,
-    found: false,
-    state: 'Raw ICY only',
-    confidence: track.artist ? 42 : 28,
-    title: track.title,
-    artist: track.artist,
-    links: {},
-    sources: [{ provider: 'icy', confidence: track.artist ? 0.42 : 0.28, fetchedAt: nowIso(), raw: track.raw }],
-    reasons: ['no catalog match above confidence threshold'],
-    raw: track.raw
   };
 
-  const ttl = identity.found ? (identity.confidence >= cfg.minIdentifiedConfidence ? cfg.cacheTtlHighMs : cfg.cacheTtlLowMs) : cfg.cacheTtlMissMs;
+  const ttl = identity.confidence >= cfg.minIdentifiedConfidence ? cfg.cacheTtlHighMs : cfg.cacheTtlLowMs;
   setCached(key, identity, ttl);
   return { ...identity, cache: 'miss' };
 }
@@ -531,8 +517,9 @@ function handleNowcardAction(event) {
 function syncWorkflowButtons() {
   const actions = byId('nowcard-actions');
   if (!actions) return;
-  const station = text(byId('player-station'));
-  const hasStation = Boolean(station && station !== 'Select a station');
+  // Locale-independent: the idle label varies by language, but an active stream or a
+  // selected station card only exists when a station is actually chosen.
+  const hasStation = Boolean(currentStreamUrl()) || Boolean(document.querySelector('.station-card--active'));
   const favoritePressed = byId('btn-favorite')?.getAttribute('aria-pressed') === 'true';
   for (const button of actions.querySelectorAll('[data-nowcard-action]')) {
     const action = button.dataset.nowcardAction;
@@ -668,7 +655,6 @@ function renderIdentity(track, identity) {
         img.alt = '';
         img.loading = 'lazy';
         img.src = identity.artworkUrl;
-        img.addEventListener('error', () => {});
         artEl.replaceChildren(img);
       }
     }
@@ -783,6 +769,8 @@ function platformTrack(platform, artist, title, combined, artworkUrl) {
   const raw = String(combined || '').trim() || [cleanArtist, cleanTitle].filter(Boolean).join(' - ');
   let track = cleanArtist && cleanTitle ? { artist: cleanArtist, title: cleanTitle, raw: raw || `${cleanArtist} - ${cleanTitle}` } : parseNowPlaying(raw);
   if (!track?.title) return null;
+  // An artist-only payload parses into title === artist; that is not a track identity.
+  if (cleanArtist && !cleanTitle && track.title === cleanArtist) return null;
   const art = String(artworkUrl || '').trim();
   return { platform, track, artworkUrl: /^https:\/\//i.test(art) ? art : '' };
 }
@@ -843,7 +831,6 @@ async function pollPlatformNowPlaying() {
   if (document.hidden || !isPlaying()) return;
   const streamUrl = currentStreamUrl();
   if (!streamUrl) return;
-  state.platformStreamUrl = streamUrl;
   try {
     const result = await resolvePlatformNowPlaying(streamUrl);
     if (!result || streamUrl !== currentStreamUrl()) return;
@@ -893,6 +880,24 @@ function handleId3CueChange(track) {
   void applyTrustedTrack(trackInfo, 'hls-id3');
 }
 
+// Single identify->render sequence shared by the DOM-ICY and trusted-feed paths, so
+// invalidation semantics (token check, lastTrackKey/currentIdentity updates) cannot
+// diverge. State is only committed after the token survives the await.
+async function identifyAndRender(track, { sourceFeed = '', artworkUrl = '' } = {}) {
+  renderIdentifying(track);
+  const token = Symbol('metadata-request');
+  state.inFlight = token;
+  const identity = await identify(track);
+  if (state.inFlight !== token) return null;
+  if (sourceFeed) identity.sourceFeed = sourceFeed;
+  if (!identity.artworkUrl && artworkUrl) identity.artworkUrl = artworkUrl;
+  state.lastTrackKey = trackKey(track);
+  state.currentIdentity = identity;
+  renderIdentity(track, identity);
+  maybeAutoFingerprint(identity);
+  return identity;
+}
+
 // Feeds artist/title from a higher-trust live source through the normal identify
 // pipeline; the catalog match still decides promotion, but the raw text no longer
 // depends on scraping the DOM for ICY fragments.
@@ -906,18 +911,7 @@ async function applyTrustedTrack(track, source, extras = {}) {
   // A fingerprint identity outranks text feeds until it goes stale.
   if (previous && previous.source === 'fingerprint' && source !== 'fingerprint' && Date.now() - previous.at < TRUSTED_TRACK_FRESH_MS) return;
   state.trustedTrack = { key, source, at: Date.now(), artworkUrl: extras.artworkUrl || '' };
-
-  state.lastTrackKey = key;
-  renderIdentifying(track);
-  const token = Symbol('metadata-request');
-  state.inFlight = token;
-  const identity = await identify(track);
-  if (state.inFlight !== token) return;
-  identity.sourceFeed = source;
-  if (!identity.artworkUrl && extras.artworkUrl) identity.artworkUrl = extras.artworkUrl;
-  state.currentIdentity = identity;
-  renderIdentity(track, identity);
-  maybeAutoFingerprint(identity);
+  await identifyAndRender(track, { sourceFeed: source, artworkUrl: extras.artworkUrl || '' });
 }
 
 // --- On-demand fingerprinting through the proxy ---
@@ -932,9 +926,10 @@ async function checkFingerprintAvailability() {
   if (state.fingerprintAvailable !== null) return state.fingerprintAvailable;
   const cfg = config();
   const data = await fetchJson(`${cfg.proxyBaseUrl}/api/track/fingerprint`, cfg.requestTimeoutMs);
-  state.fingerprintAvailable = Boolean(data?.available);
+  // Only an explicit answer latches; a failed probe stays unknown and is retried later.
+  state.fingerprintAvailable = data ? Boolean(data.available) : null;
   syncFingerprintButton();
-  return state.fingerprintAvailable;
+  return Boolean(state.fingerprintAvailable);
 }
 
 function fingerprintButton() {
@@ -985,10 +980,17 @@ async function runFingerprint(trigger) {
   const button = fingerprintButton();
   if (button) { button.disabled = true; button.textContent = 'Listening…'; }
   setFingerprintStatus(trigger === 'auto' ? 'Raw ICY only; sampling audio for a fingerprint match' : 'Sampling ~12s of audio…');
+  // Claim the render token so an identify() already in flight cannot paint over
+  // the fingerprint result the user explicitly requested.
+  const token = Symbol('fingerprint-request');
+  state.inFlight = token;
 
   try {
     const params = new URLSearchParams({ url: streamUrl });
     const data = await fetchJson(`${cfg.proxyBaseUrl}/api/track/fingerprint?${params}`, 45000);
+    // The sample takes ~15-20s; if the user switched stations meanwhile, this result
+    // belongs to the old stream and must be dropped.
+    if (streamUrl !== currentStreamUrl() || state.inFlight !== token) { setFingerprintStatus(''); return; }
     if (!data) { setFingerprintStatus('Fingerprint request failed'); return; }
     if (data.available === false) {
       state.fingerprintAvailable = false;
@@ -1025,7 +1027,6 @@ async function runFingerprint(trigger) {
     state.trustedTrack = { key: trackKey(track), source: 'fingerprint', at: Date.now(), artworkUrl: identity.artworkUrl };
     state.lastTrackKey = trackKey(track);
     state.currentIdentity = identity;
-    setCached(trackKey(track), identity, config().cacheTtlLowMs);
     renderIdentity(track, identity);
     setFingerprintStatus(`Matched by audio fingerprint (${data.provider || 'provider'})`);
   } finally {
@@ -1040,7 +1041,15 @@ async function runFingerprint(trigger) {
 // now-playing lookup so users can see what a dot is playing before pressing it.
 
 const MAP_TOOLTIP_NP_TTL_MS = 30 * 1000;
+const MAP_TOOLTIP_MAX_ENTRIES = 200;
 const mapTooltip = { nowPlaying: new Map(), inFlight: new Set(), hoverTimer: null, hoverUuid: '' };
+
+function rememberMapTooltip(uuid, text) {
+  mapTooltip.nowPlaying.set(uuid, { text, at: Date.now() });
+  if (mapTooltip.nowPlaying.size <= MAP_TOOLTIP_MAX_ENTRIES) return;
+  const oldest = [...mapTooltip.nowPlaying.entries()].sort((a, b) => a[1].at - b[1].at)[0]?.[0];
+  if (oldest !== undefined) mapTooltip.nowPlaying.delete(oldest);
+}
 
 function escapeHtmlText(value) {
   const div = document.createElement('div');
@@ -1083,11 +1092,12 @@ function updateOpenMapTooltip(uuid) {
   const line = wrap.querySelector('.er-tt-np');
   if (!line) return;
   const entry = mapTooltip.nowPlaying.get(uuid);
-  if (entry?.text) {
+  const fresh = entry && Date.now() - entry.at < MAP_TOOLTIP_NP_TTL_MS ? entry : null;
+  if (fresh?.text) {
     line.hidden = false;
     line.classList.remove('er-tt-np--pending');
-    line.textContent = `♪ ${entry.text}`;
-  } else if (!entry && mapTooltip.inFlight.has(uuid)) {
+    line.textContent = `♪ ${fresh.text}`;
+  } else if (!fresh && mapTooltip.inFlight.has(uuid)) {
     line.hidden = false;
     line.classList.add('er-tt-np--pending');
     line.textContent = 'Checking what’s playing…';
@@ -1117,10 +1127,9 @@ function handleMapTooltipHover(station) {
     resolvePlatformNowPlaying(streamUrl)
       .then(result => {
         const track = result?.track;
-        const text = track ? [track.artist, track.title].filter(Boolean).join(' – ') : '';
-        mapTooltip.nowPlaying.set(uuid, { text, at: Date.now() });
+        rememberMapTooltip(uuid, track ? [track.artist, track.title].filter(Boolean).join(' – ') : '');
       })
-      .catch(() => mapTooltip.nowPlaying.set(uuid, { text: '', at: Date.now() }))
+      .catch(() => rememberMapTooltip(uuid, ''))
       .finally(() => {
         mapTooltip.inFlight.delete(uuid);
         updateOpenMapTooltip(uuid);
@@ -1143,7 +1152,6 @@ async function processCurrentMetadata() {
   }
   if (raw === state.lastRaw) return;
   state.lastRaw = raw;
-  try { localStorage.setItem(RECENT_RAW_KEY, raw); } catch { /* ignore */ }
 
   const track = parseNowPlaying(raw);
   if (!track) {
@@ -1155,16 +1163,7 @@ async function processCurrentMetadata() {
     renderIdentity(track, state.currentIdentity);
     return;
   }
-  state.lastTrackKey = key;
-  renderIdentifying(track);
-
-  const token = Symbol('metadata-request');
-  state.inFlight = token;
-  const identity = await identify(track);
-  if (state.inFlight !== token) return;
-  state.currentIdentity = identity;
-  renderIdentity(track, identity);
-  maybeAutoFingerprint(identity);
+  await identifyAndRender(track);
 }
 
 function scheduleProcess() {
@@ -1190,11 +1189,18 @@ function init() {
   const audio = audioElement();
   if (audio) {
     audio.addEventListener('loadstart', () => {
-      // New stream: text feeds from the previous station are no longer trustworthy.
+      // New stream: everything derived from the previous station is stale — trusted
+      // feeds, the raw-title dedupe, the current identity, and any identify/fingerprint
+      // response still in flight (its token check will now fail).
       state.trustedTrack = null;
       state.fingerprintAutoKey = '';
+      state.inFlight = null;
+      state.lastRaw = '';
+      state.lastTrackKey = '';
+      state.currentIdentity = null;
       setFingerprintStatus('');
       syncFingerprintButton();
+      renderStationOnly();
     });
     audio.addEventListener('play', () => {
       syncFingerprintButton();

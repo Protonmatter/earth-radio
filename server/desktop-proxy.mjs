@@ -8,7 +8,7 @@ import net from 'node:net';
 import { URL, pathToFileURL } from 'node:url';
 import { TextDecoder } from 'node:util';
 import { handleMetadataApi } from './metadata-api.mjs';
-import { createPinnedLookup, isPrivateIp, isRedirect, normalizeHostname, resolvePublicTarget } from './net-guard.mjs';
+import { createPinnedLookup, isRedirect, normalizeHostname, requestLimited, resolvePublicTarget } from './net-guard.mjs';
 
 const USER_AGENT = 'EarthRadio/0.24.0 desktop-proxy (+https://github.com/Protonmatter/EarthRadio)';
 const RADIO_BROWSER_BASES = [
@@ -30,6 +30,7 @@ const UTF8_METADATA_DECODER = new TextDecoder('utf-8', { fatal: true });
 const WINDOWS_1252_METADATA_DECODER = new TextDecoder('windows-1252');
 
 const directoryCache = new Map();
+const directoryInFlight = new Map();
 
 export async function createDesktopProxy({ port = 0, host = '127.0.0.1', accessToken = randomBytes(32).toString('base64url') } = {}) {
   if (!/^[A-Za-z0-9_-]{32,}$/.test(accessToken)) throw new Error('desktop proxy access token is invalid');
@@ -136,13 +137,22 @@ function allowedCorsOrigin(origin) {
   return '';
 }
 
-async function getStations(limit, requestedCountryCodes = FEATURED_COUNTRY_CODES, countryLimit = FEATURED_COUNTRY_LIMIT) {
-  const countryCodes = parseCountryCodes(requestedCountryCodes, FEATURED_COUNTRY_CODES);
+async function getStations(limit, countryCodes = FEATURED_COUNTRY_CODES, countryLimit = FEATURED_COUNTRY_LIMIT) {
   const maxStations = Math.min(MAX_FEDERATED_STATIONS, limit + countryCodes.length * countryLimit);
   const cacheKey = `federated:${limit}:${countryLimit}:${countryCodes.join(',')}`;
   const cached = directoryCache.get(cacheKey);
   if (cached && Date.now() - cached.savedAt < DIRECTORY_CACHE_TTL_MS) return { ...cached.payload, cached: true };
+  if (directoryInFlight.has(cacheKey)) return { ...await directoryInFlight.get(cacheKey), cached: true };
+  const promise = fetchStationsUncached(limit, countryCodes, countryLimit, maxStations, cacheKey);
+  directoryInFlight.set(cacheKey, promise);
+  try {
+    return await promise;
+  } finally {
+    directoryInFlight.delete(cacheKey);
+  }
+}
 
+async function fetchStationsUncached(limit, countryCodes, countryLimit, maxStations, cacheKey) {
   const errors = [];
   for (const base of RADIO_BROWSER_BASES) {
     try {
@@ -358,7 +368,6 @@ async function probeStream(streamTarget) {
     const response = await requestLimited(streamTarget, {
       timeoutMs: STREAM_TIMEOUT_MS,
       maxBytes: MAX_PROBE_BYTES,
-      collectText: false,
       headers: {
         Accept: '*/*',
         Range: 'bytes=0-4095',
@@ -374,7 +383,7 @@ async function probeStream(streamTarget) {
       return { ok: false, status: 'redirect', redirectedUrl: redirected, latencyMs: Date.now() - startedAt, observedAt: new Date().toISOString() };
     }
 
-    const ok = response.statusCode >= 200 && response.statusCode < 300 || response.statusCode === 206;
+    const ok = response.statusCode >= 200 && response.statusCode < 300;
     return {
       ok,
       status: ok ? 'ok' : `http_${response.statusCode}`,
@@ -466,7 +475,7 @@ function subscribeIcyTitles(streamTarget, onTitle, onError) {
         }
       }
     });
-    response.on('error', onError);
+    response.on('error', error => { if (!closed) onError?.(error); });
   });
 
   request.on('timeout', () => request.destroy(new Error('nowplaying timeout')));
@@ -485,7 +494,7 @@ function parseIcyTitle(metadata) {
 
 export function decodeIcyMetadata(buffer) {
   const data = Buffer.isBuffer(buffer) ? buffer : Buffer.from(buffer || '');
-  let decoded = '';
+  let decoded;
   try {
     decoded = UTF8_METADATA_DECODER.decode(data);
   } catch {
@@ -507,52 +516,13 @@ async function fetchText(streamTarget, timeoutMs = 8000, headers = {}) {
   const response = await requestLimited(streamTarget, {
     timeoutMs,
     maxBytes: MAX_PLAYLIST_BYTES,
-    collectText: true,
     headers: { Accept: '*/*', ...headers }
   });
   if (isRedirect(response.statusCode)) throw new Error('playlist redirect blocked by resolver');
-  if (!(response.statusCode >= 200 && response.statusCode < 300) && response.statusCode !== 206) throw new Error(`HTTP ${response.statusCode}`);
+  if (!(response.statusCode >= 200 && response.statusCode < 300)) throw new Error(`HTTP ${response.statusCode}`);
   return response.text;
 }
 
-async function requestLimited(streamTarget, { timeoutMs = 8000, headers = {}, maxBytes = MAX_PLAYLIST_BYTES, collectText = true } = {}) {
-  const target = typeof streamTarget === 'string' ? await resolvePublicTarget(streamTarget) : streamTarget;
-  return new Promise((resolve, reject) => {
-    const client = target.url.protocol === 'https:' ? https : http;
-    const request = client.request(target.url, {
-      method: 'GET',
-      timeout: timeoutMs,
-      lookup: createPinnedLookup(target),
-      headers: { 'User-Agent': USER_AGENT, ...headers }
-    }, response => {
-      const statusCode = Number(response.statusCode || 0);
-      const result = { statusCode, headers: response.headers, text: '' };
-      if (isRedirect(statusCode)) {
-        response.resume();
-        resolve(result);
-        return;
-      }
-
-      let received = 0;
-      const chunks = [];
-      response.on('data', chunk => {
-        received += chunk.length;
-        if (received > maxBytes) {
-          request.destroy(new Error(`response exceeded ${maxBytes} byte limit`));
-          return;
-        }
-        if (collectText) chunks.push(chunk);
-      });
-      response.on('end', () => {
-        if (collectText) result.text = Buffer.concat(chunks).toString('utf8');
-        resolve(result);
-      });
-    });
-    request.setTimeout(timeoutMs, () => request.destroy(new Error('request timeout')));
-    request.on('error', reject);
-    request.end();
-  });
-}
 
 function sendJson(res, status, body, headers = {}) {
   res.writeHead(status, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store', ...headers });
@@ -566,7 +536,7 @@ function sendRouteError(res, error) {
 }
 
 function isClientInputError(message) {
-  return /invalid url|only http\/https|missing stream host|private stream|blocked|did not resolve|localhost|origin not allowed|byte limit/i.test(String(message || ''));
+  return /invalid url|only http\/https|missing stream host|private stream|blocked|did not resolve|localhost|origin not allowed/i.test(String(message || ''));
 }
 
 
@@ -590,10 +560,6 @@ function firstPlayableUrl(text, baseUrl) {
   if (plsMatch) return new URL(plsMatch[1].trim(), baseUrl).toString();
   const line = source.split(/\r?\n/).map(item => item.trim()).find(item => item && !item.startsWith('#'));
   return line ? new URL(line, baseUrl).toString() : '';
-}
-
-async function assertPublicUrl(rawUrl) {
-  return (await resolvePublicTarget(rawUrl)).href;
 }
 
 

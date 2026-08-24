@@ -416,11 +416,3 @@ export const SCENARIOS = [
   }
 ];
 
-export const REQUIRED_EVIDENCE_VIEWPORTS = Object.freeze([
-  '390x844',
-  '430x932',
-  '844x390',
-  '1024x768',
-  '1440x900',
-  '1920x1080'
-]);

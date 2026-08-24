@@ -53,7 +53,7 @@ for (const route of ['/api/track/identify', '/api/streams/platform-nowplaying', 
   if (!metadataApi.includes(route)) throw new Error(`metadata API missing route ${route}`);
 }
 if (!server.includes('handleMetadataApi')) throw new Error('desktop proxy does not mount the combined metadata API');
-if (!server.includes('assertPublicUrl')) throw new Error('desktop proxy lacks stream URL guard');
+if (!server.includes('resolvePublicTarget')) throw new Error('desktop proxy lacks stream URL guard');
 
 const proxy = await createDesktopProxy({ port: 0 });
 try {

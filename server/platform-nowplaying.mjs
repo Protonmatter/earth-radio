@@ -5,16 +5,17 @@
 // well-known platform API host) and fetched through the shared public-target guard.
 
 import { requestLimited, resolvePublicTarget } from './net-guard.mjs';
+import { createBoundedTtlCache, resolveWithCache } from './shared-cache.mjs';
 import { parseNowPlaying } from './metadata-providers.mjs';
 
-const USER_AGENT = 'EarthRadio/0.25.0 platform-nowplaying (+https://github.com/Protonmatter/EarthRadio)';
+const USER_AGENT = 'EarthRadio/0.24.0 platform-nowplaying (+https://github.com/Protonmatter/EarthRadio)';
 const DEFAULT_TIMEOUT_MS = 6000;
 const MAX_RESPONSE_BYTES = 256 * 1024;
 const CACHE_MAX_ENTRIES = 256;
 const CACHE_TTL_HIT_MS = 20 * 1000;
 const CACHE_TTL_MISS_MS = 5 * 60 * 1000;
 
-const nowPlayingCache = new Map();
+const nowPlayingCache = createBoundedTtlCache({ maxEntries: CACHE_MAX_ENTRIES });
 const inFlight = new Map();
 
 // Ordered platform candidates for a stream URL. Specific hosted platforms come first
@@ -67,19 +68,13 @@ export function detectPlatformEndpoints(streamUrl) {
 export async function resolvePlatformNowPlaying(streamUrl, { timeoutMs = DEFAULT_TIMEOUT_MS, fetchTextImpl = fetchTextGuarded } = {}) {
   const cacheKey = String(streamUrl || '').trim();
   if (!cacheKey) return notFound('missing stream url');
-  const cached = readCache(cacheKey);
-  if (cached) return { ...cached, cached: true };
-  if (inFlight.has(cacheKey)) return { ...await inFlight.get(cacheKey), cached: true };
-
-  const promise = resolveUncached(cacheKey, { timeoutMs, fetchTextImpl });
-  inFlight.set(cacheKey, promise);
-  try {
-    const payload = await promise;
-    writeCache(cacheKey, payload, payload.found ? CACHE_TTL_HIT_MS : CACHE_TTL_MISS_MS);
-    return payload;
-  } finally {
-    inFlight.delete(cacheKey);
-  }
+  return resolveWithCache({
+    cache: nowPlayingCache,
+    inFlight,
+    key: cacheKey,
+    produce: () => resolveUncached(cacheKey, { timeoutMs, fetchTextImpl }),
+    ttlFor: payload => payload.found ? CACHE_TTL_HIT_MS : CACHE_TTL_MISS_MS
+  });
 }
 
 async function resolveUncached(streamUrl, { timeoutMs, fetchTextImpl }) {
@@ -191,6 +186,11 @@ function withParsedFallback(result) {
   if (result.artist && result.title) return result;
   const parsed = parseNowPlaying(result.raw);
   if (!parsed) return null;
+  if (result.artist && !result.title) {
+    // An artist-only payload carries no track identity; without a real title the
+    // parse would just echo the artist name back as the "song".
+    return parsed.artist && parsed.title ? { ...result, artist: parsed.artist, title: parsed.title, raw: parsed.raw } : null;
+  }
   return { ...result, artist: result.artist || parsed.artist, title: result.title || parsed.title, raw: parsed.raw };
 }
 
@@ -200,7 +200,7 @@ async function fetchTextGuarded(endpoint, timeoutMs) {
     timeoutMs,
     maxBytes: MAX_RESPONSE_BYTES,
     // SSE subscriptions never end; stop after the first complete event frame.
-    stopWhen: endpoint.kind === 'sse' ? body => body.includes('\n\n') : undefined,
+    stopWhen: endpoint.kind === 'sse' ? ({ chunk, body }) => chunk.includes('\n\n') || body().includes('\n\n') : undefined,
     headers: {
       Accept: endpoint.kind === 'sse' ? 'text/event-stream' : 'application/json',
       'User-Agent': USER_AGENT
@@ -223,22 +223,6 @@ function httpsOnly(value) {
   return /^https:\/\//i.test(text) ? text : '';
 }
 
-function readCache(key) {
-  const entry = nowPlayingCache.get(key);
-  if (!entry || entry.expiresAt <= Date.now()) {
-    nowPlayingCache.delete(key);
-    return null;
-  }
-  entry.lastAccessedAt = Date.now();
-  return { ...entry.payload };
-}
-
-function writeCache(key, payload, ttlMs) {
-  nowPlayingCache.set(key, { payload: { ...payload }, expiresAt: Date.now() + ttlMs, lastAccessedAt: Date.now() });
-  if (nowPlayingCache.size <= CACHE_MAX_ENTRIES) return;
-  const oldest = [...nowPlayingCache.entries()].sort((a, b) => a[1].lastAccessedAt - b[1].lastAccessedAt)[0]?.[0];
-  if (oldest) nowPlayingCache.delete(oldest);
-}
 
 export function clearPlatformNowPlayingCache() {
   nowPlayingCache.clear();

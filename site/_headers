@@ -14,6 +14,12 @@
 /assets/index-CSoL7F-Y.css
   Cache-Control: public, max-age=31536000, immutable
 
+/assets/storage-guard.js
+  Cache-Control: public, max-age=300, must-revalidate
+
+/assets/directory-expansion.js
+  Cache-Control: public, max-age=300, must-revalidate
+
 /assets/metadata-enrichment.css
   Cache-Control: public, max-age=300, must-revalidate
 

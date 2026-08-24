@@ -137,7 +137,7 @@ export function buildCountryStationQuery(country, stationQuery) {
 export function matchesSelectedCountry(metadata, selectedCountry) {
   const wanted = normalizeSearchTerm(displayCountryName(selectedCountry));
   if (!wanted) return true;
-  const actual = normalizeSearchTerm(displayCountryName(String(metadata ?? '').split(/\s*[·â€¢]\s*/, 1)[0]));
+  const actual = normalizeSearchTerm(displayCountryName(String(metadata ?? '').split(/\s*[·•]\s*/, 1)[0]));
   return actual === wanted;
 }
 
@@ -397,10 +397,6 @@ function readLocale(state) {
 function applyLocale(locale, persist = true) {
   const resolved = normalizeLocale(locale);
   applyDocumentLocale(resolved);
-  document.documentElement.lang = resolved;
-  document.documentElement.dir = isRtlLocale(resolved) ? 'rtl' : 'ltr';
-  document.documentElement.dataset.fontProfile = resolved;
-  document.documentElement.style.setProperty('--er-font', FONT_PROFILES[resolved]);
   applyDeclarativeI18n(document, resolved);
   localizeRuntime(resolved);
   refreshCountryPresentation();
@@ -484,9 +480,20 @@ function bindLocaleOptions() {
   if ([...select.options].some(option => option.value === normalized)) select.value = normalized;
 
   select.addEventListener('change', () => {
-    applyLocale(select.value);
+    // Preview only; the Save button commits and closing the modal reverts.
+    applyLocale(select.value, false);
     applyViewport(loadUiState());
   });
+
+  const modal = byId('settings-modal');
+  if (modal) {
+    new MutationObserver(() => {
+      if (!modal.hidden) return;
+      const saved = normalizeLocale(loadUiState().locale);
+      if ([...select.options].some(option => option.value === saved)) select.value = saved;
+      applyLocale(saved, false);
+    }).observe(modal, { attributes: true, attributeFilter: ['hidden'] });
+  }
 }
 
 /* ------------------------------------------------------------------ *
@@ -620,7 +627,11 @@ function applyWorkspace(state, mode) {
     if (!restore) return;
     restore.hidden = !target;
     restore.setAttribute('data-er-collapse', target || 'map');
-    restore.textContent = target === 'list' ? t('desktop.restoreStations') : t('desktop.restoreMap');
+    const key = target === 'list' ? 'desktop.restoreStations' : 'desktop.restoreMap';
+    // Keep the declarative key in sync; applyDeclarativeI18n would otherwise rewrite
+    // the label back on its next pass.
+    restore.setAttribute('data-i18n', key);
+    restore.textContent = t(key);
   };
 
   if (mode === 'mobile') {
@@ -1032,7 +1043,10 @@ function bindCountrySearch() {
       return;
     }
     engine.dispatchEvent(new KeyboardEvent('keydown', { key: event.key, bubbles: true, cancelable: true }));
-    if (event.key === 'Escape') queueMicrotask(() => presentSearch(true));
+    // Re-present only the mobile search destination; on desktop the palette must close.
+    if (event.key === 'Escape' && classifyViewport() === 'mobile' && loadUiState().destination === 'search') {
+      queueMicrotask(() => presentSearch(true));
+    }
   });
 
   country.addEventListener('focus', () => {
@@ -1106,8 +1120,10 @@ function setDestination(destination, explicit = false) {
     // Listen is the unfiltered feed: release the Saved segment toggles.
     const recent = byId('recent-toggle');
     const favorites = byId('favorites-toggle');
-    if (recent?.classList.contains('header-btn--active')) recent.click();
-    if (favorites?.classList.contains('header-btn--active')) favorites.click();
+    const isOn = element => element?.classList.contains('header-btn--active')
+      || element?.getAttribute('aria-pressed') === 'true';
+    if (isOn(recent)) recent.click();
+    if (isOn(favorites)) favorites.click();
   }
   applyViewport(next);
   setOverflowOpen(false);
@@ -1291,10 +1307,11 @@ function bindActions() {
       if (classifyViewport() === 'mobile') {
         setDestination('search', true);
       } else {
-        // Desktop keeps the runtime's command palette and its Ctrl/Cmd+K path.
-        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true, bubbles: true }));
+        // Desktop keeps the runtime's command palette and its Ctrl/Cmd+K path. One
+        // event only (both modifiers would open it twice), and focus after the
+        // runtime's own requestAnimationFrame focus of the hidden engine input.
         document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true, bubbles: true }));
-        queueMicrotask(() => byId('er-station-query')?.focus());
+        requestAnimationFrame(() => requestAnimationFrame(() => byId('er-station-query')?.focus()));
       }
       return;
     }
@@ -1385,8 +1402,7 @@ function bindActions() {
     if (resizeFrame) return;
     resizeFrame = requestAnimationFrame(() => {
       resizeFrame = 0;
-      const state = saveUiState({});
-      applyViewport(state);
+      applyViewport(loadUiState());
     });
   };
   window.addEventListener('resize', onResize);

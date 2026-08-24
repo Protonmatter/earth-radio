@@ -67,10 +67,10 @@ export async function handleTrackFingerprint(req, res) {
       title: fingerprint.title,
       country: sanitizeCountry(url.searchParams.get('country') || 'US')
     });
-    const confidence = Math.max(85, Math.min(98, fingerprint.score || 90));
+    const confidence = Math.max(60, Math.min(98, Number(fingerprint.score) || 90));
     return sendJson(res, 200, {
       ...fingerprint,
-      state: 'Identified',
+      state: confidence >= 78 ? 'Identified' : 'Likely match',
       confidence,
       album: fingerprint.album || catalog.album || '',
       releaseYear: fingerprint.releaseYear || catalog.releaseYear || '',
@@ -138,6 +138,11 @@ function sanitizeCountry(value) {
 function consumeRateLimit(req, buckets, maxRequests) {
   const key = req.socket?.remoteAddress || 'local';
   const now = Date.now();
+  if (buckets.size > 512) {
+    for (const [bucketKey, entry] of buckets) {
+      if (now >= entry.resetAt) buckets.delete(bucketKey);
+    }
+  }
   const bucket = buckets.get(key);
   if (!bucket || now >= bucket.resetAt) {
     buckets.set(key, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });

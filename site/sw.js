@@ -2,10 +2,13 @@ const CACHE_NAME = 'earth-radio-shell-v27-live-metadata-1';
 const SHELL_ASSETS = [
   './',
   './index.html',
+  './config.js',
   './manifest.webmanifest',
   './assets/hls.light-Dr1Fv81C.js',
   './assets/index-B4rKOAHV.js',
   './assets/index-CSoL7F-Y.css',
+  './assets/storage-guard.js',
+  './assets/directory-expansion.js',
   './assets/metadata-enrichment.js',
   './assets/metadata-enrichment.css',
   './assets/responsive-ui.css',
@@ -47,7 +50,12 @@ async function networkFirst(request) {
     }
     return response;
   } catch {
-    return (await caches.match(request)) || (await caches.match('./index.html')) || Response.error();
+    const cached = await caches.match(request);
+    if (cached) return cached;
+    // Only navigations may fall back to the shell document; serving HTML for a
+    // script/style request breaks module MIME checks while offline.
+    if (request.mode === 'navigate') return (await caches.match('./index.html')) || Response.error();
+    return Response.error();
   }
 }
 

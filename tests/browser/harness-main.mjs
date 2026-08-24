@@ -269,7 +269,7 @@ const PROBE = `(() => {
 async function waitFor(contents, expression, { timeout = 20000, interval = 120 } = {}) {
   const deadline = Date.now() + timeout;
   for (;;) {
-    let value = false;
+    let value;
     try {
       value = await contents.executeJavaScript(expression, true);
     } catch {
@@ -634,8 +634,13 @@ app.whenReady().then(async () => {
     await persist(false);
   }
   await persist(true);
-  server.close();
+  await new Promise(resolve => server.close(resolve));
   await rm(harnessProfile, { recursive: true, force: true }).catch(() => {});
   process.stdout.write(`RENDERED_RESULTS ${resultsFile}\n`);
   app.exit(results.some(result => result.error) ? 1 : 0);
+}).catch(error => {
+  // Without this, a startup failure becomes an unhandled rejection and the harness
+  // hangs instead of reporting a structured failure.
+  process.stderr.write(`RENDERED_HARNESS_ERROR ${error?.stack || error}\n`);
+  app.exit(1);
 });

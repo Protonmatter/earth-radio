@@ -9,8 +9,8 @@
         "sha256": "942d2d61015289e649cf74ff509a95fd2ca20090fc40cb9fd3e5f21d89c29dcc"
       },
       "current": {
-        "bytes": 3491,
-        "sha256": "8e7a18a2fc8a8f27750348c692baf161805d5ad22d14a6db3c350ad6f55e06cb"
+        "bytes": 3549,
+        "sha256": "6aa303ed9cbf06edae50a98f64f21a3f40b114b8afb3078c645b041be24be5bc"
       },
       "reason": "Load the selected site directory and validate complete supported network-proxy rules with URL parsing."
     },
@@ -21,8 +21,8 @@
         "sha256": "329c8af7c7fa7b0921dd2c0028a057e8fea8ff4ac706c0760b8d8de629ede401"
       },
       "current": {
-        "bytes": 23271,
-        "sha256": "34ea752e06bc4498e3ded4a65df2388e2666241ab6cccc5d3f336ed8c8cc857f"
+        "bytes": 22025,
+        "sha256": "403d023a0ec8355b819ae6b4c2cad3db19592d8afa7905658d80e8a4176a3eeb"
       },
       "reason": "Require a per-launch capability path and Origin on API routes, and reject mapped IPv6, CGNAT, and other private stream targets. Mount the combined metadata API (platform now-playing, fingerprint) and import the shared outbound network guard extracted to server/net-guard.mjs."
     },
@@ -45,10 +45,22 @@
         "sha256": "0c66fa9ea4dcd4689081b9e3220a098a8e8342db96f14f230ecec39b3e39dca3"
       },
       "current": {
-        "bytes": 6751,
-        "sha256": "4a572703c48b432f290e69ecfecd644141b72383668a5b3dc369a5ed1b4d3d1b"
+        "bytes": 6940,
+        "sha256": "305d7ca9530b15a6936b32583ad434f41dd36d08b70566b7db5b6da46928cc0f"
       },
       "reason": "Add platform now-playing and on-demand fingerprint endpoints with a tighter metered-request rate limit."
+    },
+    {
+      "path": "server/metadata-providers.mjs",
+      "intake": {
+        "bytes": 17799,
+        "sha256": "648114492b64701d2a223b336d4ea9efd55fc3e8a5d9b7042d2c34d1ed3f8b93"
+      },
+      "current": {
+        "bytes": 18001,
+        "sha256": "47358d228c09be34f746e491fe3bd644c3f060493c4758b80716910dbb52bc17"
+      },
+      "reason": "Review-pass hardening: lowercase-only \"Title by Artist\" parsing, deduplicated Spotify token requests, market-scoped Spotify search, and removal of unreachable post-promotion fallbacks."
     },
     {
       "path": "site/assets/hls.light-Dr1Fv81C.js",
@@ -81,8 +93,8 @@
         "sha256": "414a84caf03ab56acbe274977475ee72f8dbea3fb1d6526a4fa65dd33f1a8a1d"
       },
       "current": {
-        "bytes": 4879,
-        "sha256": "236e08f86f1ba813c7eca0ab5d367c6506754177726ad55433ac3d8257cecfd5"
+        "bytes": 5110,
+        "sha256": "0ac2b222f65828c32dc4481e778773052a9d4a4799a6fd23d808b729c7a6bdcf"
       },
       "reason": "Style the fingerprint identify row and live-metadata source pills."
     },
@@ -93,8 +105,8 @@
         "sha256": "e213700a1a541139a66542e9bd8e615ad5dfc735d52c59569730d9a021e86009"
       },
       "current": {
-        "bytes": 50956,
-        "sha256": "7ee8511f9d0cf0d349d316041142e5425166770372326fddd35bc4c4e5e37640"
+        "bytes": 51922,
+        "sha256": "3f7b2eaef7456c77d7e8da97a27a4c9190a2785e57f56981309ebc36bf6b61c0"
       },
       "reason": "Layer live-metadata feeds above raw ICY: hosting-platform now-playing APIs, HLS timed ID3 text tracks, and an opt-in fingerprint identify button."
     },
@@ -105,8 +117,8 @@
         "sha256": "c83167f40ae7df3b389e35707b4abac834b10dc223ecb836d7840f90a7ef92a6"
       },
       "current": {
-        "bytes": 2168,
-        "sha256": "f6d65442b28a265e328192c7771e788ee803cad846e20917f5c54ebfec66b8b0"
+        "bytes": 2338,
+        "sha256": "0733c62bafbce9a70a97d88d819a1e9602520c3e92c9b224c7ce624a31c785ef"
       },
       "reason": "Keep Cloudflare Pages on an empty proxy URL and document that only Electron injects the loopback capability path. Add live-metadata runtime options (platform now-playing, HLS ID3, fingerprint) with metered fingerprinting off unless a proxy provides credentials."
     },
@@ -117,8 +129,8 @@
         "sha256": "c007984ee6349eaee532c1b3e2297e7fdac81610d4fae167c7595e127cef2d42"
       },
       "current": {
-        "bytes": 21977,
-        "sha256": "fb3146b5f9594c643bd904a1441dd7c63c82a0b4502923f72eef2539fdf498b9"
+        "bytes": 22115,
+        "sha256": "406a0d4d03d647d389dd90b3586101e662d585738e0c9ab78842b29bf77328c0"
       },
       "reason": "Move frame-ancestors enforcement to the deployable response header policy, then add responsive landmarks, iOS viewport/audio attributes, mobile destinations, compact header icons, additive responsive assets, country and station search controls, complete Now Playing metadata and sleep actions, the additive UI refresh stylesheet, and header actions ordered in the rail's reading sequence so keyboard focus follows the visual order."
     },
@@ -141,8 +153,8 @@
         "sha256": "b09e3207532fe7f47d14e9c53804d7e8caf31cad2fcb2c652b728a93871ea094"
       },
       "current": {
-        "bytes": 2483,
-        "sha256": "8335bd8b854d048597928e35775c37687874c99e3705261795245a6603c6122a"
+        "bytes": 2825,
+        "sha256": "61f04b5ce8328c20e156379e9b2ce0f63c68caf5871cb45deed9f85712c21825"
       },
       "reason": "Use network-first navigation/configuration updates, keep hashed recovered assets cache-first, reload installation requests so stale browser HTTP entries cannot seed the new service-worker cache, keep the previous worker when reload precaching fails, and precache the UI refresh stylesheet under cache generation v26. Bump the shell cache generation for the live-metadata overlay update."
     }

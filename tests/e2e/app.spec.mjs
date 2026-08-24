@@ -4,66 +4,7 @@
 
 import { expect, test } from '@playwright/test';
 import { FIXTURE_STATIONS } from './fixtures/stations.mjs';
-
-// 1 second of silent 8kHz mono 16-bit PCM in a WAV container; enough for the
-// <audio> element to reach "playing" without any real stream.
-function silentWav() {
-  const sampleRate = 8000;
-  const samples = sampleRate;
-  const dataSize = samples * 2;
-  const buffer = Buffer.alloc(44 + dataSize);
-  buffer.write('RIFF', 0);
-  buffer.writeUInt32LE(36 + dataSize, 4);
-  buffer.write('WAVE', 8);
-  buffer.write('fmt ', 12);
-  buffer.writeUInt32LE(16, 16);
-  buffer.writeUInt16LE(1, 20);
-  buffer.writeUInt16LE(1, 22);
-  buffer.writeUInt32LE(sampleRate, 24);
-  buffer.writeUInt32LE(sampleRate * 2, 28);
-  buffer.writeUInt16LE(2, 32);
-  buffer.writeUInt16LE(16, 34);
-  buffer.write('data', 36);
-  buffer.writeUInt32LE(dataSize, 40);
-  return buffer;
-}
-
-const AUDIO = silentWav();
-
-async function setupApp(page) {
-  await page.route('**/*', route => {
-    const url = new URL(route.request().url());
-    if (url.hostname === '127.0.0.1') return route.continue();
-    if (url.hostname.endsWith('api.radio-browser.info')) {
-      const pathname = url.pathname;
-      if (pathname.includes('/json/stations/topclick')) return route.fulfill({ json: FIXTURE_STATIONS });
-      if (pathname.includes('/json/stations/search')) {
-        const countryCode = url.searchParams.get('countrycode');
-        return route.fulfill({ json: FIXTURE_STATIONS.filter(s => !countryCode || s.countrycode === countryCode.toUpperCase()) });
-      }
-      if (pathname.includes('/json/url/')) return route.fulfill({ json: { ok: true } });
-      return route.fulfill({ json: [] });
-    }
-    if (url.hostname === 'streams.e2e.example') {
-      return route.fulfill({ contentType: 'audio/wav', body: AUDIO });
-    }
-    // Map tiles, icecast directory, favicons, anything else: fail fast and deterministically.
-    return route.abort();
-  });
-  await page.goto('/');
-  await expect(page.locator('.station-card').first()).toBeVisible({ timeout: 20_000 });
-}
-
-function card(page, name) {
-  return page.locator('.station-card', { hasText: name }).first();
-}
-
-async function playFromList(page, name) {
-  const target = card(page, name);
-  await target.scrollIntoViewIfNeeded();
-  await target.locator('.station-card__play').click();
-  await expect(page.locator('#player-station')).toHaveText(name, { timeout: 15_000 });
-}
+import { card, playFromList, setupApp } from './helpers.mjs';
 
 test.describe('directory and playback selection', () => {
   test('station list renders the fixture directory', async ({ page }) => {
@@ -119,12 +60,14 @@ test.describe('directory and playback selection', () => {
     await setupApp(page);
     await playFromList(page, 'E2E Berlin Techno');
     const playButton = page.locator('#btn-play');
+    const paused = () => page.evaluate(() => document.getElementById('audio-player')?.paused ?? true);
 
+    await page.waitForFunction(() => document.getElementById('audio-player')?.paused === false);
     for (let cycle = 0; cycle < 2; cycle += 1) {
       await playButton.click();
-      await page.waitForTimeout(400);
+      await expect.poll(paused, { timeout: 5000 }).toBe(true);
       await playButton.click();
-      await page.waitForTimeout(400);
+      await expect.poll(paused, { timeout: 5000 }).toBe(false);
     }
     await expect(page.locator('#player-station')).toHaveText('E2E Berlin Techno');
     await expect(page.locator('.station-card--active')).toHaveCount(1);
@@ -135,16 +78,20 @@ test.describe('map progressive disclosure', () => {
   async function openMapMarkers(page) {
     const map = page.locator('#map');
     await expect(map).toBeVisible();
-    // Zoom in enough that clusters break apart into individual station dots.
-    const markers = page.locator('#map path.leaflet-interactive');
+    // Zoom in until clusters break apart into individual station dots.
+    // :visible filters out zero-size placeholder paths markercluster leaves in the pane.
+    const markers = page.locator('#map path.leaflet-interactive:visible');
     for (let attempt = 0; attempt < 6 && (await markers.count()) < FIXTURE_STATIONS.length; attempt += 1) {
       const cluster = page.locator('#map .er-cluster').first();
-      if (await cluster.count()) {
-        await cluster.click();
-        await page.waitForTimeout(700);
-      } else {
-        break;
-      }
+      if (!(await cluster.count())) break;
+      const before = await markers.count();
+      await cluster.click();
+      // Wait for the zoom animation to actually change the marker/cluster layout.
+      await page.waitForFunction(
+        previous => document.querySelectorAll('#map path.leaflet-interactive').length !== previous,
+        before,
+        { timeout: 5000 }
+      ).catch(() => {});
     }
     await expect(markers.first()).toBeVisible();
     return markers;

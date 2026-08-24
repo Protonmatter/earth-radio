@@ -89,3 +89,42 @@ export const FIXTURE_STATIONS = [
     geo_long: 2.3522
   })
 ];
+
+// Stations that are NOT part of the initial directory: they only appear once the
+// directory-expansion overlay adds their country (JP) to the featured set.
+export const EXPANSION_STATIONS = [
+  station({
+    stationuuid: 'e2e-tokyo-0006',
+    name: 'E2E Tokyo FM',
+    url: 'https://streams.e2e.example/tokyo.mp3',
+    url_resolved: 'https://streams.e2e.example/tokyo.mp3',
+    country: 'Japan',
+    countrycode: 'JP',
+    tags: 'jpop,pop',
+    clickcount: 950,
+    geo_lat: 35.6762,
+    geo_long: 139.6503
+  }),
+  station({
+    stationuuid: 'e2e-osaka-0007',
+    name: 'E2E Osaka Beats',
+    url: 'https://streams.e2e.example/osaka.mp3',
+    url_resolved: 'https://streams.e2e.example/osaka.mp3',
+    country: 'Japan',
+    countrycode: 'JP',
+    tags: 'electronic',
+    clickcount: 400,
+    geo_lat: 34.6937,
+    geo_long: 135.5023
+  })
+];
+
+// Radio Browser /json/countries shape used by the expansion overlay's country index.
+export const FIXTURE_COUNTRIES = [
+  { name: 'The Republic Of Korea', iso_3166_1: 'KR', stationcount: 1 },
+  { name: 'The United Kingdom Of Great Britain And Northern Ireland', iso_3166_1: 'GB', stationcount: 1 },
+  { name: 'The United States Of America', iso_3166_1: 'US', stationcount: 1 },
+  { name: 'Germany', iso_3166_1: 'DE', stationcount: 1 },
+  { name: 'France', iso_3166_1: 'FR', stationcount: 1 },
+  { name: 'Japan', iso_3166_1: 'JP', stationcount: 2 }
+];

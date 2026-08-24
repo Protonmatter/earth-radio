@@ -14,7 +14,9 @@ window.RADIO_CONFIG = window.RADIO_CONFIG || {
   enabledSources: ['radio-browser', 'icecast-yp'],
   // Radio Browser uses GB for the United Kingdom.
   featuredCountryCodes: ['KR', 'US', 'GB', 'NL', 'FR', 'DE', 'CA'],
-  featuredCountryLimit: 300,
+  // Bounded initial load: the directory-expansion overlay adds further countries on
+  // demand (map "Explore", country picker/filter), so boot no longer pays for them.
+  featuredCountryLimit: 150,
   streamProbeEnabled: true,
   nowPlayingEnabled: true,
   metadataEnrichment: {

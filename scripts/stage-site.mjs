@@ -11,8 +11,11 @@ async function sha256(file) {
 }
 
 function assertChild(parent, child) {
-  const prefix = `${path.resolve(parent)}${path.sep}`.toLowerCase();
-  if (!path.resolve(child).toLowerCase().startsWith(prefix)) {
+  // Case-fold only on Windows: on case-sensitive filesystems /tmp/Work and /tmp/work
+  // are different directories and must not be conflated before a recursive delete.
+  const fold = process.platform === 'win32' ? value => value.toLowerCase() : value => value;
+  const prefix = fold(`${path.resolve(parent)}${path.sep}`);
+  if (!fold(path.resolve(child)).startsWith(prefix)) {
     throw new Error(`Refusing output outside allowed parent: ${child}`);
   }
 }
@@ -27,7 +30,7 @@ export async function stageSite({ source, output, allowedOutputParent = path.res
 
   async function walk(directory) {
     const entries = await readdir(directory, { withFileTypes: true });
-    entries.sort((a, b) => a.name.localeCompare(b.name));
+    entries.sort((a, b) => a.name.localeCompare(b.name, 'en'));
     for (const entry of entries) {
       const absolute = path.join(directory, entry.name);
       const relative = path.relative(source, absolute).replaceAll(path.sep, '/');

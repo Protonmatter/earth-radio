@@ -20,7 +20,7 @@ function assertInsideLateralSafeArea(items, id, start = 50, end = 794) {
 }
 
 test('responsive UI rendered matrix preserves layout, actions, and locale contracts', {
-  skip: unavailable || false,
+  skip: unavailable,
   timeout: 180_000
 }, async () => {
   const payload = await runRenderedHarness();

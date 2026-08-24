@@ -7,13 +7,16 @@
 
 import { createHmac } from 'node:crypto';
 import { requestLimited, resolvePublicTarget } from './net-guard.mjs';
+import { createBoundedTtlCache, resolveWithCache } from './shared-cache.mjs';
 
-const USER_AGENT = 'EarthRadio/0.25.0 fingerprint (+https://github.com/Protonmatter/EarthRadio)';
+const USER_AGENT = 'EarthRadio/0.24.0 fingerprint (+https://github.com/Protonmatter/EarthRadio)';
 const ACR_IDENTIFY_PATH = '/v1/identify';
 const AUDD_IDENTIFY_URL = 'https://api.audd.io/';
 const DEFAULT_SAMPLE_SECONDS = 12;
 const MAX_SAMPLE_SECONDS = 20;
 const MIN_SAMPLE_BYTES = 96 * 1024;
+// Below this the sample is too short for any provider to fingerprint reliably.
+const MIN_RECOGNIZE_BYTES = 16 * 1024;
 const MAX_SAMPLE_BYTES = 1024 * 1024;
 const DEFAULT_BITRATE_KBPS = 160;
 const SAMPLE_TIMEOUT_MS = 20_000;
@@ -23,8 +26,9 @@ const CACHE_TTL_HIT_MS = 90 * 1000;
 const CACHE_TTL_MISS_MS = 45 * 1000;
 const PLAYLIST_MAX_BYTES = 64 * 1024;
 const HLS_SEGMENT_COUNT = 3;
+const MAX_HLS_PLAYLIST_DEPTH = 2;
 
-const fingerprintCache = new Map();
+const fingerprintCache = createBoundedTtlCache({ maxEntries: CACHE_MAX_ENTRIES });
 const inFlight = new Map();
 
 export function fingerprintProviders(env = process.env) {
@@ -45,19 +49,13 @@ export async function identifyByFingerprint({ streamUrl, sampleSeconds = DEFAULT
   }
   const cacheKey = String(streamUrl || '').trim();
   if (!cacheKey) return { available: true, found: false, reason: 'missing stream url' };
-  const cached = readCache(cacheKey);
-  if (cached) return { ...cached, cached: true };
-  if (inFlight.has(cacheKey)) return { ...await inFlight.get(cacheKey), cached: true };
-
-  const promise = identifyUncached(cacheKey, { sampleSeconds, env, providers, sampleImpl, recognizeImpl });
-  inFlight.set(cacheKey, promise);
-  try {
-    const payload = await promise;
-    writeCache(cacheKey, payload, payload.found ? CACHE_TTL_HIT_MS : CACHE_TTL_MISS_MS);
-    return payload;
-  } finally {
-    inFlight.delete(cacheKey);
-  }
+  return resolveWithCache({
+    cache: fingerprintCache,
+    inFlight,
+    key: cacheKey,
+    produce: () => identifyUncached(cacheKey, { sampleSeconds, env, providers, sampleImpl, recognizeImpl }),
+    ttlFor: payload => payload.found ? CACHE_TTL_HIT_MS : CACHE_TTL_MISS_MS
+  });
 }
 
 async function identifyUncached(streamUrl, { sampleSeconds, env, providers, sampleImpl, recognizeImpl }) {
@@ -68,7 +66,7 @@ async function identifyUncached(streamUrl, { sampleSeconds, env, providers, samp
   } catch (error) {
     return { available: true, found: false, reason: `stream sampling failed: ${error?.message || 'unknown error'}` };
   }
-  if (!sample?.body?.length || sample.body.length < 16 * 1024) {
+  if (!sample?.body?.length || sample.body.length < MIN_RECOGNIZE_BYTES) {
     return { available: true, found: false, reason: 'stream sample was too short to fingerprint' };
   }
 
@@ -95,10 +93,10 @@ async function identifyUncached(streamUrl, { sampleSeconds, env, providers, samp
 // Pulls ~`seconds` of encoded audio from the stream. ICY metadata injection is avoided
 // by simply not sending Icy-MetaData, so the bytes are pure audio. HLS playlists are
 // resolved one level and the most recent segments are concatenated instead.
-export async function sampleStreamAudio(streamUrl, { seconds = DEFAULT_SAMPLE_SECONDS } = {}) {
+async function sampleStreamAudio(streamUrl, { seconds = DEFAULT_SAMPLE_SECONDS } = {}) {
   const target = await resolvePublicTarget(streamUrl);
   if (/\.m3u8(\?|#|$)/i.test(target.url.pathname + target.url.search)) {
-    return sampleHlsAudio(target, { seconds });
+    return sampleHlsAudio(target, { seconds, depth: 0 });
   }
 
   const response = await requestLimited(target, {
@@ -112,24 +110,25 @@ export async function sampleStreamAudio(streamUrl, { seconds = DEFAULT_SAMPLE_SE
   if (/mpegurl|application\/x-mpegurl/i.test(contentType)) {
     const media = firstPlaylistLine(response.text, target.href);
     if (!media) throw new Error('empty HLS playlist');
-    return sampleHlsAudio(await resolvePublicTarget(media), { seconds });
+    return sampleHlsAudio(await resolvePublicTarget(media), { seconds, depth: 0 });
   }
   return { body: response.body, contentType };
 }
 
 function makeByteTarget(seconds) {
   let targetBytes = 0;
-  return (body, headers) => {
+  return ({ length, headers }) => {
     if (!targetBytes) {
       const kbps = Number.parseInt(String(headers?.['icy-br'] || ''), 10);
       const bitrate = Number.isFinite(kbps) && kbps > 0 ? Math.min(kbps, 512) : DEFAULT_BITRATE_KBPS;
       targetBytes = Math.min(MAX_SAMPLE_BYTES, Math.max(MIN_SAMPLE_BYTES, Math.round(bitrate * 1000 / 8 * seconds)));
     }
-    return body.length >= targetBytes;
+    return length >= targetBytes;
   };
 }
 
-async function sampleHlsAudio(playlistTarget, { seconds }) {
+async function sampleHlsAudio(playlistTarget, { seconds, depth = 0 }) {
+  if (depth > MAX_HLS_PLAYLIST_DEPTH) throw new Error('HLS playlist nesting too deep');
   const playlistResponse = await requestLimited(playlistTarget, {
     timeoutMs: 8000,
     maxBytes: PLAYLIST_MAX_BYTES,
@@ -145,7 +144,7 @@ async function sampleHlsAudio(playlistTarget, { seconds }) {
   if (text.includes('#EXT-X-STREAM-INF')) {
     const variant = lines.find(line => line && !line.startsWith('#'));
     if (!variant) throw new Error('empty HLS master playlist');
-    return sampleHlsAudio(await resolvePublicTarget(new URL(variant, playlistTarget.href).toString()), { seconds });
+    return sampleHlsAudio(await resolvePublicTarget(new URL(variant, playlistTarget.href).toString()), { seconds, depth: depth + 1 });
   }
 
   const segments = lines.filter(line => line && !line.startsWith('#')).slice(-HLS_SEGMENT_COUNT);
@@ -182,7 +181,7 @@ function firstPlaylistLine(text, baseUrl) {
   return line ? new URL(line, baseUrl).toString() : '';
 }
 
-export async function recognizeSample(provider, sample, env = process.env) {
+async function recognizeSample(provider, sample, env = process.env) {
   if (provider === 'acrcloud') return recognizeWithAcrCloud(sample, env);
   if (provider === 'audd') return recognizeWithAudd(sample, env);
   return null;
@@ -275,22 +274,6 @@ async function postForm(url, form) {
   }
 }
 
-function readCache(key) {
-  const entry = fingerprintCache.get(key);
-  if (!entry || entry.expiresAt <= Date.now()) {
-    fingerprintCache.delete(key);
-    return null;
-  }
-  entry.lastAccessedAt = Date.now();
-  return { ...entry.payload };
-}
-
-function writeCache(key, payload, ttlMs) {
-  fingerprintCache.set(key, { payload: { ...payload }, expiresAt: Date.now() + ttlMs, lastAccessedAt: Date.now() });
-  if (fingerprintCache.size <= CACHE_MAX_ENTRIES) return;
-  const oldest = [...fingerprintCache.entries()].sort((a, b) => a[1].lastAccessedAt - b[1].lastAccessedAt)[0]?.[0];
-  if (oldest) fingerprintCache.delete(oldest);
-}
 
 export function clearFingerprintCache() {
   fingerprintCache.clear();
