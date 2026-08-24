@@ -31,7 +31,7 @@
     {
       "path": "docs/provenance/hardening-overlays.json",
       "bytes": 4642,
-      "sha256": "54b0f876ad0cb20c3dbcbd1d8d6800ade0914a7e8e6fbcb5a49ab3db1267ffd1"
+      "sha256": "96b6365db7c9fee44b8be082a62d970c96cd5e84608300fbdc992b7e629969b9"
     },
     {
       "path": "docs/provenance/recovery-manifest.json",
@@ -210,8 +210,8 @@
     },
     {
       "path": "site/assets/ui-refresh.css",
-      "bytes": 32527,
-      "sha256": "ad7514f6b48ac1da617f9b95b0cc06438e54e6b22e5c834220cf87fa7e1bcd1a"
+      "bytes": 32884,
+      "sha256": "8faba6bf1b0be3d75eab8abd9d07cc707f758dc110be8a6238529e2319d2a61a"
     },
     {
       "path": "site/config.js",
@@ -286,7 +286,7 @@
     {
       "path": "site/sw.js",
       "bytes": 2480,
-      "sha256": "61de99615e3fb7b25426c899f69fb48105d9fc780870e67d914d5c2e6d2e4746"
+      "sha256": "521342ede127b7974bc39b8e24b195cc61e7cbb881a2d5b4a4643f25add250e2"
     },
     {
       "path": "src-recovered/core/config.ts",
@@ -561,7 +561,7 @@
     {
       "path": "tests/service-worker.test.mjs",
       "bytes": 2607,
-      "sha256": "1363369226873a793e7b03dde79553aec80e33d6c0a498bede0400882db0265d"
+      "sha256": "490497222133ffe03c77b37d5e9452d6c68d82c7d7c671b43a2ab77f8a1235a3"
     },
     {
       "path": "tests/smoke-desktop.mjs",

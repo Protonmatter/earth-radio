@@ -173,6 +173,12 @@ html.er-root .btn-primary:hover {
     z-index: 120;
   }
 
+  /* The skip link sits at z-index 80 in responsive-ui.css; the opaque rail
+     (120) would cover it when focused. */
+  html.er-root .er-skip {
+    z-index: 140;
+  }
+
   html.er-root .header-left {
     order: 1;
     flex-direction: column;
@@ -238,8 +244,6 @@ html.er-root .btn-primary:hover {
   html.er-root .header-right .header-btn {
     width: 100%;
     justify-content: flex-start;
-    height: 36px;
-    min-height: 36px;
     padding: 0 12px;
     border-color: transparent;
     font-size: 13.5px;
@@ -250,8 +254,6 @@ html.er-root .btn-primary:hover {
      `order` would detach the two. */
   html.er-root .header-right #theme-toggle,
   html.er-root .header-right #settings-toggle {
-    width: 38px;
-    min-width: 38px;
     align-self: flex-start;
     justify-content: center;
     border-color: var(--er2-line);
@@ -294,7 +296,6 @@ html.er-root .btn-primary:hover {
     border-top: 1px solid var(--er2-line);
     border-radius: 0 0 8px 8px;
     padding-top: 4px;
-    height: 40px;
   }
 
   /* .kbd-hint stays hidden: its glyph is a hardcoded mac-only ⌘K while the
@@ -348,8 +349,8 @@ html.er-root .btn-primary:hover {
   }
 }
 
-/* Compact card controls only when a fine pointer is present; wide touch
-   devices (large tablets, touch laptops) keep the 44px floor that
+/* Compact card and rail controls only when a fine pointer is present; wide
+   touch devices (large tablets, touch laptops) keep the 44px floor that
    responsive-ui.css enforces. */
 @media (min-width: 1100px) and (pointer: fine) {
   html.er-root .station-card__play,
@@ -358,6 +359,21 @@ html.er-root .btn-primary:hover {
     min-width: 38px;
     height: 38px;
     min-height: 38px;
+  }
+
+  html.er-root .header-right .header-btn {
+    height: 36px;
+    min-height: 36px;
+  }
+
+  html.er-root .header-right #theme-toggle,
+  html.er-root .header-right #settings-toggle {
+    width: 38px;
+    min-width: 38px;
+  }
+
+  html.er-root #export-data {
+    height: 40px;
   }
 }
 

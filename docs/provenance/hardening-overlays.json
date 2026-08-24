@@ -106,7 +106,7 @@
       },
       "current": {
         "bytes": 2480,
-        "sha256": "61de99615e3fb7b25426c899f69fb48105d9fc780870e67d914d5c2e6d2e4746"
+        "sha256": "521342ede127b7974bc39b8e24b195cc61e7cbb881a2d5b4a4643f25add250e2"
       },
       "reason": "Use network-first navigation/configuration updates, keep hashed recovered assets cache-first, reload installation requests so stale browser HTTP entries cannot seed the new service-worker cache, keep the previous worker when reload precaching fails, and precache the UI refresh stylesheet under cache generation v26."
     }
