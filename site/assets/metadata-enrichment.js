@@ -34,7 +34,10 @@ const DEFAULTS = {
   hlsId3Enabled: true,
   fingerprintEnabled: true,
   fingerprintAutoOnRawIcy: false,
-  fingerprintMinIntervalMs: 30000
+  fingerprintMinIntervalMs: 30000,
+  // Same-origin /api/* Pages Functions (public web deployments). Feature-detected at
+  // runtime; a static-only deployment simply reports 404 and everything degrades.
+  sameOriginApiEnabled: true
 };
 
 const TRUSTED_TRACK_FRESH_MS = 45 * 1000;
@@ -52,7 +55,10 @@ const state = {
   fingerprintAvailable: null,
   fingerprintBusy: false,
   fingerprintLastAt: 0,
-  fingerprintAutoKey: ''
+  fingerprintAutoKey: '',
+  sameOriginApi: null,
+  sameOriginApiProbe: null,
+  sameOriginApiMisses: 0
 };
 
 function config() {
@@ -669,6 +675,14 @@ function describeSourceFeed(sourceFeed) {
   return sourceFeed;
 }
 
+// The player meta line shows station facts ("The Republic Of Korea \u00B7 192 kbps \u00B7 OGG \u00B7
+// quality 100") whenever no live title is available. Its first segment is a country or
+// codec, never a track \u2014 treating it as ICY text is how a station's country ended up
+// rendered as a song title.
+function isStationFactsLine(metaLine) {
+  return /\b(\d+\s*kbps|quality\s*\d+|aac|mp3|ogg|opus|flac|hls)\b/i.test(metaLine);
+}
+
 function extractRawCandidate() {
   const eyebrow = text(byId('nowcard-eyebrow')).toLowerCase();
   const meta = text(byId('player-meta'));
@@ -680,7 +694,7 @@ function extractRawCandidate() {
     const artistLine = text(byId('nowcard-artist'));
     const maybeArtist = artistLine.split(/\s(?:\||\u00B7)\s/)[0];
     raw = maybeArtist && maybeArtist !== 'Live radio' ? `${maybeArtist} - ${nowTitle}` : nowTitle;
-  } else if (meta) {
+  } else if (meta && !isStationFactsLine(meta)) {
     raw = meta.split(/\s(?:\||\u00B7)\s/)[0].trim();
   }
   if (!raw || raw === station || raw === 'Live radio') return '';
@@ -704,6 +718,37 @@ function isPlaying() {
   return Boolean(audio && !audio.paused && !audio.ended && audio.currentSrc);
 }
 
+// Detects the same-origin Pages Function API (public web deployments). Once three
+// probes fail the deployment is treated as static-only for this page load.
+async function detectSameOriginApi() {
+  const cfg = config();
+  if (!cfg.sameOriginApiEnabled || cfg.proxyBaseUrl) return false;
+  if (state.sameOriginApi !== null) return state.sameOriginApi;
+  if (state.sameOriginApiMisses >= 3) { state.sameOriginApi = false; return false; }
+  if (!state.sameOriginApiProbe) {
+    state.sameOriginApiProbe = (async () => {
+      const data = await fetchJson('/api/nowplaying', 5000);
+      if (data && data.service === 'earth-radio-pages-fn') {
+        state.sameOriginApi = true;
+      } else if (data) {
+        state.sameOriginApi = false;
+      } else {
+        state.sameOriginApiMisses += 1;
+      }
+      return state.sameOriginApi === true;
+    })().finally(() => { state.sameOriginApiProbe = null; });
+  }
+  return state.sameOriginApiProbe;
+}
+
+// Base for metadata API calls: the authorized desktop proxy when present, otherwise the
+// same-origin Pages Function API when detected, otherwise null (browser-direct only).
+async function metadataApiBase() {
+  const cfg = config();
+  if (cfg.proxyBaseUrl) return cfg.proxyBaseUrl;
+  return (await detectSameOriginApi()) ? '' : null;
+}
+
 // Mirrors server/platform-nowplaying.mjs detection for browser-direct mode; endpoints
 // that do not send CORS headers simply fail the fetch and fall through.
 function detectPlatformEndpoints(streamUrl) {
@@ -714,6 +759,11 @@ function detectPlatformEndpoints(streamUrl) {
   const host = url.hostname.toLowerCase();
   const pathname = url.pathname;
   const endpoints = [];
+
+  if (host === 'listen.moe' || host.endsWith('.listen.moe')) {
+    const kpop = /kpop/i.test(pathname) || /kpop/i.test(host);
+    endpoints.push({ platform: 'listenmoe', kind: 'ws', url: `wss://listen.moe${kpop ? '/kpop' : ''}/gateway_v2` });
+  }
 
   const zenoMount = host === 'stream.zeno.fm' ? pathname.replace(/^\/+/, '').split('/')[0] : '';
   if (zenoMount) endpoints.push({ platform: 'zeno', kind: 'sse', url: `https://api.zeno.fm/mounts/metadata/subscribe/${encodeURIComponent(zenoMount)}` });
@@ -775,7 +825,38 @@ function platformTrack(platform, artist, title, combined, artworkUrl) {
   return { platform, track, artworkUrl: /^https:\/\//i.test(art) ? art : '' };
 }
 
+function fetchListenMoe(endpoint, timeoutMs) {
+  return new Promise(resolve => {
+    let socket;
+    try {
+      socket = new WebSocket(endpoint.url);
+    } catch {
+      resolve(null);
+      return;
+    }
+    const finish = result => {
+      try { socket.close(); } catch { /* already closed */ }
+      resolve(result);
+    };
+    const timer = setTimeout(() => finish(null), timeoutMs);
+    socket.addEventListener('message', event => {
+      try {
+        const message = JSON.parse(event.data);
+        // Gateway v2 pushes the current track as op 1 immediately after the welcome.
+        const song = message?.op === 1 ? message?.d?.song : null;
+        if (!song?.title) return;
+        const artists = (song.artists || []).map(item => item?.name || item?.nameRomaji).filter(Boolean).join(', ');
+        clearTimeout(timer);
+        finish(platformTrack('listenmoe', artists, song.title, ''));
+      } catch { /* keep listening until timeout */ }
+    });
+    socket.addEventListener('error', () => { clearTimeout(timer); finish(null); });
+    socket.addEventListener('close', () => { clearTimeout(timer); resolve(null); });
+  });
+}
+
 async function fetchPlatformDirect(endpoint, timeoutMs) {
+  if (endpoint.kind === 'ws') return fetchListenMoe(endpoint, timeoutMs);
   if (endpoint.kind === 'sse') {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -811,12 +892,33 @@ async function fetchPlatformDirect(endpoint, timeoutMs) {
 
 async function resolvePlatformNowPlaying(streamUrl) {
   const cfg = config();
+  const endpoints = detectPlatformEndpoints(streamUrl);
+
+  // WebSocket gateways (listen.moe) only work from the browser; try them first.
+  for (const endpoint of endpoints.filter(item => item.kind === 'ws')) {
+    try {
+      const result = await fetchPlatformDirect(endpoint, Math.min(cfg.requestTimeoutMs, 6000));
+      if (result) return result;
+    } catch { /* fall through */ }
+  }
+
   if (cfg.proxyBaseUrl) {
     const data = await fetchJson(`${cfg.proxyBaseUrl}/api/streams/platform-nowplaying?url=${encodeURIComponent(streamUrl)}`, cfg.requestTimeoutMs);
     if (!data?.found || !data.title && !data.raw) return null;
     return platformTrack(data.platform || 'platform', data.artist, data.title, data.raw, data.artworkUrl);
   }
-  for (const endpoint of detectPlatformEndpoints(streamUrl)) {
+
+  // Public web: the same-origin Pages Function also covers one-shot ICY reads, which
+  // the browser cannot do itself.
+  if (await detectSameOriginApi()) {
+    const data = await fetchJson(`/api/nowplaying?url=${encodeURIComponent(streamUrl)}`, 12000);
+    if (data?.found && (data.title || data.raw)) {
+      return platformTrack(data.platform || data.source || 'platform', data.artist, data.title, data.raw, data.artworkUrl);
+    }
+    return null;
+  }
+
+  for (const endpoint of endpoints.filter(item => item.kind !== 'ws')) {
     try {
       const result = await fetchPlatformDirect(endpoint, Math.min(cfg.requestTimeoutMs, 5000));
       if (result) return result;
@@ -891,6 +993,15 @@ async function identifyAndRender(track, { sourceFeed = '', artworkUrl = '' } = {
   if (state.inFlight !== token) return null;
   if (sourceFeed) identity.sourceFeed = sourceFeed;
   if (!identity.artworkUrl && artworkUrl) identity.artworkUrl = artworkUrl;
+  if (!identity.found && sourceFeed && sourceFeed !== 'fingerprint' && track.artist && track.title) {
+    // The station's own feed named artist and title; catalogs simply could not
+    // confirm it (common for K-pop/J-pop and regional releases).
+    identity.state = 'Station feed';
+    identity.confidence = Math.max(identity.confidence || 0, 65);
+    identity.title = track.title;
+    identity.artist = track.artist;
+    identity.reasons = ['structured now-playing feed from the station', ...(identity.reasons || [])];
+  }
   state.lastTrackKey = trackKey(track);
   state.currentIdentity = identity;
   renderIdentity(track, identity);
@@ -918,14 +1029,17 @@ async function applyTrustedTrack(track, source, extras = {}) {
 
 function fingerprintConfigured() {
   const cfg = config();
-  return Boolean(cfg.proxyBaseUrl && cfg.fingerprintEnabled);
+  if (!cfg.fingerprintEnabled) return false;
+  return Boolean(cfg.proxyBaseUrl) || (cfg.sameOriginApiEnabled && state.sameOriginApi !== false);
 }
 
 async function checkFingerprintAvailability() {
   if (!fingerprintConfigured()) { state.fingerprintAvailable = false; return false; }
   if (state.fingerprintAvailable !== null) return state.fingerprintAvailable;
   const cfg = config();
-  const data = await fetchJson(`${cfg.proxyBaseUrl}/api/track/fingerprint`, cfg.requestTimeoutMs);
+  const base = await metadataApiBase();
+  if (base === null) { state.fingerprintAvailable = false; syncFingerprintButton(); return false; }
+  const data = await fetchJson(`${base}/api/track/fingerprint`, cfg.requestTimeoutMs);
   // Only an explicit answer latches; a failed probe stays unknown and is retried later.
   state.fingerprintAvailable = data ? Boolean(data.available) : null;
   syncFingerprintButton();
@@ -986,8 +1100,10 @@ async function runFingerprint(trigger) {
   state.inFlight = token;
 
   try {
+    const base = await metadataApiBase();
+    if (base === null) { setFingerprintStatus('Fingerprinting is not available on this deployment'); return; }
     const params = new URLSearchParams({ url: streamUrl });
-    const data = await fetchJson(`${cfg.proxyBaseUrl}/api/track/fingerprint?${params}`, 45000);
+    const data = await fetchJson(`${base}/api/track/fingerprint?${params}`, 45000);
     // The sample takes ~15-20s; if the user switched stations meanwhile, this result
     // belongs to the old stream and must be dropped.
     if (streamUrl !== currentStreamUrl() || state.inFlight !== token) { setFingerprintStatus(''); return; }

@@ -27,10 +27,20 @@ export function silentWav(seconds = 30) {
 const AUDIO = silentWav();
 const ALL_STATIONS = [...FIXTURE_STATIONS, ...EXPANSION_STATIONS];
 
-export async function setupApp(page) {
+export async function setupApp(page, { sameOriginNowPlaying = null } = {}) {
   await page.route('**/*', route => {
     const url = new URL(route.request().url());
-    if (url.hostname === '127.0.0.1') return route.continue();
+    if (url.hostname === '127.0.0.1') {
+      // Optionally emulate the same-origin Pages Function API in front of the static server.
+      if (sameOriginNowPlaying && url.pathname === '/api/nowplaying') {
+        if (!url.searchParams.get('url')) return route.fulfill({ json: { ok: true, service: 'earth-radio-pages-fn' } });
+        return route.fulfill({ json: sameOriginNowPlaying });
+      }
+      if (sameOriginNowPlaying && url.pathname === '/api/track/fingerprint') {
+        return route.fulfill({ json: { available: false, providers: [] } });
+      }
+      return route.continue();
+    }
     if (url.hostname.endsWith('api.radio-browser.info')) {
       const pathname = url.pathname;
       if (pathname.includes('/json/stations/topclick')) return route.fulfill({ json: FIXTURE_STATIONS });

@@ -30,6 +30,10 @@ Because raw ICY text is unreliable, higher-trust live-metadata feeds layer above
 
 The selected runnable web, Electron, and server files came from the installed 0.24.0 application. `scripts/Import-EarthRadioRecovery.ps1` implements the selection rules and emits `docs/provenance/recovery-manifest.json`.
 
-## Excluded future boundary
+## Same-origin metadata functions (public web)
 
-A Cloudflare Worker or other public proxy is not part of this build. Publishing the desktop proxy would materially enlarge the abuse and SSRF surface and would require authentication, rate limits, quotas, egress policy, logging, abuse response, and separate review. No such service should be inferred from the Pages design.
+The public deployment carries two narrowly scoped Cloudflare Pages Functions under `functions/` (same origin as the site, not a separate service): `/api/nowplaying` (one-shot ICY StreamTitle read plus hosting-platform status resolution — keyless, byte- and time-budgeted, edge-cached) and `/api/track/fingerprint` (audio fingerprinting, active only when ACRCloud or AudD credentials are configured on the Pages project; rate-limited and cached). Browsers cannot read ICY metadata themselves, so without these the static web app has no live now-playing feed at all. Both endpoints accept a single stream URL, reject private hosts, follow tight budgets, and expose nothing beyond what the station already broadcasts publicly.
+
+## Excluded boundary: the desktop proxy stays private
+
+The desktop proxy itself is still never published. Its directory federation, stream resolution/probing, and SSE endpoints would materially enlarge the abuse and SSRF surface and would require authentication, quotas, egress policy, logging, and abuse response. The Pages Functions above deliberately reimplement only the two read-only metadata lookups on the Workers runtime with their own guards; they do not import or expose the proxy.

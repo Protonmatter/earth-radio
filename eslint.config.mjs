@@ -57,5 +57,10 @@ export default [
   {
     files: ['site/sw.js'],
     languageOptions: { ecmaVersion: 2024, sourceType: 'script', globals: { ...globals.serviceworker } }
+  },
+  {
+    // Cloudflare Pages Functions: Workers runtime (Web APIs, no Node globals).
+    files: ['functions/**/*.js'],
+    languageOptions: { ecmaVersion: 2024, sourceType: 'module', globals: { ...globals.serviceworker, ...globals.worker } }
   }
 ];

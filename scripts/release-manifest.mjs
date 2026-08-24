@@ -3,7 +3,7 @@ import { readFile, readdir, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const includeRoots = ['.github', 'site', 'electron', 'server', 'docs', 'tests', 'src-recovered', 'scripts'];
+const includeRoots = ['.github', 'site', 'electron', 'server', 'docs', 'tests', 'src-recovered', 'scripts', 'functions'];
 const includeFiles = ['package.json', 'package-lock.json', 'electron-builder.yml'];
 
 async function collectFiles(root) {

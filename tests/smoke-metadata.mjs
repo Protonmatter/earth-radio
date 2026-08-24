@@ -19,7 +19,11 @@ const required = [
   'server/metadata-api.mjs',
   'server/net-guard.mjs',
   'server/platform-nowplaying.mjs',
+  'server/platform-detect.mjs',
+  'server/icy-title.mjs',
   'server/fingerprint-providers.mjs',
+  'functions/api/nowplaying.js',
+  'functions/api/track/fingerprint.js',
   'docs/recovered/METADATA_ENRICHMENT_IMPLEMENTATION.md',
   'docs/LIVE_METADATA.md'
 ];

@@ -98,9 +98,29 @@ fingerprintMinIntervalMs: 30000
 requests without a user action. The manual "Identify song" button is the intended
 default interaction.
 
+## Same-origin Pages Functions (public web)
+
+Browsers cannot read ICY metadata, so the static deployment gains two same-origin
+Cloudflare Pages Functions (`functions/` at the repo root; deployed automatically by the
+git-integrated Pages project as long as its root directory is the repository root):
+
+```text
+GET /api/nowplaying                 # availability probe (feature-detected by the overlay)
+GET /api/nowplaying?url=<stream>    # one-shot ICY read + platform status, keyless
+GET /api/track/fingerprint          # availability probe
+GET /api/track/fingerprint?url=...  # env-keyed (set ACR_* or AUDD_API_TOKEN on the Pages project)
+```
+
+The overlay feature-detects the API at runtime; on a static-only deployment the probe
+404s and everything degrades to browser-direct behavior. Client-only feeds stay in the
+browser: listen.moe's realtime song gateway is resolved over WebSocket directly.
+
+When a structured feed names artist and title but no catalog can confirm the track
+(common for K-pop/J-pop and regional releases), the panel shows the honest
+`Station feed` state instead of hiding the information behind "Raw ICY only".
+
 ## Scope
 
-The public Cloudflare Pages deployment remains static and browser-direct: platform APIs
-that allow CORS and HLS ID3 work there; fingerprinting requires the desktop proxy (or a
-self-hosted `example-proxy` with credentials), consistent with the existing Spotify
-server-side-only boundary. No public proxy is introduced.
+The desktop proxy is still never published; the Pages Functions reimplement only the two
+read-only metadata lookups on the Workers runtime with their own budgets and guards.
+Spotify enrichment remains server-side-only on the desktop proxy.
