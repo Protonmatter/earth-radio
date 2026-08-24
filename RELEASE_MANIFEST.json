@@ -5,18 +5,23 @@
   "files": [
     {
       "path": ".github/workflows/ci.yml",
-      "bytes": 1286,
-      "sha256": "e92950ca58a94d7c67a92f9307b76450712d4dc5b1ba1844d59c07189cae4f96"
+      "bytes": 2141,
+      "sha256": "2b78f431f70ad074ca84b40fac8fdeadeb1c1efad5d3852d3baea9f09dda0047"
     },
     {
       "path": "docs/ARCHITECTURE.md",
-      "bytes": 5225,
-      "sha256": "b4e2ec6d8d9c0150dacbf31605b5c38c6c7212cf7007b67b30911b200c78f53d"
+      "bytes": 5964,
+      "sha256": "061b09883646c202fea70a188eb71bd44bf0f731db6b5f137c08042c4fb4647c"
     },
     {
       "path": "docs/BUILD_STATE.md",
       "bytes": 4721,
       "sha256": "44932b27a3ee24a98198612268d470365e766b1e58227dc3082260add7b6ac75"
+    },
+    {
+      "path": "docs/E2E_TESTING.md",
+      "bytes": 1861,
+      "sha256": "48e131b5a354ddcc91e82952a4648f217825635e228889781bbde30625c604c6"
     },
     {
       "path": "docs/LIVE_METADATA.md",
@@ -35,8 +40,8 @@
     },
     {
       "path": "docs/provenance/hardening-overlays.json",
-      "bytes": 6490,
-      "sha256": "22a5b93854257470f0b17c7d7bf25248db739f8e0a1b774e9f74b49299993c5f"
+      "bytes": 6630,
+      "sha256": "356e1a42cd66e36e9a8cbead499f1aa95b461f2a92055a3b82d2c818e376001b"
     },
     {
       "path": "docs/provenance/recovery-manifest.json",
@@ -115,13 +120,13 @@
     },
     {
       "path": "package-lock.json",
-      "bytes": 139722,
-      "sha256": "6f0e9b62982837cedbc9f6a0dcc968a699aa8d7935f9ddcbd099fc5fcf039558"
+      "bytes": 141732,
+      "sha256": "c6c2ff449fdd44e27b6f47836fa9ff4259478bdac431f16c8ff45d08b9eba454"
     },
     {
       "path": "package.json",
-      "bytes": 2279,
-      "sha256": "6075bb5d14d014454a3a0816e7b0aa7b7fd5339659a16f1e210f6aaff6e52603"
+      "bytes": 2367,
+      "sha256": "0e13d22a523da986c236f7e45bce2bcfddd8432a212654785040966215d1dfe8"
     },
     {
       "path": "scripts/Import-EarthRadioRecovery.ps1",
@@ -200,8 +205,8 @@
     },
     {
       "path": "site/assets/index-B4rKOAHV.js",
-      "bytes": 273377,
-      "sha256": "77eb908050d7a2ef4220ac1af0ae78b061bd141f348d0f8886710cb3d4a9609d"
+      "bytes": 273618,
+      "sha256": "851bc9589d47c42507e07bac8b0c2c690228ab88e12b5f683ea8c2e3e7b8ef9d"
     },
     {
       "path": "site/assets/index-CSoL7F-Y.css",
@@ -210,13 +215,13 @@
     },
     {
       "path": "site/assets/metadata-enrichment.css",
-      "bytes": 3693,
-      "sha256": "9c6bb916b48a5250880cf896bb40f5129fb0e070837405eb6eadb78fcc7efc40"
+      "bytes": 4879,
+      "sha256": "236e08f86f1ba813c7eca0ab5d367c6506754177726ad55433ac3d8257cecfd5"
     },
     {
       "path": "site/assets/metadata-enrichment.js",
-      "bytes": 47099,
-      "sha256": "2c75029eb57cbe2be0dcaf85c29f6ccdacf872010c17170d70fbea4e5df78aa8"
+      "bytes": 50956,
+      "sha256": "7ee8511f9d0cf0d349d316041142e5425166770372326fddd35bc4c4e5e37640"
     },
     {
       "path": "site/assets/responsive-ui.css",
@@ -537,6 +542,26 @@
       "path": "tests/documentation.test.mjs",
       "bytes": 4571,
       "sha256": "d205135137a0280bf921da7ee990a751309cd22abb0294eab3cff8f691f944f7"
+    },
+    {
+      "path": "tests/e2e/app.spec.mjs",
+      "bytes": 7475,
+      "sha256": "6680c5224598eebff92cba93327c07b6cace5f8cedf23e6c2ab7ebc212bb4793"
+    },
+    {
+      "path": "tests/e2e/fixtures/stations.mjs",
+      "bytes": 2403,
+      "sha256": "d7f0b609b3990e87a73ae902840484813cb40644c2e2738e354ea3aaf3a50f42"
+    },
+    {
+      "path": "tests/e2e/playwright.config.mjs",
+      "bytes": 1295,
+      "sha256": "c47812d9e8f81d3d798d33c18b5603baf02acec7274dc98008d90ef16bb51b1b"
+    },
+    {
+      "path": "tests/e2e/serve-site.mjs",
+      "bytes": 1527,
+      "sha256": "8bc0b5ca8043bdc0b61715182024af549ce0e30b45b474241f5c6eea35471b94"
     },
     {
       "path": "tests/fixtures/inventory/a.txt",

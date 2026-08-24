@@ -19,11 +19,12 @@
     "pack:desktop": "electron-builder --dir",
     "dist:desktop": "electron-builder",
     "release:manifest": "node scripts/release-manifest.mjs",
-    "verify": "npm run check && npm test && npm run build:web && npm run verify:site && npm run release:manifest"
+    "verify": "npm run check && npm test && npm run build:web && npm run verify:site && npm run release:manifest",
+    "test:e2e": "playwright test --config tests/e2e/playwright.config.mjs"
   },
-  "dependencies": {},
   "devDependencies": {
     "@electron/asar": "4.3.0",
+    "@playwright/test": "1.62.1",
     "electron": "43.4.1",
     "electron-builder": "26.15.3",
     "hls.js": "1.6.16",

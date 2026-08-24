@@ -69,10 +69,10 @@
         "sha256": "610e3cdbea0e98b748aef94a24ea8362024430e01647b35bb4cd62038a04fa13"
       },
       "current": {
-        "bytes": 273377,
-        "sha256": "77eb908050d7a2ef4220ac1af0ae78b061bd141f348d0f8886710cb3d4a9609d"
+        "bytes": 273618,
+        "sha256": "851bc9589d47c42507e07bac8b0c2c690228ab88e12b5f683ea8c2e3e7b8ef9d"
       },
-      "reason": "Register the service worker after asynchronous startup and remove a reference to an excluded source map."
+      "reason": "Register the service worker after asynchronous startup and remove a reference to an excluded source map. Bind a station tooltip on map markers for pre-selection progressive disclosure, delegating content to the maintained metadata overlay hook."
     },
     {
       "path": "site/assets/metadata-enrichment.css",
@@ -81,8 +81,8 @@
         "sha256": "414a84caf03ab56acbe274977475ee72f8dbea3fb1d6526a4fa65dd33f1a8a1d"
       },
       "current": {
-        "bytes": 3693,
-        "sha256": "9c6bb916b48a5250880cf896bb40f5129fb0e070837405eb6eadb78fcc7efc40"
+        "bytes": 4879,
+        "sha256": "236e08f86f1ba813c7eca0ab5d367c6506754177726ad55433ac3d8257cecfd5"
       },
       "reason": "Style the fingerprint identify row and live-metadata source pills."
     },
@@ -93,8 +93,8 @@
         "sha256": "e213700a1a541139a66542e9bd8e615ad5dfc735d52c59569730d9a021e86009"
       },
       "current": {
-        "bytes": 47099,
-        "sha256": "2c75029eb57cbe2be0dcaf85c29f6ccdacf872010c17170d70fbea4e5df78aa8"
+        "bytes": 50956,
+        "sha256": "7ee8511f9d0cf0d349d316041142e5425166770372326fddd35bc4c4e5e37640"
       },
       "reason": "Layer live-metadata feeds above raw ICY: hosting-platform now-playing APIs, HLS timed ID3 text tracks, and an opt-in fingerprint identify button."
     },

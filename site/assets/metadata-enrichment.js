@@ -1034,6 +1034,102 @@ async function runFingerprint(trigger) {
   }
 }
 
+// --- Map tooltip: progressive disclosure of a station before selection ---
+// The runtime map binds a Leaflet tooltip whose content is delegated to
+// window.earthRadioMapTooltip.render(station); hover() starts a best-effort
+// now-playing lookup so users can see what a dot is playing before pressing it.
+
+const MAP_TOOLTIP_NP_TTL_MS = 30 * 1000;
+const mapTooltip = { nowPlaying: new Map(), inFlight: new Set(), hoverTimer: null, hoverUuid: '' };
+
+function escapeHtmlText(value) {
+  const div = document.createElement('div');
+  div.textContent = String(value ?? '');
+  return div.innerHTML;
+}
+
+function stationStreamUrl(station) {
+  const url = String(station?.url_resolved || station?.url || '');
+  return /^https?:\/\//i.test(url) ? url : '';
+}
+
+function mapTooltipNowPlayingLine(uuid) {
+  const entry = mapTooltip.nowPlaying.get(uuid);
+  const fresh = entry && Date.now() - entry.at < MAP_TOOLTIP_NP_TTL_MS ? entry : null;
+  if (fresh?.text) return `<span class="er-tt-np">♪ ${escapeHtmlText(fresh.text)}</span>`;
+  if (!fresh && mapTooltip.inFlight.has(uuid)) return '<span class="er-tt-np er-tt-np--pending">Checking what’s playing…</span>';
+  return '<span class="er-tt-np" hidden></span>';
+}
+
+function renderMapTooltip(station) {
+  const uuid = String(station?.stationuuid || '');
+  const meta = [station?.country, station?.codec, station?.bitrate ? `${station.bitrate} kbps` : '']
+    .filter(Boolean)
+    .map(escapeHtmlText)
+    .join(' · ');
+  return `
+    <div class="er-tt" data-station-uuid="${escapeHtmlText(uuid)}">
+      <strong class="er-tt-name">${escapeHtmlText(station?.name || 'Unknown station')}</strong>
+      ${meta ? `<span class="er-tt-meta">${meta}</span>` : ''}
+      ${mapTooltipNowPlayingLine(uuid)}
+      <span class="er-tt-hint">Click to listen</span>
+    </div>
+  `;
+}
+
+function updateOpenMapTooltip(uuid) {
+  const wrap = document.querySelector(`.er-station-tooltip .er-tt[data-station-uuid="${CSS.escape(uuid)}"]`);
+  if (!wrap) return;
+  const line = wrap.querySelector('.er-tt-np');
+  if (!line) return;
+  const entry = mapTooltip.nowPlaying.get(uuid);
+  if (entry?.text) {
+    line.hidden = false;
+    line.classList.remove('er-tt-np--pending');
+    line.textContent = `♪ ${entry.text}`;
+  } else if (!entry && mapTooltip.inFlight.has(uuid)) {
+    line.hidden = false;
+    line.classList.add('er-tt-np--pending');
+    line.textContent = 'Checking what’s playing…';
+  } else {
+    line.hidden = true;
+    line.textContent = '';
+  }
+}
+
+function handleMapTooltipHover(station) {
+  const cfg = config();
+  if (!cfg.enabled || !cfg.platformNowPlayingEnabled) return;
+  const uuid = String(station?.stationuuid || '');
+  const streamUrl = stationStreamUrl(station);
+  if (!uuid || !streamUrl) return;
+  const cached = mapTooltip.nowPlaying.get(uuid);
+  if (cached && Date.now() - cached.at < MAP_TOOLTIP_NP_TTL_MS) return;
+  if (mapTooltip.inFlight.has(uuid)) return;
+
+  // Debounce sweeps across dense marker fields; only the dot the pointer rests on resolves.
+  mapTooltip.hoverUuid = uuid;
+  clearTimeout(mapTooltip.hoverTimer);
+  mapTooltip.hoverTimer = setTimeout(() => {
+    if (mapTooltip.hoverUuid !== uuid || mapTooltip.inFlight.has(uuid)) return;
+    mapTooltip.inFlight.add(uuid);
+    updateOpenMapTooltip(uuid);
+    resolvePlatformNowPlaying(streamUrl)
+      .then(result => {
+        const track = result?.track;
+        const text = track ? [track.artist, track.title].filter(Boolean).join(' – ') : '';
+        mapTooltip.nowPlaying.set(uuid, { text, at: Date.now() });
+      })
+      .catch(() => mapTooltip.nowPlaying.set(uuid, { text: '', at: Date.now() }))
+      .finally(() => {
+        mapTooltip.inFlight.delete(uuid);
+        updateOpenMapTooltip(uuid);
+      });
+  }, 250);
+}
+
+window.earthRadioMapTooltip = Object.freeze({ render: renderMapTooltip, hover: handleMapTooltipHover });
+
 async function processCurrentMetadata() {
   const cfg = config();
   if (!cfg.enabled) return;
