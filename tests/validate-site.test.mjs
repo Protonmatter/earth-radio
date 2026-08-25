@@ -41,6 +41,29 @@ test('validateSite rejects a localhost production proxy', async () => {
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
+for (const [label, unsafeConfig] of [
+  ['Supabase auth URL', "window.RADIO_CONFIG={proxyBaseUrl: desktopProxyBaseUrl || '',auth:{url:'http://localhost:8788'}};"],
+  ['generic API URL', "window.RADIO_CONFIG={proxyBaseUrl: desktopProxyBaseUrl || '',apiUrl:'http://localhost:8788/api'};"],
+  ['executable request', "fetch('http://localhost:8788/internal'); window.RADIO_CONFIG={proxyBaseUrl: desktopProxyBaseUrl || ''};"],
+  ['string-derived endpoint', "const declaration=\"const authOriginAllowed = ['https://earth-radio.pages.dev', 'http://localhost:8788'].includes(window.location.origin);\"; window.RADIO_CONFIG={proxyBaseUrl:declaration.split(\"'\")[3]};"]
+]) {
+  test(`validateSite rejects localhost in ${label}`, async () => {
+    const root = await mkdtemp(path.join(os.tmpdir(), 'earth-radio-local-exception-site-'));
+    try {
+      await createSite(root, { config: unsafeConfig });
+      await assert.rejects(() => validateSite(root), /forbidden local reference/i);
+    } finally { await rm(root, { recursive: true, force: true }); }
+  });
+}
+
+test('validateSite still rejects the permitted auth origin when used as a proxy endpoint', async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), 'earth-radio-local-proxy-site-'));
+  try {
+    await createSite(root, { config: "window.RADIO_CONFIG={proxyBaseUrl:'http://localhost:8788'};" });
+    await assert.rejects(() => validateSite(root), /forbidden local reference|fail closed/i);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
 test('validateSite rejects an absent referenced asset', async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), 'earth-radio-missing-site-'));
   try {

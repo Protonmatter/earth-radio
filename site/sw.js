@@ -1,4 +1,4 @@
-const CACHE_NAME = 'earth-radio-shell-v26-ui-refresh-4';
+const CACHE_NAME = 'earth-radio-shell-v27-supabase-auth-1';
 const SHELL_ASSETS = [
   './',
   './index.html',
@@ -11,6 +11,10 @@ const SHELL_ASSETS = [
   './assets/responsive-ui.css',
   './assets/responsive-ui.js',
   './assets/ui-refresh.css',
+  './assets/auth-core.js',
+  './assets/sync-core.js',
+  './assets/auth-ui.js',
+  './assets/auth-ui.css',
   './i18n/index.js',
   './i18n/en.js',
   './i18n/es.js',

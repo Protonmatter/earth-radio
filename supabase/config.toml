@@ -1,0 +1,29 @@
+project_id = "ueomkorngpgvthqioqns"
+
+[api]
+enabled = true
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[auth]
+enabled = true
+site_url = "https://earth-radio.pages.dev"
+additional_redirect_urls = [
+  "https://earth-radio.pages.dev/**",
+  "http://localhost:8788/**",
+  "earth-radio://auth/callback"
+]
+
+[auth.external.github]
+# Hosted GitHub OAuth is enabled in the dashboard. Local CI has no provider secrets.
+enabled = false
+
+[auth.external.google]
+enabled = false
+
+[auth.external.apple]
+enabled = false
+
+[auth.external.azure]
+enabled = false

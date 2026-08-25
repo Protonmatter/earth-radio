@@ -69,10 +69,10 @@
         "sha256": "c83167f40ae7df3b389e35707b4abac834b10dc223ecb836d7840f90a7ef92a6"
       },
       "current": {
-        "bytes": 1433,
-        "sha256": "8c9d59221f38f8a86a84fc0ad5008d2015cea4881a45012892bf486b10e234a4"
+        "bytes": 2155,
+        "sha256": "9639b5bef751920e5ecae684ba0b6b854250746aed057cb2240c10c846c021af"
       },
-      "reason": "Keep Cloudflare Pages on an empty proxy URL and document that only Electron injects the loopback capability path."
+      "reason": "Keep Cloudflare Pages on an empty proxy URL, restrict deployable authentication to the exact production origin, configure the public Supabase project and enabled providers, and load the same-origin account overlay without changing the recovered bundle."
     },
     {
       "path": "site/index.html",
@@ -105,10 +105,10 @@
         "sha256": "b09e3207532fe7f47d14e9c53804d7e8caf31cad2fcb2c652b728a93871ea094"
       },
       "current": {
-        "bytes": 2480,
-        "sha256": "521342ede127b7974bc39b8e24b195cc61e7cbb881a2d5b4a4643f25add250e2"
+        "bytes": 2588,
+        "sha256": "4d8c61148913a6171f09e48be2bc8b5b6588b5bf6d5a9afa918e5ac04da8f509"
       },
-      "reason": "Use network-first navigation/configuration updates, keep hashed recovered assets cache-first, reload installation requests so stale browser HTTP entries cannot seed the new service-worker cache, keep the previous worker when reload precaching fails, and precache the UI refresh stylesheet under cache generation v26."
+      "reason": "Use network-first navigation and configuration updates, keep hashed recovered assets cache-first, and precache the account, sync, responsive, and i18n overlays under cache generation v27."
     }
   ]
 }
