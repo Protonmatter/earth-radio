@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(20);
+select plan(21);
 
 select ok(
   to_regprocedure('public.rls_auto_enable()') is null
@@ -106,7 +106,7 @@ select is(
   (
     select revision::integer
       from public.upsert_user_config_document(
-        'player.eq', '{"bass":2}'::jsonb, 0, false
+        'preferences', '{"bass":2}'::jsonb, 0, false
       )
   ),
   1,
@@ -117,7 +117,7 @@ select is(
   (
     select revision::integer
       from public.upsert_user_config_document(
-        'player.eq', '{"bass":3}'::jsonb, 1, false
+        'preferences', '{"bass":3}'::jsonb, 1, false
       )
   ),
   2,
@@ -128,7 +128,7 @@ select is(
   (
     select count(*)::integer
       from public.upsert_user_config_document(
-        'player.eq', '{"bass":99}'::jsonb, 1, false
+        'preferences', '{"bass":99}'::jsonb, 1, false
       )
   ),
   0,
@@ -136,7 +136,7 @@ select is(
 );
 
 select is(
-  (select value ->> 'bass' from public.user_config_documents where document_key = 'player.eq'),
+  (select value ->> 'bass' from public.user_config_documents where document_key = 'preferences'),
   '3',
   'a rejected stale write does not change stored data'
 );
@@ -145,11 +145,18 @@ select throws_ok(
   $$
     update public.user_config_documents
        set value = '{"bass":100}'::jsonb
-     where document_key = 'player.eq'
+     where document_key = 'preferences'
   $$,
   '42501',
   null,
   'direct config mutation is denied so revision checks cannot be bypassed'
+);
+
+select throws_ok(
+  $$ select * from public.upsert_user_config_document('unsupported', '{}'::jsonb, 0, false) $$,
+  '23514',
+  'unsupported document key',
+  'config RPC rejects keys outside the three synchronized documents'
 );
 
 select set_config('request.jwt.claim.sub', '22222222-2222-4222-8222-222222222222', true);
