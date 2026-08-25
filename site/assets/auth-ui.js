@@ -4,6 +4,13 @@ import {
   shouldResetBrowserAccount, stableStringify, syncDocuments
 } from './sync-core.js';
 
+export function quiesceSignOut({ cancelReload, syncTimer, invalidateSync, clearIntervalImpl = clearInterval }) {
+  invalidateSync();
+  cancelReload();
+  if (syncTimer) clearIntervalImpl(syncTimer);
+  return null;
+}
+
 const ACTIVE_USER_KEY = 'earthRadio.auth.activeUser.v1';
 const ACTIVE_NAMESPACE_KEY = 'account:active';
 const DEFAULT_LOCAL_DATA = Object.freeze({
@@ -447,19 +454,32 @@ async function boot() {
       const signOut = el('button', 'er-auth-secondary', 'Sign out');
       signOut.type = 'button';
       signOut.addEventListener('click', async () => {
+        const userId = session?.user?.id;
+        signingOut = true;
+        syncTimer = quiesceSignOut({
+          cancelReload,
+          syncTimer,
+          invalidateSync: () => { syncGeneration += 1; }
+        });
+        let signedOut = false;
         try {
-          const userId = session?.user?.id;
-          signingOut = true;
-          await auth.signOut();
-          syncGeneration += 1;
-          cancelReload();
-          await switchLocalAccount(userId, null);
-          localStorage.removeItem(ACTIVE_USER_KEY);
-          session = null;
-          user = null;
-          syncStatus = 'Local only';
-          if (syncTimer) clearInterval(syncTimer);
-          syncTimer = null;
+          signedOut = await auth.signOut();
+        } finally {
+          if (signedOut) {
+            try {
+              await switchLocalAccount(userId, null);
+            } finally {
+              localStorage.removeItem(ACTIVE_USER_KEY);
+              session = null;
+              user = null;
+              syncStatus = 'Local only';
+            }
+          } else {
+            signingOut = false;
+          }
+        }
+        if (!signedOut) return;
+        try {
           location.reload();
         } catch (error) {
           signingOut = false;
@@ -520,5 +540,7 @@ async function boot() {
   }
 }
 
-if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => void boot(), { once: true });
-else void boot();
+if (typeof document !== 'undefined') {
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => void boot(), { once: true });
+  else void boot();
+}
