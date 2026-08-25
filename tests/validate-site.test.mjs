@@ -41,23 +41,13 @@ test('validateSite rejects a localhost production proxy', async () => {
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
-test('validateSite permits only the bounded localhost auth development origin', async () => {
-  const root = await mkdtemp(path.join(os.tmpdir(), 'earth-radio-auth-dev-site-'));
-  try {
-    await createSite(root, {
-      config: "const authOriginAllowed = ['https://earth-radio.pages.dev', 'http://localhost:8788'].includes(window.location.origin); window.RADIO_CONFIG={proxyBaseUrl: desktopProxyBaseUrl || '',authOriginAllowed};"
-    });
-    const result = await validateSite(root);
-    assert.equal(result.ok, true);
-  } finally { await rm(root, { recursive: true, force: true }); }
-});
-
 for (const [label, unsafeConfig] of [
-  ['Supabase auth URL', "const authOriginAllowed = ['https://earth-radio.pages.dev', 'http://localhost:8788'].includes(window.location.origin); window.RADIO_CONFIG={proxyBaseUrl: desktopProxyBaseUrl || '',auth:{url:'http://localhost:8788'}};"],
-  ['generic API URL', "const authOriginAllowed = ['https://earth-radio.pages.dev', 'http://localhost:8788'].includes(window.location.origin); window.RADIO_CONFIG={proxyBaseUrl: desktopProxyBaseUrl || '',apiUrl:'http://localhost:8788/api'};"],
-  ['executable request', "const authOriginAllowed = ['https://earth-radio.pages.dev', 'http://localhost:8788'].includes(window.location.origin); fetch('http://localhost:8788/internal'); window.RADIO_CONFIG={proxyBaseUrl: desktopProxyBaseUrl || ''};"]
+  ['Supabase auth URL', "window.RADIO_CONFIG={proxyBaseUrl: desktopProxyBaseUrl || '',auth:{url:'http://localhost:8788'}};"],
+  ['generic API URL', "window.RADIO_CONFIG={proxyBaseUrl: desktopProxyBaseUrl || '',apiUrl:'http://localhost:8788/api'};"],
+  ['executable request', "fetch('http://localhost:8788/internal'); window.RADIO_CONFIG={proxyBaseUrl: desktopProxyBaseUrl || ''};"],
+  ['string-derived endpoint', "const declaration=\"const authOriginAllowed = ['https://earth-radio.pages.dev', 'http://localhost:8788'].includes(window.location.origin);\"; window.RADIO_CONFIG={proxyBaseUrl:declaration.split(\"'\")[3]};"]
 ]) {
-  test(`validateSite rejects localhost in ${label} outside the exact auth declaration`, async () => {
+  test(`validateSite rejects localhost in ${label}`, async () => {
     const root = await mkdtemp(path.join(os.tmpdir(), 'earth-radio-local-exception-site-'));
     try {
       await createSite(root, { config: unsafeConfig });
