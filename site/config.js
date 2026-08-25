@@ -17,6 +17,19 @@ window.RADIO_CONFIG = window.RADIO_CONFIG || {
   featuredCountryLimit: 300,
   streamProbeEnabled: true,
   nowPlayingEnabled: true,
+  auth: {
+    // The publishable key is intentionally public; authorization is enforced by RLS.
+    enabled: !(window.earthRadio && window.earthRadio.isDesktop),
+    url: 'https://ueomkorngpgvthqioqns.supabase.co',
+    publishableKey: 'sb_publishable_5oaWYxR0LVs4UHplfnaP6g_ArQQSBa0',
+    providers: {
+      github: true,
+      google: false,
+      apple: false,
+      azure: false
+    },
+    syncIntervalMs: 5000
+  },
   metadataEnrichment: {
     enabled: true,
     iTunesDirectEnabled: true,
@@ -31,3 +44,6 @@ window.RADIO_CONFIG = window.RADIO_CONFIG || {
     maxCandidates: 8
   }
 };
+
+// Authentication is an additive overlay so the recovered application bundle remains immutable.
+void import('./assets/auth-ui.js').catch(error => console.warn('Earth Radio account UI:', error));
