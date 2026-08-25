@@ -291,3 +291,25 @@ test('provider-supplied link URLs are restricted to web schemes', async () => {
   assert.equal(safeLinkHref('data:text/html,<script>1</script>'), '');
   assert.equal(safeLinkHref(''), '');
 });
+
+test('the listener market is derived from the browser locale for catalog enrichment', async () => {
+  const { listenerCountry } = await import('../site/assets/metadata-enrichment.js');
+  assert.equal(listenerCountry('en-US'), 'US');
+  assert.equal(listenerCountry('ko'), 'KR');
+  assert.equal(listenerCountry('pt-BR'), 'BR');
+  assert.equal(listenerCountry(''), '');
+  assert.equal(listenerCountry('zzzz-not-a-locale!!'), '');
+});
+
+test('settle events are correlated with forced refreshes', async () => {
+  const root = path.resolve(import.meta.dirname, '..');
+  const source = await readFile(path.join(root, 'src-recovered', 'main.ts'), 'utf8');
+  const bundle = await readFile(path.join(root, 'site', 'assets', 'index-B4rKOAHV.js'), 'utf8');
+  // Both dispatch sites carry the forceRefresh flag in the settle detail...
+  assert.match(source, /stations-load-settled', \{ detail: \{ ok, forceRefresh \} \}/);
+  assert.match(bundle, /stations-load-settled`,\{detail:\{ok:_ok,forceRefresh:e\}\}/);
+  // ...and the expansion overlay ignores settles of unforced (boot) loads, so an
+  // unrelated concurrent load cannot release its refresh queue early.
+  const overlay = await readFile(path.join(root, 'site', 'assets', 'directory-expansion.js'), 'utf8');
+  assert.match(overlay, /forceRefresh === false\) return/);
+});

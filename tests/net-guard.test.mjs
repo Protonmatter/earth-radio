@@ -263,3 +263,14 @@ test('NAT64 translation prefixes with embedded private IPv4 are rejected', async
   // The well-known prefix around a public IPv4 stays public.
   assert.equal(isPrivateIp('64:ff9b::808:808'), false);
 });
+
+test('reserved and documentation IPv4 networks are private to the Node guard', async () => {
+  const { isPrivateIp } = await import('../server/net-guard.mjs');
+  assert.equal(isPrivateIp('192.0.2.10'), true);
+  assert.equal(isPrivateIp('198.51.100.7'), true);
+  assert.equal(isPrivateIp('203.0.113.9'), true);
+  assert.equal(isPrivateIp('198.18.5.1'), true);
+  assert.equal(isPrivateIp('198.19.255.1'), true);
+  assert.equal(isPrivateIp('198.52.1.1'), false);
+  assert.equal(isPrivateIp('192.0.3.1'), false);
+});

@@ -51,7 +51,9 @@ export async function onRequestGet({ request, env }) {
   if (!streamUrl) return json({ available: providers.length > 0, providers }, 60);
   if (!providers.length) return json({ available: false, found: false, reason: 'no fingerprint provider credentials configured' }, 300);
 
-  const rejection = rejectFetchUrl(streamUrl);
+  // This deployment's own hostname is never a valid stream target (same-zone block).
+  const forbiddenOrigins = [url.origin];
+  const rejection = rejectFetchUrl(streamUrl, { forbiddenOrigins });
   if (rejection) return json({ available: true, found: false, reason: rejection }, CACHE_TTL_MISS_S, 400);
 
   const country = normalizeCountry(url.searchParams.get('country'));
@@ -62,7 +64,7 @@ export async function onRequestGet({ request, env }) {
     if (cached) return cached;
   }
 
-  const payload = await identify(streamUrl, providers, env, country);
+  const payload = await identify(streamUrl, providers, env, country, forbiddenOrigins);
   const response = json(payload, payload.found ? CACHE_TTL_FOUND_S : CACHE_TTL_MISS_S);
   if (cache) await cache.put(cacheKey, response.clone()).catch(() => {});
   return response;
@@ -75,10 +77,10 @@ function configuredProviders(env = {}) {
   return providers;
 }
 
-async function identify(streamUrl, providers, env, country) {
+async function identify(streamUrl, providers, env, country, forbiddenOrigins = []) {
   let sample;
   try {
-    sample = await sampleStream(streamUrl);
+    sample = await sampleStream(streamUrl, forbiddenOrigins);
   } catch (error) {
     return { available: true, found: false, reason: `stream sampling failed: ${error?.message || 'unknown error'}` };
   }
@@ -139,17 +141,18 @@ async function identify(streamUrl, providers, env, country) {
 // ~12s of encoded audio through the guarded boundary; no Icy-MetaData header, so the
 // bytes are pure audio. HLS playlists resolve one master hop then sample recent
 // segments, all under the same wall-clock deadline.
-async function sampleStream(streamUrl) {
+async function sampleStream(streamUrl, forbiddenOrigins = []) {
   const deadlineAt = Date.now() + SAMPLE_TIMEOUT_MS;
   const { response, finalUrl } = await guardedFetch(streamUrl, {
     deadlineAt,
+    forbiddenOrigins,
     headers: { Accept: '*/*', 'User-Agent': USER_AGENT }
   });
   if (!response.ok || !response.body) throw new Error(`stream HTTP ${response.status}`);
   const contentType = String(response.headers.get('content-type') || '').toLowerCase();
   if (/mpegurl/.test(contentType) || /\.m3u8(\?|#|$)/i.test(finalUrl)) {
     const playlist = new TextDecoder().decode(await readBodyCapped(response, { maxBytes: PLAYLIST_MAX_BYTES, deadlineAt }));
-    return sampleHls(playlist, finalUrl, { deadlineAt, depth: 0 });
+    return sampleHls(playlist, finalUrl, { deadlineAt, depth: 0, forbiddenOrigins });
   }
   if (/text\/html|application\/json|text\/plain/.test(contentType)) {
     throw new Error(`unsupported content-type ${contentType.split(';')[0] || 'unknown'}`);
@@ -161,7 +164,7 @@ async function sampleStream(streamUrl) {
   return readBodyCapped(response, { maxBytes: target, deadlineAt });
 }
 
-async function sampleHls(playlistText, baseUrl, { deadlineAt, depth }) {
+async function sampleHls(playlistText, baseUrl, { deadlineAt, depth, forbiddenOrigins = [] }) {
   if (depth > MAX_HLS_PLAYLIST_DEPTH) throw new Error('HLS playlist nesting too deep');
   const lines = String(playlistText || '').split(/\r?\n/).map(line => line.trim());
 
@@ -170,10 +173,10 @@ async function sampleHls(playlistText, baseUrl, { deadlineAt, depth }) {
     const variant = lines.find(line => line && !line.startsWith('#'));
     if (!variant) throw new Error('empty HLS master playlist');
     const variantUrl = new URL(variant, baseUrl).toString();
-    const { response, finalUrl } = await guardedFetch(variantUrl, { deadlineAt, headers: { Accept: '*/*', 'User-Agent': USER_AGENT } });
+    const { response, finalUrl } = await guardedFetch(variantUrl, { deadlineAt, forbiddenOrigins, headers: { Accept: '*/*', 'User-Agent': USER_AGENT } });
     if (!response.ok) throw new Error(`HLS playlist HTTP ${response.status}`);
     const media = new TextDecoder().decode(await readBodyCapped(response, { maxBytes: PLAYLIST_MAX_BYTES, deadlineAt }));
-    return sampleHls(media, finalUrl, { deadlineAt, depth: depth + 1 });
+    return sampleHls(media, finalUrl, { deadlineAt, depth: depth + 1, forbiddenOrigins });
   }
 
   const segments = lines.filter(line => line && !line.startsWith('#')).slice(-HLS_SEGMENT_COUNT);
@@ -188,7 +191,7 @@ async function sampleHls(playlistText, baseUrl, { deadlineAt, depth }) {
   for (const segment of fetchList) {
     if (Date.now() >= deadlineAt) break;
     try {
-      const { response } = await guardedFetch(new URL(segment, baseUrl).toString(), { deadlineAt, headers: { Accept: '*/*', 'User-Agent': USER_AGENT } });
+      const { response } = await guardedFetch(new URL(segment, baseUrl).toString(), { deadlineAt, forbiddenOrigins, headers: { Accept: '*/*', 'User-Agent': USER_AGENT } });
       if (!response.ok || !response.body) continue;
       const bytes = await readBodyCapped(response, { maxBytes: perSegmentCap, deadlineAt });
       if (bytes.length) {

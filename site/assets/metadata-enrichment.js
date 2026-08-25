@@ -1120,6 +1120,17 @@ async function checkFingerprintAvailability() {
   return Boolean(state.fingerprintAvailable);
 }
 
+// The listener's storefront market from the browser locale ('' when undeterminable).
+// Pure enough to export for unit tests via an explicit locale argument.
+export function listenerCountry(locale = typeof navigator !== 'undefined' ? navigator.language : '') {
+  try {
+    const region = new Intl.Locale(String(locale || '')).maximize().region || '';
+    return /^[A-Z]{2}$/.test(region) ? region : '';
+  } catch {
+    return '';
+  }
+}
+
 function fingerprintButton() {
   return byId('metadata-fingerprint-btn');
 }
@@ -1177,6 +1188,10 @@ async function runFingerprint(trigger) {
     const base = await metadataApiBase();
     if (base === null) { setFingerprintStatus('Fingerprinting is not available on this deployment'); return; }
     const params = new URLSearchParams({ url: streamUrl });
+    // Catalog enrichment (artwork, storefront links) is market-specific, and the
+    // server keys its cache on the country — send the listener's market.
+    const country = listenerCountry();
+    if (country) params.set('country', country);
     const data = await fetchJson(`${base}/api/track/fingerprint?${params}`, 45000);
     // The sample takes ~15-20s; if the user switched stations meanwhile, this result
     // belongs to the old stream and must be dropped.

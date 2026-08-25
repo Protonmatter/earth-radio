@@ -83,10 +83,17 @@ function idbGet(db, key) {
 }
 
 function idbSet(db, key, value) {
+  return idbSetMany(db, [[key, value]]);
+}
+
+// All entries commit in ONE readwrite transaction: a restore must never leave the
+// store half-written with data from one generation and a marker from another.
+function idbSetMany(db, entries) {
   return new Promise(resolve => {
     try {
       const transaction = db.transaction(KV_STORE, 'readwrite');
-      transaction.objectStore(KV_STORE).put(value, key);
+      const store = transaction.objectStore(KV_STORE);
+      for (const [key, value] of entries) store.put(value, key);
       transaction.oncomplete = () => resolve(true);
       transaction.onerror = () => resolve(false);
       transaction.onabort = () => resolve(false);
@@ -231,15 +238,16 @@ async function restoreIfLost(db) {
     return false;
   }
 
-  // Restore data and the generation marker together; a second round covers the
-  // runtime concurrently seeding initial empty records at first boot.
+  // Restore data and the generation marker atomically in one readwrite transaction;
+  // a second round covers the runtime concurrently seeding initial empty records at
+  // first boot.
   let wrote = false;
   for (let round = 0; round < 2; round += 1) {
-    for (const key of USER_KEYS) {
-      if (backup.data[key] === undefined) continue;
-      if (await idbSet(db, key, backup.data[key])) wrote = true;
-    }
-    await idbSet(db, GUARD_META_KEY, { schemaVersion: 1, generation: Number(backup.generation) || 1, committedAt: Date.now(), namespace: activeNamespace() });
+    const dataEntries = USER_KEYS
+      .filter(key => backup.data[key] !== undefined)
+      .map(key => [key, backup.data[key]]);
+    const meta = [GUARD_META_KEY, { schemaVersion: 1, generation: Number(backup.generation) || 1, committedAt: Date.now(), namespace: activeNamespace() }];
+    if (await idbSetMany(db, [...dataEntries, meta]) && dataEntries.length) wrote = true;
     if (round === 0) await new Promise(resolve => setTimeout(resolve, 350));
   }
   if (!wrote) return false;

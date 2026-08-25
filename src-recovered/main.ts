@@ -541,8 +541,10 @@ async function loadStations({ forceRefresh = false } = {}): Promise<void> {
     ok = false;
   } finally {
     // Directory-expansion serializes forced refreshes on this settle signal instead of
-    // guessing with a timer; it fires on success and failure alike.
-    window.dispatchEvent(new CustomEvent('earthradio:stations-load-settled', { detail: { ok } }));
+    // guessing with a timer; it fires on success and failure alike. forceRefresh lets
+    // listeners correlate the settle with the forced load they triggered, so an
+    // unrelated boot load settling cannot end their cycle early.
+    window.dispatchEvent(new CustomEvent('earthradio:stations-load-settled', { detail: { ok, forceRefresh } }));
   }
 }
 

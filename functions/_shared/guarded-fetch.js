@@ -5,17 +5,20 @@
 //   -> repeat up to the hop cap -> byte/deadline-capped body reads.
 // The initial URL check is never authorization for later hops, and the whole chain
 // shares one absolute wall-clock deadline. The `global_fetch_strictly_public`
-// compatibility flag (wrangler.toml) additionally forces global fetch() through the
-// public Internet boundary so a same-zone hostname cannot short-circuit to an origin.
+// compatibility flag (wrangler.jsonc) additionally forces global fetch() through the
+// public Internet boundary so a same-zone hostname cannot short-circuit to an origin;
+// the forbiddenOrigins check rejects the deployment's own hostname outright.
 
 const DEFAULT_MAX_REDIRECTS = 3;
 const DEFAULT_USER_AGENT = 'EarthRadio/0.24.0 pages-fn (+https://github.com/Protonmatter/EarthRadio)';
 
 // Rejects URLs this endpoint must never fetch: non-http(s) schemes, embedded
-// credentials, and literal private/loopback/link-local/reserved hosts. DNS cannot be
-// resolved on Workers, so name-based rebinding is additionally covered by Cloudflare's
-// egress policy plus the strict-public fetch flag.
-export function rejectFetchUrl(rawUrl) {
+// credentials, literal private/loopback/link-local/reserved hosts, and (when the
+// route supplies its own origin via forbiddenOrigins) same-zone destinations, so a
+// listener-supplied URL or redirect can never point the Function back at its own
+// deployment. DNS cannot be resolved on Workers, so name-based rebinding is
+// additionally covered by Cloudflare's egress policy plus the strict-public flag.
+export function rejectFetchUrl(rawUrl, { forbiddenOrigins = [] } = {}) {
   let parsed;
   try {
     parsed = new URL(String(rawUrl || ''));
@@ -24,15 +27,26 @@ export function rejectFetchUrl(rawUrl) {
   }
   if (!['http:', 'https:'].includes(parsed.protocol)) return 'only http/https URLs are allowed';
   if (parsed.username || parsed.password) return 'credentials in URLs are not allowed';
+  for (const origin of forbiddenOrigins) {
+    let forbiddenHost;
+    try { forbiddenHost = new URL(String(origin)).hostname.toLowerCase(); } catch { forbiddenHost = String(origin || '').toLowerCase(); }
+    // Hostname (not full-origin) comparison: the same zone on another scheme or port
+    // is still this deployment.
+    if (forbiddenHost && parsed.hostname.toLowerCase() === forbiddenHost) return 'same-zone targets are blocked';
+  }
   const host = parsed.hostname.toLowerCase().replace(/^\[/, '').replace(/\]$/, '');
   if (!host || host === 'localhost' || host.endsWith('.local') || host.endsWith('.internal') || host.endsWith('.home.arpa')) {
     return 'private hosts are blocked';
   }
   const ipv4 = ipv4From(host);
   if (ipv4) {
-    const [a, b] = ipv4.split('.').map(Number);
+    const [a, b, c] = ipv4.split('.').map(Number);
     if (a === 0 || a === 10 || a === 127 || a === 169 && b === 254 || a === 192 && b === 168 ||
-        a === 172 && b >= 16 && b <= 31 || a === 100 && b >= 64 && b <= 127 || a >= 224) {
+        a === 172 && b >= 16 && b <= 31 || a === 100 && b >= 64 && b <= 127 || a >= 224 ||
+        // Reserved/documentation networks fail closed: TEST-NET-1/2/3 and the
+        // 198.18.0.0/15 benchmarking range.
+        a === 192 && b === 0 && c === 2 || a === 198 && b === 51 && c === 100 ||
+        a === 203 && b === 0 && c === 113 || a === 198 && (b === 18 || b === 19)) {
       return 'private hosts are blocked';
     }
     return '';
@@ -82,6 +96,7 @@ export async function guardedFetch(rawUrl, {
   maxRedirects = DEFAULT_MAX_REDIRECTS,
   deadlineAt,
   headers = {},
+  forbiddenOrigins = [],
   fetchImpl = fetch
 } = {}) {
   const deadline = Number(deadlineAt) || Date.now() + 8000;
@@ -91,7 +106,7 @@ export async function guardedFetch(rawUrl, {
   for (let hop = 0; hop <= maxRedirects; hop += 1) {
     const remaining = deadline - Date.now();
     if (remaining <= 0) throw new Error('request deadline exceeded');
-    const rejection = rejectFetchUrl(currentUrl);
+    const rejection = rejectFetchUrl(currentUrl, { forbiddenOrigins });
     if (rejection) throw new Error(rejection);
 
     const controller = new AbortController();

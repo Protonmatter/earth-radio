@@ -154,8 +154,12 @@ function scheduleRefresh() {
   expansion.refreshing = true;
   applyCodes([...new Set([...currentCodes(), ...readPersistedCodes()])].slice(0, MAX_TOTAL_COUNTRY_CODES));
   let fallback = 0;
-  const settle = () => {
+  const settle = event => {
     if (!expansion.refreshing) return;
+    // Only a forced load can end this cycle: the refresh button always forces, while
+    // an unrelated boot load settling concurrently must not release the queue early
+    // (its slower, smaller-country-set fetch could otherwise become terminal state).
+    if (event && event.detail && event.detail.forceRefresh === false) return;
     window.removeEventListener('earthradio:stations-load-settled', settle);
     clearTimeout(fallback);
     expansion.refreshing = false;

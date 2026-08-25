@@ -48,3 +48,13 @@ test('substance means records a user would miss, not re-seeded defaults', () => 
   assert.equal(hasUserSubstance({ favorites: {}, recents: [], prefs: { theme: 'dark' } }), false);
   assert.equal(hasUserSubstance(null), false);
 });
+
+test('restore commits backup data and the generation marker in one transaction', async () => {
+  const { readFile } = await import('node:fs/promises');
+  const path = await import('node:path');
+  const source = await readFile(path.resolve(import.meta.dirname, '..', 'site', 'assets', 'storage-guard.js'), 'utf8');
+  // The restore path builds one entries list (records + marker) and commits it via
+  // idbSetMany's single readwrite transaction — never one transaction per key.
+  assert.match(source, /idbSetMany\(db, \[\.\.\.dataEntries, meta\]\)/);
+  assert.match(source, /for \(const \[key, value\] of entries\) store\.put\(value, key\);/);
+});

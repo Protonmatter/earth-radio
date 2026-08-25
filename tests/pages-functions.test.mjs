@@ -349,3 +349,38 @@ test('Pages guard rejects NAT64-embedded private IPv4 literals', () => {
   assert.equal(rejectFetchUrl('http://[64:ff9b:1::a9fe:a9fe]/x'), 'private hosts are blocked');
   assert.equal(rejectFetchUrl('http://[64:ff9b::808:808]/x'), '');
 });
+
+test('Pages public fetch blocks redirects to its own zone', async () => {
+  await assert.rejects(guardedFetch('https://radio.example/live', {
+    fetchImpl: async () => new Response(null, { status: 302, headers: { location: 'https://earth-radio.pages.dev/api/nowplaying' } }),
+    forbiddenOrigins: ['https://earth-radio.pages.dev']
+  }), /same-zone targets are blocked/);
+  assert.equal(
+    rejectFetchUrl('https://earth-radio.pages.dev/api/nowplaying', { forbiddenOrigins: ['https://earth-radio.pages.dev'] }),
+    'same-zone targets are blocked'
+  );
+  // Same hostname on another scheme or port is still this deployment.
+  assert.equal(
+    rejectFetchUrl('http://earth-radio.pages.dev:8080/x', { forbiddenOrigins: ['https://earth-radio.pages.dev'] }),
+    'same-zone targets are blocked'
+  );
+  assert.equal(rejectFetchUrl('https://radio.example/x', { forbiddenOrigins: ['https://earth-radio.pages.dev'] }), '');
+});
+
+test('the now-playing route refuses its own deployment as a stream target', async () => {
+  const { onRequestGet } = await import('../functions/api/nowplaying.js');
+  const target = encodeURIComponent('https://earth-radio.pages.dev/api/track/fingerprint');
+  const request = new Request(`https://earth-radio.pages.dev/api/nowplaying?url=${target}`);
+  const response = await onRequestGet({ request });
+  assert.equal(response.status, 400);
+  const body = await response.json();
+  assert.match(body.reason, /same-zone/);
+});
+
+test('reserved and documentation IPv4 networks fail closed at the Pages boundary', () => {
+  assert.equal(rejectFetchUrl('http://192.0.2.10/stream'), 'private hosts are blocked');
+  assert.equal(rejectFetchUrl('http://198.51.100.7/stream'), 'private hosts are blocked');
+  assert.equal(rejectFetchUrl('http://203.0.113.9/stream'), 'private hosts are blocked');
+  assert.equal(rejectFetchUrl('http://198.18.5.1/stream'), 'private hosts are blocked');
+  assert.equal(rejectFetchUrl('http://198.52.1.1/stream'), '');
+});

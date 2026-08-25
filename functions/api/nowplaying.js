@@ -35,7 +35,10 @@ export async function onRequestGet({ request }) {
     return json({ ok: true, service: 'earth-radio-pages-fn', endpoints: ['nowplaying', 'track/fingerprint'] }, 60);
   }
 
-  const rejection = rejectFetchUrl(streamUrl);
+  // The Function's own deployment hostname is never a valid stream target: a
+  // listener-supplied URL or redirect must not point the fetch back at this zone.
+  const forbiddenOrigins = [url.origin];
+  const rejection = rejectFetchUrl(streamUrl, { forbiddenOrigins });
   if (rejection) return json({ found: false, reason: rejection }, CACHE_TTL_MISS_S, 400);
 
   const cache = await openCache();
@@ -52,13 +55,13 @@ export async function onRequestGet({ request }) {
     });
   }
 
-  const payload = await resolveNowPlaying(streamUrl);
+  const payload = await resolveNowPlaying(streamUrl, { forbiddenOrigins });
   const response = json(payload, payload.found ? CACHE_TTL_FOUND_S : CACHE_TTL_MISS_S);
   if (cache) await cache.put(cacheKey, response.clone()).catch(() => {});
   return response;
 }
 
-export async function resolveNowPlaying(streamUrl, { deadlineAt = Date.now() + TOTAL_BUDGET_MS } = {}) {
+export async function resolveNowPlaying(streamUrl, { deadlineAt = Date.now() + TOTAL_BUDGET_MS, forbiddenOrigins = [] } = {}) {
   const attempted = [];
   const endpoints = detectPlatformEndpoints(streamUrl).filter(endpoint => endpoint.kind !== 'ws');
   const generic = endpoints.filter(endpoint => endpoint.platform === 'icecast' || endpoint.platform === 'shoutcast');
@@ -67,7 +70,7 @@ export async function resolveNowPlaying(streamUrl, { deadlineAt = Date.now() + T
   // Hosted-platform endpoints answer fast and authoritatively.
   for (const endpoint of specific) {
     attempted.push(endpoint.platform);
-    const result = await tryPlatform(endpoint, stageDeadline(deadlineAt)).catch(() => null);
+    const result = await tryPlatform(endpoint, stageDeadline(deadlineAt), forbiddenOrigins).catch(() => null);
     if (result) return found(result, attempted);
   }
 
@@ -76,14 +79,14 @@ export async function resolveNowPlaying(streamUrl, { deadlineAt = Date.now() + T
   const genericDeadline = stageDeadline(deadlineAt);
   if (generic.length && genericDeadline > Date.now()) {
     attempted.push(...generic.map(endpoint => endpoint.platform));
-    const results = await Promise.all(generic.map(endpoint => tryPlatform(endpoint, genericDeadline).catch(() => null)));
+    const results = await Promise.all(generic.map(endpoint => tryPlatform(endpoint, genericDeadline, forbiddenOrigins).catch(() => null)));
     const hit = results.find(Boolean);
     if (hit) return found(hit, attempted);
   }
 
   attempted.push('icy');
   try {
-    const icy = await readIcyOnce(streamUrl, deadlineAt);
+    const icy = await readIcyOnce(streamUrl, deadlineAt, forbiddenOrigins);
     if (icy) {
       const track = parseNowPlaying(icy);
       if (track) {
@@ -104,10 +107,11 @@ function found(result, attempted) {
   return { found: true, source: 'platform', ...result, attempted, fetchedAt: new Date().toISOString() };
 }
 
-async function tryPlatform(endpoint, deadlineAt) {
+async function tryPlatform(endpoint, deadlineAt, forbiddenOrigins = []) {
   if (deadlineAt <= Date.now()) return null;
   const { response } = await guardedFetch(endpoint.url, {
     deadlineAt,
+    forbiddenOrigins,
     headers: { Accept: endpoint.kind === 'sse' ? 'text/event-stream' : 'application/json', 'User-Agent': USER_AGENT }
   });
   if (!response.ok) return null;
@@ -123,9 +127,10 @@ async function tryPlatform(endpoint, deadlineAt) {
 
 // One-shot ICY read: request metadata interleaving, read just enough bytes to see a
 // couple of metadata blocks, extract the first StreamTitle, abort the stream.
-async function readIcyOnce(streamUrl, deadlineAt) {
+async function readIcyOnce(streamUrl, deadlineAt, forbiddenOrigins = []) {
   const { response } = await guardedFetch(streamUrl, {
     deadlineAt,
+    forbiddenOrigins,
     headers: { 'Icy-MetaData': '1', 'User-Agent': USER_AGENT, Accept: '*/*' }
   });
   if (!response.ok || !response.body) return '';

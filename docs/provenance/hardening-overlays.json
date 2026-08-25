@@ -81,8 +81,8 @@
         "sha256": "610e3cdbea0e98b748aef94a24ea8362024430e01647b35bb4cd62038a04fa13"
       },
       "current": {
-        "bytes": 273898,
-        "sha256": "e8f57ad29e8c5b7816810ac0be648ff139bb02452eb526ef422790d2d890e201"
+        "bytes": 273913,
+        "sha256": "c692da7f217b40aaa603391c8141d3dd76868e407606e81a4ed55d7d0df6a935"
       },
       "reason": "Register the service worker after asynchronous startup and remove a reference to an excluded source map. Bind a station tooltip on map markers for pre-selection progressive disclosure, delegating content to the maintained metadata overlay hook. Dispatch earthradio:station-selected after successful station playback (canonical stream identity for MediaSource/blob playback) and earthradio:stations-load-settled from loadStations' finally block (directory-refresh serialization signal); both mirrored in src-recovered/main.ts."
     },
@@ -105,8 +105,8 @@
         "sha256": "e213700a1a541139a66542e9bd8e615ad5dfc735d52c59569730d9a021e86009"
       },
       "current": {
-        "bytes": 61603,
-        "sha256": "e0de698ded10cb9839a144c650ff47bd2224cc3e74b9270e587a950148cbc28d"
+        "bytes": 62287,
+        "sha256": "248a81e4e50b933791a362541e1fb2b057064ef41000d076fe4ad38e011dab6e"
       },
       "reason": "Layer live-metadata feeds above raw ICY: hosting-platform now-playing APIs, HLS timed ID3 text tracks, and an opt-in fingerprint identify button."
     },

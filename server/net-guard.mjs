@@ -179,13 +179,19 @@ export function isPrivateIp(address) {
   if (embeddedIpv4) return isPrivateIp(embeddedIpv4);
   const kind = net.isIP(address);
   if (kind === 4) {
-    const [a, b] = address.split('.').map(Number);
+    const [a, b, c] = address.split('.').map(Number);
     if (a === 10 || a === 127 || a === 0) return true;
     if (a === 100 && b >= 64 && b <= 127) return true;
     if (a === 169 && b === 254) return true;
     if (a === 172 && b >= 16 && b <= 31) return true;
     if (a === 192 && b === 168) return true;
     if (a >= 224) return true;
+    // Reserved/documentation networks fail closed: TEST-NET-1/2/3 and the
+    // 198.18.0.0/15 benchmarking range are never legitimate stream hosts.
+    if (a === 192 && b === 0 && c === 2) return true;
+    if (a === 198 && b === 51 && c === 100) return true;
+    if (a === 203 && b === 0 && c === 113) return true;
+    if (a === 198 && (b === 18 || b === 19)) return true;
     return false;
   }
   if (kind === 6) {
