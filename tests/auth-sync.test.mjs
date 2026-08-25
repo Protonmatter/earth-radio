@@ -56,6 +56,28 @@ test('OAuth sign-in uses PKCE and stores only the verifier locally', async () =>
   assert.equal(Object.keys(flows).length, 1);
 });
 
+test('OAuth redirects preserve the current query and hash route', async () => {
+  const storage = memoryStorage();
+  const assigned = [];
+  const client = createAuthClient({
+    url: 'https://project.supabase.co',
+    publishableKey: 'sb_publishable_test',
+    storage,
+    location: {
+      href: 'https://earth-radio.example/?domain=US#station=abc',
+      origin: 'https://earth-radio.example', pathname: '/', search: '?domain=US', hash: '#station=abc',
+      assign: url => assigned.push(url)
+    }
+  });
+
+  await client.signInWithOAuth('github');
+
+  const redirect = new URL(new URL(assigned[0]).searchParams.get('redirect_to'));
+  assert.equal(redirect.searchParams.get('domain'), 'US');
+  assert.ok(redirect.searchParams.get('er_auth_flow'));
+  assert.equal(redirect.hash, '#station=abc');
+});
+
 test('OAuth callback exchanges the code, persists the session, and cleans the URL', async () => {
   const storage = memoryStorage();
   storage.setItem('earthRadio.auth.pkce.v1', JSON.stringify({
@@ -408,6 +430,14 @@ test('authenticated boot verifies IndexedDB and keeps sync running after transie
   assert.match(bootTail, /switchLocalAccount\(previousUserId, nextUserId\)/);
   assert.match(bootTail, /clearMissingNamespaceSyncState\(nextUserId, transition\)/);
   assert.match(bootTail, /try \{ await refreshUser\(\); \}[\s\S]*if \(session && !resettingSession\) startSync\(\)/);
+});
+
+test('downloads during the reload cooldown schedule a later reload', async () => {
+  const root = path.resolve(import.meta.dirname, '..');
+  const source = await readFile(path.join(root, 'site', 'assets', 'auth-ui.js'), 'utf8');
+  const syncBody = source.slice(source.indexOf('async function runSync'), source.indexOf('function startSync'));
+  assert.match(syncBody, /const reloadDelay = Math\.max\(0, 5000 - \(Date\.now\(\) - lastReload\)\)/);
+  assert.match(syncBody, /reloadTimer = setTimeout\([\s\S]*reloadDelay\)/);
 });
 
 test('sync local access is fenced by the active account in the same IndexedDB transaction', async () => {
