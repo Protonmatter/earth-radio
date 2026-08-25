@@ -39,7 +39,7 @@ const guard = {
   lastError: ''
 };
 
-function checksum(text) {
+export function checksum(text) {
   // FNV-1a: cheap, synchronous, good enough to detect torn/corrupted JSON writes.
   let hash = 0x811c9dc5;
   for (let index = 0; index < text.length; index += 1) {
@@ -137,7 +137,7 @@ function readBestBackup() {
 // "Substance" = records the user would miss: favorites, listening history, last station.
 // Default preferences written at first boot do not count, so a store that lost user data
 // still reads as empty even if the runtime already re-seeded defaults.
-function hasUserSubstance(data) {
+export function hasUserSubstance(data) {
   if (!data) return false;
   const favorites = data.favorites;
   const recents = data.recents;
@@ -191,9 +191,22 @@ function restoreAttempts() {
   }
 }
 
+// The whole restore-or-not decision, pure and exported for direct unit testing.
+// A present primary generation proves the store's current contents — including
+// intentionally emptied favorites/recents — are authoritative, so no backup may
+// overwrite them. Restoration happens only when the marker is gone (real loss or
+// eviction), a decodable backup exists, and the per-tab-session attempt cap has
+// not been reached.
+export function shouldRestore({ primaryGeneration, backup, restoreAttempts: attempts = 0 }) {
+  if (primaryGeneration) return false;
+  if (!backup || typeof backup !== 'object' || !backup.data || typeof backup.data !== 'object') return false;
+  return Number(attempts) < 2;
+}
+
 async function restoreIfLost(db) {
   const meta = await idbGet(db, GUARD_META_KEY);
-  if (isValidGuardMeta(meta)) {
+  const primaryGeneration = isValidGuardMeta(meta) ? String(meta.generation) : '';
+  if (primaryGeneration) {
     // A valid generation marker proves the primary contents are intentional — even an
     // empty state after the user cleared their data is authoritative and must never be
     // overwritten by a stale backup.
@@ -211,7 +224,7 @@ async function restoreIfLost(db) {
 
   // At most two attempts per tab session so a hostile write path can never reload-loop.
   const attempts = restoreAttempts();
-  if (attempts >= 2) return false;
+  if (!shouldRestore({ primaryGeneration, backup, restoreAttempts: attempts })) return false;
   try {
     sessionStorage.setItem(RESTORE_FLAG_KEY, String(attempts + 1));
   } catch {
