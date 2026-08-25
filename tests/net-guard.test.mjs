@@ -206,3 +206,28 @@ test('fMP4 HLS sampling prepends the EXT-X-MAP initialization segment', async ()
   assert.ok(sample.body.subarray(0, 12).toString().startsWith('INIT-SEGMENT'), 'sample must begin with the initialization segment');
   assert.ok(sample.body.length > initBytes.length);
 });
+
+test('extensionless HLS media playlists are parsed as playlists, not nested children', async () => {
+  const segment = Buffer.from('SEGDATA-'.repeat(4 * 1024));
+  const { resolveTarget } = makeResolver();
+  const fetched = [];
+  const requestImpl = async url => {
+    fetched.push(url);
+    if (url === 'https://radio.example/stream') {
+      return {
+        statusCode: 200,
+        headers: { 'content-type': 'application/vnd.apple.mpegurl' },
+        body: Buffer.from(''),
+        // A media playlist (no #EXT-X-STREAM-INF): its first URI is a segment, and must
+        // never be re-fetched and parsed as another playlist.
+        text: '#EXTM3U\n#EXT-X-TARGETDURATION:4\n#EXTINF:4,\nseg1.aac\n#EXTINF:4,\nseg2.aac\n',
+        finalUrl: url
+      };
+    }
+    return { statusCode: 200, headers: {}, body: segment, text: '', finalUrl: url };
+  };
+  const sample = await sampleStreamAudio('https://radio.example/stream', { requestImpl, resolveTarget });
+  assert.ok(fetched.includes('https://radio.example/seg1.aac'), `segments fetched directly, saw ${fetched.join(', ')}`);
+  assert.ok(fetched.includes('https://radio.example/seg2.aac'));
+  assert.ok(sample.body.length >= segment.length * 2, 'both media segments are concatenated');
+});

@@ -128,8 +128,19 @@ export async function readBodyCapped(response, { maxBytes, deadlineAt, stopWhen 
   const chunks = [];
   let received = 0;
   try {
-    while (received < cap && Date.now() < deadline) {
-      const { value, done } = await reader.read();
+    while (received < cap) {
+      // The clock check alone cannot bound a stalled upstream: a reader.read() that
+      // never resolves would pend past every deadline. Race each read against the
+      // remaining budget and return the partial result when time runs out.
+      const remaining = deadline - Date.now();
+      if (remaining <= 0) break;
+      let timer;
+      const result = await Promise.race([
+        reader.read(),
+        new Promise(resolve => { timer = setTimeout(() => resolve({ timedOut: true }), remaining); })
+      ]).finally(() => clearTimeout(timer));
+      if (result.timedOut) break;
+      const { value, done } = result;
       if (done) break;
       chunks.push(value);
       received += value.length;

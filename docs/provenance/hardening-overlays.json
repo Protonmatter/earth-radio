@@ -9,10 +9,10 @@
         "sha256": "942d2d61015289e649cf74ff509a95fd2ca20090fc40cb9fd3e5f21d89c29dcc"
       },
       "current": {
-        "bytes": 3549,
-        "sha256": "6aa303ed9cbf06edae50a98f64f21a3f40b114b8afb3078c645b041be24be5bc"
+        "bytes": 3566,
+        "sha256": "606065ec150d32644f668894f3849cf6a1fdd6346e0221d195687f573fb8e62f"
       },
-      "reason": "Load the selected site directory and validate complete supported network-proxy rules with URL parsing."
+      "reason": "Load the selected site directory and validate complete supported network-proxy rules with URL parsing. Allow the Listen.moe realtime gateway (wss://listen.moe) in the renderer connect-src policy."
     },
     {
       "path": "server/desktop-proxy.mjs",
@@ -105,8 +105,8 @@
         "sha256": "e213700a1a541139a66542e9bd8e615ad5dfc735d52c59569730d9a021e86009"
       },
       "current": {
-        "bytes": 60392,
-        "sha256": "b10f8e1cfc095d96f83e77668bb701b3457a1452ab970c731fb2bbe94c155f9c"
+        "bytes": 61221,
+        "sha256": "9443ed1231a1b00033747882a3d8e5bcc1b6c79de6cfd8753b7a47d5f526676c"
       },
       "reason": "Layer live-metadata feeds above raw ICY: hosting-platform now-playing APIs, HLS timed ID3 text tracks, and an opt-in fingerprint identify button."
     },

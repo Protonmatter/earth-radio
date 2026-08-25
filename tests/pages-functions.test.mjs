@@ -325,3 +325,20 @@ test('Pages fingerprinting includes the EXT-X-MAP init segment and reports provi
     assert.match(body.reason, /unavailable/);
   });
 });
+
+test('a stalled body read cannot outlive the wall-clock deadline', async () => {
+  const stream = new ReadableStream({
+    start(controller) {
+      controller.enqueue(new Uint8Array(8));
+    },
+    pull() {
+      // Headers and one chunk arrived; the upstream then black-holes forever.
+      return new Promise(() => {});
+    }
+  });
+  const startedAt = Date.now();
+  const bytes = await readBodyCapped(new Response(stream), { maxBytes: 1024 * 1024, deadlineAt: Date.now() + 200 });
+  const elapsed = Date.now() - startedAt;
+  assert.ok(elapsed < 1500, `stalled read must end at the deadline, took ${elapsed}ms`);
+  assert.equal(bytes.length, 8, 'the partial body read before the stall is returned');
+});

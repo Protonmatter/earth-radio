@@ -34,10 +34,19 @@ export async function resolvePlatformNowPlaying(streamUrl, { timeoutMs = DEFAULT
 async function resolveUncached(streamUrl, { timeoutMs, fetchTextImpl }) {
   const endpoints = detectPlatformEndpoints(streamUrl);
   const attempted = [];
-  for (const endpoint of endpoints) {
+  // One wall-clock budget across every candidate: the remaining time is divided over
+  // the remaining endpoints, so a stalled first probe cannot consume the caller's whole
+  // client timeout and starve the generic fallbacks, while a fast failure donates its
+  // unused slice to the next endpoint.
+  const deadlineAt = Date.now() + timeoutMs;
+  for (let index = 0; index < endpoints.length; index += 1) {
+    const endpoint = endpoints[index];
+    const remaining = deadlineAt - Date.now();
+    if (remaining <= 250) break;
+    const budget = Math.max(250, Math.floor(remaining / (endpoints.length - index)));
     attempted.push(endpoint.platform);
     try {
-      const text = await fetchTextImpl(endpoint, timeoutMs);
+      const text = await fetchTextImpl(endpoint, budget);
       if (!text) continue;
       const result = parsePlatformPayload(endpoint, text);
       if (result) return { ...result, found: true, endpoint: endpoint.url, attempted, fetchedAt: new Date().toISOString() };

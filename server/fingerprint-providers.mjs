@@ -122,9 +122,10 @@ export async function sampleStreamAudio(streamUrl, { seconds = DEFAULT_SAMPLE_SE
   assertAudioResponse(response);
   const contentType = String(response.headers['content-type'] || '');
   if (/mpegurl|application\/x-mpegurl/i.test(contentType)) {
-    const media = firstPlaylistLine(response.text, response.finalUrl);
-    if (!media) throw new Error('empty HLS playlist');
-    return sampleHlsAudio(media, { seconds, depth: 0, deadlineAt, requestImpl });
+    // The playlist body is already in hand; parse it directly. Guessing that the first
+    // URI is a child playlist would misread a media playlist's first segment as a
+    // playlist for HLS URLs that lack an .m3u8 suffix.
+    return sampleHlsFromText(response.text, response.finalUrl, { seconds, depth: 0, deadlineAt, requestImpl });
   }
   return { body: response.body, contentType };
 }
@@ -152,9 +153,11 @@ async function sampleHlsAudio(playlistUrl, { seconds, depth = 0, deadlineAt = Da
   if (playlistResponse.statusCode < 200 || playlistResponse.statusCode >= 300) {
     throw new Error(`HLS playlist HTTP ${playlistResponse.statusCode}`);
   }
-  const text = playlistResponse.text;
-  const baseUrl = playlistResponse.finalUrl;
-  const lines = text.split(/\r?\n/).map(line => line.trim());
+  return sampleHlsFromText(playlistResponse.text, playlistResponse.finalUrl, { seconds, depth, deadlineAt, requestImpl });
+}
+
+async function sampleHlsFromText(text, baseUrl, { seconds, depth = 0, deadlineAt, requestImpl }) {
+  const lines = String(text || '').split(/\r?\n/).map(line => line.trim());
 
   // Master playlist: follow the first variant, once.
   if (text.includes('#EXT-X-STREAM-INF')) {
@@ -194,11 +197,6 @@ function assertAudioResponse(response) {
   if (/text\/html|application\/json|text\/plain/.test(contentType)) {
     throw new Error(`stream returned non-audio content-type ${contentType.split(';')[0]}`);
   }
-}
-
-function firstPlaylistLine(text, baseUrl) {
-  const line = String(text || '').split(/\r?\n/).map(item => item.trim()).find(item => item && !item.startsWith('#'));
-  return line ? new URL(line, baseUrl).toString() : '';
 }
 
 async function recognizeSample(provider, sample, env = process.env) {

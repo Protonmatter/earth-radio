@@ -244,3 +244,41 @@ test('runtime source and installed bundle both dispatch the selection and settle
     assert.match(text, /url_resolved/);
   }
 });
+
+test('platform resolution shares one wall-clock budget across candidate endpoints', async () => {
+  clearPlatformNowPlayingCache();
+  const budgets = [];
+  const startedAt = Date.now();
+  const result = await resolvePlatformNowPlaying('https://ice.example.net:8000/live.mp3', {
+    timeoutMs: 800,
+    fetchTextImpl: async (endpoint, budget) => {
+      budgets.push(budget);
+      if (budgets.length === 1) {
+        // First endpoint stalls for its entire slice, like a black-holed status page.
+        await new Promise(resolve => setTimeout(resolve, budget));
+        return '';
+      }
+      // The surviving generic fallback (shoutcast) answers with its own payload shape.
+      return JSON.stringify({ streamstatus: 1, songtitle: 'IU - Blueming' });
+    }
+  });
+  const elapsed = Date.now() - startedAt;
+  assert.equal(result.found, true, `fallback endpoint must still be reached: ${JSON.stringify(result)}`);
+  assert.ok(budgets.length >= 2, 'the second endpoint was attempted');
+  assert.ok(budgets[0] < 800, `first endpoint must not receive the whole budget, got ${budgets[0]}ms`);
+  assert.ok(elapsed < 1200, `resolution stayed within the caller budget, took ${elapsed}ms`);
+  clearPlatformNowPlayingCache();
+});
+
+test('trusted feed results own the panel only for their freshness window', async () => {
+  const { trustedFreshRemaining } = await import('../site/assets/metadata-enrichment.js');
+  const now = 1_000_000;
+  assert.equal(trustedFreshRemaining(null, now), 0);
+  assert.equal(trustedFreshRemaining({ at: now - 60_000 }, now), 0);
+  const remaining = trustedFreshRemaining({ at: now - 10_000 }, now);
+  assert.ok(remaining > 0 && remaining <= 45_000, `mid-window remaining is bounded, got ${remaining}`);
+  // The overlay must arm a re-process at expiry: without it, a finished song would
+  // stay on the panel whenever the platform feed goes quiet and the DOM stops mutating.
+  const overlay = await readFile(path.resolve(import.meta.dirname, '..', 'site', 'assets', 'metadata-enrichment.js'), 'utf8');
+  assert.match(overlay, /trustExpiryTimer = setTimeout\(scheduleProcess/);
+});
