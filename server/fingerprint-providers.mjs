@@ -22,8 +22,10 @@ const DEFAULT_BITRATE_KBPS = 160;
 const SAMPLE_TIMEOUT_MS = 20_000;
 const RECOGNIZE_TIMEOUT_MS = 15_000;
 const CACHE_MAX_ENTRIES = 128;
-const CACHE_TTL_HIT_MS = 90 * 1000;
-const CACHE_TTL_MISS_MS = 45 * 1000;
+// Positive results must expire before the client's 30s retry cooldown: after a track
+// change, a retry must sample the current audio, not replay the previous song.
+export const CACHE_TTL_HIT_MS = 25 * 1000;
+const CACHE_TTL_MISS_MS = 30 * 1000;
 const PLAYLIST_MAX_BYTES = 64 * 1024;
 const HLS_SEGMENT_COUNT = 3;
 const MAX_HLS_PLAYLIST_DEPTH = 2;
@@ -70,6 +72,7 @@ async function identifyUncached(streamUrl, { sampleSeconds, env, providers, samp
     return { available: true, found: false, reason: 'stream sample was too short to fingerprint' };
   }
 
+  let providerFailures = 0;
   for (const provider of providers) {
     try {
       const result = await recognizeImpl(provider, sample, env);
@@ -84,8 +87,13 @@ async function identifyUncached(streamUrl, { sampleSeconds, env, providers, samp
         };
       }
     } catch {
-      // Provider errors fall through to the next configured provider.
+      // Transport/credential failure — try the next configured provider.
+      providerFailures += 1;
     }
+  }
+  if (providerFailures === providers.length) {
+    // Recognition never completed; this is an outage, not a negative identification.
+    return { available: true, found: false, providerError: true, reason: 'fingerprint providers unavailable', sampleBytes: sample.body.length, fetchedAt: new Date().toISOString() };
   }
   return { available: true, found: false, reason: 'no fingerprint match', sampleBytes: sample.body.length, fetchedAt: new Date().toISOString() };
 }
@@ -157,9 +165,13 @@ async function sampleHlsAudio(playlistUrl, { seconds, depth = 0, deadlineAt = Da
 
   const segments = lines.filter(line => line && !line.startsWith('#')).slice(-HLS_SEGMENT_COUNT);
   if (!segments.length) throw new Error('HLS media playlist has no segments');
-  const perSegmentCap = Math.floor(MAX_SAMPLE_BYTES / segments.length);
+  // Fragmented-MP4 playlists carry decoder metadata in an EXT-X-MAP initialization
+  // segment; without it the recognizers receive an undecodable container.
+  const mapUri = lines.map(line => line.match(/^#EXT-X-MAP:.*URI="([^"]+)"/i)?.[1]).find(Boolean);
+  const fetchList = mapUri ? [new URL(mapUri, baseUrl).toString(), ...segments] : segments;
+  const perSegmentCap = Math.floor(MAX_SAMPLE_BYTES / fetchList.length);
   const parts = [];
-  for (const segment of segments) {
+  for (const segment of fetchList) {
     const segmentResponse = await requestImpl(new URL(segment, baseUrl).toString(), {
       timeoutMs: 8000,
       deadlineAt,
@@ -202,6 +214,7 @@ export function buildAcrSignature({ accessKey, accessSecret, timestamp }) {
   return createHmac('sha1', accessSecret).update(stringToSign).digest('base64');
 }
 
+// Throws on transport/credential failure; returns null only for a genuine no-match.
 async function recognizeWithAcrCloud(sample, env) {
   const host = String(env.ACR_HOST || '').replace(/^https?:\/\//, '').replace(/\/+$/, '');
   const timestamp = Math.floor(Date.now() / 1000);
@@ -214,8 +227,13 @@ async function recognizeWithAcrCloud(sample, env) {
   form.set('sample_bytes', String(sample.body.length));
   form.set('sample', new Blob([sample.body]), 'sample.bin');
 
-  const data = await postForm(`https://${host}${ACR_IDENTIFY_PATH}`, form);
-  return normalizeAcrResult(data);
+  const outcome = await postForm(`https://${host}${ACR_IDENTIFY_PATH}`, form);
+  if (!outcome.ok) throw new Error('acrcloud request failed');
+  const code = Number(outcome.data?.status?.code);
+  // 0 = hit; 1001 = analyzed but no result — a genuine miss. Anything else is a
+  // provider-side error (bad credentials, quota, internal failure).
+  if (code !== 0 && code !== 1001) throw new Error(`acrcloud status ${code}`);
+  return normalizeAcrResult(outcome.data);
 }
 
 export function normalizeAcrResult(data) {
@@ -242,8 +260,10 @@ async function recognizeWithAudd(sample, env) {
   form.set('return', 'apple_music,spotify');
   form.set('file', new Blob([sample.body]), 'sample.bin');
 
-  const data = await postForm(AUDD_IDENTIFY_URL, form);
-  return normalizeAuddResult(data);
+  const outcome = await postForm(AUDD_IDENTIFY_URL, form);
+  if (!outcome.ok) throw new Error('audd request failed');
+  if (outcome.data?.status !== 'success') throw new Error(`audd status ${outcome.data?.status || 'unknown'}`);
+  return normalizeAuddResult(outcome.data);
 }
 
 export function normalizeAuddResult(data) {
@@ -273,10 +293,10 @@ async function postForm(url, form) {
       headers: { 'User-Agent': USER_AGENT },
       body: form
     });
-    if (!response.ok) return null;
-    return await response.json();
+    if (!response.ok) return { ok: false };
+    return { ok: true, data: await response.json() };
   } catch {
-    return null;
+    return { ok: false };
   } finally {
     clearTimeout(timer);
   }

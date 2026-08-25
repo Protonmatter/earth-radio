@@ -1153,7 +1153,8 @@ async function runFingerprint(trigger) {
       return;
     }
     if (!data.found) {
-      setFingerprintStatus(data.reason === 'no fingerprint match' ? 'No match; may be talk, ads, or an unreleased mix' : `No match: ${data.reason || 'unknown'}`);
+      if (data.providerError) setFingerprintStatus('Recognition service unreachable; try again shortly');
+      else setFingerprintStatus(data.reason === 'no fingerprint match' ? 'No match; may be talk, ads, or an unreleased mix' : `No match: ${data.reason || 'unknown'}`);
       return;
     }
 

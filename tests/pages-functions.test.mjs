@@ -294,3 +294,34 @@ test('slow generic probes still leave budget for a successful ICY fallback', asy
     assert.ok(Date.now() - startedAt < 9000, 'ICY fallback must complete inside the shared budget');
   });
 });
+
+test('Pages guard rejects the unspecified IPv6 address and hex-mapped loopback', () => {
+  assert.equal(rejectFetchUrl('http://[::]/x'), 'private hosts are blocked');
+  assert.equal(rejectFetchUrl('http://[::ffff:7f00:1]/x'), 'private hosts are blocked');
+});
+
+test('Pages fingerprinting includes the EXT-X-MAP init segment and reports provider outages', async () => {
+  const fetchedUrls = [];
+  const segment = new Uint8Array(20 * 1024).fill(9);
+  await withFetch(async target => {
+    const url = String(target);
+    fetchedUrls.push(url);
+    if (url === 'https://hls.example/fmp4.m3u8') {
+      return new Response('#EXTM3U\n#EXT-X-MAP:URI="init.mp4"\n#EXTINF:4,\nseg1.m4s\n#EXTINF:4,\nseg2.m4s\n', {
+        headers: { 'content-type': 'application/vnd.apple.mpegurl' }
+      });
+    }
+    if (/init\.mp4$|seg\d\.m4s$/.test(url)) return new Response(segment, { headers: { 'content-type': 'video/mp4' } });
+    if (url === 'https://api.audd.io/') return new Response('upstream down', { status: 503 });
+    return new Response('nope', { status: 404 });
+  }, async () => {
+    const request = new Request(`https://site.example/api/track/fingerprint?url=${encodeURIComponent('https://hls.example/fmp4.m3u8')}`);
+    const body = await (await fingerprintGet2({ request, env: { AUDD_API_TOKEN: 't' } })).json();
+    // The init segment was fetched ahead of the media segments...
+    assert.ok(fetchedUrls.some(url => url.endsWith('/init.mp4')), 'init segment must be fetched');
+    // ...and the provider 503 is an outage, never a negative identification.
+    assert.equal(body.found, false);
+    assert.equal(body.providerError, true);
+    assert.match(body.reason, /unavailable/);
+  });
+});

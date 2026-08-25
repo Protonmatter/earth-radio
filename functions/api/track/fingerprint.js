@@ -25,8 +25,10 @@ const RECOGNIZE_TIMEOUT_MS = 15_000;
 const PLAYLIST_MAX_BYTES = 64 * 1024;
 const HLS_SEGMENT_COUNT = 3;
 const MAX_HLS_PLAYLIST_DEPTH = 2;
-const CACHE_TTL_FOUND_S = 90;
-const CACHE_TTL_MISS_S = 45;
+// Positive results must expire before the client's 30s retry cooldown: after a track
+// change, a retry must sample the current audio, not replay the previous song.
+const CACHE_TTL_FOUND_S = 25;
+const CACHE_TTL_MISS_S = 30;
 
 const allowRequest = createRateLimiter({ windowMs: 60_000, max: 6 });
 
@@ -91,11 +93,19 @@ async function identify(streamUrl, providers, env, country) {
   }
 
   let match = null;
+  let providerFailures = 0;
   for (const provider of providers) {
     try {
       match = provider === 'acrcloud' ? await recognizeAcr(sample, env) : await recognizeAudd(sample, env);
       if (match) break;
-    } catch { /* next provider */ }
+    } catch {
+      // Transport/credential failure — try the next configured provider.
+      providerFailures += 1;
+    }
+  }
+  if (!match && providerFailures === providers.length) {
+    // Recognition never completed; report an outage, not a negative identification.
+    return { available: true, found: false, providerError: true, reason: 'fingerprint providers unavailable', sampleBytes: sample.length };
   }
   if (!match) return { available: true, found: false, reason: 'no fingerprint match', sampleBytes: sample.length };
 
@@ -174,10 +184,14 @@ async function sampleHls(playlistText, baseUrl, { deadlineAt, depth }) {
 
   const segments = lines.filter(line => line && !line.startsWith('#')).slice(-HLS_SEGMENT_COUNT);
   if (!segments.length) throw new Error('HLS media playlist has no segments');
-  const perSegmentCap = Math.floor(MAX_SAMPLE_BYTES / segments.length);
+  // Fragmented-MP4 playlists carry decoder metadata in an EXT-X-MAP initialization
+  // segment; without it the recognizers receive an undecodable container.
+  const mapUri = lines.map(line => line.match(/^#EXT-X-MAP:.*URI="([^"]+)"/i)?.[1]).find(Boolean);
+  const fetchList = mapUri ? [new URL(mapUri, baseUrl).toString(), ...segments] : segments;
+  const perSegmentCap = Math.floor(MAX_SAMPLE_BYTES / fetchList.length);
   const parts = [];
   let total = 0;
-  for (const segment of segments) {
+  for (const segment of fetchList) {
     if (Date.now() >= deadlineAt) break;
     try {
       const { response } = await guardedFetch(new URL(segment, baseUrl).toString(), { deadlineAt, headers: { Accept: '*/*', 'User-Agent': USER_AGENT } });
@@ -214,8 +228,12 @@ async function recognizeAcr(sample, env) {
   form.set('sample_bytes', String(sample.length));
   form.set('sample', new Blob([sample]), 'sample.bin');
 
-  const data = await postForm(`https://${host}/v1/identify`, form);
-  if (Number(data?.status?.code) !== 0) return null;
+  const outcome = await postForm(`https://${host}/v1/identify`, form);
+  if (!outcome.ok) throw new Error('acrcloud request failed');
+  const code = Number(outcome.data?.status?.code);
+  if (code !== 0 && code !== 1001) throw new Error(`acrcloud status ${code}`);
+  const data = outcome.data;
+  if (code !== 0) return null;
   const music = data?.metadata?.music?.[0];
   if (!music?.title) return null;
   const spotifyId = music.external_metadata?.spotify?.track?.id || '';
@@ -238,9 +256,11 @@ async function recognizeAudd(sample, env) {
   form.set('return', 'apple_music,spotify');
   form.set('file', new Blob([sample]), 'sample.bin');
 
-  const data = await postForm('https://api.audd.io/', form);
-  if (data?.status !== 'success' || !data?.result?.title) return null;
-  const result = data.result;
+  const outcome = await postForm('https://api.audd.io/', form);
+  if (!outcome.ok) throw new Error('audd request failed');
+  if (outcome.data?.status !== 'success') throw new Error(`audd status ${outcome.data?.status || 'unknown'}`);
+  if (!outcome.data?.result?.title) return null;
+  const result = outcome.data.result;
   return {
     provider: 'audd',
     artist: String(result.artist || ''),
@@ -273,10 +293,10 @@ async function postForm(target, form) {
   const timer = setTimeout(() => controller.abort(), RECOGNIZE_TIMEOUT_MS);
   try {
     const response = await fetch(target, { method: 'POST', signal: controller.signal, body: form, headers: { 'User-Agent': USER_AGENT } });
-    if (!response.ok) return null;
-    return await response.json();
+    if (!response.ok) return { ok: false };
+    return { ok: true, data: await response.json() };
   } catch {
-    return null;
+    return { ok: false };
   } finally {
     clearTimeout(timer);
   }

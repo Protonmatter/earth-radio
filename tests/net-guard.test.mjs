@@ -149,3 +149,60 @@ test('fingerprint sampling succeeds through a public redirect and rejects a priv
     /private/
   );
 });
+
+// --- Second-review regressions: cache TTL, fMP4 init segments, provider outages ---
+
+import { CACHE_TTL_HIT_MS, clearFingerprintCache, identifyByFingerprint } from '../server/fingerprint-providers.mjs';
+
+test('positive fingerprint cache entries expire within the client retry cooldown', () => {
+  assert.ok(CACHE_TTL_HIT_MS <= 30_000, `hit TTL ${CACHE_TTL_HIT_MS}ms must not exceed the 30s client cooldown`);
+});
+
+test('an all-provider outage reports an error, not a negative identification', async () => {
+  clearFingerprintCache();
+  const env = { AUDD_API_TOKEN: 'token' };
+  const sampleImpl = async () => ({ body: Buffer.alloc(64 * 1024, 1), contentType: 'audio/mpeg' });
+  const outage = await identifyByFingerprint({
+    streamUrl: 'https://ice.example.net/outage',
+    env,
+    sampleImpl,
+    recognizeImpl: async () => { throw new Error('audd request failed'); }
+  });
+  assert.equal(outage.found, false);
+  assert.equal(outage.providerError, true);
+  assert.match(outage.reason, /unavailable/);
+
+  clearFingerprintCache();
+  const miss = await identifyByFingerprint({
+    streamUrl: 'https://ice.example.net/quiet',
+    env,
+    sampleImpl,
+    recognizeImpl: async () => null
+  });
+  assert.equal(miss.found, false);
+  assert.equal(miss.providerError, undefined);
+  assert.equal(miss.reason, 'no fingerprint match');
+  clearFingerprintCache();
+});
+
+test('fMP4 HLS sampling prepends the EXT-X-MAP initialization segment', async () => {
+  const initBytes = Buffer.from('INIT-SEGMENT----' + 'i'.repeat(16 * 1024));
+  const mediaBytes = Buffer.from('MEDIA-SEGMENT---' + 'm'.repeat(16 * 1024));
+  const { resolveTarget } = makeResolver();
+  const requestImpl = async url => {
+    if (url.endsWith('/live.m3u8')) {
+      return {
+        statusCode: 200,
+        headers: { 'content-type': 'application/vnd.apple.mpegurl' },
+        body: Buffer.from(''),
+        text: '#EXTM3U\n#EXT-X-MAP:URI="init.mp4"\n#EXTINF:4,\nseg1.m4s\n#EXTINF:4,\nseg2.m4s\n',
+        finalUrl: url
+      };
+    }
+    if (url.endsWith('/init.mp4')) return { statusCode: 200, headers: {}, body: initBytes, text: '', finalUrl: url };
+    return { statusCode: 200, headers: {}, body: mediaBytes, text: '', finalUrl: url };
+  };
+  const sample = await sampleStreamAudio('https://hls.example/live.m3u8', { requestImpl, resolveTarget });
+  assert.ok(sample.body.subarray(0, 12).toString().startsWith('INIT-SEGMENT'), 'sample must begin with the initialization segment');
+  assert.ok(sample.body.length > initBytes.length);
+});

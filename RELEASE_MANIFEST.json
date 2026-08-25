@@ -41,7 +41,7 @@
     {
       "path": "docs/provenance/hardening-overlays.json",
       "bytes": 7168,
-      "sha256": "5ba26803fe7d57fa11e311fe53a038fab040ed8c7184fc43500649786761c12b"
+      "sha256": "2fd4a819d9e2d12c8393a8f3617b0b9ed6879c00ec116c42e3eecc802feee74d"
     },
     {
       "path": "docs/provenance/recovery-manifest.json",
@@ -135,8 +135,8 @@
     },
     {
       "path": "functions/api/track/fingerprint.js",
-      "bytes": 13338,
-      "sha256": "885e2169a7bf78d5026767180dcaaa8b3003393bd94bba81ff51ac0663bb5a68"
+      "bytes": 14659,
+      "sha256": "0dbe30529ea4e56e3774b6bc3bad9428b37a8e03b179fe030071b22063663a14"
     },
     {
       "path": "package-lock.json",
@@ -190,8 +190,8 @@
     },
     {
       "path": "server/fingerprint-providers.mjs",
-      "bytes": 12264,
-      "sha256": "784cdff91bf68f4a872297d9bff73481d4b3affc7033e7102c9a3fed8bc6d5fa"
+      "bytes": 13830,
+      "sha256": "69b6d69b3d676eba2f3cdfdefc18181154cfb990d58739a3736a861901d87114"
     },
     {
       "path": "server/icy-title.mjs",
@@ -260,8 +260,8 @@
     },
     {
       "path": "site/assets/metadata-enrichment.js",
-      "bytes": 58722,
-      "sha256": "9607a37a0970c5a5ff4c96814b113fe29ffd9d3a288f4c883cb78a6bd2e824bc"
+      "bytes": 58833,
+      "sha256": "f05496b88a1eb02b4c740ddf715ad75cd505a25cb05aa1dbab526c74aa985ee0"
     },
     {
       "path": "site/assets/responsive-ui.css",
@@ -650,13 +650,13 @@
     },
     {
       "path": "tests/net-guard.test.mjs",
-      "bytes": 6030,
-      "sha256": "cc864799df467b6cfa7e4f7c672c8aaa80d92fb5f15b469746238ecd61437acf"
+      "bytes": 8537,
+      "sha256": "77c50ec68a09f5030a01991e56b4647351627da099fd5733c0a1b0bac1305c81"
     },
     {
       "path": "tests/pages-functions.test.mjs",
-      "bytes": 13711,
-      "sha256": "553b2171d4008e623cef898ca08de2e5f61df18ea0ab88c6258cffa514af5926"
+      "bytes": 15404,
+      "sha256": "cb0dcfa9545491d5b1e964916cfa3c844ea57c5714a9055a19155fa94549d954"
     },
     {
       "path": "tests/recovery-inventory.test.mjs",
