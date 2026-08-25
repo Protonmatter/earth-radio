@@ -4,6 +4,7 @@ import path from 'node:path';
 import test from 'node:test';
 
 import { createAuthClient } from '../site/assets/auth-core.js';
+import { quiesceSignOut } from '../site/assets/auth-ui.js';
 import {
   accountDataKey, createSyncEngine, mergeFavorites, planLocalAccountTransition,
   shouldResetBrowserAccount, shouldResetLocalAccount, stableStringify
@@ -205,6 +206,68 @@ test('offline sign-out still completes locally so private device data can be cle
 
   assert.equal(storage.getItem('earthRadio.auth.session.v1'), null);
   assert.deepEqual(events, [['SIGNED_OUT', null]]);
+});
+
+test('a stale sign-out cannot clear a cross-tab replacement session', async () => {
+  const storage = memoryStorage();
+  storage.setItem('earthRadio.auth.session.v1', JSON.stringify({
+    access_token: 'a', refresh_token: 'a-refresh', expires_at: 4102444800,
+    user: { id: 'user-a' }
+  }));
+  storage.setItem('earthRadio.auth.pkce.v1', JSON.stringify({ pending: { verifier: 'keep-me' } }));
+  let storageListener;
+  let resolveLogout;
+  const logoutResponse = new Promise(resolve => { resolveLogout = resolve; });
+  const client = createAuthClient({
+    url: 'https://project.supabase.co',
+    publishableKey: 'sb_publishable_test',
+    storage,
+    eventTarget: { addEventListener: (_name, listener) => { storageListener = listener; } },
+    location: { href: 'https://earth-radio.example/', origin: 'https://earth-radio.example', pathname: '/' },
+    fetchImpl: async () => logoutResponse
+  });
+  const events = [];
+  client.onAuthStateChange((event, session) => events.push([event, session?.user?.id]));
+
+  const pending = client.signOut();
+  storage.setItem('earthRadio.auth.session.v1', JSON.stringify({
+    access_token: 'b', refresh_token: 'b-refresh', expires_at: 4102444800,
+    user: { id: 'user-b' }
+  }));
+  storageListener({ key: 'earthRadio.auth.session.v1' });
+  resolveLogout(new Response(null, { status: 204 }));
+  assert.equal(await pending, false);
+
+  assert.equal(JSON.parse(storage.getItem('earthRadio.auth.session.v1')).user.id, 'user-b');
+  assert.ok(storage.getItem('earthRadio.auth.pkce.v1'));
+  assert.deepEqual(events, [['SIGNED_IN', 'user-b']]);
+});
+
+test('sign-out quiesces queued reloads before a slow logout can finish', async () => {
+  let reloadFired = false;
+  let generation = 0;
+  let reloadTimer = setTimeout(() => { reloadFired = true; }, 10);
+  const syncTimer = setInterval(() => {}, 10);
+
+  const nextSyncTimer = quiesceSignOut({
+    cancelReload: () => {
+      clearTimeout(reloadTimer);
+      reloadTimer = null;
+    },
+    syncTimer,
+    invalidateSync: () => { generation += 1; }
+  });
+  await new Promise(resolve => setTimeout(resolve, 30));
+
+  assert.equal(reloadFired, false);
+  assert.equal(reloadTimer, null);
+  assert.equal(nextSyncTimer, null);
+  assert.equal(generation, 1);
+
+  const root = path.resolve(import.meta.dirname, '..');
+  const source = await readFile(path.join(root, 'site', 'assets', 'auth-ui.js'), 'utf8');
+  const handler = source.slice(source.indexOf("signOut.addEventListener('click'"), source.indexOf("const actions = el('div', 'er-auth-actions')"));
+  assert.ok(handler.indexOf('quiesceSignOut') < handler.indexOf('await auth.signOut()'));
 });
 
 test('definitive user validation failure clears the invalid session', async () => {
