@@ -478,7 +478,11 @@ async function boot() {
             signingOut = false;
           }
         }
-        if (!signedOut) return;
+        if (!signedOut) {
+          // A replacement session won the race; reload to reinitialize its namespace and sync loop.
+          location.reload();
+          return;
+        }
         try {
           location.reload();
         } catch (error) {
