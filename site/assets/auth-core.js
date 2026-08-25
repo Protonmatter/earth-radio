@@ -100,12 +100,16 @@ export function createAuthClient({
   }
 
   async function refreshSession() {
+    const refreshSource = session;
+    if (!refreshSource) return null;
     try {
       const refreshed = await request(`${authUrl}/token?grant_type=refresh_token`, {
-        method: 'POST', body: { refresh_token: session.refresh_token }
+        method: 'POST', body: { refresh_token: refreshSource.refresh_token }
       });
+      if (session !== refreshSource) return session;
       return saveSession(refreshed, 'TOKEN_REFRESHED');
     } catch (error) {
+      if (session !== refreshSource) return session;
       if (invalidSessionError(error)) saveSession(null, 'SIGNED_OUT');
       throw error;
     }
