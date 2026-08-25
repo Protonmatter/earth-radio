@@ -131,6 +131,52 @@ export function shouldResetLocalAccount(previousUserId, nextUserId) {
   return Boolean(previousUserId && nextUserId && previousUserId !== nextUserId);
 }
 
+export function accountDataKey(userId, localKey) {
+  if (!userId || !DOCUMENTS.some(document => document.localKey === localKey)) {
+    throw new Error('A user and synchronized local key are required.');
+  }
+  return `account:${encodeURIComponent(String(userId))}:${localKey}`;
+}
+
+export async function transitionLocalAccount({
+  previousUserId,
+  nextUserId,
+  readLocal,
+  writeLocal,
+  defaults
+}) {
+  if (typeof readLocal !== 'function' || typeof writeLocal !== 'function') {
+    throw new Error('Account transition storage dependencies must be functions.');
+  }
+  const previous = previousUserId || null;
+  const next = nextUserId || null;
+  if (previous === next) return { archived: false, restored: false, detached: false };
+
+  if (previous) {
+    for (const { localKey } of DOCUMENTS) {
+      const value = await readLocal(localKey);
+      await writeLocal(accountDataKey(previous, localKey), structuredClone(value ?? defaults[localKey]));
+    }
+  }
+
+  if (!next) {
+    for (const { localKey } of DOCUMENTS) {
+      await writeLocal(localKey, structuredClone(defaults[localKey]));
+    }
+    return { archived: Boolean(previous), restored: false, detached: Boolean(previous) };
+  }
+
+  const saved = await readLocal(accountDataKey(next, DOCUMENTS[0].localKey));
+  if (saved === undefined && !previous) {
+    return { archived: false, restored: false, detached: false };
+  }
+  for (const { localKey } of DOCUMENTS) {
+    const value = await readLocal(accountDataKey(next, localKey));
+    await writeLocal(localKey, structuredClone(value ?? defaults[localKey]));
+  }
+  return { archived: Boolean(previous), restored: saved !== undefined, detached: false };
+}
+
 function normalizeWriteResult(result) {
   if (Array.isArray(result)) return result[0] || null;
   return result || null;
