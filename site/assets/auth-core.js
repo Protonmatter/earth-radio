@@ -264,16 +264,21 @@ export function createAuthClient({
       }
     },
 
-    async rest(path, options = {}) {
+    async rest(path, { expectedUserId, ...options } = {}) {
       const current = await freshSession();
       if (!current) throw new Error('Authentication required.');
+      if (expectedUserId && current.user?.id !== expectedUserId) {
+        const error = new Error('Account changed before the request could be sent.');
+        error.code = 'ACCOUNT_CHANGED';
+        throw error;
+      }
       return request(`${baseUrl}/rest/v1/${path.replace(/^\//, '')}`, {
         ...options, accessToken: current.access_token
       });
     },
 
-    async rpc(name, body) {
-      return this.rest(`rpc/${encodeURIComponent(name)}`, { method: 'POST', body });
+    async rpc(name, body, options = {}) {
+      return this.rest(`rpc/${encodeURIComponent(name)}`, { ...options, method: 'POST', body });
     }
   };
 }
