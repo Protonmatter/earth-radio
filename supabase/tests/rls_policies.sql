@@ -2,7 +2,19 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(18);
+select plan(20);
+
+select ok(
+  to_regprocedure('public.rls_auto_enable()') is null
+    or not has_function_privilege('anon', 'public.rls_auto_enable()', 'EXECUTE'),
+  'anonymous users cannot execute the automatic RLS trigger function'
+);
+
+select ok(
+  to_regprocedure('public.rls_auto_enable()') is null
+    or not has_function_privilege('authenticated', 'public.rls_auto_enable()', 'EXECUTE'),
+  'authenticated users cannot execute the automatic RLS trigger function'
+);
 
 insert into auth.users (
   id, instance_id, aud, role, email, encrypted_password,
