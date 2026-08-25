@@ -5,8 +5,8 @@ import test from 'node:test';
 
 import { createAuthClient } from '../site/assets/auth-core.js';
 import {
-  accountDataKey, createSyncEngine, mergeFavorites, shouldResetLocalAccount,
-  stableStringify, transitionLocalAccount
+  accountDataKey, createSyncEngine, mergeFavorites, planLocalAccountTransition,
+  shouldResetLocalAccount, stableStringify
 } from '../site/assets/sync-core.js';
 
 function memoryStorage() {
@@ -294,32 +294,46 @@ test('account transitions archive offline data and restore each user namespace',
     [accountDataKey('user-b', 'recents'), [{ uuid: 'b' }]],
     [accountDataKey('user-b', 'prefs'), { theme: 'light' }]
   ]);
-  const storage = {
-    readLocal: async key => values.get(key),
-    writeLocal: async (key, value) => values.set(key, value)
-  };
   const defaults = { favorites: {}, recents: [], prefs: { theme: 'system' } };
+  const apply = (previousUserId, nextUserId) => {
+    const current = Object.fromEntries(['favorites', 'recents', 'prefs'].map(key => [key, values.get(key)]));
+    const saved = Object.fromEntries(['favorites', 'recents', 'prefs'].map(key => [
+      key, nextUserId ? values.get(accountDataKey(nextUserId, key)) : undefined
+    ]));
+    const plan = planLocalAccountTransition({
+      previousUserId, nextUserId, current, saved,
+      nextNamespaceExists: Boolean(nextUserId) && values.has(accountDataKey(nextUserId, 'favorites')),
+      defaults
+    });
+    for (const [key, value] of plan.writes) values.set(key, value);
+    return plan;
+  };
 
-  await transitionLocalAccount({
-    previousUserId: 'user-a', nextUserId: 'user-b', ...storage, defaults
-  });
+  apply('user-a', 'user-b');
 
   assert.deepEqual(values.get(accountDataKey('user-a', 'favorites')), { a: { uuid: 'a' } });
   assert.deepEqual(values.get('favorites'), { b: { uuid: 'b' } });
   assert.deepEqual(values.get('recents'), [{ uuid: 'b' }]);
   assert.deepEqual(values.get('prefs'), { theme: 'light' });
 
-  await transitionLocalAccount({
-    previousUserId: 'user-b', nextUserId: null, ...storage, defaults
-  });
+  apply('user-b', null);
   assert.deepEqual(values.get(accountDataKey('user-b', 'favorites')), { b: { uuid: 'b' } });
   assert.deepEqual(values.get('favorites'), {});
 
-  await transitionLocalAccount({
-    previousUserId: null, nextUserId: 'user-a', ...storage, defaults
-  });
+  apply(null, 'user-a');
   assert.deepEqual(values.get('favorites'), { a: { uuid: 'a' } });
   assert.deepEqual(values.get('prefs'), { theme: 'dark' });
+});
+
+test('the browser account switch uses one IndexedDB readwrite transaction', async () => {
+  const root = path.resolve(import.meta.dirname, '..');
+  const source = await readFile(path.join(root, 'site', 'assets', 'auth-ui.js'), 'utf8');
+  const switchBody = source.slice(source.indexOf('async function switchLocalAccount'), source.indexOf('function clearMissingNamespaceSyncState'));
+  assert.match(switchBody, /db\.transaction\('kv', 'readwrite'\)/);
+  assert.match(switchBody, /transaction\.oncomplete/);
+  assert.match(switchBody, /values\.get\(ACTIVE_NAMESPACE_KEY\)/);
+  assert.match(switchBody, /store\.put\(nextUserId \|\| null, ACTIVE_NAMESPACE_KEY\)/);
+  assert.doesNotMatch(switchBody, /await kv\(/);
 });
 
 test('cross-tab session replacement emits the new user before the UI can continue syncing', () => {
@@ -449,6 +463,7 @@ test('production auth excludes Cloudflare preview origins', async () => {
   const supabaseConfig = await readFile(path.join(root, 'supabase', 'config.toml'), 'utf8');
   assert.match(runtimeConfig, /authOriginAllowed/);
   assert.match(runtimeConfig, /https:\/\/earth-radio\.pages\.dev/);
+  assert.doesNotMatch(runtimeConfig, /localhost|127\.0\.0\.1/);
   assert.doesNotMatch(runtimeConfig, /\*\.earth-radio\.pages\.dev/);
   assert.doesNotMatch(supabaseConfig, /\*\.earth-radio\.pages\.dev/);
 });
