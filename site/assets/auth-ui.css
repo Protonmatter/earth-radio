@@ -1,0 +1,72 @@
+.er-auth-button {
+  appearance: none;
+  border: 1px solid color-mix(in srgb, currentColor 24%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface, #fff) 88%, transparent);
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  font-size: .86rem;
+  font-weight: 700;
+  max-width: 13rem;
+  overflow: hidden;
+  padding: .55rem .85rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.er-auth-modal[hidden] { display: none; }
+.er-auth-modal {
+  align-items: center;
+  background: rgb(18 18 28 / .72);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  padding: 1rem;
+  position: fixed;
+  z-index: 10000;
+}
+
+.er-auth-card {
+  background: var(--surface, #fff);
+  border: 1px solid color-mix(in srgb, currentColor 16%, transparent);
+  border-radius: 1rem;
+  box-shadow: 0 1.5rem 4rem rgb(0 0 0 / .32);
+  color: var(--text, #25243d);
+  max-height: min(42rem, calc(100vh - 2rem));
+  max-width: 28rem;
+  overflow: auto;
+  padding: 1.2rem;
+  width: 100%;
+}
+
+.er-auth-heading, .er-auth-actions { align-items: center; display: flex; gap: .75rem; justify-content: space-between; }
+.er-auth-heading h2 { font-size: 1.2rem; margin: 0; }
+.er-auth-close { background: transparent; border: 0; color: inherit; cursor: pointer; font-size: 1.8rem; line-height: 1; }
+.er-auth-copy { color: color-mix(in srgb, currentColor 72%, transparent); line-height: 1.45; }
+.er-auth-providers, .er-auth-identities { display: grid; gap: .6rem; }
+.er-auth-provider, .er-auth-primary, .er-auth-secondary {
+  border: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+  border-radius: .65rem;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+  padding: .75rem .9rem;
+}
+.er-auth-provider, .er-auth-secondary { background: transparent; color: inherit; }
+.er-auth-primary { background: #5b58d6; border-color: #5b58d6; color: #fff; }
+.er-auth-divider { color: color-mix(in srgb, currentColor 55%, transparent); font-size: .82rem; text-align: center; }
+.er-auth-email { display: grid; gap: .6rem; }
+.er-auth-email input { border: 1px solid color-mix(in srgb, currentColor 22%, transparent); border-radius: .65rem; font: inherit; padding: .75rem; }
+.er-auth-sync, .er-auth-linked { background: color-mix(in srgb, #5b58d6 12%, transparent); border-radius: .55rem; display: block; font-size: .85rem; padding: .55rem .7rem; }
+.er-auth-actions { margin-top: 1rem; }
+.er-auth-actions > * { flex: 1; }
+.er-auth-message { min-height: 1.4em; margin-bottom: 0; }
+.er-auth-message[data-kind="error"] { color: #b42318; }
+.er-auth-message[data-kind="success"] { color: #087443; }
+
+@media (max-width: 680px) {
+  .er-auth-button { max-width: 7rem; padding-inline: .65rem; }
+  .er-auth-card { border-radius: 1rem 1rem 0 0; margin-top: auto; max-height: 85vh; }
+  .er-auth-modal { padding: 0; }
+}

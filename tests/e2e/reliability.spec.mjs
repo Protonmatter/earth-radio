@@ -147,3 +147,39 @@ test.describe('semantic country selection', () => {
     expect(codes).toContain('BR');
   });
 });
+
+test.describe('account-scoped backup identity', () => {
+  test('a backup captured under another account never restores into this namespace', async ({ page }) => {
+    await setupApp(page);
+    await playFromList(page, 'E2E Berlin Techno');
+    await page.locator('#btn-favorite').click();
+    await page.waitForFunction(() => Boolean(window.earthRadioStorageGuard));
+    await page.evaluate(() => window.earthRadioStorageGuard.snapshotNow());
+    await page.waitForFunction(() => window.earthRadioStorageGuard.status().hasBackup);
+
+    // Re-label the backup as belonging to a different account, then lose the store.
+    await page.evaluate(() => {
+      const raw = localStorage.getItem('earth-radio-user-backup-v2');
+      const parsed = JSON.parse(raw);
+      parsed.namespace = 'account:someone-else';
+      localStorage.setItem('earth-radio-user-backup-v2', raw && JSON.stringify(parsed));
+      localStorage.removeItem('earth-radio-user-backup-v2-prev');
+      return new Promise(resolve => {
+        const open = indexedDB.open('earthRadio', 1);
+        open.onsuccess = () => {
+          const tx = open.result.transaction('kv', 'readwrite');
+          tx.objectStore('kv').clear();
+          tx.oncomplete = () => { open.result.close(); resolve(true); };
+          tx.onabort = () => resolve(false);
+        };
+        open.onerror = () => resolve(false);
+      });
+    });
+
+    await page.reload();
+    await expect(page.locator('.station-card').first()).toBeVisible({ timeout: 20_000 });
+    await page.waitForTimeout(1200);
+    // The foreign-namespace backup must be rejected: nothing restored.
+    await expect(card(page, 'E2E Berlin Techno').locator('.station-card__favorite--active')).toHaveCount(0);
+  });
+});

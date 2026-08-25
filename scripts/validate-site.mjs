@@ -106,7 +106,9 @@ export async function validateSite(rootInput) {
   for (const relative of files) {
     if (!textExtensions.has(path.extname(relative))) continue;
     const content = await readFile(path.join(root, ...relative.split('/')), 'utf8');
-    if (forbidden.test(content)) errors.push(`Forbidden local reference in ${relative}`);
+    if (forbidden.test(content)) {
+      errors.push(`Forbidden local reference in ${relative}`);
+    }
     if (/[/#@]\s*sourceMappingURL\s*=/i.test(content)) {
       errors.push(`Source map reference is not deployable in ${relative}`);
     }

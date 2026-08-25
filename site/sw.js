@@ -1,4 +1,4 @@
-const CACHE_NAME = 'earth-radio-shell-v27-live-metadata-1';
+const CACHE_NAME = 'earth-radio-shell-v28-live-metadata-auth-1';
 const SHELL_ASSETS = [
   './',
   './index.html',
@@ -14,6 +14,10 @@ const SHELL_ASSETS = [
   './assets/responsive-ui.css',
   './assets/responsive-ui.js',
   './assets/ui-refresh.css',
+  './assets/auth-core.js',
+  './assets/sync-core.js',
+  './assets/auth-ui.js',
+  './assets/auth-ui.css',
   './i18n/index.js',
   './i18n/en.js',
   './i18n/es.js',

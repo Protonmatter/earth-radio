@@ -117,10 +117,10 @@
         "sha256": "c83167f40ae7df3b389e35707b4abac834b10dc223ecb836d7840f90a7ef92a6"
       },
       "current": {
-        "bytes": 2338,
-        "sha256": "0733c62bafbce9a70a97d88d819a1e9602520c3e92c9b224c7ce624a31c785ef"
+        "bytes": 3060,
+        "sha256": "8406d5b3a2891f94e32084aded5140f4a40dfa97e81c600b13dcace7c0f539b6"
       },
-      "reason": "Keep Cloudflare Pages on an empty proxy URL and document that only Electron injects the loopback capability path. Add live-metadata runtime options (platform now-playing, HLS ID3, fingerprint) with metered fingerprinting off unless a proxy provides credentials."
+      "reason": "Keep Cloudflare Pages on an empty proxy URL and document that only Electron injects the loopback capability path. Add live-metadata runtime options (platform now-playing, HLS ID3, fingerprint) with metered fingerprinting off unless a proxy provides credentials. Keep Cloudflare Pages on an empty proxy URL, restrict deployable authentication to the exact production origin, configure the public Supabase project and enabled providers, and load the same-origin account overlay without changing the recovered bundle."
     },
     {
       "path": "site/index.html",
@@ -153,8 +153,8 @@
         "sha256": "b09e3207532fe7f47d14e9c53804d7e8caf31cad2fcb2c652b728a93871ea094"
       },
       "current": {
-        "bytes": 2825,
-        "sha256": "61f04b5ce8328c20e156379e9b2ce0f63c68caf5871cb45deed9f85712c21825"
+        "bytes": 2935,
+        "sha256": "d6141e3b31d4bd606cfe0da006a31a764165ffd865fcd6ed13593baeb968bf6d"
       },
       "reason": "Use network-first navigation/configuration updates, keep hashed recovered assets cache-first, reload installation requests so stale browser HTTP entries cannot seed the new service-worker cache, keep the previous worker when reload precaching fails, and precache the UI refresh stylesheet under cache generation v26. Bump the shell cache generation for the live-metadata overlay update."
     }

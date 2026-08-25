@@ -4,6 +4,7 @@
 const desktopProxyBaseUrl = window.earthRadio && window.earthRadio.isDesktop && typeof window.earthRadio.proxyBaseUrl === 'string'
   ? window.earthRadio.proxyBaseUrl
   : '';
+const authOriginAllowed = window.location.origin === 'https://earth-radio.pages.dev';
 
 window.RADIO_CONFIG = window.RADIO_CONFIG || {
   // Public Cloudflare Pages deployments use browser-direct mode, so this must remain empty.
@@ -19,6 +20,19 @@ window.RADIO_CONFIG = window.RADIO_CONFIG || {
   featuredCountryLimit: 150,
   streamProbeEnabled: true,
   nowPlayingEnabled: true,
+  auth: {
+    // The publishable key is intentionally public; authorization is enforced by RLS.
+    enabled: authOriginAllowed && !(window.earthRadio && window.earthRadio.isDesktop),
+    url: 'https://ueomkorngpgvthqioqns.supabase.co',
+    publishableKey: 'sb_publishable_5oaWYxR0LVs4UHplfnaP6g_ArQQSBa0',
+    providers: {
+      github: true,
+      google: false,
+      apple: false,
+      azure: false
+    },
+    syncIntervalMs: 5000
+  },
   metadataEnrichment: {
     enabled: true,
     iTunesDirectEnabled: true,
@@ -46,3 +60,6 @@ window.RADIO_CONFIG = window.RADIO_CONFIG || {
     fingerprintMinIntervalMs: 30000
   }
 };
+
+// Authentication is an additive overlay so the recovered application bundle remains immutable.
+void import('./assets/auth-ui.js').catch(error => console.warn('Earth Radio account UI:', error));

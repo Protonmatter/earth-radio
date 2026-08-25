@@ -29,11 +29,12 @@ test('service worker refreshes navigations and config while caching only immutab
   assert.doesNotMatch(worker, /cached \|\| fetch\(request\)/);
 });
 
-test('service worker precaches the responsive shell and i18n catalogs under a new cache version', async () => {
+test('service worker precaches the auth, responsive, and i18n shell under a new cache version', async () => {
   const worker = await readFile(path.join(root, 'site', 'sw.js'), 'utf8');
   assert.match(worker, /new Request\(asset, \{ cache: 'reload' \}\)/);
-  assert.match(worker, /earth-radio-shell-v27-live-metadata-1/);
-  assert.doesNotMatch(worker, /earth-radio-shell-v26-ui-refresh-4\b/);
+  assert.match(worker, /earth-radio-shell-v28-live-metadata-auth-1/);
+  assert.doesNotMatch(worker, /earth-radio-shell-v27-live-metadata-1\b/);
+  assert.doesNotMatch(worker, /earth-radio-shell-v27-supabase-auth-1\b/);
   assert.match(worker, /responsive-ui\.js/);
   assert.match(worker, /ui-refresh\.css/);
   assert.match(worker, /i18n\/zh-Hant\.js/);

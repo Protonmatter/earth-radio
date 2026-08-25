@@ -14,7 +14,19 @@ const USER_KEYS = ['favorites', 'recents', 'prefs', 'badStations', 'lastPlayed']
 // while an intentional clear keeps a valid marker — so loss is proven, never inferred
 // from empty application data.
 const GUARD_META_KEY = 'earthRadioGuard:meta';
-const GUARD_NAMESPACE = 'default';
+// Backup identity is scoped to the active account (PR #7 sync): a backup captured
+// under one account must never restore into another account's working keys. Signed-out
+// sessions use the 'default' namespace.
+const ACTIVE_USER_KEY = 'earthRadio.auth.activeUser.v1';
+
+function activeNamespace() {
+  try {
+    const id = localStorage.getItem(ACTIVE_USER_KEY);
+    return id ? `account:${id}` : 'default';
+  } catch {
+    return 'default';
+  }
+}
 const BACKUP_KEY = 'earth-radio-user-backup-v2';
 const BACKUP_PREV_KEY = 'earth-radio-user-backup-v2-prev';
 const RESTORE_FLAG_KEY = 'earth-radio-user-restore-attempted-v1';
@@ -103,7 +115,7 @@ function readBackup(storageKey) {
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     if (!parsed || parsed.v !== 2 || typeof parsed.payload !== 'string') return null;
-    if (parsed.namespace !== GUARD_NAMESPACE) return null;
+    if (parsed.namespace !== activeNamespace()) return null;
     if (checksum(parsed.payload) !== parsed.checksum) return null;
     const data = JSON.parse(parsed.payload);
     if (!data || typeof data !== 'object') return null;
@@ -115,7 +127,7 @@ function readBackup(storageKey) {
 
 function isValidGuardMeta(meta) {
   return Boolean(meta && meta.schemaVersion === 1 && Number.isFinite(Number(meta.generation)) &&
-    Number(meta.generation) > 0 && meta.namespace === GUARD_NAMESPACE);
+    Number(meta.generation) > 0 && meta.namespace === activeNamespace());
 }
 
 function readBestBackup() {
@@ -144,7 +156,7 @@ function writeBackup(data, generation) {
     localStorage.setItem(BACKUP_KEY, JSON.stringify({
       v: 2,
       schemaVersion: 1,
-      namespace: GUARD_NAMESPACE,
+      namespace: activeNamespace(),
       generation,
       committedAt: Date.now(),
       checksum: checksum(payload),
@@ -165,7 +177,7 @@ async function snapshot(db) {
   if (!isValidGuardMeta(meta)) return false;
   const { data } = await readUserRecords(db);
   const generation = Number(meta.generation) + 1;
-  const nextMeta = { schemaVersion: 1, generation, committedAt: Date.now(), namespace: GUARD_NAMESPACE };
+  const nextMeta = { schemaVersion: 1, generation, committedAt: Date.now(), namespace: activeNamespace() };
   if (!(await idbSet(db, GUARD_META_KEY, nextMeta))) return false;
   writeBackup(data, generation);
   return true;
@@ -193,7 +205,7 @@ async function restoreIfLost(db) {
   if (!backup) {
     // Fresh profile (no marker, no backup): establish generation 1 so future
     // snapshots run and future loss is provable.
-    await idbSet(db, GUARD_META_KEY, { schemaVersion: 1, generation: 1, committedAt: Date.now(), namespace: GUARD_NAMESPACE });
+    await idbSet(db, GUARD_META_KEY, { schemaVersion: 1, generation: 1, committedAt: Date.now(), namespace: activeNamespace() });
     return false;
   }
 
@@ -214,7 +226,7 @@ async function restoreIfLost(db) {
       if (backup.data[key] === undefined) continue;
       if (await idbSet(db, key, backup.data[key])) wrote = true;
     }
-    await idbSet(db, GUARD_META_KEY, { schemaVersion: 1, generation: Number(backup.generation) || 1, committedAt: Date.now(), namespace: GUARD_NAMESPACE });
+    await idbSet(db, GUARD_META_KEY, { schemaVersion: 1, generation: Number(backup.generation) || 1, committedAt: Date.now(), namespace: activeNamespace() });
     if (round === 0) await new Promise(resolve => setTimeout(resolve, 350));
   }
   if (!wrote) return false;
