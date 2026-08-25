@@ -103,13 +103,10 @@ export async function validateSite(rootInput) {
   }
   const textExtensions = new Set(['.html', '.js', '.css', '.json', '.webmanifest', '.svg', '']);
   const forbidden = /localhost|127\.0\.0\.1|file:\/\/|[A-Za-z]:\\Users\\/i;
-  const allowedAuthOrigins = "const authOriginAllowed = ['https://earth-radio.pages.dev', 'http://localhost:8788'].includes(window.location.origin);";
   for (const relative of files) {
     if (!textExtensions.has(path.extname(relative))) continue;
     const content = await readFile(path.join(root, ...relative.split('/')), 'utf8');
-    const declarationCount = relative === 'config.js' ? content.split(allowedAuthOrigins).length - 1 : 0;
-    const deployableContent = declarationCount === 1 ? content.replace(allowedAuthOrigins, '') : content;
-    if (forbidden.test(deployableContent)) {
+    if (forbidden.test(content)) {
       errors.push(`Forbidden local reference in ${relative}`);
     }
     if (/[/#@]\s*sourceMappingURL\s*=/i.test(content)) {
