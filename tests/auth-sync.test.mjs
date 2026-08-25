@@ -243,6 +243,59 @@ test('a stale sign-out cannot clear a cross-tab replacement session', async () =
   assert.deepEqual(events, [['SIGNED_IN', 'user-b']]);
 });
 
+test('concurrent sign-out reports success when another tab already cleared the session', async () => {
+  const storage = memoryStorage();
+  storage.setItem('earthRadio.auth.session.v1', JSON.stringify({
+    access_token: 'a', refresh_token: 'a-refresh', expires_at: 4102444800,
+    user: { id: 'user-a' }
+  }));
+  let storageListener;
+  let resolveLogout;
+  const logoutResponse = new Promise(resolve => { resolveLogout = resolve; });
+  const client = createAuthClient({
+    url: 'https://project.supabase.co', publishableKey: 'sb_publishable_test', storage,
+    eventTarget: { addEventListener: (_name, listener) => { storageListener = listener; } },
+    location: { href: 'https://earth-radio.example/', origin: 'https://earth-radio.example', pathname: '/' },
+    fetchImpl: async () => logoutResponse
+  });
+
+  const pending = client.signOut();
+  storage.removeItem('earthRadio.auth.session.v1');
+  storageListener({ key: 'earthRadio.auth.session.v1' });
+  resolveLogout(new Response(null, { status: 204 }));
+
+  assert.equal(await pending, true);
+  assert.equal(storage.getItem('earthRadio.auth.session.v1'), null);
+});
+
+test('same-user cross-tab refresh is preserved during sign-out', async () => {
+  const storage = memoryStorage();
+  storage.setItem('earthRadio.auth.session.v1', JSON.stringify({
+    access_token: 'old', refresh_token: 'old-refresh', expires_at: 4102444800,
+    user: { id: 'user-a' }
+  }));
+  let storageListener;
+  let resolveLogout;
+  const logoutResponse = new Promise(resolve => { resolveLogout = resolve; });
+  const client = createAuthClient({
+    url: 'https://project.supabase.co', publishableKey: 'sb_publishable_test', storage,
+    eventTarget: { addEventListener: (_name, listener) => { storageListener = listener; } },
+    location: { href: 'https://earth-radio.example/', origin: 'https://earth-radio.example', pathname: '/' },
+    fetchImpl: async () => logoutResponse
+  });
+
+  const pending = client.signOut();
+  storage.setItem('earthRadio.auth.session.v1', JSON.stringify({
+    access_token: 'new', refresh_token: 'new-refresh', expires_at: 4102444800,
+    user: { id: 'user-a' }
+  }));
+  storageListener({ key: 'earthRadio.auth.session.v1' });
+  resolveLogout(new Response(null, { status: 204 }));
+
+  assert.equal(await pending, false);
+  assert.equal(JSON.parse(storage.getItem('earthRadio.auth.session.v1')).access_token, 'new');
+});
+
 test('sign-out quiesces queued reloads before a slow logout can finish', async () => {
   let reloadFired = false;
   let generation = 0;
@@ -268,6 +321,7 @@ test('sign-out quiesces queued reloads before a slow logout can finish', async (
   const source = await readFile(path.join(root, 'site', 'assets', 'auth-ui.js'), 'utf8');
   const handler = source.slice(source.indexOf("signOut.addEventListener('click'"), source.indexOf("const actions = el('div', 'er-auth-actions')"));
   assert.ok(handler.indexOf('quiesceSignOut') < handler.indexOf('await auth.signOut()'));
+  assert.match(handler, /if \(!signedOut\)[\s\S]*location\.reload\(\)[\s\S]*return/);
 });
 
 test('definitive user validation failure clears the invalid session', async () => {
