@@ -45,12 +45,26 @@ test('validateSite permits only the bounded localhost auth development origin', 
   const root = await mkdtemp(path.join(os.tmpdir(), 'earth-radio-auth-dev-site-'));
   try {
     await createSite(root, {
-      config: "const authOrigins=['https://earth-radio.pages.dev','http://localhost:8788']; window.RADIO_CONFIG={proxyBaseUrl: desktopProxyBaseUrl || '',authOrigins};"
+      config: "const authOriginAllowed = ['https://earth-radio.pages.dev', 'http://localhost:8788'].includes(window.location.origin); window.RADIO_CONFIG={proxyBaseUrl: desktopProxyBaseUrl || '',authOriginAllowed};"
     });
     const result = await validateSite(root);
     assert.equal(result.ok, true);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
+
+for (const [label, unsafeConfig] of [
+  ['Supabase auth URL', "const authOriginAllowed = ['https://earth-radio.pages.dev', 'http://localhost:8788'].includes(window.location.origin); window.RADIO_CONFIG={proxyBaseUrl: desktopProxyBaseUrl || '',auth:{url:'http://localhost:8788'}};"],
+  ['generic API URL', "const authOriginAllowed = ['https://earth-radio.pages.dev', 'http://localhost:8788'].includes(window.location.origin); window.RADIO_CONFIG={proxyBaseUrl: desktopProxyBaseUrl || '',apiUrl:'http://localhost:8788/api'};"],
+  ['executable request', "const authOriginAllowed = ['https://earth-radio.pages.dev', 'http://localhost:8788'].includes(window.location.origin); fetch('http://localhost:8788/internal'); window.RADIO_CONFIG={proxyBaseUrl: desktopProxyBaseUrl || ''};"]
+]) {
+  test(`validateSite rejects localhost in ${label} outside the exact auth declaration`, async () => {
+    const root = await mkdtemp(path.join(os.tmpdir(), 'earth-radio-local-exception-site-'));
+    try {
+      await createSite(root, { config: unsafeConfig });
+      await assert.rejects(() => validateSite(root), /forbidden local reference/i);
+    } finally { await rm(root, { recursive: true, force: true }); }
+  });
+}
 
 test('validateSite still rejects the permitted auth origin when used as a proxy endpoint', async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), 'earth-radio-local-proxy-site-'));
@@ -154,4 +168,3 @@ test('validateSite rejects immutable caching on a versionless file outside asset
     );
   } finally { await rm(root, { recursive: true, force: true }); }
 });
-
