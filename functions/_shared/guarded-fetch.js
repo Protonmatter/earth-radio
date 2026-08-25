@@ -52,10 +52,13 @@ export function rejectFetchUrl(rawUrl) {
 // encoded loopback like http://2130706433/ cannot slip past the literal checks.
 function ipv4From(host) {
   const lower = String(host || '').toLowerCase();
-  const mapped = lower.match(/^::(?:ffff:)?(\d{1,3}(?:\.\d{1,3}){3})$/);
+  // Mapped/compatible prefixes plus the NAT64 translation prefixes (RFC 6052
+  // 64:ff9b::/96 well-known, RFC 8215 64:ff9b:1:: local-use) embed IPv4 in the
+  // final 32 bits.
+  const mapped = lower.match(/^(?:::(?:ffff:)?|64:ff9b::|64:ff9b:1::)(\d{1,3}(?:\.\d{1,3}){3})$/);
   // WHATWG URL canonicalizes bracketed IPv4-mapped IPv6 into hex words
   // ([::ffff:127.0.0.1] -> ::ffff:7f00:1), so cover that form too.
-  const hexMapped = lower.match(/^::(?:ffff:)?([0-9a-f]{1,4}):([0-9a-f]{1,4})$/);
+  const hexMapped = lower.match(/^(?:::(?:ffff:)?|64:ff9b::|64:ff9b:1::)([0-9a-f]{1,4}):([0-9a-f]{1,4})$/);
   if (!mapped && hexMapped) {
     const high = Number.parseInt(hexMapped[1], 16);
     const low = Number.parseInt(hexMapped[2], 16);

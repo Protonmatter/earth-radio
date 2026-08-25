@@ -282,3 +282,12 @@ test('trusted feed results own the panel only for their freshness window', async
   const overlay = await readFile(path.resolve(import.meta.dirname, '..', 'site', 'assets', 'metadata-enrichment.js'), 'utf8');
   assert.match(overlay, /trustExpiryTimer = setTimeout\(scheduleProcess/);
 });
+
+test('provider-supplied link URLs are restricted to web schemes', async () => {
+  const { safeLinkHref } = await import('../site/assets/metadata-enrichment.js');
+  assert.equal(safeLinkHref('https://open.spotify.com/track/abc'), 'https://open.spotify.com/track/abc');
+  assert.equal(safeLinkHref('http://music.example/x'), 'http://music.example/x');
+  assert.equal(safeLinkHref('javascript:alert(1)'), '');
+  assert.equal(safeLinkHref('data:text/html,<script>1</script>'), '');
+  assert.equal(safeLinkHref(''), '');
+});

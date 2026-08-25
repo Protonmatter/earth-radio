@@ -51,7 +51,7 @@
     {
       "path": "docs/provenance/hardening-overlays.json",
       "bytes": 7795,
-      "sha256": "d89a925d364b9347f7017883b80f3d355b21f9a2574c320c671df45d526a74e7"
+      "sha256": "fe306e514122e7a00439f84ab9086251fe39011af78ef400f5fe525c02b84e10"
     },
     {
       "path": "docs/provenance/recovery-manifest.json",
@@ -145,8 +145,8 @@
     },
     {
       "path": "functions/_shared/guarded-fetch.js",
-      "bytes": 7889,
-      "sha256": "eb85af8ed67c5d3692b123e649a2293a33f2c3a678ac36bf7938d30c46871cf2"
+      "bytes": 8119,
+      "sha256": "722deddad6180513e147c4e25cd56056d88fb72000643cca33903cf37de3a091"
     },
     {
       "path": "functions/api/nowplaying.js",
@@ -230,8 +230,8 @@
     },
     {
       "path": "server/net-guard.mjs",
-      "bytes": 9290,
-      "sha256": "98538f5ba36ca916e8e505f2e3b0967dde2e99f4a60581553e1c036d69a78e53"
+      "bytes": 9597,
+      "sha256": "dcc3dad0238f65e935a0ce0c477a77762dfecb3e7937e13cc63f16bb3cc5c375"
     },
     {
       "path": "server/platform-detect.mjs",
@@ -295,8 +295,8 @@
     },
     {
       "path": "site/assets/metadata-enrichment.js",
-      "bytes": 61221,
-      "sha256": "9443ed1231a1b00033747882a3d8e5bcc1b6c79de6cfd8753b7a47d5f526676c"
+      "bytes": 61603,
+      "sha256": "e0de698ded10cb9839a144c650ff47bd2224cc3e74b9270e587a950148cbc28d"
     },
     {
       "path": "site/assets/responsive-ui.css",
@@ -690,18 +690,18 @@
     },
     {
       "path": "tests/live-metadata.test.mjs",
-      "bytes": 13029,
-      "sha256": "493d2e236ecf7d9fee90f4a275116653f2e800c1219db67166c111adad820c36"
+      "bytes": 13550,
+      "sha256": "bfd997ac1e2f29e1f03e5acb16ddc684d2b9014752dea874cd66e5df214cccbe"
     },
     {
       "path": "tests/net-guard.test.mjs",
-      "bytes": 9782,
-      "sha256": "7d146b60dba4ba52b4c0bdb4f690890de5e53f716987e689c0eb00ec0073958e"
+      "bytes": 11445,
+      "sha256": "b7e5f1ca91f0e8474370eeebde89c849f7a0cb7111a2dea5967d687ef19cfc9c"
     },
     {
       "path": "tests/pages-functions.test.mjs",
-      "bytes": 16111,
-      "sha256": "38801b4a24dac085e7a053f14c7f7ef59b4cdb9e136df0d024de1809bdb3cc9c"
+      "bytes": 16537,
+      "sha256": "4b9a59f564362f493da4149438de91feff7b4e2f4b5dadf78e55344ac4cf7b78"
     },
     {
       "path": "tests/recovery-inventory.test.mjs",

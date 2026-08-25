@@ -200,9 +200,12 @@ export function isPrivateIp(address) {
 export function ipv4FromMappedOrCompatibleIpv6(address) {
   const lower = String(address || '').toLowerCase().split('%', 1)[0];
   if (!lower.includes(':')) return '';
-  const dotted = lower.match(/^(?:::ffff:|::)(\d{1,3}(?:\.\d{1,3}){3})$/);
+  // Mapped (::ffff:), compatible (::), and NAT64 translation prefixes — the RFC 6052
+  // well-known 64:ff9b::/96 and RFC 8215 local-use 64:ff9b:1:: form — all embed an
+  // IPv4 address in the final 32 bits; a NAT64 route would deliver it to that IPv4.
+  const dotted = lower.match(/^(?:::ffff:|::|64:ff9b::|64:ff9b:1::)(\d{1,3}(?:\.\d{1,3}){3})$/);
   if (dotted && net.isIP(dotted[1]) === 4) return dotted[1];
-  const hexadecimal = lower.match(/^::(?:ffff:)?([0-9a-f]{1,4}):([0-9a-f]{1,4})$/);
+  const hexadecimal = lower.match(/^(?:::(?:ffff:)?|64:ff9b::|64:ff9b:1::)([0-9a-f]{1,4}):([0-9a-f]{1,4})$/);
   if (!hexadecimal) return '';
   const high = Number.parseInt(hexadecimal[1], 16);
   const low = Number.parseInt(hexadecimal[2], 16);

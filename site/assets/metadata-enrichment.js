@@ -554,9 +554,18 @@ function detailRow(term, value) {
   return [dt, dd];
 }
 
+// Provider-supplied URLs become clickable hrefs; only web schemes are acceptable
+// (a compromised provider response must never deliver javascript:/data: links).
+// Pure and exported for unit tests.
+export function safeLinkHref(url) {
+  const candidate = String(url || '');
+  return /^https?:\/\//i.test(candidate) ? candidate : '';
+}
+
 function link(label, url) {
   const a = document.createElement('a');
-  a.href = url;
+  const href = safeLinkHref(url);
+  if (href) a.href = href;
   a.target = '_blank';
   a.rel = 'noopener noreferrer';
   a.textContent = label;

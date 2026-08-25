@@ -253,3 +253,13 @@ test('requestLimited sends the default EarthRadio user agent unless overridden',
   assert.match(seen[0], /^EarthRadio\/0\.24\.0/, 'playlist and probe requests identify the client by default');
   assert.equal(seen[1], 'custom/1.0', 'caller-supplied user agents are preserved');
 });
+
+test('NAT64 translation prefixes with embedded private IPv4 are rejected', async () => {
+  const { ipv4FromMappedOrCompatibleIpv6, isPrivateIp } = await import('../server/net-guard.mjs');
+  assert.equal(ipv4FromMappedOrCompatibleIpv6('64:ff9b::7f00:1'), '127.0.0.1');
+  assert.equal(ipv4FromMappedOrCompatibleIpv6('64:ff9b::127.0.0.1'), '127.0.0.1');
+  assert.equal(ipv4FromMappedOrCompatibleIpv6('64:ff9b:1::a9fe:a9fe'), '169.254.169.254');
+  assert.equal(isPrivateIp('64:ff9b::7f00:1'), true);
+  // The well-known prefix around a public IPv4 stays public.
+  assert.equal(isPrivateIp('64:ff9b::808:808'), false);
+});

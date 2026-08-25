@@ -342,3 +342,10 @@ test('a stalled body read cannot outlive the wall-clock deadline', async () => {
   assert.ok(elapsed < 1500, `stalled read must end at the deadline, took ${elapsed}ms`);
   assert.equal(bytes.length, 8, 'the partial body read before the stall is returned');
 });
+
+test('Pages guard rejects NAT64-embedded private IPv4 literals', () => {
+  assert.equal(rejectFetchUrl('http://[64:ff9b::7f00:1]/x'), 'private hosts are blocked');
+  assert.equal(rejectFetchUrl('http://[64:ff9b::127.0.0.1]/x'), 'private hosts are blocked');
+  assert.equal(rejectFetchUrl('http://[64:ff9b:1::a9fe:a9fe]/x'), 'private hosts are blocked');
+  assert.equal(rejectFetchUrl('http://[64:ff9b::808:808]/x'), '');
+});
