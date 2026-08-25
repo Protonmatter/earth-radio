@@ -1,7 +1,7 @@
 import { createAuthClient } from './auth-core.js';
 import {
   accountDataKey, createSyncEngine, planLocalAccountTransition,
-  shouldResetBrowserAccount, shouldResetLocalAccount, stableStringify, syncDocuments
+  shouldResetBrowserAccount, stableStringify, syncDocuments
 } from './sync-core.js';
 
 const ACTIVE_USER_KEY = 'earthRadio.auth.activeUser.v1';
@@ -138,6 +138,7 @@ async function switchLocalAccount(previousUserId, nextUserId) {
             nextNamespaceExists: Boolean(nextUserId) && values.get(accountDataKey(nextUserId, syncDocuments[0].localKey)) !== undefined,
             defaults: DEFAULT_LOCAL_DATA
           });
+          result = { ...result, namespaceMissing: storedNamespace === undefined };
           for (const [keyToWrite, value] of result.writes) store.put(value, keyToWrite);
           store.put(nextUserId || null, ACTIVE_NAMESPACE_KEY);
         };
@@ -149,14 +150,24 @@ async function switchLocalAccount(previousUserId, nextUserId) {
 }
 
 function clearMissingNamespaceSyncState(userId, transition) {
-  if (userId && !transition.restored && !transition.unchanged) {
+  if (userId && (transition.namespaceMissing || (!transition.restored && !transition.unchanged))) {
     for (const { localKey } of syncDocuments) localStorage.removeItem(syncStateKey(userId, localKey));
   }
 }
 
 async function boot() {
   const config = window.RADIO_CONFIG?.auth;
-  if (!config?.enabled) return;
+  if (!config?.enabled) {
+    const activeUserId = localStorage.getItem(ACTIVE_USER_KEY);
+    try {
+      const transition = await switchLocalAccount(activeUserId, null);
+      localStorage.removeItem(ACTIVE_USER_KEY);
+      if (activeUserId || transition.detached) location.reload();
+    } catch (error) {
+      console.warn('Earth Radio account detach:', error);
+    }
+    return;
+  }
 
   const stylesheet = document.createElement('link');
   stylesheet.rel = 'stylesheet';
@@ -469,21 +480,22 @@ async function boot() {
     if (session) {
       const previousUserId = localStorage.getItem(ACTIVE_USER_KEY);
       const nextUserId = session.user.id;
-      if (shouldResetLocalAccount(previousUserId, nextUserId)) {
+      const transition = await switchLocalAccount(previousUserId, nextUserId);
+      clearMissingNamespaceSyncState(nextUserId, transition);
+      localStorage.setItem(ACTIVE_USER_KEY, nextUserId);
+      if (transition.archived || transition.restored) {
         syncGeneration += 1;
-        const transition = await switchLocalAccount(previousUserId, nextUserId);
-        clearMissingNamespaceSyncState(nextUserId, transition);
-        localStorage.setItem(ACTIVE_USER_KEY, nextUserId);
         location.reload();
         return;
       }
-      if (!previousUserId) {
-        const transition = await switchLocalAccount(null, nextUserId);
-        clearMissingNamespaceSyncState(nextUserId, transition);
+      try { await refreshUser(); }
+      catch (error) {
+        if (resettingSession) return;
+        syncStatus = navigator.onLine ? 'Syncing · profile unavailable' : 'Offline';
+        console.warn('Earth Radio account profile:', error);
+        render();
       }
-      localStorage.setItem(ACTIVE_USER_KEY, nextUserId);
-      await refreshUser();
-      startSync();
+      if (session && !resettingSession) startSync();
     }
   } catch (error) {
     authInitialized = true;
