@@ -274,14 +274,20 @@ export function createAuthClient({
 
     async signOut() {
       const current = session;
+      let signedOut = false;
       try {
         if (current) await request(`${authUrl}/logout`, { method: 'POST', accessToken: current.access_token });
       } catch {
         // Remote revocation is best-effort. Local sign-out and account-data cleanup must still finish offline.
       } finally {
-        saveSession(null, 'SIGNED_OUT');
-        storage.removeItem(PKCE_KEY);
+        // A different tab may have installed a replacement session while revocation was in flight.
+        if (session === current) {
+          saveSession(null, 'SIGNED_OUT');
+          storage.removeItem(PKCE_KEY);
+          signedOut = true;
+        }
       }
+      return signedOut;
     },
 
     async rest(path, { expectedUserId, ...options } = {}) {
