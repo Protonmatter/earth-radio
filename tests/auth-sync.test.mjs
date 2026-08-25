@@ -4,7 +4,10 @@ import path from 'node:path';
 import test from 'node:test';
 
 import { createAuthClient } from '../site/assets/auth-core.js';
-import { createSyncEngine, mergeFavorites, shouldResetLocalAccount, stableStringify } from '../site/assets/sync-core.js';
+import {
+  accountDataKey, createSyncEngine, mergeFavorites, shouldResetLocalAccount,
+  stableStringify, transitionLocalAccount
+} from '../site/assets/sync-core.js';
 
 function memoryStorage() {
   const values = new Map();
@@ -280,6 +283,67 @@ test('account boundaries reset local synced data only when switching known users
   assert.equal(shouldResetLocalAccount(null, 'user-a'), false);
   assert.equal(shouldResetLocalAccount('user-a', 'user-a'), false);
   assert.equal(shouldResetLocalAccount('user-a', 'user-b'), true);
+});
+
+test('account transitions archive offline data and restore each user namespace', async () => {
+  const values = new Map([
+    ['favorites', { a: { uuid: 'a' } }],
+    ['recents', [{ uuid: 'a' }]],
+    ['prefs', { theme: 'dark' }],
+    [accountDataKey('user-b', 'favorites'), { b: { uuid: 'b' } }],
+    [accountDataKey('user-b', 'recents'), [{ uuid: 'b' }]],
+    [accountDataKey('user-b', 'prefs'), { theme: 'light' }]
+  ]);
+  const storage = {
+    readLocal: async key => values.get(key),
+    writeLocal: async (key, value) => values.set(key, value)
+  };
+  const defaults = { favorites: {}, recents: [], prefs: { theme: 'system' } };
+
+  await transitionLocalAccount({
+    previousUserId: 'user-a', nextUserId: 'user-b', ...storage, defaults
+  });
+
+  assert.deepEqual(values.get(accountDataKey('user-a', 'favorites')), { a: { uuid: 'a' } });
+  assert.deepEqual(values.get('favorites'), { b: { uuid: 'b' } });
+  assert.deepEqual(values.get('recents'), [{ uuid: 'b' }]);
+  assert.deepEqual(values.get('prefs'), { theme: 'light' });
+
+  await transitionLocalAccount({
+    previousUserId: 'user-b', nextUserId: null, ...storage, defaults
+  });
+  assert.deepEqual(values.get(accountDataKey('user-b', 'favorites')), { b: { uuid: 'b' } });
+  assert.deepEqual(values.get('favorites'), {});
+
+  await transitionLocalAccount({
+    previousUserId: null, nextUserId: 'user-a', ...storage, defaults
+  });
+  assert.deepEqual(values.get('favorites'), { a: { uuid: 'a' } });
+  assert.deepEqual(values.get('prefs'), { theme: 'dark' });
+});
+
+test('cross-tab session replacement emits the new user before the UI can continue syncing', () => {
+  const storage = memoryStorage();
+  storage.setItem('earthRadio.auth.session.v1', JSON.stringify({
+    access_token: 'a', refresh_token: 'a', expires_at: 4102444800, user: { id: 'user-a' }
+  }));
+  let storageListener;
+  const client = createAuthClient({
+    url: 'https://project.supabase.co',
+    publishableKey: 'sb_publishable_test',
+    storage,
+    eventTarget: { addEventListener: (_name, listener) => { storageListener = listener; } },
+    location: { href: 'https://earth-radio.example/', origin: 'https://earth-radio.example', pathname: '/' }
+  });
+  const events = [];
+  client.onAuthStateChange((event, session) => events.push([event, session?.user?.id]));
+  storage.setItem('earthRadio.auth.session.v1', JSON.stringify({
+    access_token: 'b', refresh_token: 'b', expires_at: 4102444800, user: { id: 'user-b' }
+  }));
+
+  storageListener({ key: 'earthRadio.auth.session.v1' });
+
+  assert.deepEqual(events, [['SIGNED_IN', 'user-b']]);
 });
 
 test('three-way sync does not resurrect a locally deleted favorite', async () => {
