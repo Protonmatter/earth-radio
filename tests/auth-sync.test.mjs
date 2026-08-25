@@ -346,6 +346,72 @@ test('cross-tab session replacement emits the new user before the UI can continu
   assert.deepEqual(events, [['SIGNED_IN', 'user-b']]);
 });
 
+test('an in-flight refresh cannot overwrite a cross-tab replacement session', async () => {
+  const storage = memoryStorage();
+  storage.setItem('earthRadio.auth.session.v1', JSON.stringify({
+    access_token: 'a-old', refresh_token: 'a-refresh', expires_at: 1, user: { id: 'user-a' }
+  }));
+  let storageListener;
+  let resolveRefresh;
+  const refreshResponse = new Promise(resolve => { resolveRefresh = resolve; });
+  const client = createAuthClient({
+    url: 'https://project.supabase.co',
+    publishableKey: 'sb_publishable_test',
+    storage,
+    eventTarget: { addEventListener: (_name, listener) => { storageListener = listener; } },
+    location: { href: 'https://earth-radio.example/', origin: 'https://earth-radio.example', pathname: '/' },
+    fetchImpl: async () => refreshResponse
+  });
+  const events = [];
+  client.onAuthStateChange((event, session) => events.push([event, session?.user?.id]));
+  const pending = client.getSession();
+  storage.setItem('earthRadio.auth.session.v1', JSON.stringify({
+    access_token: 'b', refresh_token: 'b-refresh', expires_at: 4102444800, user: { id: 'user-b' }
+  }));
+  storageListener({ key: 'earthRadio.auth.session.v1' });
+  resolveRefresh(jsonResponse({
+    access_token: 'a-new', refresh_token: 'a-refresh', expires_in: 3600, user: { id: 'user-a' }
+  }));
+
+  const session = await pending;
+
+  assert.equal(session.user.id, 'user-b');
+  assert.equal(JSON.parse(storage.getItem('earthRadio.auth.session.v1')).user.id, 'user-b');
+  assert.deepEqual(events, [['SIGNED_IN', 'user-b']]);
+});
+
+test('a stale failed refresh cannot sign out a cross-tab replacement session', async () => {
+  const storage = memoryStorage();
+  storage.setItem('earthRadio.auth.session.v1', JSON.stringify({
+    access_token: 'a-old', refresh_token: 'a-refresh', expires_at: 1, user: { id: 'user-a' }
+  }));
+  let storageListener;
+  let resolveRefresh;
+  const refreshResponse = new Promise(resolve => { resolveRefresh = resolve; });
+  const client = createAuthClient({
+    url: 'https://project.supabase.co',
+    publishableKey: 'sb_publishable_test',
+    storage,
+    eventTarget: { addEventListener: (_name, listener) => { storageListener = listener; } },
+    location: { href: 'https://earth-radio.example/', origin: 'https://earth-radio.example', pathname: '/' },
+    fetchImpl: async () => refreshResponse
+  });
+  const events = [];
+  client.onAuthStateChange((event, session) => events.push([event, session?.user?.id]));
+  const pending = client.getSession();
+  storage.setItem('earthRadio.auth.session.v1', JSON.stringify({
+    access_token: 'b', refresh_token: 'b-refresh', expires_at: 4102444800, user: { id: 'user-b' }
+  }));
+  storageListener({ key: 'earthRadio.auth.session.v1' });
+  resolveRefresh(jsonResponse({ error: 'invalid refresh token' }, 401));
+
+  const session = await pending;
+
+  assert.equal(session.user.id, 'user-b');
+  assert.equal(JSON.parse(storage.getItem('earthRadio.auth.session.v1')).user.id, 'user-b');
+  assert.deepEqual(events, [['SIGNED_IN', 'user-b']]);
+});
+
 test('three-way sync does not resurrect a locally deleted favorite', async () => {
   const base = { station: { uuid: 'station', addedAt: '2026-01-01T00:00:00Z' } };
   const local = { favorites: {}, recents: undefined, prefs: undefined };
