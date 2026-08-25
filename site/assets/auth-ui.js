@@ -1,7 +1,7 @@
 import { createAuthClient } from './auth-core.js';
 import {
   accountDataKey, createSyncEngine, planLocalAccountTransition,
-  shouldResetLocalAccount, syncDocuments
+  shouldResetBrowserAccount, shouldResetLocalAccount, syncDocuments
 } from './sync-core.js';
 
 const ACTIVE_USER_KEY = 'earthRadio.auth.activeUser.v1';
@@ -32,16 +32,36 @@ function openDatabase() {
   });
 }
 
-async function kv(operation, key, value) {
+function accountChangedError() {
+  const error = new Error('Account changed while synchronization was running.');
+  error.code = 'ACCOUNT_CHANGED';
+  return error;
+}
+
+async function accountKv(operation, key, value, userId) {
   const db = await openDatabase();
   try {
     return await new Promise((resolve, reject) => {
       const transaction = db.transaction('kv', operation === 'get' ? 'readonly' : 'readwrite');
-      const request = operation === 'get'
-        ? transaction.objectStore('kv').get(key)
-        : transaction.objectStore('kv').put(value, key);
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
+      const store = transaction.objectStore('kv');
+      let result;
+      let failure;
+      transaction.oncomplete = () => resolve(result);
+      transaction.onerror = () => reject(failure || transaction.error || new Error('Account storage access failed.'));
+      transaction.onabort = () => reject(failure || transaction.error || new Error('Account storage access aborted.'));
+      const namespaceRequest = store.get(ACTIVE_NAMESPACE_KEY);
+      namespaceRequest.onerror = () => reject(namespaceRequest.error);
+      namespaceRequest.onsuccess = () => {
+        const storedNamespace = namespaceRequest.result || null;
+        if (storedNamespace !== userId) {
+          failure = accountChangedError();
+          transaction.abort();
+          return;
+        }
+        const request = operation === 'get' ? store.get(key) : store.put(value, key);
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => { result = request.result; };
+      };
     });
   } finally {
     db.close();
@@ -187,7 +207,8 @@ async function boot() {
     if (nextSession?.user?.id) {
       const nextUserId = nextSession.user.id;
       const activeUserId = localStorage.getItem(ACTIVE_USER_KEY);
-      if (shouldResetLocalAccount(activeUserId, nextUserId)) {
+      const tabUserId = session?.user?.id;
+      if (shouldResetBrowserAccount(activeUserId, tabUserId, nextUserId)) {
         syncGeneration += 1;
         if (syncTimer) clearInterval(syncTimer);
         syncTimer = null;
@@ -217,14 +238,27 @@ async function boot() {
       const generation = syncGeneration;
       const assertActive = () => {
         if (generation !== syncGeneration || session?.user?.id !== userId) {
-          const error = new Error('Account changed while synchronization was running.');
-          error.code = 'ACCOUNT_CHANGED';
-          throw error;
+          throw accountChangedError();
         }
       };
+      const assertActiveNamespace = async () => {
+        assertActive();
+        await accountKv('get', ACTIVE_NAMESPACE_KEY, undefined, userId);
+        assertActive();
+      };
       const engine = createSyncEngine({
-        readLocal: async key => { assertActive(); return kv('get', key); },
-        writeLocal: async (key, value) => { assertActive(); return kv('put', key, value); },
+        readLocal: async key => {
+          assertActive();
+          const value = await accountKv('get', key, undefined, userId);
+          assertActive();
+          return value;
+        },
+        writeLocal: async (key, value) => {
+          assertActive();
+          const result = await accountKv('put', key, value, userId);
+          assertActive();
+          return result;
+        },
         readState: async key => {
           assertActive();
           try { return JSON.parse(localStorage.getItem(syncStateKey(userId, key))); }
@@ -235,20 +269,23 @@ async function boot() {
           localStorage.setItem(syncStateKey(userId, key), JSON.stringify(value));
         },
         fetchRemote: async () => {
-          assertActive();
-          const rows = await auth.rest('user_config_documents?select=document_key,value,revision,deleted_at&order=document_key');
-          assertActive();
+          await assertActiveNamespace();
+          const rows = await auth.rest(
+            'user_config_documents?select=document_key,value,revision,deleted_at&order=document_key',
+            { expectedUserId: userId }
+          );
+          await assertActiveNamespace();
           return rows;
         },
         upsertRemote: async ({ documentKey, value, expectedRevision, deleteDocument }) => {
-          assertActive();
+          await assertActiveNamespace();
           const row = await auth.rpc('upsert_user_config_document', {
             p_document_key: documentKey,
             p_value: deleteDocument ? null : value,
             p_expected_revision: expectedRevision,
             p_delete: deleteDocument
-          });
-          assertActive();
+          }, { expectedUserId: userId });
+          await assertActiveNamespace();
           return row;
         }
       });
