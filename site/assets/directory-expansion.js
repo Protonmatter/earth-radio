@@ -19,8 +19,11 @@ const COUNTRY_LIST_BASES = [
 
 // One serialized/coalescing refresh scheduler: new ISO codes join the config
 // immediately, and each refresh snapshots the latest persisted set just before it
-// runs, so a stale earlier completion can never be the terminal state.
-const REFRESH_WINDOW_MS = 8000;
+// runs, so a stale earlier completion can never be the terminal state. Each cycle
+// ends on the runtime's earthradio:stations-load-settled event (dispatched from
+// loadStations' finally block, success and failure alike); the timer below is only
+// a fallback for a runtime that never settles (e.g. a stale cached bundle).
+const REFRESH_FALLBACK_MS = 12000;
 const expansion = { indexPromise: null, refreshing: false, queued: false };
 
 function radioConfig() {
@@ -150,14 +153,20 @@ function scheduleRefresh() {
   }
   expansion.refreshing = true;
   applyCodes([...new Set([...currentCodes(), ...readPersistedCodes()])].slice(0, MAX_TOTAL_COUNTRY_CODES));
-  document.getElementById('refresh-stations')?.click();
-  setTimeout(() => {
+  let fallback = 0;
+  const settle = () => {
+    if (!expansion.refreshing) return;
+    window.removeEventListener('earthradio:stations-load-settled', settle);
+    clearTimeout(fallback);
     expansion.refreshing = false;
     if (expansion.queued) {
       expansion.queued = false;
       scheduleRefresh();
     }
-  }, REFRESH_WINDOW_MS);
+  };
+  fallback = setTimeout(settle, REFRESH_FALLBACK_MS);
+  window.addEventListener('earthradio:stations-load-settled', settle);
+  document.getElementById('refresh-stations')?.click();
 }
 
 function countryFromEventTarget(target) {
