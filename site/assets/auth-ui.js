@@ -1,5 +1,12 @@
 import { createAuthClient } from './auth-core.js';
-import { createSyncEngine } from './sync-core.js';
+import { createSyncEngine, shouldResetLocalAccount, syncDocuments } from './sync-core.js';
+
+const ACTIVE_USER_KEY = 'earthRadio.auth.activeUser.v1';
+const DEFAULT_LOCAL_DATA = Object.freeze({
+  favorites: {},
+  recents: [],
+  prefs: { secureOnly: false, minQuality: 0, volume: 0.8, theme: 'system', locale: 'en' }
+});
 
 const PROVIDERS = Object.freeze({
   github: { label: 'GitHub' },
@@ -54,6 +61,15 @@ function syncStateKey(userId, localKey) {
   return `earthRadio.sync.${userId}.${localKey}.v1`;
 }
 
+async function clearLocalSyncData(userId) {
+  for (const [key, value] of Object.entries(DEFAULT_LOCAL_DATA)) {
+    await kv('put', key, structuredClone(value));
+  }
+  if (userId) {
+    for (const { localKey } of syncDocuments) localStorage.removeItem(syncStateKey(userId, localKey));
+  }
+}
+
 async function boot() {
   const config = window.RADIO_CONFIG?.auth;
   if (!config?.enabled) return;
@@ -69,6 +85,8 @@ async function boot() {
   let syncTimer = null;
   let syncing = false;
   let syncStatus = 'Local only';
+  let signingOut = false;
+  let resettingSession = false;
 
   const button = el('button', 'er-auth-button', 'Sign in');
   button.type = 'button';
@@ -95,6 +113,27 @@ async function boot() {
     target.textContent = text;
     target.dataset.kind = kind;
   }
+
+  async function resetSignedOutSession(userId) {
+    if (resettingSession) return;
+    resettingSession = true;
+    if (syncTimer) clearInterval(syncTimer);
+    syncTimer = null;
+    session = null;
+    user = null;
+    await clearLocalSyncData(userId);
+    localStorage.removeItem(ACTIVE_USER_KEY);
+    location.reload();
+  }
+
+  auth.onAuthStateChange((event, nextSession) => {
+    session = nextSession;
+    if (event === 'SIGNED_OUT' && !signingOut) {
+      void resetSignedOutSession(localStorage.getItem(ACTIVE_USER_KEY));
+      return;
+    }
+    render();
+  });
 
   async function runSync() {
     if (!session || syncing) return;
@@ -136,6 +175,10 @@ async function boot() {
     } catch (error) {
       syncStatus = navigator.onLine ? 'Sync paused' : 'Offline';
       console.warn('Earth Radio account sync:', error);
+      if (error?.status === 401 || error?.status === 403) {
+        await resetSignedOutSession(session?.user?.id || localStorage.getItem(ACTIVE_USER_KEY));
+        return;
+      }
     } finally {
       syncing = false;
       render();
@@ -233,14 +276,21 @@ async function boot() {
       signOut.type = 'button';
       signOut.addEventListener('click', async () => {
         try {
+          const userId = session?.user?.id;
+          signingOut = true;
           await auth.signOut();
+          await clearLocalSyncData(userId);
+          localStorage.removeItem(ACTIVE_USER_KEY);
           session = null;
           user = null;
           syncStatus = 'Local only';
           if (syncTimer) clearInterval(syncTimer);
           syncTimer = null;
-          render();
-        } catch (error) { message(error.message, 'error'); }
+          location.reload();
+        } catch (error) {
+          signingOut = false;
+          message(error.message, 'error');
+        }
       });
       const actions = el('div', 'er-auth-actions');
       actions.append(syncNow, signOut);
@@ -267,6 +317,15 @@ async function boot() {
   try {
     session = await auth.initialize();
     if (session) {
+      const previousUserId = localStorage.getItem(ACTIVE_USER_KEY);
+      const nextUserId = session.user.id;
+      if (shouldResetLocalAccount(previousUserId, nextUserId)) {
+        await clearLocalSyncData(nextUserId);
+        localStorage.setItem(ACTIVE_USER_KEY, nextUserId);
+        location.reload();
+        return;
+      }
+      localStorage.setItem(ACTIVE_USER_KEY, nextUserId);
       await refreshUser();
       startSync();
     }

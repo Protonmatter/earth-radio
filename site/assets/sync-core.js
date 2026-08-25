@@ -1,7 +1,19 @@
 const DOCUMENTS = Object.freeze([
-  { localKey: 'favorites', documentKey: 'favorites', merge: mergeFavorites },
-  { localKey: 'recents', documentKey: 'recents', merge: mergeRecents },
-  { localKey: 'prefs', documentKey: 'preferences', merge: mergePreferences }
+  {
+    localKey: 'favorites', documentKey: 'favorites', merge: mergeFavorites,
+    mergeConcurrent: mergeFavoritesThreeWay
+  },
+  {
+    localKey: 'recents', documentKey: 'recents', merge: mergeRecents,
+    mergeConcurrent: mergeRecentsThreeWay
+  },
+  {
+    localKey: 'prefs',
+    documentKey: 'preferences',
+    merge: mergePreferences,
+    mergeConcurrent: mergePreferencesThreeWay,
+    mergeInitial: (_local, remote) => remote
+  }
 ]);
 
 export function stableStringify(value) {
@@ -14,7 +26,42 @@ export function stableStringify(value) {
 function newer(left, right, property) {
   const leftTime = Date.parse(left?.[property] || '') || 0;
   const rightTime = Date.parse(right?.[property] || '') || 0;
-  return rightTime >= leftTime ? right : left;
+  if (rightTime !== leftTime) return rightTime > leftTime ? right : left;
+  return stableStringify(right) > stableStringify(left) ? right : left;
+}
+
+function has(object, key) {
+  return object != null && Object.prototype.hasOwnProperty.call(object, key);
+}
+
+function mergeMapThreeWay(base = {}, local = {}, remote = {}, timestampProperty) {
+  const merged = {};
+  const keys = new Set([...Object.keys(base || {}), ...Object.keys(local || {}), ...Object.keys(remote || {})]);
+  for (const key of [...keys].sort()) {
+    const baseHas = has(base, key);
+    const localHas = has(local, key);
+    const remoteHas = has(remote, key);
+    const baseValue = baseHas ? base[key] : undefined;
+    const localValue = localHas ? local[key] : undefined;
+    const remoteValue = remoteHas ? remote[key] : undefined;
+    const localChanged = localHas !== baseHas || stableStringify(localValue) !== stableStringify(baseValue);
+    const remoteChanged = remoteHas !== baseHas || stableStringify(remoteValue) !== stableStringify(baseValue);
+
+    if (localChanged && remoteChanged) {
+      if (localHas && remoteHas) merged[key] = newer(localValue, remoteValue, timestampProperty);
+      continue; // An explicit deletion wins over a concurrent update.
+    }
+    if (localChanged) {
+      if (localHas) merged[key] = localValue;
+      continue;
+    }
+    if (remoteChanged) {
+      if (remoteHas) merged[key] = remoteValue;
+      continue;
+    }
+    if (baseHas) merged[key] = baseValue;
+  }
+  return merged;
 }
 
 export function mergeFavorites(local = {}, remote = {}) {
@@ -23,6 +70,10 @@ export function mergeFavorites(local = {}, remote = {}) {
     merged[id] = id in merged ? newer(merged[id], entry, 'addedAt') : entry;
   }
   return merged;
+}
+
+export function mergeFavoritesThreeWay(base = {}, local = {}, remote = {}) {
+  return mergeMapThreeWay(base, local, remote, 'addedAt');
 }
 
 export function mergeRecents(local = [], remote = []) {
@@ -37,11 +88,47 @@ export function mergeRecents(local = [], remote = []) {
     .slice(0, 50);
 }
 
+function recentsById(entries) {
+  return Object.fromEntries((Array.isArray(entries) ? entries : [])
+    .filter(entry => entry?.stationuuid || entry?.uuid)
+    .map(entry => [entry.stationuuid || entry.uuid, entry]));
+}
+
+export function mergeRecentsThreeWay(base = [], local = [], remote = []) {
+  const merged = mergeMapThreeWay(recentsById(base), recentsById(local), recentsById(remote), 'playedAt');
+  return Object.values(merged)
+    .sort((left, right) => (Date.parse(right?.playedAt || '') || 0) - (Date.parse(left?.playedAt || '') || 0))
+    .slice(0, 50);
+}
+
 export function mergePreferences(local = {}, remote = {}) {
   return {
     ...(remote && typeof remote === 'object' ? remote : {}),
     ...(local && typeof local === 'object' ? local : {})
   };
+}
+
+export function mergePreferencesThreeWay(base = {}, local = {}, remote = {}) {
+  const merged = {};
+  const keys = new Set([...Object.keys(base || {}), ...Object.keys(local || {}), ...Object.keys(remote || {})]);
+  for (const key of [...keys].sort()) {
+    const baseHas = has(base, key);
+    const localHas = has(local, key);
+    const remoteHas = has(remote, key);
+    const baseValue = baseHas ? base[key] : undefined;
+    const localChanged = localHas !== baseHas || stableStringify(local[key]) !== stableStringify(baseValue);
+    const remoteChanged = remoteHas !== baseHas || stableStringify(remote[key]) !== stableStringify(baseValue);
+    if (localChanged) {
+      if (localHas) merged[key] = local[key];
+    } else if (remoteChanged) {
+      if (remoteHas) merged[key] = remote[key];
+    } else if (baseHas) merged[key] = baseValue;
+  }
+  return merged;
+}
+
+export function shouldResetLocalAccount(previousUserId, nextUserId) {
+  return Boolean(previousUserId && nextUserId && previousUserId !== nextUserId);
 }
 
 function normalizeWriteResult(result) {
@@ -62,7 +149,7 @@ export function createSyncEngine({
   }
 
   async function remember(localKey, revision, value) {
-    await writeState(localKey, { revision, hash: stableStringify(value) });
+    await writeState(localKey, { revision, hash: stableStringify(value), value });
   }
 
   async function push(document, value, expectedRevision) {
@@ -109,7 +196,7 @@ export function createSyncEngine({
             result.downloaded += 1;
             continue;
           }
-          const merged = document.merge(local, remoteValue);
+          const merged = (document.mergeInitial || document.merge)(local, remoteValue);
           const mergedHash = stableStringify(merged);
           if (mergedHash !== localHash) {
             await writeLocal(document.localKey, merged);
@@ -129,7 +216,10 @@ export function createSyncEngine({
         const remoteChanged = remoteRevision !== Number(state.revision) || remoteHash !== state.hash;
 
         if (localChanged && remoteChanged) {
-          const merged = document.merge(local, remoteValue);
+          const hasBase = Object.prototype.hasOwnProperty.call(state, 'value');
+          const merged = hasBase && document.mergeConcurrent
+            ? document.mergeConcurrent(state.value, local, remoteValue)
+            : document.merge(local, remoteValue);
           await writeLocal(document.localKey, merged);
           const written = await push(document, merged, remoteRevision);
           result.conflicts += 1;

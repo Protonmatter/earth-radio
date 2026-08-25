@@ -1,8 +1,10 @@
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+import path from 'node:path';
 import test from 'node:test';
 
 import { createAuthClient } from '../site/assets/auth-core.js';
-import { createSyncEngine, mergeFavorites, stableStringify } from '../site/assets/sync-core.js';
+import { createSyncEngine, mergeFavorites, shouldResetLocalAccount, stableStringify } from '../site/assets/sync-core.js';
 
 function memoryStorage() {
   const values = new Map();
@@ -43,13 +45,19 @@ test('OAuth sign-in uses PKCE and stores only the verifier locally', async () =>
   assert.equal(url.searchParams.get('provider'), 'github');
   assert.equal(url.searchParams.get('code_challenge_method'), 's256');
   assert.ok(url.searchParams.get('code_challenge'));
-  assert.ok(storage.getItem('earthRadio.auth.pkce.v1'));
-  assert.doesNotMatch(storage.getItem('earthRadio.auth.pkce.v1'), /challenge/i);
+  const redirect = new URL(url.searchParams.get('redirect_to'));
+  const flowId = redirect.searchParams.get('er_auth_flow');
+  const flows = JSON.parse(storage.getItem('earthRadio.auth.pkce.v1'));
+  assert.ok(flowId);
+  assert.ok(flows[flowId].verifier);
+  assert.equal(Object.keys(flows).length, 1);
 });
 
 test('OAuth callback exchanges the code, persists the session, and cleans the URL', async () => {
   const storage = memoryStorage();
-  storage.setItem('earthRadio.auth.pkce.v1', 'verifier-value');
+  storage.setItem('earthRadio.auth.pkce.v1', JSON.stringify({
+    'flow-1': { verifier: 'verifier-value', createdAt: Date.now() }
+  }));
   const requests = [];
   const replaced = [];
   const client = createAuthClient({
@@ -57,10 +65,10 @@ test('OAuth callback exchanges the code, persists the session, and cleans the UR
     publishableKey: 'sb_publishable_test',
     storage,
     location: {
-      href: 'https://earth-radio.example/?code=oauth-code&domain=world',
+      href: 'https://earth-radio.example/?code=oauth-code&er_auth_flow=flow-1&domain=world',
       origin: 'https://earth-radio.example',
       pathname: '/',
-      search: '?code=oauth-code&domain=world',
+      search: '?code=oauth-code&er_auth_flow=flow-1&domain=world',
       hash: ''
     },
     history: { replaceState: (_state, _title, url) => replaced.push(url) },
@@ -84,6 +92,48 @@ test('OAuth callback exchanges the code, persists the session, and cleans the UR
   assert.equal(storage.getItem('earthRadio.auth.pkce.v1'), null);
   assert.ok(storage.getItem('earthRadio.auth.session.v1'));
   assert.equal(replaced[0], '/?domain=world');
+});
+
+test('parallel OAuth starts retain independent PKCE verifiers', async () => {
+  const storage = memoryStorage();
+  const assigned = [];
+  const client = createAuthClient({
+    url: 'https://project.supabase.co',
+    publishableKey: 'sb_publishable_test',
+    storage,
+    location: {
+      href: 'https://earth-radio.example/', origin: 'https://earth-radio.example', pathname: '/',
+      assign: url => assigned.push(url)
+    }
+  });
+
+  await client.signInWithOAuth('github');
+  await client.signInWithOAuth('google');
+
+  const flows = JSON.parse(storage.getItem('earthRadio.auth.pkce.v1'));
+  assert.equal(Object.keys(flows).length, 2);
+  const flowIds = assigned.map(value => new URL(new URL(value).searchParams.get('redirect_to')).searchParams.get('er_auth_flow'));
+  assert.equal(new Set(flowIds).size, 2);
+  assert.ok(flowIds.every(flowId => flows[flowId]?.verifier));
+});
+
+test('transient refresh failures retain and restore the offline session', async () => {
+  const storage = memoryStorage();
+  storage.setItem('earthRadio.auth.session.v1', JSON.stringify({
+    access_token: 'expired-access', refresh_token: 'still-valid', expires_at: 1,
+    user: { id: 'user-1' }
+  }));
+  const client = createAuthClient({
+    url: 'https://project.supabase.co',
+    publishableKey: 'sb_publishable_test',
+    storage,
+    location: { href: 'https://earth-radio.example/', origin: 'https://earth-radio.example', pathname: '/' },
+    fetchImpl: async () => { throw new TypeError('offline'); }
+  });
+
+  const session = await client.initialize();
+  assert.equal(session.user.id, 'user-1');
+  assert.ok(storage.getItem('earthRadio.auth.session.v1'));
 });
 
 test('identity linking is authorized with the current access token', async () => {
@@ -178,4 +228,75 @@ test('sync downloads a remote-only change and resolves concurrent favorites by u
   assert.deepEqual(Object.keys(local.favorites).sort(), ['local', 'remote']);
   assert.equal(pushes[0].expectedRevision, 2);
   assert.deepEqual(Object.keys(pushes[0].value).sort(), ['local', 'remote']);
+});
+
+test('first sync keeps established remote preferences over this device defaults', async () => {
+  const local = { prefs: { theme: 'system', volume: 0.8 } };
+  const state = {};
+  const pushes = [];
+  const engine = createSyncEngine({
+    readLocal: async key => local[key],
+    writeLocal: async (key, value) => { local[key] = value; },
+    readState: async key => state[key] ?? null,
+    writeState: async (key, value) => { state[key] = value; },
+    fetchRemote: async () => [{
+      document_key: 'preferences', revision: 7,
+      value: { theme: 'dark', volume: 0.3 }, deleted_at: null
+    }],
+    upsertRemote: async input => { pushes.push(input); return null; }
+  });
+
+  const result = await engine.syncOnce();
+
+  assert.deepEqual(local.prefs, { theme: 'dark', volume: 0.3 });
+  assert.equal(result.downloaded, 1);
+  assert.equal(pushes.length, 0);
+  assert.equal(state.prefs.revision, 7);
+});
+
+test('account boundaries reset local synced data only when switching known users', () => {
+  assert.equal(shouldResetLocalAccount(null, 'user-a'), false);
+  assert.equal(shouldResetLocalAccount('user-a', 'user-a'), false);
+  assert.equal(shouldResetLocalAccount('user-a', 'user-b'), true);
+});
+
+test('three-way sync does not resurrect a locally deleted favorite', async () => {
+  const base = { station: { uuid: 'station', addedAt: '2026-01-01T00:00:00Z' } };
+  const local = { favorites: {}, recents: undefined, prefs: undefined };
+  const state = {
+    favorites: { revision: 1, hash: stableStringify(base), value: base }
+  };
+  const pushes = [];
+  const engine = createSyncEngine({
+    readLocal: async key => local[key],
+    writeLocal: async (key, value) => { local[key] = value; },
+    readState: async key => state[key] ?? null,
+    writeState: async (key, value) => { state[key] = value; },
+    fetchRemote: async () => [{
+      document_key: 'favorites', revision: 2,
+      value: { ...base, other: { uuid: 'other', addedAt: '2026-02-01T00:00:00Z' } },
+      deleted_at: null
+    }],
+    upsertRemote: async input => {
+      pushes.push(input);
+      return { document_key: input.documentKey, revision: 3, value: input.value, deleted_at: null };
+    }
+  });
+
+  const result = await engine.syncOnce();
+
+  assert.equal(result.conflicts, 1);
+  assert.deepEqual(Object.keys(local.favorites), ['other']);
+  assert.deepEqual(Object.keys(pushes[0].value), ['other']);
+  assert.deepEqual(state.favorites.value, pushes[0].value);
+});
+
+test('production auth excludes Cloudflare preview origins', async () => {
+  const root = path.resolve(import.meta.dirname, '..');
+  const runtimeConfig = await readFile(path.join(root, 'site', 'config.js'), 'utf8');
+  const supabaseConfig = await readFile(path.join(root, 'supabase', 'config.toml'), 'utf8');
+  assert.match(runtimeConfig, /authOriginAllowed/);
+  assert.match(runtimeConfig, /https:\/\/earth-radio\.pages\.dev/);
+  assert.doesNotMatch(runtimeConfig, /\*\.earth-radio\.pages\.dev/);
+  assert.doesNotMatch(supabaseConfig, /\*\.earth-radio\.pages\.dev/);
 });
