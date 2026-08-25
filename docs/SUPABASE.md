@@ -17,9 +17,10 @@ The web client syncs the existing IndexedDB `favorites`, `recents`, and `prefs` 
 the generic configuration documents `favorites`, `recents`, and `preferences`. First-device
 data is uploaded. Remote-only changes are downloaded. Concurrent favorites and recents are
 merged by station; concurrent preferences keep the current device's explicitly stored fields.
-Production authentication is enabled only on `https://earth-radio.pages.dev` (and the explicit
-localhost development origin). Cloudflare preview origins are intentionally excluded from the
-Supabase redirect allowlist and the client feature gate.
+Production authentication is enabled only on `https://earth-radio.pages.dev`. Local development
+can inject a runtime auth configuration before `config.js`; the explicit localhost callback remains
+in the Supabase redirect allowlist. Cloudflare preview origins are excluded from both production
+configuration and the redirect allowlist.
 
 ## Apply and verify
 
