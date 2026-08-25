@@ -138,43 +138,39 @@ export function accountDataKey(userId, localKey) {
   return `account:${encodeURIComponent(String(userId))}:${localKey}`;
 }
 
-export async function transitionLocalAccount({
+export function planLocalAccountTransition({
   previousUserId,
   nextUserId,
-  readLocal,
-  writeLocal,
+  current,
+  saved,
+  nextNamespaceExists,
   defaults
 }) {
-  if (typeof readLocal !== 'function' || typeof writeLocal !== 'function') {
-    throw new Error('Account transition storage dependencies must be functions.');
-  }
   const previous = previousUserId || null;
   const next = nextUserId || null;
-  if (previous === next) return { archived: false, restored: false, detached: false };
+  const writes = [];
+  if (previous === next) return { writes, archived: false, restored: false, detached: false, unchanged: true };
 
   if (previous) {
     for (const { localKey } of DOCUMENTS) {
-      const value = await readLocal(localKey);
-      await writeLocal(accountDataKey(previous, localKey), structuredClone(value ?? defaults[localKey]));
+      writes.push([accountDataKey(previous, localKey), structuredClone(current[localKey] ?? defaults[localKey])]);
     }
   }
 
   if (!next) {
     for (const { localKey } of DOCUMENTS) {
-      await writeLocal(localKey, structuredClone(defaults[localKey]));
+      writes.push([localKey, structuredClone(defaults[localKey])]);
     }
-    return { archived: Boolean(previous), restored: false, detached: Boolean(previous) };
+    return { writes, archived: Boolean(previous), restored: false, detached: Boolean(previous), unchanged: false };
   }
 
-  const saved = await readLocal(accountDataKey(next, DOCUMENTS[0].localKey));
-  if (saved === undefined && !previous) {
-    return { archived: false, restored: false, detached: false };
+  if (!nextNamespaceExists && !previous) {
+    return { writes, archived: false, restored: false, detached: false, unchanged: false };
   }
   for (const { localKey } of DOCUMENTS) {
-    const value = await readLocal(accountDataKey(next, localKey));
-    await writeLocal(localKey, structuredClone(value ?? defaults[localKey]));
+    writes.push([localKey, structuredClone(saved[localKey] ?? defaults[localKey])]);
   }
-  return { archived: Boolean(previous), restored: saved !== undefined, detached: false };
+  return { writes, archived: Boolean(previous), restored: Boolean(nextNamespaceExists), detached: false, unchanged: false };
 }
 
 function normalizeWriteResult(result) {
