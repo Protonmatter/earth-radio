@@ -135,7 +135,7 @@ async function boot() {
       void resetSignedOutSession(localStorage.getItem(ACTIVE_USER_KEY));
       return;
     }
-    if (event === 'SIGNED_IN' && nextSession?.user?.id) {
+    if (nextSession?.user?.id) {
       const nextUserId = nextSession.user.id;
       const activeUserId = localStorage.getItem(ACTIVE_USER_KEY);
       if (shouldResetLocalAccount(activeUserId, nextUserId)) {
