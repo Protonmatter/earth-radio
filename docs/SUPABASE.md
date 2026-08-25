@@ -56,6 +56,7 @@ the account dialog. Do not automatically link identities based solely on an unve
 ## Rollback
 
 Disable `site/config.js` `auth.enabled` to stop new browser auth and sync without deleting
-user data. Disable an individual provider in both the client configuration and Supabase before
+user data. On the next load, the account overlay archives the active local namespace and detaches
+the shared working keys before it exits. Disable an individual provider in both the client configuration and Supabase before
 revoking its provider credentials. Database rollback should use a new forward migration;
 never delete auth or user tables as an emergency rollback.
