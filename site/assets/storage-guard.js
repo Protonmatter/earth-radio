@@ -29,6 +29,16 @@ function activeNamespace() {
 }
 const BACKUP_KEY = 'earth-radio-user-backup-v2';
 const BACKUP_PREV_KEY = 'earth-radio-user-backup-v2-prev';
+
+// Each account namespace owns its own current/previous backup generations: sharing
+// two global keys would let account B's snapshots rotate account A's generations
+// away, leaving A unrestorable after eviction. The signed-out 'default' namespace
+// keeps the legacy unsuffixed keys so pre-existing backups stay readable. Exported
+// for unit tests.
+export function backupStorageKeys(namespace) {
+  const suffix = namespace && namespace !== 'default' ? `:${namespace}` : '';
+  return { current: `${BACKUP_KEY}${suffix}`, previous: `${BACKUP_PREV_KEY}${suffix}` };
+}
 const RESTORE_FLAG_KEY = 'earth-radio-user-restore-attempted-v1';
 const SNAPSHOT_INTERVAL_MS = 20 * 1000;
 
@@ -138,7 +148,8 @@ function isValidGuardMeta(meta) {
 }
 
 function readBestBackup() {
-  return readBackup(BACKUP_KEY) || readBackup(BACKUP_PREV_KEY);
+  const keys = backupStorageKeys(activeNamespace());
+  return readBackup(keys.current) || readBackup(keys.previous);
 }
 
 // "Substance" = records the user would miss: favorites, listening history, last station.
@@ -157,10 +168,11 @@ function writeBackup(data, generation) {
   const payload = JSON.stringify(data);
   if (payload === guard.lastSerialized) return;
   try {
+    const keys = backupStorageKeys(activeNamespace());
     // Keep the previous good generation so a torn write of the primary never loses both.
-    const current = localStorage.getItem(BACKUP_KEY);
-    if (current && readBackup(BACKUP_KEY)) localStorage.setItem(BACKUP_PREV_KEY, current);
-    localStorage.setItem(BACKUP_KEY, JSON.stringify({
+    const current = localStorage.getItem(keys.current);
+    if (current && readBackup(keys.current)) localStorage.setItem(keys.previous, current);
+    localStorage.setItem(keys.current, JSON.stringify({
       v: 2,
       schemaVersion: 1,
       namespace: activeNamespace(),

@@ -16,6 +16,7 @@
 
 import { guardedFetch, readBodyCapped, rejectFetchUrl } from '../../_shared/guarded-fetch.js';
 import { identifyTrack } from '../../../server/metadata-providers.mjs';
+import { parseMapSegment, parseMediaSegments, rangeHeaderFor } from '../../../server/hls-segments.mjs';
 
 const USER_AGENT = 'EarthRadio/0.24.0 pages-fn (+https://github.com/Protonmatter/EarthRadio)';
 const SAMPLE_SECONDS = 12;
@@ -24,6 +25,9 @@ const MIN_SAMPLE_BYTES = 96 * 1024;
 const MAX_SAMPLE_BYTES = 1024 * 1024;
 const DEFAULT_BITRATE_KBPS = 160;
 const SAMPLE_TIMEOUT_MS = 20_000;
+// One budget for the whole request (sampling + every provider): the browser aborts
+// at 45s, so the route must always answer inside that.
+const TOTAL_FINGERPRINT_BUDGET_MS = 40_000;
 const RECOGNIZE_TIMEOUT_MS = 15_000;
 const PLAYLIST_MAX_BYTES = 64 * 1024;
 const HLS_SEGMENT_COUNT = 3;
@@ -77,10 +81,11 @@ function configuredProviders(env = {}) {
   return providers;
 }
 
-async function identify(streamUrl, providers, env, country, forbiddenOrigins = []) {
+export async function identify(streamUrl, providers, env, country, forbiddenOrigins = [], { budgetMs = TOTAL_FINGERPRINT_BUDGET_MS } = {}) {
+  const deadlineAt = Date.now() + budgetMs;
   let sample;
   try {
-    sample = await sampleStream(streamUrl, forbiddenOrigins);
+    sample = await sampleStream(streamUrl, forbiddenOrigins, deadlineAt);
   } catch (error) {
     return { available: true, found: false, reason: `stream sampling failed: ${error?.message || 'unknown error'}` };
   }
@@ -91,8 +96,18 @@ async function identify(streamUrl, providers, env, country, forbiddenOrigins = [
   let match = null;
   let providerFailures = 0;
   for (const provider of providers) {
+    // Recognition shares the route budget with sampling: a stalled first provider
+    // must leave the next one only the remaining time, never a fresh full timeout.
+    const remaining = deadlineAt - Date.now();
+    if (remaining < 3000) {
+      providerFailures += 1;
+      continue;
+    }
+    const providerTimeoutMs = Math.min(RECOGNIZE_TIMEOUT_MS, remaining);
     try {
-      match = provider === 'acrcloud' ? await recognizeAcr(sample, env) : await recognizeAudd(sample, env);
+      match = provider === 'acrcloud'
+        ? await recognizeAcr(sample, env, providerTimeoutMs)
+        : await recognizeAudd(sample, env, providerTimeoutMs);
       if (match) break;
     } catch {
       // Transport/credential failure — try the next configured provider.
@@ -141,8 +156,10 @@ async function identify(streamUrl, providers, env, country, forbiddenOrigins = [
 // ~12s of encoded audio through the guarded boundary; no Icy-MetaData header, so the
 // bytes are pure audio. HLS playlists resolve one master hop then sample recent
 // segments, all under the same wall-clock deadline.
-async function sampleStream(streamUrl, forbiddenOrigins = []) {
-  const deadlineAt = Date.now() + SAMPLE_TIMEOUT_MS;
+async function sampleStream(streamUrl, forbiddenOrigins = [], overallDeadlineAt = 0) {
+  const deadlineAt = overallDeadlineAt > 0
+    ? Math.min(Date.now() + SAMPLE_TIMEOUT_MS, overallDeadlineAt)
+    : Date.now() + SAMPLE_TIMEOUT_MS;
   const { response, finalUrl } = await guardedFetch(streamUrl, {
     deadlineAt,
     forbiddenOrigins,
@@ -179,19 +196,23 @@ async function sampleHls(playlistText, baseUrl, { deadlineAt, depth, forbiddenOr
     return sampleHls(media, finalUrl, { deadlineAt, depth: depth + 1, forbiddenOrigins });
   }
 
-  const segments = lines.filter(line => line && !line.startsWith('#')).slice(-HLS_SEGMENT_COUNT);
+  const segments = parseMediaSegments(lines).slice(-HLS_SEGMENT_COUNT);
   if (!segments.length) throw new Error('HLS media playlist has no segments');
   // Fragmented-MP4 playlists carry decoder metadata in an EXT-X-MAP initialization
-  // segment; without it the recognizers receive an undecodable container.
-  const mapUri = lines.map(line => line.match(/^#EXT-X-MAP:.*URI="([^"]+)"/i)?.[1]).find(Boolean);
-  const fetchList = mapUri ? [new URL(mapUri, baseUrl).toString(), ...segments] : segments;
+  // segment; without it the recognizers receive an undecodable container. Byte-range
+  // playlists (#EXT-X-BYTERANGE) address fragments inside one file; the parsed range
+  // becomes a Range header so repeated URIs fetch distinct fragments.
+  const fetchList = [...parseMapSegment(lines), ...segments];
   const perSegmentCap = Math.floor(MAX_SAMPLE_BYTES / fetchList.length);
   const parts = [];
   let total = 0;
   for (const segment of fetchList) {
     if (Date.now() >= deadlineAt) break;
     try {
-      const { response } = await guardedFetch(new URL(segment, baseUrl).toString(), { deadlineAt, forbiddenOrigins, headers: { Accept: '*/*', 'User-Agent': USER_AGENT } });
+      const headers = { Accept: '*/*', 'User-Agent': USER_AGENT };
+      const rangeHeader = rangeHeaderFor(segment);
+      if (rangeHeader) headers.Range = rangeHeader;
+      const { response } = await guardedFetch(new URL(segment.uri, baseUrl).toString(), { deadlineAt, forbiddenOrigins, headers });
       if (!response.ok || !response.body) continue;
       const bytes = await readBodyCapped(response, { maxBytes: perSegmentCap, deadlineAt });
       if (bytes.length) {
@@ -210,7 +231,7 @@ async function sampleHls(playlistText, baseUrl, { deadlineAt, depth, forbiddenOr
   return merged;
 }
 
-async function recognizeAcr(sample, env) {
+async function recognizeAcr(sample, env, timeoutMs = RECOGNIZE_TIMEOUT_MS) {
   const host = String(env.ACR_HOST || '').replace(/^https?:\/\//, '').replace(/\/+$/, '');
   const timestamp = Math.floor(Date.now() / 1000);
   const stringToSign = ['POST', '/v1/identify', env.ACR_ACCESS_KEY, 'audio', '1', String(timestamp)].join('\n');
@@ -225,7 +246,7 @@ async function recognizeAcr(sample, env) {
   form.set('sample_bytes', String(sample.length));
   form.set('sample', new Blob([sample]), 'sample.bin');
 
-  const outcome = await postForm(`https://${host}/v1/identify`, form);
+  const outcome = await postForm(`https://${host}/v1/identify`, form, timeoutMs);
   if (!outcome.ok) throw new Error('acrcloud request failed');
   const code = Number(outcome.data?.status?.code);
   if (code !== 0 && code !== 1001) throw new Error(`acrcloud status ${code}`);
@@ -247,13 +268,13 @@ async function recognizeAcr(sample, env) {
   };
 }
 
-async function recognizeAudd(sample, env) {
+async function recognizeAudd(sample, env, timeoutMs = RECOGNIZE_TIMEOUT_MS) {
   const form = new FormData();
   form.set('api_token', env.AUDD_API_TOKEN);
   form.set('return', 'apple_music,spotify');
   form.set('file', new Blob([sample]), 'sample.bin');
 
-  const outcome = await postForm('https://api.audd.io/', form);
+  const outcome = await postForm('https://api.audd.io/', form, timeoutMs);
   if (!outcome.ok) throw new Error('audd request failed');
   if (outcome.data?.status !== 'success') throw new Error(`audd status ${outcome.data?.status || 'unknown'}`);
   if (!outcome.data?.result?.title) return null;
@@ -285,9 +306,9 @@ async function hmacSha1Base64(secret, text) {
   return btoa(binary);
 }
 
-async function postForm(target, form) {
+async function postForm(target, form, timeoutMs = RECOGNIZE_TIMEOUT_MS) {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), RECOGNIZE_TIMEOUT_MS);
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
     const response = await fetch(target, { method: 'POST', signal: controller.signal, body: form, headers: { 'User-Agent': USER_AGENT } });
     if (!response.ok) return { ok: false };

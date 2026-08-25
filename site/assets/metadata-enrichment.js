@@ -1248,7 +1248,18 @@ async function runFingerprint(trigger) {
 
 const MAP_TOOLTIP_NP_TTL_MS = 30 * 1000;
 const MAP_TOOLTIP_MAX_ENTRIES = 200;
-const mapTooltip = { nowPlaying: new Map(), inFlight: new Set(), hoverTimer: null, hoverUuid: '' };
+const mapTooltip = { nowPlaying: new Map(), inFlight: new Set(), hoverTimer: null, hoverUuid: '', spentAt: [] };
+
+// Speculative tooltip lookups share the /api/nowplaying rate budget with the selected
+// station's polling (the edge allows 30/min/IP), so they get their own small sliding
+// window: at most 8 lookups per minute, after which tooltips stay name-only until the
+// window frees up. Pure and exported for unit tests.
+export function takeTooltipLookupToken(spentAt, now = Date.now(), { windowMs = 60_000, max = 8 } = {}) {
+  while (spentAt.length && now - spentAt[0] >= windowMs) spentAt.shift();
+  if (spentAt.length >= max) return false;
+  spentAt.push(now);
+  return true;
+}
 
 function rememberMapTooltip(uuid, text) {
   mapTooltip.nowPlaying.set(uuid, { text, at: Date.now() });
@@ -1328,6 +1339,7 @@ function handleMapTooltipHover(station) {
   clearTimeout(mapTooltip.hoverTimer);
   mapTooltip.hoverTimer = setTimeout(() => {
     if (mapTooltip.hoverUuid !== uuid || mapTooltip.inFlight.has(uuid)) return;
+    if (!takeTooltipLookupToken(mapTooltip.spentAt)) return;
     mapTooltip.inFlight.add(uuid);
     updateOpenMapTooltip(uuid);
     resolvePlatformNowPlaying(streamUrl)

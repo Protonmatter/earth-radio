@@ -274,3 +274,76 @@ test('reserved and documentation IPv4 networks are private to the Node guard', a
   assert.equal(isPrivateIp('198.52.1.1'), false);
   assert.equal(isPrivateIp('192.0.3.1'), false);
 });
+
+test('IPv6 site-local (fec0::/10) targets are private to both guards', async () => {
+  const { isPrivateIp } = await import('../server/net-guard.mjs');
+  assert.equal(isPrivateIp('fec0::1'), true);
+  assert.equal(isPrivateIp('feff::1'), true);
+  assert.equal(isPrivateIp('fe80::1'), true);
+  assert.equal(isPrivateIp('2607:f8b0::1'), false);
+});
+
+test('redirect responses are destroyed, not drained', async () => {
+  const { requestLimited } = await import('../server/net-guard.mjs');
+  const { createServer } = await import('node:http');
+  let closed = false;
+  const server = createServer((request, response) => {
+    // Redirect with an endless trickling body: the client must close the socket
+    // instead of draining it forever.
+    response.writeHead(302, { location: 'https://radio.example/next' });
+    const drip = setInterval(() => {
+      try { response.write('x'.repeat(1024)); } catch { /* peer closed */ }
+    }, 20);
+    request.socket.on('close', () => { closed = true; clearInterval(drip); });
+  });
+  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+  const { port } = server.address();
+  const url = new URL(`http://127.0.0.1:${port}/stream`);
+  const target = { href: url.href, url, hostname: '127.0.0.1', address: '127.0.0.1', family: 4 };
+  try {
+    const result = await requestLimited(target, { timeoutMs: 3000 });
+    assert.equal(result.statusCode, 302);
+    await new Promise(resolve => setTimeout(resolve, 400));
+    assert.equal(closed, true, 'the redirect socket must be closed after the hop resolves');
+  } finally {
+    server.close();
+  }
+});
+
+test('HLS byte-range playlists sample distinct fragments via Range headers', async () => {
+  const { parseMapSegment, parseMediaSegments } = await import('../server/hls-segments.mjs');
+  const lines = [
+    '#EXTM3U',
+    '#EXT-X-MAP:URI="init.mp4",BYTERANGE="500@0"',
+    '#EXTINF:4,', '#EXT-X-BYTERANGE:1000@1000', 'media.mp4',
+    '#EXTINF:4,', '#EXT-X-BYTERANGE:1000', 'media.mp4'
+  ];
+  const map = parseMapSegment(lines);
+  assert.deepEqual(map, [{ uri: 'init.mp4', range: { length: 500, offset: 0 } }]);
+  const segments = parseMediaSegments(lines);
+  assert.deepEqual(segments, [
+    { uri: 'media.mp4', range: { offset: 1000, length: 1000 } },
+    // Omitted @offset continues from the previous range's end for the same URI.
+    { uri: 'media.mp4', range: { offset: 2000, length: 1000 } }
+  ]);
+
+  // End-to-end through the sampler: every fragment fetch carries its Range header.
+  const ranges = [];
+  const { resolveTarget } = makeResolver();
+  const requestImpl = async (url, options) => {
+    if (url.endsWith('/live.m3u8')) {
+      return {
+        statusCode: 200,
+        headers: { 'content-type': 'application/vnd.apple.mpegurl' },
+        body: Buffer.from(''),
+        text: '#EXTM3U\n#EXT-X-MAP:URI="init.mp4",BYTERANGE="500@0"\n#EXTINF:4,\n#EXT-X-BYTERANGE:1000@1000\nmedia.mp4\n#EXTINF:4,\n#EXT-X-BYTERANGE:1000\nmedia.mp4\n',
+        finalUrl: url
+      };
+    }
+    ranges.push(`${url.split('/').pop()} ${options.headers.Range || ''}`.trim());
+    return { statusCode: 206, headers: {}, body: Buffer.alloc(20 * 1024, 3), text: '', finalUrl: url };
+  };
+  const sample = await sampleStreamAudio('https://hls.example/live.m3u8', { requestImpl, resolveTarget });
+  assert.deepEqual(ranges, ['init.mp4 bytes=0-499', 'media.mp4 bytes=1000-1999', 'media.mp4 bytes=2000-2999']);
+  assert.ok(sample.body.length >= 60 * 1024);
+});

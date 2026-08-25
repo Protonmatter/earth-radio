@@ -105,8 +105,8 @@
         "sha256": "e213700a1a541139a66542e9bd8e615ad5dfc735d52c59569730d9a021e86009"
       },
       "current": {
-        "bytes": 62287,
-        "sha256": "248a81e4e50b933791a362541e1fb2b057064ef41000d076fe4ad38e011dab6e"
+        "bytes": 62936,
+        "sha256": "d6f8ca27275c22e5038c617ddf5e16ae009acae322c09a328e2122ce2bb55916"
       },
       "reason": "Layer live-metadata feeds above raw ICY: hosting-platform now-playing APIs, HLS timed ID3 text tracks, and an opt-in fingerprint identify button."
     },

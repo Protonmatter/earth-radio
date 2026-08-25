@@ -73,12 +73,13 @@ async function loadCountryIndex() {
   } catch { /* refetch below */ }
 
   for (const base of COUNTRY_LIST_BASES) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 8000);
     try {
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), 8000);
       const response = await fetch(`${base}/json/countries`, { signal: controller.signal, headers: { Accept: 'application/json' } });
-      clearTimeout(timer);
       if (!response.ok) continue;
+      // The abort timer must survive until the body is parsed: a mirror that sends
+      // headers and then stalls the JSON would otherwise hang this attempt forever.
       const raw = await response.json();
       if (!Array.isArray(raw)) continue;
       const list = raw
@@ -93,13 +94,22 @@ async function loadCountryIndex() {
         localStorage.setItem(COUNTRY_INDEX_KEY, JSON.stringify({ savedAt: Date.now(), list }));
       } catch { /* cache is best-effort */ }
       return list;
-    } catch { /* try the next mirror */ }
+    } catch { /* try the next mirror */ } finally {
+      clearTimeout(timer);
+    }
   }
   return [];
 }
 
 function countryIndex() {
-  if (!expansion.indexPromise) expansion.indexPromise = loadCountryIndex();
+  if (!expansion.indexPromise) {
+    expansion.indexPromise = loadCountryIndex().then(list => {
+      // An empty result (offline boot, all mirrors down) must not be memoized
+      // forever — drop it so the next country selection retries the mirrors.
+      if (!list.length) expansion.indexPromise = null;
+      return list;
+    });
+  }
   return expansion.indexPromise;
 }
 
@@ -122,7 +132,10 @@ async function expandCountry(countryName) {
   if (!name || name === 'Unknown') return { expanded: false, reason: 'no country' };
 
   const index = await countryIndex();
-  const entry = index.find(item => item.name.toLowerCase() === name.toLowerCase());
+  // Selections arrive as full names (map popups, picker) or bare ISO codes (typed
+  // search accepts either); every index record carries both.
+  const needle = name.toLowerCase();
+  const entry = index.find(item => item.name.toLowerCase() === needle || item.code.toLowerCase() === needle);
   if (!entry) return { expanded: false, reason: 'country not in directory index' };
 
   const codes = currentCodes();

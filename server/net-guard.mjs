@@ -86,7 +86,11 @@ export async function requestLimited(streamTarget, { timeoutMs = DEFAULT_TIMEOUT
       const statusCode = Number(response.statusCode || 0);
       const result = { statusCode, headers: response.headers, body: Buffer.alloc(0), truncated: false, get text() { return this.body.toString('utf8'); } };
       if (isRedirect(statusCode)) {
-        response.resume();
+        // Destroy, never drain: a redirect body that trickles indefinitely would keep
+        // this socket pinned after the hop resolves (the activity-reset socket timeout
+        // never fires and the deadline timer is cleared by settle).
+        response.destroy();
+        request.destroy();
         settle(resolve, result);
         return;
       }
@@ -197,8 +201,11 @@ export function isPrivateIp(address) {
   if (kind === 6) {
     const lower = address.toLowerCase().split('%', 1)[0];
     const firstWord = Number.parseInt(lower.split(':').find(Boolean) || '0', 16);
+    // fe80::/10 link-local and the deprecated-but-routable fec0::/10 site-local
+    // range are both non-public.
     return lower === '::' || lower === '::1' || lower.startsWith('fc') || lower.startsWith('fd') ||
-      (Number.isFinite(firstWord) && (firstWord & 0xffc0) === 0xfe80) || lower.startsWith('ff');
+      (Number.isFinite(firstWord) && ((firstWord & 0xffc0) === 0xfe80 || (firstWord & 0xffc0) === 0xfec0)) ||
+      lower.startsWith('ff');
   }
   return false;
 }

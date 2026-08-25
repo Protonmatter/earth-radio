@@ -58,3 +58,19 @@ test('restore commits backup data and the generation marker in one transaction',
   assert.match(source, /idbSetMany\(db, \[\.\.\.dataEntries, meta\]\)/);
   assert.match(source, /for \(const \[key, value\] of entries\) store\.put\(value, key\);/);
 });
+
+test('each account namespace owns its own backup generations', async () => {
+  const { backupStorageKeys } = await import('../site/assets/storage-guard.js');
+  // Signed-out sessions keep the legacy keys so pre-existing backups stay readable.
+  assert.deepEqual(backupStorageKeys('default'), {
+    current: 'earth-radio-user-backup-v2',
+    previous: 'earth-radio-user-backup-v2-prev'
+  });
+  const a = backupStorageKeys('account:user-a');
+  const b = backupStorageKeys('account:user-b');
+  assert.equal(a.current, 'earth-radio-user-backup-v2:account:user-a');
+  assert.equal(a.previous, 'earth-radio-user-backup-v2-prev:account:user-a');
+  // Two accounts can never rotate each other's generations away.
+  assert.notEqual(a.current, b.current);
+  assert.notEqual(a.previous, b.previous);
+});

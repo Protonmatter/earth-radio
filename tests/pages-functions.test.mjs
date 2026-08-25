@@ -384,3 +384,44 @@ test('reserved and documentation IPv4 networks fail closed at the Pages boundary
   assert.equal(rejectFetchUrl('http://198.18.5.1/stream'), 'private hosts are blocked');
   assert.equal(rejectFetchUrl('http://198.52.1.1/stream'), '');
 });
+
+test('Pages guard rejects IPv6 site-local literals', () => {
+  assert.equal(rejectFetchUrl('http://[fec0::1]/x'), 'private hosts are blocked');
+  assert.equal(rejectFetchUrl('http://[feff::1]/x'), 'private hosts are blocked');
+});
+
+test('a single oversized chunk never pushes the body past the byte cap', async () => {
+  const stream = new ReadableStream({
+    start(controller) {
+      controller.enqueue(new Uint8Array(64 * 1024).fill(7));
+      controller.close();
+    }
+  });
+  const bytes = await readBodyCapped(new Response(stream), { maxBytes: 1000, deadlineAt: Date.now() + 2000 });
+  assert.equal(bytes.length, 1000, 'the chunk is trimmed to the remaining budget');
+});
+
+test('fingerprint recognition shares the route budget with sampling', async () => {
+  const { identify } = await import('../functions/api/track/fingerprint.js');
+  const fetched = [];
+  const audio = new Uint8Array(64 * 1024).fill(5);
+  await withFetch(async target => {
+    const url = String(target);
+    fetched.push(url);
+    if (url.includes('audd.io')) {
+      return new Promise(resolve => setTimeout(() => resolve(new Response(JSON.stringify({ status: 'success', result: null }))), 400));
+    }
+    return new Response(audio, { headers: { 'content-type': 'audio/mpeg' } });
+  }, async () => {
+    const startedAt = Date.now();
+    // Budget so small that after sampling there is no usable provider slice left:
+    // the provider must be skipped and the outage reported, never given a fresh
+    // full 15-second timeout of its own.
+    const outcome = await identify('https://ice.example.net/mount', ['audd'], { AUDD_API_TOKEN: 't' }, 'US', [], { budgetMs: 600 });
+    const elapsed = Date.now() - startedAt;
+    assert.equal(outcome.found, false);
+    assert.equal(outcome.providerError, true);
+    assert.ok(elapsed < 3000, `route answered within the budget, took ${elapsed}ms`);
+    assert.ok(!fetched.some(url => url.includes('audd.io')), 'no provider call once the budget is spent');
+  });
+});

@@ -54,8 +54,11 @@ export function rejectFetchUrl(rawUrl, { forbiddenOrigins = [] } = {}) {
   if (host.includes(':')) {
     const lower = host.split('%', 1)[0];
     const firstWord = Number.parseInt(lower.split(':').find(Boolean) || '0', 16);
+    // fe80::/10 link-local and the deprecated-but-routable fec0::/10 site-local
+    // range are both non-public.
     if (lower === '::' || lower === '::1' || lower.startsWith('fc') || lower.startsWith('fd') ||
-        (Number.isFinite(firstWord) && (firstWord & 0xffc0) === 0xfe80) || lower.startsWith('ff')) {
+        (Number.isFinite(firstWord) && ((firstWord & 0xffc0) === 0xfe80 || (firstWord & 0xffc0) === 0xfec0)) ||
+        lower.startsWith('ff')) {
       return 'private hosts are blocked';
     }
   }
@@ -160,9 +163,12 @@ export async function readBodyCapped(response, { maxBytes, deadlineAt, stopWhen 
       if (result.timedOut) break;
       const { value, done } = result;
       if (done) break;
-      chunks.push(value);
-      received += value.length;
-      if (typeof stopWhen === 'function' && stopWhen({ length: received, chunk: value, body: () => concatChunks(chunks, received) })) break;
+      // A single upstream chunk can exceed the remaining budget; trim it so the
+      // returned body never overshoots the advertised cap.
+      const kept = value.length > cap - received ? value.subarray(0, cap - received) : value;
+      chunks.push(kept);
+      received += kept.length;
+      if (typeof stopWhen === 'function' && stopWhen({ length: received, chunk: kept, body: () => concatChunks(chunks, received) })) break;
     }
   } finally {
     reader.cancel().catch(() => {});

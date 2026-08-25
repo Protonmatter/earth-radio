@@ -8,6 +8,7 @@
 import { createHmac } from 'node:crypto';
 import { guardedRequest, resolvePublicTarget } from './net-guard.mjs';
 import { createBoundedTtlCache, resolveWithCache } from './shared-cache.mjs';
+import { parseMapSegment, parseMediaSegments, rangeHeaderFor } from './hls-segments.mjs';
 
 const USER_AGENT = 'EarthRadio/0.24.0 fingerprint (+https://github.com/Protonmatter/EarthRadio)';
 const ACR_IDENTIFY_PATH = '/v1/identify';
@@ -166,20 +167,22 @@ async function sampleHlsFromText(text, baseUrl, { seconds, depth = 0, deadlineAt
     return sampleHlsAudio(new URL(variant, baseUrl).toString(), { seconds, depth: depth + 1, deadlineAt, requestImpl });
   }
 
-  const segments = lines.filter(line => line && !line.startsWith('#')).slice(-HLS_SEGMENT_COUNT);
+  const segments = parseMediaSegments(lines).slice(-HLS_SEGMENT_COUNT);
   if (!segments.length) throw new Error('HLS media playlist has no segments');
   // Fragmented-MP4 playlists carry decoder metadata in an EXT-X-MAP initialization
   // segment; without it the recognizers receive an undecodable container.
-  const mapUri = lines.map(line => line.match(/^#EXT-X-MAP:.*URI="([^"]+)"/i)?.[1]).find(Boolean);
-  const fetchList = mapUri ? [new URL(mapUri, baseUrl).toString(), ...segments] : segments;
+  const fetchList = [...parseMapSegment(lines), ...segments];
   const perSegmentCap = Math.floor(MAX_SAMPLE_BYTES / fetchList.length);
   const parts = [];
   for (const segment of fetchList) {
-    const segmentResponse = await requestImpl(new URL(segment, baseUrl).toString(), {
+    const headers = { Accept: '*/*', 'User-Agent': USER_AGENT };
+    const rangeHeader = rangeHeaderFor(segment);
+    if (rangeHeader) headers.Range = rangeHeader;
+    const segmentResponse = await requestImpl(new URL(segment.uri, baseUrl).toString(), {
       timeoutMs: 8000,
       deadlineAt,
       maxBytes: perSegmentCap,
-      headers: { Accept: '*/*', 'User-Agent': USER_AGENT }
+      headers
     });
     if (segmentResponse.statusCode >= 200 && segmentResponse.statusCode < 300 && segmentResponse.body.length) {
       parts.push(segmentResponse.body);

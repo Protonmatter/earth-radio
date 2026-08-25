@@ -128,6 +128,18 @@ test.describe('semantic country selection', () => {
     await expect(card(page, 'E2E Tokyo FM')).toBeVisible({ timeout: 20_000 });
   });
 
+  test('a bare ISO code expands its country like the full name', async ({ page }) => {
+    await setupApp(page);
+    await expect(card(page, 'E2E Tokyo FM')).toHaveCount(0);
+    await page.waitForFunction(() => Boolean(window.earthRadioDirectory));
+
+    // Typed search accepts ISO codes; the expansion lookup must match them too.
+    const result = await page.evaluate(() => window.earthRadioDirectory.expand('JP'));
+    expect(result.expanded).toBe(true);
+    expect(result.code).toBe('JP');
+    await expect(card(page, 'E2E Tokyo FM')).toBeVisible({ timeout: 20_000 });
+  });
+
   test('rapid expansions of different countries coalesce into a complete final set', async ({ page }) => {
     await setupApp(page);
     await page.waitForFunction(() => Boolean(window.earthRadioDirectory));

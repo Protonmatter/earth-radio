@@ -313,3 +313,17 @@ test('settle events are correlated with forced refreshes', async () => {
   const overlay = await readFile(path.join(root, 'site', 'assets', 'directory-expansion.js'), 'utf8');
   assert.match(overlay, /forceRefresh === false\) return/);
 });
+
+test('speculative tooltip lookups have their own bounded request budget', async () => {
+  const { takeTooltipLookupToken } = await import('../site/assets/metadata-enrichment.js');
+  const spentAt = [];
+  const start = 1_000_000;
+  for (let i = 0; i < 8; i += 1) {
+    assert.equal(takeTooltipLookupToken(spentAt, start + i * 100), true);
+  }
+  // The ninth hover inside the window stays name-only instead of spending the
+  // shared /api/nowplaying budget.
+  assert.equal(takeTooltipLookupToken(spentAt, start + 900), false);
+  // Once the window slides past the oldest spend, lookups resume.
+  assert.equal(takeTooltipLookupToken(spentAt, start + 61_000), true);
+});
