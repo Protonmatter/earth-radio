@@ -9,7 +9,8 @@ database password, provider client secret, or Apple signing key in the repositor
 The migrations under `supabase/migrations` create private profile, preference, favorite,
 recent-station, country, and generic configuration tables. Every table has forced RLS.
 Authenticated users can access only rows whose `user_id` equals `auth.uid()`. Anonymous
-access is revoked. Generic configuration writes must use
+access is revoked. Configuration writes are restricted to the three synchronized document
+keys (`favorites`, `recents`, and `preferences`) and must use
 `upsert_user_config_document`, which performs compare-and-swap revision checks and keeps
 deletion tombstones.
 
