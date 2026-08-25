@@ -97,6 +97,30 @@ test('OAuth callback exchanges the code, persists the session, and cleans the UR
   assert.equal(replaced[0], '/?domain=world');
 });
 
+test('retryable OAuth callback failures preserve the verifier and callback URL', async () => {
+  const storage = memoryStorage();
+  const flows = { 'flow-1': { verifier: 'verifier-value', createdAt: Date.now() } };
+  storage.setItem('earthRadio.auth.pkce.v1', JSON.stringify(flows));
+  const replaced = [];
+  const client = createAuthClient({
+    url: 'https://project.supabase.co',
+    publishableKey: 'sb_publishable_test',
+    storage,
+    location: {
+      href: 'https://earth-radio.example/?code=oauth-code&er_auth_flow=flow-1',
+      origin: 'https://earth-radio.example', pathname: '/',
+      search: '?code=oauth-code&er_auth_flow=flow-1', hash: ''
+    },
+    history: { replaceState: (_state, _title, url) => replaced.push(url) },
+    fetchImpl: async () => jsonResponse({ error: 'temporarily unavailable' }, 503)
+  });
+
+  await assert.rejects(client.initialize(), error => error?.status === 503);
+
+  assert.deepEqual(JSON.parse(storage.getItem('earthRadio.auth.pkce.v1')), flows);
+  assert.deepEqual(replaced, []);
+});
+
 test('parallel OAuth starts retain independent PKCE verifiers', async () => {
   const storage = memoryStorage();
   const assigned = [];
@@ -156,6 +180,28 @@ test('offline sign-out still completes locally so private device data can be cle
   client.onAuthStateChange((event, session) => events.push([event, session]));
 
   await client.signOut();
+
+  assert.equal(storage.getItem('earthRadio.auth.session.v1'), null);
+  assert.deepEqual(events, [['SIGNED_OUT', null]]);
+});
+
+test('definitive user validation failure clears the invalid session', async () => {
+  const storage = memoryStorage();
+  storage.setItem('earthRadio.auth.session.v1', JSON.stringify({
+    access_token: 'invalid', refresh_token: 'invalid', expires_at: 4102444800,
+    user: { id: 'user-1' }
+  }));
+  const events = [];
+  const client = createAuthClient({
+    url: 'https://project.supabase.co',
+    publishableKey: 'sb_publishable_test',
+    storage,
+    location: { href: 'https://earth-radio.example/', origin: 'https://earth-radio.example', pathname: '/' },
+    fetchImpl: async () => jsonResponse({ error: 'invalid token' }, 401)
+  });
+  client.onAuthStateChange((event, session) => events.push([event, session]));
+
+  await assert.rejects(client.getUser(), error => error?.status === 401);
 
   assert.equal(storage.getItem('earthRadio.auth.session.v1'), null);
   assert.deepEqual(events, [['SIGNED_OUT', null]]);
@@ -250,6 +296,7 @@ test('sync downloads a remote-only change and resolves concurrent favorites by u
   const result = await engine.syncOnce();
 
   assert.equal(result.conflicts, 1);
+  assert.equal(result.downloaded, 1);
   assert.deepEqual(Object.keys(local.favorites).sort(), ['local', 'remote']);
   assert.equal(pushes[0].expectedRevision, 2);
   assert.deepEqual(Object.keys(pushes[0].value).sort(), ['local', 'remote']);
@@ -289,6 +336,8 @@ test('a delayed tab resets even after another tab already activated the new acco
   assert.equal(shouldResetBrowserAccount('user-b', 'user-a', 'user-b'), true);
   assert.equal(shouldResetBrowserAccount('user-b', 'user-b', 'user-b'), false);
   assert.equal(shouldResetBrowserAccount(null, null, 'user-b'), false);
+  assert.equal(shouldResetBrowserAccount('user-b', null, 'user-b', true), true);
+  assert.equal(shouldResetBrowserAccount(null, null, 'user-b', false), false);
 });
 
 test('account transitions archive offline data and restore each user namespace', async () => {
@@ -353,6 +402,7 @@ test('sync local access is fenced by the active account in the same IndexedDB tr
   assert.match(accountKvBody, /transaction\.abort\(\)/);
   assert.match(syncBody, /readLocal: async key =>[\s\S]*accountKv\('get', key, undefined, userId\)/);
   assert.match(syncBody, /writeLocal: async \(key, value\) =>[\s\S]*accountKv\('put', key, value, userId\)/);
+  assert.match(syncBody, /writeLocalIfUnchanged:[\s\S]*accountKv\('comparePut'/);
 });
 
 test('REST requests reject a session belonging to a different expected account', async () => {
@@ -495,6 +545,43 @@ test('three-way sync does not resurrect a locally deleted favorite', async () =>
   assert.deepEqual(Object.keys(local.favorites), ['other']);
   assert.deepEqual(Object.keys(pushes[0].value), ['other']);
   assert.deepEqual(state.favorites.value, pushes[0].value);
+});
+
+test('a remote download cannot overwrite a newer local edit', async () => {
+  const base = { old: { uuid: 'old' } };
+  const newerLocal = { new: { uuid: 'new' } };
+  const remoteValue = { remote: { uuid: 'remote' } };
+  const local = { favorites: base, recents: [], prefs: {} };
+  const state = {
+    favorites: { revision: 1, hash: stableStringify(base), value: base },
+    recents: { revision: 1, hash: stableStringify([]), value: [] },
+    prefs: { revision: 1, hash: stableStringify({}), value: {} }
+  };
+  const engine = createSyncEngine({
+    readLocal: async key => local[key],
+    writeLocal: async (key, value) => { local[key] = value; },
+    writeLocalIfUnchanged: async (key, expected, value) => {
+      if (key === 'favorites') local[key] = newerLocal;
+      if (stableStringify(local[key]) !== stableStringify(expected)) return false;
+      local[key] = value;
+      return true;
+    },
+    readState: async key => state[key] ?? null,
+    writeState: async (key, value) => { state[key] = value; },
+    fetchRemote: async () => [
+      { document_key: 'favorites', revision: 2, value: remoteValue, deleted_at: null },
+      { document_key: 'recents', revision: 1, value: [], deleted_at: null },
+      { document_key: 'preferences', revision: 1, value: {}, deleted_at: null }
+    ],
+    upsertRemote: async () => null
+  });
+
+  const result = await engine.syncOnce();
+
+  assert.deepEqual(local.favorites, newerLocal);
+  assert.equal(state.favorites.revision, 1);
+  assert.equal(result.downloaded, 0);
+  assert.equal(result.conflicts, 1);
 });
 
 test('production auth excludes Cloudflare preview origins', async () => {
