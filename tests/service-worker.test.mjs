@@ -32,7 +32,8 @@ test('service worker refreshes navigations and config while caching only immutab
 test('service worker precaches the auth, responsive, and i18n shell under a new cache version', async () => {
   const worker = await readFile(path.join(root, 'site', 'sw.js'), 'utf8');
   assert.match(worker, /new Request\(asset, \{ cache: 'reload' \}\)/);
-  assert.match(worker, /earth-radio-shell-v28-live-metadata-auth-1/);
+  assert.match(worker, /earth-radio-shell-v29-remediation-1/);
+  assert.doesNotMatch(worker, /earth-radio-shell-v28-live-metadata-auth-1\b/);
   assert.doesNotMatch(worker, /earth-radio-shell-v27-live-metadata-1\b/);
   assert.doesNotMatch(worker, /earth-radio-shell-v27-supabase-auth-1\b/);
   assert.match(worker, /responsive-ui\.js/);

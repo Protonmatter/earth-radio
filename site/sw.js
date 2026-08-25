@@ -1,4 +1,4 @@
-const CACHE_NAME = 'earth-radio-shell-v28-live-metadata-auth-1';
+const CACHE_NAME = 'earth-radio-shell-v29-remediation-1';
 const SHELL_ASSETS = [
   './',
   './index.html',

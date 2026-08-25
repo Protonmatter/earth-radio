@@ -153,8 +153,8 @@
         "sha256": "b09e3207532fe7f47d14e9c53804d7e8caf31cad2fcb2c652b728a93871ea094"
       },
       "current": {
-        "bytes": 2935,
-        "sha256": "d6141e3b31d4bd606cfe0da006a31a764165ffd865fcd6ed13593baeb968bf6d"
+        "bytes": 2928,
+        "sha256": "e932a3a7d0e31f3c1e4048d63376be5f9e8ed2b53ddcf2e043e6e11f52b78f9c"
       },
       "reason": "Use network-first navigation/configuration updates, keep hashed recovered assets cache-first, reload installation requests so stale browser HTTP entries cannot seed the new service-worker cache, keep the previous worker when reload precaching fails, and precache the UI refresh stylesheet under cache generation v26. Bump the shell cache generation for the live-metadata overlay update."
     }

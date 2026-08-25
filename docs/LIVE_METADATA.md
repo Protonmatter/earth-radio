@@ -112,7 +112,19 @@ GET /api/track/fingerprint?url=...  # env-keyed (set ACR_* or AUDD_API_TOKEN on 
 ```
 
 The overlay feature-detects the API at runtime; on a static-only deployment the probe
-404s and everything degrades to browser-direct behavior. Client-only feeds stay in the
+404s and everything degrades to browser-direct behavior. Deployments must also apply
+the external edge controls in `docs/CLOUDFLARE_DEPLOYMENT.md`: the
+`global_fetch_strictly_public` compatibility flag (`wrangler.jsonc`, enforced by
+repository validation) and the zone WAF rate limits (30/min/IP for `/api/nowplaying`,
+6/min/IP for `/api/track/fingerprint`, HTTP 429 for 60s), which are the single durable
+rate policy for the metered fingerprint route.
+
+Stream identity survives MediaSource playback: hls.js exposes only a `blob:` URL on the
+audio element, so after successful playback the runtime dispatches
+`earthradio:station-selected` (`detail: { streamUrl, stationUuid }`) and the overlay's
+exported `resolveStreamUrl` helper prefers a real HTTP(S) media source, then the
+selected station URL — never a non-HTTP(S) value — for platform polling and
+fingerprinting. Client-only feeds stay in the
 browser: listen.moe's realtime song gateway is resolved over WebSocket directly.
 
 When a structured feed names artist and title but no catalog can confirm the track

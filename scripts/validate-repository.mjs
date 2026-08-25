@@ -73,10 +73,11 @@ function hasRealSecretAssignment(text) {
 export async function validateCloudflareConfig(root) {
   const errors = [];
   const configPath = path.join(root, 'wrangler.jsonc');
-  let raw = null;
-  try { raw = await readFile(configPath, 'utf8'); } catch { raw = null; }
-  if (raw === null) {
-    let hasFunctions = false;
+  let raw;
+  try {
+    raw = await readFile(configPath, 'utf8');
+  } catch {
+    let hasFunctions;
     try { hasFunctions = (await readdir(path.join(root, 'functions'))).length > 0; } catch { hasFunctions = false; }
     if (hasFunctions) errors.push('Missing wrangler.jsonc: Pages Functions require the strict-public fetch configuration');
     return errors;
