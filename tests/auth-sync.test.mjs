@@ -387,8 +387,27 @@ test('the browser account switch uses one IndexedDB readwrite transaction', asyn
   assert.match(switchBody, /db\.transaction\('kv', 'readwrite'\)/);
   assert.match(switchBody, /transaction\.oncomplete/);
   assert.match(switchBody, /values\.get\(ACTIVE_NAMESPACE_KEY\)/);
+  assert.match(switchBody, /namespaceMissing: storedNamespace === undefined/);
   assert.match(switchBody, /store\.put\(nextUserId \|\| null, ACTIVE_NAMESPACE_KEY\)/);
   assert.doesNotMatch(switchBody, /await kv\(/);
+});
+
+test('disabled authentication detaches any active local account namespace', async () => {
+  const root = path.resolve(import.meta.dirname, '..');
+  const source = await readFile(path.join(root, 'site', 'assets', 'auth-ui.js'), 'utf8');
+  const bootPrefix = source.slice(source.indexOf('async function boot'), source.indexOf("const stylesheet"));
+  assert.match(bootPrefix, /if \(!config\?\.enabled\)[\s\S]*switchLocalAccount\(activeUserId, null\)/);
+  assert.match(bootPrefix, /localStorage\.removeItem\(ACTIVE_USER_KEY\)/);
+  assert.match(bootPrefix, /location\.reload\(\)/);
+});
+
+test('authenticated boot verifies IndexedDB and keeps sync running after transient profile failure', async () => {
+  const root = path.resolve(import.meta.dirname, '..');
+  const source = await readFile(path.join(root, 'site', 'assets', 'auth-ui.js'), 'utf8');
+  const bootTail = source.slice(source.indexOf('session = await auth.initialize()'), source.lastIndexOf('\n}'));
+  assert.match(bootTail, /switchLocalAccount\(previousUserId, nextUserId\)/);
+  assert.match(bootTail, /clearMissingNamespaceSyncState\(nextUserId, transition\)/);
+  assert.match(bootTail, /try \{ await refreshUser\(\); \}[\s\S]*if \(session && !resettingSession\) startSync\(\)/);
 });
 
 test('sync local access is fenced by the active account in the same IndexedDB transaction', async () => {
