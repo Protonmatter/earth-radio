@@ -1,7 +1,11 @@
 import { createAuthClient } from './auth-core.js';
-import { createSyncEngine, shouldResetLocalAccount, transitionLocalAccount } from './sync-core.js';
+import {
+  accountDataKey, createSyncEngine, planLocalAccountTransition,
+  shouldResetLocalAccount, syncDocuments
+} from './sync-core.js';
 
 const ACTIVE_USER_KEY = 'earthRadio.auth.activeUser.v1';
+const ACTIVE_NAMESPACE_KEY = 'account:active';
 const DEFAULT_LOCAL_DATA = Object.freeze({
   favorites: {},
   recents: [],
@@ -61,14 +65,59 @@ function syncStateKey(userId, localKey) {
   return `earthRadio.sync.${userId}.${localKey}.v1`;
 }
 
-function switchLocalAccount(previousUserId, nextUserId) {
-  return transitionLocalAccount({
-    previousUserId,
-    nextUserId,
-    readLocal: key => kv('get', key),
-    writeLocal: (key, value) => kv('put', key, value),
-    defaults: DEFAULT_LOCAL_DATA
-  });
+async function switchLocalAccount(previousUserId, nextUserId) {
+  const db = await openDatabase();
+  try {
+    return await new Promise((resolve, reject) => {
+      const transaction = db.transaction('kv', 'readwrite');
+      const store = transaction.objectStore('kv');
+      const keys = [ACTIVE_NAMESPACE_KEY, ...syncDocuments.map(({ localKey }) => localKey)];
+      if (nextUserId) {
+        keys.push(...syncDocuments.map(({ localKey }) => accountDataKey(nextUserId, localKey)));
+      }
+      const values = new Map();
+      let pending = keys.length;
+      let result;
+      const fail = () => reject(transaction.error || new Error('Account storage transition failed.'));
+      transaction.onerror = fail;
+      transaction.onabort = fail;
+      transaction.oncomplete = () => resolve(result);
+      for (const key of keys) {
+        const request = store.get(key);
+        request.onerror = fail;
+        request.onsuccess = () => {
+          values.set(key, request.result);
+          pending -= 1;
+          if (pending !== 0) return;
+          const current = Object.fromEntries(syncDocuments.map(({ localKey }) => [localKey, values.get(localKey)]));
+          const saved = Object.fromEntries(syncDocuments.map(({ localKey }) => [
+            localKey,
+            nextUserId ? values.get(accountDataKey(nextUserId, localKey)) : undefined
+          ]));
+          const storedNamespace = values.get(ACTIVE_NAMESPACE_KEY);
+          const actualPreviousUserId = storedNamespace === undefined ? previousUserId : storedNamespace;
+          result = planLocalAccountTransition({
+            previousUserId: actualPreviousUserId,
+            nextUserId,
+            current,
+            saved,
+            nextNamespaceExists: Boolean(nextUserId) && values.get(accountDataKey(nextUserId, syncDocuments[0].localKey)) !== undefined,
+            defaults: DEFAULT_LOCAL_DATA
+          });
+          for (const [keyToWrite, value] of result.writes) store.put(value, keyToWrite);
+          store.put(nextUserId || null, ACTIVE_NAMESPACE_KEY);
+        };
+      }
+    });
+  } finally {
+    db.close();
+  }
+}
+
+function clearMissingNamespaceSyncState(userId, transition) {
+  if (userId && !transition.restored && !transition.unchanged) {
+    for (const { localKey } of syncDocuments) localStorage.removeItem(syncStateKey(userId, localKey));
+  }
 }
 
 async function boot() {
@@ -146,7 +195,8 @@ async function boot() {
         user = null;
         accountTransition = accountTransition.then(async () => {
           const previousUserId = localStorage.getItem(ACTIVE_USER_KEY);
-          await switchLocalAccount(previousUserId, nextUserId);
+          const transition = await switchLocalAccount(previousUserId, nextUserId);
+          clearMissingNamespaceSyncState(nextUserId, transition);
           localStorage.setItem(ACTIVE_USER_KEY, nextUserId);
           location.reload();
         });
@@ -362,12 +412,16 @@ async function boot() {
       const nextUserId = session.user.id;
       if (shouldResetLocalAccount(previousUserId, nextUserId)) {
         syncGeneration += 1;
-        await switchLocalAccount(previousUserId, nextUserId);
+        const transition = await switchLocalAccount(previousUserId, nextUserId);
+        clearMissingNamespaceSyncState(nextUserId, transition);
         localStorage.setItem(ACTIVE_USER_KEY, nextUserId);
         location.reload();
         return;
       }
-      if (!previousUserId) await switchLocalAccount(null, nextUserId);
+      if (!previousUserId) {
+        const transition = await switchLocalAccount(null, nextUserId);
+        clearMissingNamespaceSyncState(nextUserId, transition);
+      }
       localStorage.setItem(ACTIVE_USER_KEY, nextUserId);
       await refreshUser();
       startSync();
