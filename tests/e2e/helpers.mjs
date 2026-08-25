@@ -27,7 +27,9 @@ export function silentWav(seconds = 30) {
 const AUDIO = silentWav();
 const ALL_STATIONS = [...FIXTURE_STATIONS, ...EXPANSION_STATIONS];
 
-export async function setupApp(page, { sameOriginNowPlaying = null } = {}) {
+export async function setupApp(page, { sameOriginNowPlaying = null, sameOriginFingerprint = null } = {}) {
+  // Stream URLs the page sent to the same-origin fingerprint endpoint, in order.
+  const fingerprintRequests = [];
   await page.route('**/*', route => {
     const url = new URL(route.request().url());
     if (url.hostname === '127.0.0.1') {
@@ -36,8 +38,12 @@ export async function setupApp(page, { sameOriginNowPlaying = null } = {}) {
         if (!url.searchParams.get('url')) return route.fulfill({ json: { ok: true, service: 'earth-radio-pages-fn' } });
         return route.fulfill({ json: sameOriginNowPlaying });
       }
-      if (sameOriginNowPlaying && url.pathname === '/api/track/fingerprint') {
-        return route.fulfill({ json: { available: false, providers: [] } });
+      if ((sameOriginNowPlaying || sameOriginFingerprint) && url.pathname === '/api/track/fingerprint') {
+        const streamUrl = url.searchParams.get('url') || '';
+        if (!sameOriginFingerprint) return route.fulfill({ json: { available: false, providers: [] } });
+        if (!streamUrl) return route.fulfill({ json: { available: true, providers: ['audd'] } });
+        fingerprintRequests.push(streamUrl);
+        return route.fulfill({ json: sameOriginFingerprint });
       }
       return route.continue();
     }
@@ -60,6 +66,7 @@ export async function setupApp(page, { sameOriginNowPlaying = null } = {}) {
   });
   await page.goto('/');
   await expect(page.locator('.station-card').first()).toBeVisible({ timeout: 20_000 });
+  return { fingerprintRequests };
 }
 
 export function card(page, name) {

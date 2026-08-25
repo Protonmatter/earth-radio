@@ -357,6 +357,14 @@ async function onStationClick(station: Station): Promise<void> {
     presentNowPlaying(station);
     setStatus(t('status.playing', { name: station.name }));
     syncRoute(getActiveFilters());
+    // Overlays (metadata enrichment) need the canonical HTTP(S) stream identity even
+    // when playback runs through MediaSource and exposes only a blob: URL.
+    window.dispatchEvent(new CustomEvent('earthradio:station-selected', {
+      detail: {
+        streamUrl: String(station.url_resolved || station.url || ''),
+        stationUuid: String(station.stationuuid || '')
+      }
+    }));
   }
 }
 
@@ -480,6 +488,7 @@ function renderEmptyState(message: string, actions: EmptyAction[] = [], spinner 
 
 async function loadStations({ forceRefresh = false } = {}): Promise<void> {
   showLoadingState();
+  let ok = true;
   try {
     const result = await activePack.loadEntities({ forceRefresh });
     allStations = result.stations;
@@ -529,6 +538,11 @@ async function loadStations({ forceRefresh = false } = {}): Promise<void> {
     setStatus(`${t('toast.loadFailed')}: ${(error as Error).message}`);
     renderEmptyState(t('empty.failed'), [{ text: t('empty.retry'), action: 'refresh-stations' }]);
     showToast(t('toast.loadFailed'), 'error');
+    ok = false;
+  } finally {
+    // Directory-expansion serializes forced refreshes on this settle signal instead of
+    // guessing with a timer; it fires on success and failure alike.
+    window.dispatchEvent(new CustomEvent('earthradio:stations-load-settled', { detail: { ok } }));
   }
 }
 

@@ -26,6 +26,46 @@ test('same-origin now-playing feed surfaces the track in the metadata panel', as
   await expect(page.locator('#metadata-state')).toHaveText(/Station feed|Identified|Likely match/);
 });
 
+test('fingerprinting keeps the selected station URL when playback is MediaSource-backed', async ({ page }) => {
+  const { fingerprintRequests } = await setupApp(page, {
+    sameOriginNowPlaying: { found: false, reason: 'no track data' },
+    sameOriginFingerprint: {
+      available: true,
+      found: true,
+      provider: 'audd',
+      artist: 'IU',
+      title: 'Blueming',
+      confidence: 92,
+      state: 'Identified'
+    }
+  });
+  await playFromList(page, 'E2E Seoul Pop');
+
+  // Simulate an hls.js takeover: MediaSource playback exposes only a blob: URL. The
+  // element keeps playing the real audio (swapping in an empty MediaSource would trip
+  // the app's stalled-playback auto-skip); only the URL getters are masked, then the
+  // runtime-order earthradio:station-selected event announces the canonical selection.
+  // The announced HLS URL is deliberately absent from the cached directory so only the
+  // event can supply it.
+  await page.evaluate(() => {
+    const audio = document.getElementById('audio-player');
+    Object.defineProperty(audio, 'currentSrc', { get: () => 'blob:https://e2e.example/mediasource' });
+    Object.defineProperty(audio, 'src', { get: () => 'blob:https://e2e.example/mediasource', set: () => {} });
+  });
+  await page.evaluate(() => {
+    window.dispatchEvent(new CustomEvent('earthradio:station-selected', {
+      detail: { streamUrl: 'https://streams.e2e.example/hls/master.m3u8', stationUuid: 'e2e-seoul-0001' }
+    }));
+  });
+
+  const button = page.locator('#metadata-fingerprint-btn');
+  await expect(button).toBeEnabled({ timeout: 20_000 });
+  await button.click();
+
+  await expect(page.locator('#metadata-details')).toContainText('Blueming', { timeout: 30_000 });
+  expect(fingerprintRequests).toContain('https://streams.e2e.example/hls/master.m3u8');
+});
+
 test('station facts are never presented as a track title', async ({ page }) => {
   await setupApp(page);
   await playFromList(page, 'E2E Seoul Pop');

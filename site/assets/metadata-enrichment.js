@@ -59,7 +59,8 @@ const state = {
   sameOriginApi: null,
   sameOriginApiProbe: null,
   sameOriginApiMisses: 0,
-  streamUrl: ''
+  streamUrl: '',
+  selectedStreamUrl: ''
 };
 
 function config() {
@@ -710,12 +711,36 @@ function audioElement() {
 
 // hls.js plays through MediaSource, which makes currentSrc a blob: URL; the selected
 // station's canonical HTTP(S) stream URL is tracked separately so platform polling and
-// fingerprinting keep working for HLS-backed stations.
-function currentStreamUrl() {
-  const audio = audioElement();
-  const src = String(audio?.currentSrc || audio?.src || '');
+// fingerprinting keep working for HLS-backed stations. Pure and exported so the
+// blob-vs-selected precedence is unit-testable: a real HTTP(S) media source wins,
+// anything else (blob:, empty) falls back to the explicitly selected station URL.
+export function resolveStreamUrl(audioLike, selectedUrl) {
+  const src = String(audioLike?.currentSrc || audioLike?.src || '');
   if (/^https?:\/\//i.test(src)) return src;
-  return state.streamUrl;
+  const selected = String(selectedUrl || '');
+  return /^https?:\/\//i.test(selected) ? selected : '';
+}
+
+function currentStreamUrl() {
+  // The runtime's `earthradio:station-selected` event is authoritative for the selected
+  // identity; the IndexedDB directory lookup (state.streamUrl) remains as a fallback
+  // for reloads where playback resumes without a fresh selection event.
+  return resolveStreamUrl(audioElement(), state.selectedStreamUrl || state.streamUrl);
+}
+
+// The runtime dispatches this after playback actually starts for a clicked station.
+// A new selection invalidates every identity derived from the previous stream.
+function handleStationSelected(event) {
+  const url = String(event?.detail?.streamUrl || '');
+  if (!/^https?:\/\//i.test(url)) return;
+  if (url !== state.selectedStreamUrl) {
+    state.trustedTrack = null;
+    state.inFlight = null;
+    state.fingerprintAutoKey = '';
+    state.currentIdentity = null;
+  }
+  state.selectedStreamUrl = url;
+  syncFingerprintButton();
 }
 
 // Resolves the active station's stream URL from the runtime's IndexedDB directory
@@ -1293,7 +1318,9 @@ function handleMapTooltipHover(station) {
   }, 250);
 }
 
-window.earthRadioMapTooltip = Object.freeze({ render: renderMapTooltip, hover: handleMapTooltipHover });
+if (typeof window !== 'undefined') {
+  window.earthRadioMapTooltip = Object.freeze({ render: renderMapTooltip, hover: handleMapTooltipHover });
+}
 
 async function processCurrentMetadata() {
   const cfg = config();
@@ -1341,6 +1368,7 @@ function init() {
   targets.forEach(target => observer.observe(target, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['aria-pressed'] }));
   document.addEventListener('visibilitychange', () => { if (!document.hidden) scheduleProcess(); });
   window.addEventListener('earthradio:metadata-refresh', scheduleProcess);
+  window.addEventListener('earthradio:station-selected', handleStationSelected);
 
   const audio = audioElement();
   if (audio) {
@@ -1349,6 +1377,7 @@ function init() {
       // feeds, the raw-title dedupe, the current identity, and any identify/fingerprint
       // response still in flight (its token check will now fail).
       state.streamUrl = '';
+      state.selectedStreamUrl = '';
       refreshCanonicalStreamUrl();
       state.trustedTrack = null;
       state.fingerprintAutoKey = '';
@@ -1374,11 +1403,15 @@ function init() {
   scheduleProcess();
 }
 
-if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
-else init();
+// Browser-only bootstrap; guarded so the exported pure helpers stay importable from
+// Node unit tests without a DOM.
+if (typeof document !== 'undefined') {
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+}
 
 // Minimal debug hook for smoke tests and local validation. Does not expose secrets.
-window.earthRadioMetadata = Object.freeze({
+if (typeof window !== 'undefined') window.earthRadioMetadata = Object.freeze({
   version: VERSION,
   parseNowPlaying,
   scoreCandidate,

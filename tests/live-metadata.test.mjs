@@ -208,3 +208,39 @@ test('identifyByFingerprint reports short samples instead of spending recognitio
   assert.match(result.reason, /too short/);
   clearFingerprintCache();
 });
+
+// --- Selected-station stream identity (earthradio:station-selected) ---
+
+import { readFile } from 'node:fs/promises';
+import path from 'node:path';
+import { resolveStreamUrl } from '../site/assets/metadata-enrichment.js';
+
+test('blob MediaSource playback resolves to the selected station URL', () => {
+  assert.equal(
+    resolveStreamUrl(
+      { currentSrc: 'blob:https://site.example/id', src: 'blob:https://site.example/id' },
+      'https://streams.example/live.m3u8'
+    ),
+    'https://streams.example/live.m3u8'
+  );
+  // A real HTTP(S) media source always wins over the remembered selection.
+  assert.equal(
+    resolveStreamUrl({ currentSrc: 'https://direct.example/ice' }, 'https://selected.example/live.m3u8'),
+    'https://direct.example/ice'
+  );
+  // Non-HTTP(S) selections never leak into fetchable URLs.
+  assert.equal(resolveStreamUrl({ currentSrc: 'blob:https://site.example/id' }, 'javascript:alert(1)'), '');
+  assert.equal(resolveStreamUrl({ currentSrc: '' }, ''), '');
+  assert.equal(resolveStreamUrl(null, 'https://selected.example/live.m3u8'), 'https://selected.example/live.m3u8');
+});
+
+test('runtime source and installed bundle both dispatch the selection and settle events', async () => {
+  const root = path.resolve(import.meta.dirname, '..');
+  const source = await readFile(path.join(root, 'src-recovered', 'main.ts'), 'utf8');
+  const bundle = await readFile(path.join(root, 'site', 'assets', 'index-B4rKOAHV.js'), 'utf8');
+  for (const text of [source, bundle]) {
+    assert.match(text, /earthradio:station-selected/);
+    assert.match(text, /earthradio:stations-load-settled/);
+    assert.match(text, /url_resolved/);
+  }
+});
