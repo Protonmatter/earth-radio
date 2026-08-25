@@ -185,6 +185,12 @@ async function boot() {
   let syncGeneration = 0;
   let accountTransition = Promise.resolve();
   let authInitialized = false;
+  let reloadTimer = null;
+
+  function cancelReload() {
+    if (reloadTimer) clearTimeout(reloadTimer);
+    reloadTimer = null;
+  }
 
   const button = el('button', 'er-auth-button', 'Sign in');
   button.type = 'button';
@@ -216,6 +222,7 @@ async function boot() {
     if (resettingSession) return;
     resettingSession = true;
     syncGeneration += 1;
+    cancelReload();
     if (syncTimer) clearInterval(syncTimer);
     syncTimer = null;
     session = null;
@@ -236,6 +243,7 @@ async function boot() {
       const tabUserId = session?.user?.id;
       if (shouldResetBrowserAccount(activeUserId, tabUserId, nextUserId, authInitialized)) {
         syncGeneration += 1;
+        cancelReload();
         if (syncTimer) clearInterval(syncTimer);
         syncTimer = null;
         session = null;
@@ -326,11 +334,18 @@ async function boot() {
       if (result.downloaded > 0) {
         const reloadKey = `earthRadio.sync.reload.${userId}`;
         const lastReload = Number(sessionStorage.getItem(reloadKey) || 0);
-        if (Date.now() - lastReload > 5000) {
+        const reloadDelay = Math.max(0, 5000 - (Date.now() - lastReload));
+        const reload = () => {
+          reloadTimer = null;
+          if (session?.user?.id !== userId) return;
           sessionStorage.setItem(reloadKey, String(Date.now()));
           location.reload();
+        };
+        if (reloadDelay === 0) {
+          reload();
           return;
         }
+        if (!reloadTimer) reloadTimer = setTimeout(reload, reloadDelay);
       }
     } catch (error) {
       syncStatus = navigator.onLine ? 'Sync paused' : 'Offline';
@@ -437,6 +452,7 @@ async function boot() {
           signingOut = true;
           await auth.signOut();
           syncGeneration += 1;
+          cancelReload();
           await switchLocalAccount(userId, null);
           localStorage.removeItem(ACTIVE_USER_KEY);
           session = null;
