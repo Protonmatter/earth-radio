@@ -8,6 +8,22 @@ alter table public.user_config_documents
   check (document_key in ('favorites', 'recents', 'preferences'))
   not valid;
 
+alter table public.user_config_documents
+  drop constraint if exists user_config_document_value_size;
+
+alter table public.user_config_documents
+  add constraint user_config_document_value_size
+  check (
+    value is null
+    or octet_length(value::text) <= case document_key
+      when 'favorites' then 8388608
+      when 'recents' then 1048576
+      when 'preferences' then 65536
+      else 0
+    end
+  )
+  not valid;
+
 create or replace function public.upsert_user_config_document(
   p_document_key text,
   p_value jsonb,
@@ -21,6 +37,7 @@ set search_path = ''
 as $$
 declare
   caller_id uuid := auth.uid();
+  document_limit integer;
 begin
   if caller_id is null then
     raise insufficient_privilege using message = 'authentication required';
@@ -31,6 +48,12 @@ begin
     raise check_violation using message = 'unsupported document key';
   end if;
 
+  document_limit := case p_document_key
+    when 'favorites' then 8388608
+    when 'recents' then 1048576
+    when 'preferences' then 65536
+  end;
+
   if p_expected_revision < 0 then
     raise check_violation using message = 'expected revision must be non-negative';
   end if;
@@ -39,8 +62,8 @@ begin
     raise check_violation using message = 'a live document requires a value';
   end if;
 
-  if p_value is not null and octet_length(p_value::text) > 65536 then
-    raise check_violation using message = 'document exceeds 64 KiB';
+  if p_value is not null and octet_length(p_value::text) > document_limit then
+    raise check_violation using message = 'document exceeds supported size';
   end if;
 
   if p_expected_revision = 0 then
