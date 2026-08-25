@@ -43,22 +43,26 @@ Every merge to `main` triggers a production deployment. Match the Cloudflare dep
 
 The `/api/nowplaying` and `/api/track/fingerprint` Pages Functions fetch listener-supplied
 stream URLs. Their in-code protections (manual revalidated redirects, hop caps, byte caps,
-wall-clock deadlines, per-isolate limiters) are complemented by required zone
-configuration:
+wall-clock deadlines) are complemented by required zone configuration; the full
+deployment procedure lives in `docs/CLOUDFLARE_DEPLOYMENT.md`.
 
-1. **Strict public fetch routing.** `wrangler.toml` sets the
+1. **Strict public fetch routing.** `wrangler.jsonc` sets the
    `global_fetch_strictly_public` compatibility flag so global `fetch()` routes through
    the public Internet boundary and can never privately reach a same-zone origin.
-   Confirm the flag is active on the Pages project after the first deployment with this
-   file (Settings → Functions → Compatibility flags).
+   `scripts/validate-repository.mjs` fails the build if the flag is dropped or
+   `global_fetch_private_origin` appears. Confirm the flag is active on the Pages
+   project after the first deployment with this file (Settings → Functions →
+   Compatibility flags).
 2. **WAF rate limiting (before Function execution).** Create Cloudflare rate-limiting
    rules on the zone:
    - `/api/nowplaying`: 30 requests per source IP per 60 seconds → block with HTTP 429
      for 60 seconds.
    - `/api/track/fingerprint`: 6 requests per source IP per 60 seconds → block with
      HTTP 429 for 60 seconds.
-   These fire before the Function executes; the in-function limiters at the same
-   thresholds are defense in depth only.
+   These fire before the Function executes and are the single durable source of rate
+   policy. The metered fingerprint Function deliberately carries no in-isolate
+   counter (a per-isolate budget multiplies by isolate count); `/api/nowplaying`
+   keeps a best-effort in-isolate limiter as defense in depth only.
 3. **Preview validation.** After deploying, verify on the preview URL that
    (a) `/api/nowplaying` answers the probe, (b) a request for a public redirecting
    stream resolves, (c) a request for a loopback/private URL returns HTTP 400 without

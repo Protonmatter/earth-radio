@@ -5,13 +5,16 @@
 // available: false and the client hides the identify button. All stream traffic goes
 // through the shared guarded boundary (manual revalidated redirects, byte caps, one
 // wall-clock deadline); HLS playlists are resolved and recent segments sampled the same
-// way the desktop implementation does. Zone-level WAF rate limits (docs/OPERATIONS.md)
-// sit in front; the in-function limiter is defense in depth.
+// way the desktop implementation does. Rate limiting for this metered route is
+// enforced exclusively by the zone-level WAF rules (6 requests/min/IP, HTTP 429;
+// docs/CLOUDFLARE_DEPLOYMENT.md): a per-isolate counter multiplies by isolate count
+// and would misrepresent the real budget, so production policy has one durable
+// source of truth.
 //
 // GET /api/track/fingerprint                 -> availability probe
 // GET /api/track/fingerprint?url=<stream>    -> identify what is playing right now
 
-import { createRateLimiter, guardedFetch, readBodyCapped, rejectFetchUrl } from '../../_shared/guarded-fetch.js';
+import { guardedFetch, readBodyCapped, rejectFetchUrl } from '../../_shared/guarded-fetch.js';
 import { identifyTrack } from '../../../server/metadata-providers.mjs';
 
 const USER_AGENT = 'EarthRadio/0.24.0 pages-fn (+https://github.com/Protonmatter/EarthRadio)';
@@ -29,8 +32,6 @@ const MAX_HLS_PLAYLIST_DEPTH = 2;
 // change, a retry must sample the current audio, not replay the previous song.
 const CACHE_TTL_FOUND_S = 25;
 const CACHE_TTL_MISS_S = 30;
-
-const allowRequest = createRateLimiter({ windowMs: 60_000, max: 6 });
 
 // The cached payload includes country-specific catalog enrichment, so the country is
 // part of the cache identity; invalid or absent countries map to the US default key.
@@ -59,13 +60,6 @@ export async function onRequestGet({ request, env }) {
   if (cache) {
     const cached = await cache.match(cacheKey);
     if (cached) return cached;
-  }
-
-  if (!allowRequest(request)) {
-    return new Response(JSON.stringify({ error: 'fingerprint rate limit exceeded' }), {
-      status: 429,
-      headers: { 'content-type': 'application/json; charset=utf-8', 'retry-after': '60', 'cache-control': 'no-store' }
-    });
   }
 
   const payload = await identify(streamUrl, providers, env, country);

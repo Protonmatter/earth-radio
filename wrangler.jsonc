@@ -1,0 +1,16 @@
+// Cloudflare Pages configuration (deployable repository configuration).
+// `global_fetch_strictly_public` is mandatory for the /api/* Functions: it forces
+// global fetch() through the public Internet boundary so a same-zone hostname can
+// never short-circuit to a zone origin, complementing the manual redirect
+// revalidation in functions/_shared/guarded-fetch.js. scripts/validate-repository.mjs
+// rejects any commit that drops this flag or introduces global_fetch_private_origin.
+// The output directory is the staged, validated artifact produced by
+// `npm run build:web` (see docs/OPERATIONS.md and docs/CLOUDFLARE_DEPLOYMENT.md);
+// deploying the raw `site/` source would skip staging validation. No secret lives
+// in this file.
+{
+  "name": "earth-radio",
+  "pages_build_output_dir": ".build/site",
+  "compatibility_date": "2026-08-25",
+  "compatibility_flags": ["global_fetch_strictly_public"]
+}

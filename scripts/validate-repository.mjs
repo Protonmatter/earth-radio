@@ -65,9 +65,43 @@ function hasRealSecretAssignment(text) {
   return false;
 }
 
+// The Pages Functions fetch listener-supplied stream URLs, so the deployable
+// Cloudflare configuration is a security control: `global_fetch_strictly_public`
+// must stay declared and `global_fetch_private_origin` must never appear. JSONC
+// comments are stripped before parsing (string literals in this file never
+// contain `//`, so a line-based strip is sufficient).
+export async function validateCloudflareConfig(root) {
+  const errors = [];
+  const configPath = path.join(root, 'wrangler.jsonc');
+  let raw = null;
+  try { raw = await readFile(configPath, 'utf8'); } catch { raw = null; }
+  if (raw === null) {
+    let hasFunctions = false;
+    try { hasFunctions = (await readdir(path.join(root, 'functions'))).length > 0; } catch { hasFunctions = false; }
+    if (hasFunctions) errors.push('Missing wrangler.jsonc: Pages Functions require the strict-public fetch configuration');
+    return errors;
+  }
+  let config;
+  try {
+    config = JSON.parse(raw.split(/\r?\n/).filter(line => !line.trim().startsWith('//')).join('\n'));
+  } catch {
+    errors.push('wrangler.jsonc is not parseable JSONC');
+    return errors;
+  }
+  const flags = Array.isArray(config.compatibility_flags) ? config.compatibility_flags : [];
+  if (!flags.includes('global_fetch_strictly_public')) {
+    errors.push('wrangler.jsonc must declare the global_fetch_strictly_public compatibility flag');
+  }
+  if (flags.includes('global_fetch_private_origin')) {
+    errors.push('wrangler.jsonc must never declare the global_fetch_private_origin compatibility flag');
+  }
+  return errors;
+}
+
 export async function validateRepository(rootInput) {
   const root = path.resolve(rootInput);
   const errors = [];
+  errors.push(...await validateCloudflareConfig(root));
   const files = await candidateFiles(root);
   for (const relative of files) {
     const normalized = relative.replaceAll('\\', '/');
