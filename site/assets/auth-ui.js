@@ -1,7 +1,7 @@
 import { createAuthClient } from './auth-core.js';
 import {
   accountDataKey, createSyncEngine, planLocalAccountTransition,
-  shouldResetBrowserAccount, shouldResetLocalAccount, syncDocuments
+  shouldResetBrowserAccount, shouldResetLocalAccount, stableStringify, syncDocuments
 } from './sync-core.js';
 
 const ACTIVE_USER_KEY = 'earthRadio.auth.activeUser.v1';
@@ -56,6 +56,20 @@ async function accountKv(operation, key, value, userId) {
         if (storedNamespace !== userId) {
           failure = accountChangedError();
           transaction.abort();
+          return;
+        }
+        if (operation === 'comparePut') {
+          const compareRequest = store.get(key);
+          compareRequest.onerror = () => reject(compareRequest.error);
+          compareRequest.onsuccess = () => {
+            if (stableStringify(compareRequest.result) !== stableStringify(value.expected)) {
+              result = false;
+              return;
+            }
+            const putRequest = store.put(value.next, key);
+            putRequest.onerror = () => reject(putRequest.error);
+            putRequest.onsuccess = () => { result = true; };
+          };
           return;
         }
         const request = operation === 'get' ? store.get(key) : store.put(value, key);
@@ -159,6 +173,7 @@ async function boot() {
   let resettingSession = false;
   let syncGeneration = 0;
   let accountTransition = Promise.resolve();
+  let authInitialized = false;
 
   const button = el('button', 'er-auth-button', 'Sign in');
   button.type = 'button';
@@ -208,7 +223,7 @@ async function boot() {
       const nextUserId = nextSession.user.id;
       const activeUserId = localStorage.getItem(ACTIVE_USER_KEY);
       const tabUserId = session?.user?.id;
-      if (shouldResetBrowserAccount(activeUserId, tabUserId, nextUserId)) {
+      if (shouldResetBrowserAccount(activeUserId, tabUserId, nextUserId, authInitialized)) {
         syncGeneration += 1;
         if (syncTimer) clearInterval(syncTimer);
         syncTimer = null;
@@ -258,6 +273,12 @@ async function boot() {
           const result = await accountKv('put', key, value, userId);
           assertActive();
           return result;
+        },
+        writeLocalIfUnchanged: async (key, expected, value) => {
+          assertActive();
+          const written = await accountKv('comparePut', key, { expected, next: value }, userId);
+          assertActive();
+          return written;
         },
         readState: async key => {
           assertActive();
@@ -442,6 +463,7 @@ async function boot() {
   render();
   try {
     session = await auth.initialize();
+    authInitialized = true;
     await accountTransition;
     if (resettingSession) return;
     if (session) {
@@ -464,6 +486,7 @@ async function boot() {
       startSync();
     }
   } catch (error) {
+    authInitialized = true;
     message(error.message, 'error');
     modal.hidden = false;
   }
