@@ -136,6 +136,28 @@ test('transient refresh failures retain and restore the offline session', async 
   assert.ok(storage.getItem('earthRadio.auth.session.v1'));
 });
 
+test('offline sign-out still completes locally so private device data can be cleared', async () => {
+  const storage = memoryStorage();
+  storage.setItem('earthRadio.auth.session.v1', JSON.stringify({
+    access_token: 'access', refresh_token: 'refresh', expires_at: 4102444800,
+    user: { id: 'user-1' }
+  }));
+  const events = [];
+  const client = createAuthClient({
+    url: 'https://project.supabase.co',
+    publishableKey: 'sb_publishable_test',
+    storage,
+    location: { href: 'https://earth-radio.example/', origin: 'https://earth-radio.example', pathname: '/' },
+    fetchImpl: async () => { throw new TypeError('offline'); }
+  });
+  client.onAuthStateChange((event, session) => events.push([event, session]));
+
+  await client.signOut();
+
+  assert.equal(storage.getItem('earthRadio.auth.session.v1'), null);
+  assert.deepEqual(events, [['SIGNED_OUT', null]]);
+});
+
 test('identity linking is authorized with the current access token', async () => {
   const storage = memoryStorage();
   storage.setItem('earthRadio.auth.session.v1', JSON.stringify({
