@@ -99,6 +99,11 @@ export function createAuthClient({
     return [400, 401, 403].includes(Number(error?.status));
   }
 
+  function retryableRequestError(error) {
+    const status = Number(error?.status);
+    return !status || status === 408 || status === 425 || status === 429 || status >= 500;
+  }
+
   async function refreshSession() {
     const refreshSource = session;
     if (!refreshSource) return null;
@@ -167,16 +172,22 @@ export function createAuthClient({
     const flows = readFlows();
     const verifier = flows[flowId]?.verifier;
     if (!flowId || !verifier) throw new Error('The sign-in verifier is missing. Please start sign-in again.');
+    let consumeFlow = true;
     try {
       const value = await request(`${authUrl}/token?grant_type=pkce`, {
         method: 'POST', body: { auth_code: code, code_verifier: verifier }
       });
       return saveSession(value);
+    } catch (error) {
+      consumeFlow = !retryableRequestError(error);
+      throw error;
     } finally {
-      delete flows[flowId];
-      if (Object.keys(flows).length) storage.setItem(PKCE_KEY, JSON.stringify(flows));
-      else storage.removeItem(PKCE_KEY);
-      cleanCallbackUrl();
+      if (consumeFlow) {
+        delete flows[flowId];
+        if (Object.keys(flows).length) storage.setItem(PKCE_KEY, JSON.stringify(flows));
+        else storage.removeItem(PKCE_KEY);
+        cleanCallbackUrl();
+      }
     }
   }
 
@@ -249,7 +260,12 @@ export function createAuthClient({
     async getUser() {
       const current = await freshSession();
       if (!current) return null;
-      return request(`${authUrl}/user`, { accessToken: current.access_token });
+      try {
+        return await request(`${authUrl}/user`, { accessToken: current.access_token });
+      } catch (error) {
+        if (invalidSessionError(error) && session === current) saveSession(null, 'SIGNED_OUT');
+        throw error;
+      }
     },
 
     async signOut() {
