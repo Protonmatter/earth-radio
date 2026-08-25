@@ -231,3 +231,25 @@ test('extensionless HLS media playlists are parsed as playlists, not nested chil
   assert.ok(fetched.includes('https://radio.example/seg2.aac'));
   assert.ok(sample.body.length >= segment.length * 2, 'both media segments are concatenated');
 });
+
+test('requestLimited sends the default EarthRadio user agent unless overridden', async () => {
+  const { requestLimited } = await import('../server/net-guard.mjs');
+  const { createServer } = await import('node:http');
+  const seen = [];
+  const server = createServer((request, response) => {
+    seen.push(request.headers['user-agent'] || '');
+    response.end('ok');
+  });
+  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+  const { port } = server.address();
+  const url = new URL(`http://127.0.0.1:${port}/playlist.m3u`);
+  const target = { href: url.href, url, hostname: '127.0.0.1', address: '127.0.0.1', family: 4 };
+  try {
+    await requestLimited(target, { timeoutMs: 3000 });
+    await requestLimited(target, { timeoutMs: 3000, headers: { 'User-Agent': 'custom/1.0' } });
+  } finally {
+    server.close();
+  }
+  assert.match(seen[0], /^EarthRadio\/0\.24\.0/, 'playlist and probe requests identify the client by default');
+  assert.equal(seen[1], 'custom/1.0', 'caller-supplied user agents are preserved');
+});
