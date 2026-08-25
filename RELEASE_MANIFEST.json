@@ -275,8 +275,8 @@
     },
     {
       "path": "site/assets/directory-expansion.js",
-      "bytes": 9373,
-      "sha256": "689bb58bc1a52a960abcd7b8424bd57f151387c023a87275a1c57b2706a494e2"
+      "bytes": 9778,
+      "sha256": "b5a6693cb327793a3d88932dad0caac9b17f28019314da0ab4011217bcb6b8ef"
     },
     {
       "path": "site/assets/hls.light-Dr1Fv81C.js",
@@ -695,8 +695,8 @@
     },
     {
       "path": "tests/live-metadata.test.mjs",
-      "bytes": 15536,
-      "sha256": "565edf2a681e79a1e65ee82c25efb0569bae918d0fad5a519834c37bf4751cd9"
+      "bytes": 17343,
+      "sha256": "ca8afefbf7df67933b86978dee0da43389d74c1bf710b9aa103d44312872bc7e"
     },
     {
       "path": "tests/net-guard.test.mjs",

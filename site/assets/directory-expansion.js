@@ -64,7 +64,9 @@ function applyPersistedExpansions() {
   applyCodes(merged);
 }
 
-async function loadCountryIndex() {
+// Exported (with injectable fetch/timeout) for direct unit testing of the mirror
+// walk, the abort budget, and empty-result semantics.
+export async function loadCountryIndex({ fetchImpl = fetch, timeoutMs = 8000 } = {}) {
   try {
     const cached = JSON.parse(localStorage.getItem(COUNTRY_INDEX_KEY) || 'null');
     if (cached && Array.isArray(cached.list) && Date.now() - Number(cached.savedAt || 0) < COUNTRY_INDEX_TTL_MS) {
@@ -74,9 +76,9 @@ async function loadCountryIndex() {
 
   for (const base of COUNTRY_LIST_BASES) {
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 8000);
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
     try {
-      const response = await fetch(`${base}/json/countries`, { signal: controller.signal, headers: { Accept: 'application/json' } });
+      const response = await fetchImpl(`${base}/json/countries`, { signal: controller.signal, headers: { Accept: 'application/json' } });
       if (!response.ok) continue;
       // The abort timer must survive until the body is parsed: a mirror that sends
       // headers and then stalls the JSON would otherwise hang this attempt forever.
@@ -213,14 +215,18 @@ function wireSelectionListeners() {
   }, true);
 }
 
-applyPersistedExpansions();
-if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wireSelectionListeners);
-else wireSelectionListeners();
+// Browser-only bootstrap; guarded so the exported helpers stay importable from
+// Node unit tests without a DOM.
+if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+  applyPersistedExpansions();
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wireSelectionListeners);
+  else wireSelectionListeners();
 
-// Debug/e2e hook.
-window.earthRadioDirectory = Object.freeze({
-  version: '1.0.0',
-  expand: expandCountry,
-  expandedCodes: readPersistedCodes,
-  activeCodes: currentCodes
-});
+  // Debug/e2e hook.
+  window.earthRadioDirectory = Object.freeze({
+    version: '1.0.0',
+    expand: expandCountry,
+    expandedCodes: readPersistedCodes,
+    activeCodes: currentCodes
+  });
+}

@@ -327,3 +327,38 @@ test('speculative tooltip lookups have their own bounded request budget', async 
   // Once the window slides past the oldest spend, lookups resume.
   assert.equal(takeTooltipLookupToken(spentAt, start + 61_000), true);
 });
+
+test('a mirror that stalls mid-body cannot hang the country index', async () => {
+  const { loadCountryIndex } = await import('../site/assets/directory-expansion.js');
+  const calls = [];
+  const fetchImpl = (url, { signal }) => {
+    calls.push(String(url));
+    if (calls.length === 1) {
+      // Headers arrive, then the JSON body black-holes; only the abort budget —
+      // which must survive until the body is parsed — can end this attempt.
+      return Promise.resolve({
+        ok: true,
+        json: () => new Promise((resolve, reject) => {
+          signal.addEventListener('abort', () => reject(new Error('aborted')));
+        })
+      });
+    }
+    return Promise.resolve({ ok: true, json: async () => [{ name: 'Japan', iso_3166_1: 'JP', stationcount: 5 }] });
+  };
+  const startedAt = Date.now();
+  const list = await loadCountryIndex({ fetchImpl, timeoutMs: 150 });
+  assert.ok(Date.now() - startedAt < 2000, 'the stalled mirror was abandoned inside the budget');
+  assert.ok(calls.length >= 2, 'the next mirror was attempted');
+  assert.equal(list[0]?.code, 'JP');
+});
+
+test('an all-mirror failure yields an empty index that is never memoized', async () => {
+  const { loadCountryIndex } = await import('../site/assets/directory-expansion.js');
+  const failing = () => Promise.reject(new Error('offline'));
+  assert.deepEqual(await loadCountryIndex({ fetchImpl: failing, timeoutMs: 100 }), []);
+  // The memoization wrapper drops an empty result so the next country selection
+  // retries the mirrors instead of staying dead until a reload.
+  const root = path.resolve(import.meta.dirname, '..');
+  const overlay = await readFile(path.join(root, 'site', 'assets', 'directory-expansion.js'), 'utf8');
+  assert.match(overlay, /if \(!list\.length\) expansion\.indexPromise = null;/);
+});
