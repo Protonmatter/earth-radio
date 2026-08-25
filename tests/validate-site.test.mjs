@@ -41,6 +41,25 @@ test('validateSite rejects a localhost production proxy', async () => {
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
+test('validateSite permits only the bounded localhost auth development origin', async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), 'earth-radio-auth-dev-site-'));
+  try {
+    await createSite(root, {
+      config: "const authOrigins=['https://earth-radio.pages.dev','http://localhost:8788']; window.RADIO_CONFIG={proxyBaseUrl: desktopProxyBaseUrl || '',authOrigins};"
+    });
+    const result = await validateSite(root);
+    assert.equal(result.ok, true);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test('validateSite still rejects the permitted auth origin when used as a proxy endpoint', async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), 'earth-radio-local-proxy-site-'));
+  try {
+    await createSite(root, { config: "window.RADIO_CONFIG={proxyBaseUrl:'http://localhost:8788'};" });
+    await assert.rejects(() => validateSite(root), /forbidden local reference|fail closed/i);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
 test('validateSite rejects an absent referenced asset', async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), 'earth-radio-missing-site-'));
   try {
@@ -135,3 +154,4 @@ test('validateSite rejects immutable caching on a versionless file outside asset
     );
   } finally { await rm(root, { recursive: true, force: true }); }
 });
+
