@@ -252,6 +252,8 @@ export function createAuthClient({
       const current = session;
       try {
         if (current) await request(`${authUrl}/logout`, { method: 'POST', accessToken: current.access_token });
+      } catch {
+        // Remote revocation is best-effort. Local sign-out and account-data cleanup must still finish offline.
       } finally {
         saveSession(null, 'SIGNED_OUT');
         storage.removeItem(PKCE_KEY);
