@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(21);
+select plan(23);
 
 select ok(
   to_regprocedure('public.rls_auto_enable()') is null
@@ -157,6 +157,26 @@ select throws_ok(
   '23514',
   'unsupported document key',
   'config RPC rejects keys outside the three synchronized documents'
+);
+
+select lives_ok(
+  $$
+    select * from public.upsert_user_config_document(
+      'favorites', jsonb_build_object('payload', repeat('x', 70000)), 0, false
+    )
+  $$,
+  'favorites accepts a valid document larger than the preferences limit'
+);
+
+select throws_ok(
+  $$
+    select * from public.upsert_user_config_document(
+      'preferences', jsonb_build_object('payload', repeat('x', 70000)), 0, false
+    )
+  $$,
+  '23514',
+  'document exceeds supported size',
+  'preferences retains a bounded document size'
 );
 
 select set_config('request.jwt.claim.sub', '22222222-2222-4222-8222-222222222222', true);
