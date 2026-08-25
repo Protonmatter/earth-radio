@@ -4,7 +4,7 @@
 const desktopProxyBaseUrl = window.earthRadio && window.earthRadio.isDesktop && typeof window.earthRadio.proxyBaseUrl === 'string'
   ? window.earthRadio.proxyBaseUrl
   : '';
-const authOriginAllowed = ['https://earth-radio.pages.dev', 'http://localhost:8788'].includes(window.location.origin);
+const authOriginAllowed = window.location.origin === 'https://earth-radio.pages.dev';
 
 window.RADIO_CONFIG = window.RADIO_CONFIG || {
   // Public Cloudflare Pages deployments use browser-direct mode, so this must remain empty.
