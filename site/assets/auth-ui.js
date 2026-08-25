@@ -1,5 +1,5 @@
 import { createAuthClient } from './auth-core.js';
-import { createSyncEngine, shouldResetLocalAccount, syncDocuments } from './sync-core.js';
+import { createSyncEngine, shouldResetLocalAccount, transitionLocalAccount } from './sync-core.js';
 
 const ACTIVE_USER_KEY = 'earthRadio.auth.activeUser.v1';
 const DEFAULT_LOCAL_DATA = Object.freeze({
@@ -61,13 +61,14 @@ function syncStateKey(userId, localKey) {
   return `earthRadio.sync.${userId}.${localKey}.v1`;
 }
 
-async function clearLocalSyncData(userId) {
-  for (const [key, value] of Object.entries(DEFAULT_LOCAL_DATA)) {
-    await kv('put', key, structuredClone(value));
-  }
-  if (userId) {
-    for (const { localKey } of syncDocuments) localStorage.removeItem(syncStateKey(userId, localKey));
-  }
+function switchLocalAccount(previousUserId, nextUserId) {
+  return transitionLocalAccount({
+    previousUserId,
+    nextUserId,
+    readLocal: key => kv('get', key),
+    writeLocal: (key, value) => kv('put', key, value),
+    defaults: DEFAULT_LOCAL_DATA
+  });
 }
 
 async function boot() {
@@ -87,6 +88,8 @@ async function boot() {
   let syncStatus = 'Local only';
   let signingOut = false;
   let resettingSession = false;
+  let syncGeneration = 0;
+  let accountTransition = Promise.resolve();
 
   const button = el('button', 'er-auth-button', 'Sign in');
   button.type = 'button';
@@ -117,21 +120,40 @@ async function boot() {
   async function resetSignedOutSession(userId) {
     if (resettingSession) return;
     resettingSession = true;
+    syncGeneration += 1;
     if (syncTimer) clearInterval(syncTimer);
     syncTimer = null;
     session = null;
     user = null;
-    await clearLocalSyncData(userId);
+    await switchLocalAccount(userId, null);
     localStorage.removeItem(ACTIVE_USER_KEY);
     location.reload();
   }
 
   auth.onAuthStateChange((event, nextSession) => {
-    session = nextSession;
     if (event === 'SIGNED_OUT' && !signingOut) {
       void resetSignedOutSession(localStorage.getItem(ACTIVE_USER_KEY));
       return;
     }
+    if (event === 'SIGNED_IN' && nextSession?.user?.id) {
+      const nextUserId = nextSession.user.id;
+      const activeUserId = localStorage.getItem(ACTIVE_USER_KEY);
+      if (shouldResetLocalAccount(activeUserId, nextUserId)) {
+        syncGeneration += 1;
+        if (syncTimer) clearInterval(syncTimer);
+        syncTimer = null;
+        session = null;
+        user = null;
+        accountTransition = accountTransition.then(async () => {
+          const previousUserId = localStorage.getItem(ACTIVE_USER_KEY);
+          await switchLocalAccount(previousUserId, nextUserId);
+          localStorage.setItem(ACTIVE_USER_KEY, nextUserId);
+          location.reload();
+        });
+        return;
+      }
+    }
+    session = nextSession;
     render();
   });
 
@@ -142,24 +164,43 @@ async function boot() {
     render();
     try {
       const userId = session.user.id;
+      const generation = syncGeneration;
+      const assertActive = () => {
+        if (generation !== syncGeneration || session?.user?.id !== userId) {
+          const error = new Error('Account changed while synchronization was running.');
+          error.code = 'ACCOUNT_CHANGED';
+          throw error;
+        }
+      };
       const engine = createSyncEngine({
-        readLocal: key => kv('get', key),
-        writeLocal: (key, value) => kv('put', key, value),
+        readLocal: async key => { assertActive(); return kv('get', key); },
+        writeLocal: async (key, value) => { assertActive(); return kv('put', key, value); },
         readState: async key => {
+          assertActive();
           try { return JSON.parse(localStorage.getItem(syncStateKey(userId, key))); }
           catch { return null; }
         },
-        writeState: async (key, value) => localStorage.setItem(syncStateKey(userId, key), JSON.stringify(value)),
-        fetchRemote: () => auth.rest('user_config_documents?select=document_key,value,revision,deleted_at&order=document_key'),
-        upsertRemote: ({ documentKey, value, expectedRevision, deleteDocument }) => auth.rpc(
-          'upsert_user_config_document',
-          {
+        writeState: async (key, value) => {
+          assertActive();
+          localStorage.setItem(syncStateKey(userId, key), JSON.stringify(value));
+        },
+        fetchRemote: async () => {
+          assertActive();
+          const rows = await auth.rest('user_config_documents?select=document_key,value,revision,deleted_at&order=document_key');
+          assertActive();
+          return rows;
+        },
+        upsertRemote: async ({ documentKey, value, expectedRevision, deleteDocument }) => {
+          assertActive();
+          const row = await auth.rpc('upsert_user_config_document', {
             p_document_key: documentKey,
             p_value: deleteDocument ? null : value,
             p_expected_revision: expectedRevision,
             p_delete: deleteDocument
-          }
-        )
+          });
+          assertActive();
+          return row;
+        }
       });
       const result = await engine.syncOnce();
       syncStatus = result.conflicts ? 'Synced · conflicts merged' : 'Synced';
@@ -175,10 +216,7 @@ async function boot() {
     } catch (error) {
       syncStatus = navigator.onLine ? 'Sync paused' : 'Offline';
       console.warn('Earth Radio account sync:', error);
-      if (error?.status === 401 || error?.status === 403) {
-        await resetSignedOutSession(session?.user?.id || localStorage.getItem(ACTIVE_USER_KEY));
-        return;
-      }
+      if (error?.code === 'ACCOUNT_CHANGED') return;
     } finally {
       syncing = false;
       render();
@@ -279,7 +317,8 @@ async function boot() {
           const userId = session?.user?.id;
           signingOut = true;
           await auth.signOut();
-          await clearLocalSyncData(userId);
+          syncGeneration += 1;
+          await switchLocalAccount(userId, null);
           localStorage.removeItem(ACTIVE_USER_KEY);
           session = null;
           user = null;
@@ -316,15 +355,19 @@ async function boot() {
   render();
   try {
     session = await auth.initialize();
+    await accountTransition;
+    if (resettingSession) return;
     if (session) {
       const previousUserId = localStorage.getItem(ACTIVE_USER_KEY);
       const nextUserId = session.user.id;
       if (shouldResetLocalAccount(previousUserId, nextUserId)) {
-        await clearLocalSyncData(nextUserId);
+        syncGeneration += 1;
+        await switchLocalAccount(previousUserId, nextUserId);
         localStorage.setItem(ACTIVE_USER_KEY, nextUserId);
         location.reload();
         return;
       }
+      if (!previousUserId) await switchLocalAccount(null, nextUserId);
       localStorage.setItem(ACTIVE_USER_KEY, nextUserId);
       await refreshUser();
       startSync();
