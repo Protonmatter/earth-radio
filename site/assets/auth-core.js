@@ -285,6 +285,9 @@ export function createAuthClient({
           saveSession(null, 'SIGNED_OUT');
           storage.removeItem(PKCE_KEY);
           signedOut = true;
+        } else if (!session) {
+          // Another tab completed the same sign-out while this request was in flight.
+          signedOut = true;
         }
       }
       return signedOut;
