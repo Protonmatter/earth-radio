@@ -131,9 +131,10 @@ export function shouldResetLocalAccount(previousUserId, nextUserId) {
   return Boolean(previousUserId && nextUserId && previousUserId !== nextUserId);
 }
 
-export function shouldResetBrowserAccount(activeUserId, tabUserId, nextUserId) {
+export function shouldResetBrowserAccount(activeUserId, tabUserId, nextUserId, tabInitialized = false) {
   return shouldResetLocalAccount(activeUserId, nextUserId)
-    || shouldResetLocalAccount(tabUserId, nextUserId);
+    || shouldResetLocalAccount(tabUserId, nextUserId)
+    || Boolean(tabInitialized && nextUserId && !tabUserId);
 }
 
 export function accountDataKey(userId, localKey) {
@@ -186,6 +187,7 @@ function normalizeWriteResult(result) {
 export function createSyncEngine({
   readLocal,
   writeLocal,
+  writeLocalIfUnchanged,
   readState,
   writeState,
   fetchRemote,
@@ -197,6 +199,16 @@ export function createSyncEngine({
 
   async function remember(localKey, revision, value) {
     await writeState(localKey, { revision, hash: stableStringify(value), value });
+  }
+
+  async function replaceLocal(localKey, expected, value) {
+    if (typeof writeLocalIfUnchanged === 'function') {
+      return writeLocalIfUnchanged(localKey, expected, value);
+    }
+    const current = await readLocal(localKey);
+    if (stableStringify(current) !== stableStringify(expected)) return false;
+    await writeLocal(localKey, value);
+    return true;
   }
 
   async function push(document, value, expectedRevision) {
@@ -238,7 +250,10 @@ export function createSyncEngine({
 
         if (!state) {
           if (local === undefined) {
-            await writeLocal(document.localKey, remoteValue);
+            if (!await replaceLocal(document.localKey, local, remoteValue)) {
+              result.conflicts += 1;
+              continue;
+            }
             await remember(document.localKey, remoteRevision, remoteValue);
             result.downloaded += 1;
             continue;
@@ -246,7 +261,10 @@ export function createSyncEngine({
           const merged = (document.mergeInitial || document.merge)(local, remoteValue);
           const mergedHash = stableStringify(merged);
           if (mergedHash !== localHash) {
-            await writeLocal(document.localKey, merged);
+            if (!await replaceLocal(document.localKey, local, merged)) {
+              result.conflicts += 1;
+              continue;
+            }
             result.downloaded += 1;
           }
           if (mergedHash !== remoteHash) {
@@ -267,7 +285,14 @@ export function createSyncEngine({
           const merged = hasBase && document.mergeConcurrent
             ? document.mergeConcurrent(state.value, local, remoteValue)
             : document.merge(local, remoteValue);
-          await writeLocal(document.localKey, merged);
+          const mergedHash = stableStringify(merged);
+          if (mergedHash !== localHash) {
+            if (!await replaceLocal(document.localKey, local, merged)) {
+              result.conflicts += 1;
+              continue;
+            }
+            result.downloaded += 1;
+          }
           const written = await push(document, merged, remoteRevision);
           result.conflicts += 1;
           if (written) result.uploaded += 1;
@@ -282,7 +307,10 @@ export function createSyncEngine({
         }
 
         if (remoteChanged) {
-          await writeLocal(document.localKey, remoteValue);
+          if (!await replaceLocal(document.localKey, local, remoteValue)) {
+            result.conflicts += 1;
+            continue;
+          }
           await remember(document.localKey, remoteRevision, remoteValue);
           result.downloaded += 1;
         }
