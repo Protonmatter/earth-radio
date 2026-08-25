@@ -131,6 +131,11 @@ export function shouldResetLocalAccount(previousUserId, nextUserId) {
   return Boolean(previousUserId && nextUserId && previousUserId !== nextUserId);
 }
 
+export function shouldResetBrowserAccount(activeUserId, tabUserId, nextUserId) {
+  return shouldResetLocalAccount(activeUserId, nextUserId)
+    || shouldResetLocalAccount(tabUserId, nextUserId);
+}
+
 export function accountDataKey(userId, localKey) {
   if (!userId || !DOCUMENTS.some(document => document.localKey === localKey)) {
     throw new Error('A user and synchronized local key are required.');
