@@ -69,10 +69,10 @@
         "sha256": "c83167f40ae7df3b389e35707b4abac834b10dc223ecb836d7840f90a7ef92a6"
       },
       "current": {
-        "bytes": 2188,
-        "sha256": "9fe1c2231d0bf0b731b78196587d97cc85b6a7badf2d0f8bf9c84efb659c56d1"
+        "bytes": 2155,
+        "sha256": "9639b5bef751920e5ecae684ba0b6b854250746aed057cb2240c10c846c021af"
       },
-      "reason": "Keep Cloudflare Pages on an empty proxy URL, restrict production authentication to the production and explicit localhost origins, configure the public Supabase project and enabled providers, and load the same-origin account overlay without changing the recovered bundle."
+      "reason": "Keep Cloudflare Pages on an empty proxy URL, restrict deployable authentication to the exact production origin, configure the public Supabase project and enabled providers, and load the same-origin account overlay without changing the recovered bundle."
     },
     {
       "path": "site/index.html",
