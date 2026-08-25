@@ -12,7 +12,8 @@ Authenticated users can access only rows whose `user_id` equals `auth.uid()`. An
 access is revoked. Configuration writes are restricted to the three synchronized document
 keys (`favorites`, `recents`, and `preferences`) and must use
 `upsert_user_config_document`, which performs compare-and-swap revision checks and keeps
-deletion tombstones.
+deletion tombstones. Per-key size limits accommodate the recovered model's 1,000 full favorite
+summaries while keeping recents and preferences substantially smaller.
 
 The web client syncs the existing IndexedDB `favorites`, `recents`, and `prefs` records to
 the generic configuration documents `favorites`, `recents`, and `preferences`. First-device
