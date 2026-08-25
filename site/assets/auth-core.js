@@ -152,7 +152,11 @@ export function createAuthClient({
   }
 
   function redirectTarget() {
-    return `${location.origin}${location.pathname || '/'}`;
+    const current = new URL(location.href);
+    for (const key of ['code', 'error', 'error_code', 'error_description', FLOW_PARAM]) {
+      current.searchParams.delete(key);
+    }
+    return current.href;
   }
 
   function redirectForFlow(target, flowId) {
