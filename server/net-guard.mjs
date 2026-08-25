@@ -10,6 +10,9 @@ import { URL } from 'node:url';
 
 const DEFAULT_TIMEOUT_MS = 8000;
 const DEFAULT_MAX_BYTES = 64 * 1024;
+const DEFAULT_MAX_REDIRECTS = 3;
+// Deterministic identity at the shared outbound boundary; callers may override.
+const DEFAULT_USER_AGENT = 'EarthRadio/0.24.0 (+https://github.com/Protonmatter/EarthRadio)';
 
 export async function resolvePublicTarget(rawUrl) {
   const parsed = new URL(String(rawUrl || '').trim());
@@ -57,21 +60,28 @@ export function createPinnedLookup(target) {
 // truncated: true — endless live streams are the normal case here, not an error.
 // stopWhen receives { length, chunk, headers, body() } where body() concatenates the
 // buffered bytes on demand; return true to stop reading.
-export async function requestLimited(streamTarget, { timeoutMs = DEFAULT_TIMEOUT_MS, headers = {}, maxBytes = DEFAULT_MAX_BYTES, stopWhen } = {}) {
+export async function requestLimited(streamTarget, { timeoutMs = DEFAULT_TIMEOUT_MS, deadlineAt = 0, headers = {}, maxBytes = DEFAULT_MAX_BYTES, stopWhen } = {}) {
   const target = typeof streamTarget === 'string' ? await resolvePublicTarget(streamTarget) : streamTarget;
+  // The socket timeout below resets on activity; the wall-clock budget must not — a
+  // trickling upstream can otherwise pin the request (and its caller) indefinitely.
+  const budgetMs = Math.max(1, Math.min(timeoutMs, deadlineAt > 0 ? deadlineAt - Date.now() : Number.POSITIVE_INFINITY));
   return new Promise((resolve, reject) => {
     let settled = false;
+    let deadlineTimer = null;
+    // Replaced once a body is streaming so the deadline yields a usable partial read.
+    let onDeadline = () => settle(reject, new Error('request deadline exceeded'));
     const settle = (fn, value) => {
       if (settled) return;
       settled = true;
+      clearTimeout(deadlineTimer);
       fn(value);
     };
     const client = target.url.protocol === 'https:' ? https : http;
     const request = client.request(target.url, {
       method: 'GET',
-      timeout: timeoutMs,
+      timeout: budgetMs,
       lookup: createPinnedLookup(target),
-      headers
+      headers: { 'User-Agent': DEFAULT_USER_AGENT, ...headers }
     }, response => {
       const statusCode = Number(response.statusCode || 0);
       const result = { statusCode, headers: response.headers, body: Buffer.alloc(0), truncated: false, get text() { return this.body.toString('utf8'); } };
@@ -108,11 +118,52 @@ export async function requestLimited(streamTarget, { timeoutMs = DEFAULT_TIMEOUT
         if (chunks.length) finish(true);
         else settle(reject, new Error('response stream error'));
       });
+      onDeadline = () => {
+        if (chunks.length) finish(true);
+        else {
+          response.destroy();
+          request.destroy();
+          settle(reject, new Error('request deadline exceeded'));
+        }
+      };
     });
-    request.setTimeout(timeoutMs, () => request.destroy(new Error('request timeout')));
+    deadlineTimer = setTimeout(() => onDeadline(), budgetMs);
+    request.setTimeout(budgetMs, () => request.destroy(new Error('request timeout')));
     request.on('error', error => settle(reject, error));
     request.end();
   });
+}
+
+// Redirect-following variant of requestLimited. Every hop is re-validated through the
+// public-target policy (the initial URL check is not authorization for later hops),
+// the hop count is capped, and the whole chain shares one absolute wall-clock
+// deadline. resolveTarget/performRequest are injectable for tests.
+export async function guardedRequest(rawUrl, {
+  maxRedirects = DEFAULT_MAX_REDIRECTS,
+  timeoutMs = DEFAULT_TIMEOUT_MS,
+  deadlineAt = 0,
+  resolveTarget = resolvePublicTarget,
+  performRequest = requestLimited,
+  ...options
+} = {}) {
+  const deadline = deadlineAt > 0 ? deadlineAt : Date.now() + timeoutMs;
+  let currentUrl = String(rawUrl || '').trim();
+  const visited = new Set();
+  for (let hop = 0; hop <= maxRedirects; hop += 1) {
+    if (Date.now() >= deadline) throw new Error('request deadline exceeded');
+    const target = await resolveTarget(currentUrl);
+    const response = await performRequest(target, { ...options, timeoutMs, deadlineAt: deadline });
+    if (!isRedirect(response.statusCode)) {
+      return { ...response, statusCode: response.statusCode, finalUrl: target.href, hops: hop };
+    }
+    const location = response.headers?.location;
+    if (!location) throw new Error('redirect without a location header');
+    const nextUrl = new URL(location, target.href).toString();
+    if (visited.has(nextUrl) || nextUrl === currentUrl) throw new Error('redirect loop detected');
+    visited.add(currentUrl);
+    currentUrl = nextUrl;
+  }
+  throw new Error('too many redirects');
 }
 
 export function isRedirect(status) {

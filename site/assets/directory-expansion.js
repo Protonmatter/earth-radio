@@ -17,7 +17,11 @@ const COUNTRY_LIST_BASES = [
   'https://nl1.api.radio-browser.info'
 ];
 
-const expansion = { busy: false, lastCountry: '', indexPromise: null };
+// One serialized/coalescing refresh scheduler: new ISO codes join the config
+// immediately, and each refresh snapshots the latest persisted set just before it
+// runs, so a stale earlier completion can never be the terminal state.
+const REFRESH_WINDOW_MS = 8000;
+const expansion = { indexPromise: null, refreshing: false, queued: false };
 
 function radioConfig() {
   if (!window.RADIO_CONFIG || typeof window.RADIO_CONFIG !== 'object') window.RADIO_CONFIG = {};
@@ -113,7 +117,6 @@ function toast(message) {
 async function expandCountry(countryName) {
   const name = String(countryName || '').trim();
   if (!name || name === 'Unknown') return { expanded: false, reason: 'no country' };
-  if (expansion.busy && expansion.lastCountry === name) return { expanded: false, reason: 'in progress' };
 
   const index = await countryIndex();
   const entry = index.find(item => item.name.toLowerCase() === name.toLowerCase());
@@ -130,29 +133,46 @@ async function expandCountry(countryName) {
     persistCodes(persisted.filter(code => code !== removable));
   }
 
-  expansion.busy = true;
-  expansion.lastCountry = name;
-  try {
-    const merged = [...codes, entry.code];
-    applyCodes(merged);
-    persistCodes([...new Set([...readPersistedCodes(), entry.code])]);
-    toast(`Loading ${entry.stationcount ? `${entry.stationcount.toLocaleString()} ` : ''}stations for ${entry.name}…`);
-    document.getElementById('refresh-stations')?.click();
-    return { expanded: true, code: entry.code, stationcount: entry.stationcount };
-  } finally {
-    setTimeout(() => { expansion.busy = false; }, 4000);
+  applyCodes([...codes, entry.code]);
+  persistCodes([...new Set([...readPersistedCodes(), entry.code])]);
+  toast(`Loading ${entry.stationcount ? `${entry.stationcount.toLocaleString()} ` : ''}stations for ${entry.name}…`);
+  scheduleRefresh();
+  return { expanded: true, code: entry.code, stationcount: entry.stationcount };
+}
+
+// Serializes directory refreshes. While one runs, further expansions only mark the
+// scheduler dirty; the follow-up refresh re-reads the merged code set, so the last
+// refresh always covers every selected country.
+function scheduleRefresh() {
+  if (expansion.refreshing) {
+    expansion.queued = true;
+    return;
   }
+  expansion.refreshing = true;
+  applyCodes([...new Set([...currentCodes(), ...readPersistedCodes()])].slice(0, MAX_TOTAL_COUNTRY_CODES));
+  document.getElementById('refresh-stations')?.click();
+  setTimeout(() => {
+    expansion.refreshing = false;
+    if (expansion.queued) {
+      expansion.queued = false;
+      scheduleRefresh();
+    }
+  }, REFRESH_WINDOW_MS);
 }
 
 function countryFromEventTarget(target) {
   const explore = target?.closest?.('.popup-country-btn');
-  if (explore) return explore.dataset.country || '';
-  const option = target?.closest?.('#er-country-options [role="option"]');
-  if (option) return option.dataset.country || '';
-  return '';
+  return explore ? explore.dataset.country || '' : '';
 }
 
 function wireSelectionListeners() {
+  // The country picker emits one semantic event for every selection path
+  // (mouse click, Enter key, programmatic selection).
+  document.addEventListener('earthradio:country-selected', event => {
+    const country = event?.detail?.country;
+    if (country) void expandCountry(country);
+  });
+
   document.addEventListener('click', event => {
     const country = countryFromEventTarget(event.target);
     if (country) void expandCountry(country);

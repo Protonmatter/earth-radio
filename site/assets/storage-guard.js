@@ -9,8 +9,14 @@ const DB_NAME = 'earthRadio';
 const DB_VERSION = 1;
 const KV_STORE = 'kv';
 const USER_KEYS = ['favorites', 'recents', 'prefs', 'badStations', 'lastPlayed'];
-const BACKUP_KEY = 'earth-radio-user-backup-v1';
-const BACKUP_PREV_KEY = 'earth-radio-user-backup-v1-prev';
+// Generation marker: proof that the primary store's current contents are intentional.
+// Only the guard writes it; a wiped/evicted store loses it together with the data,
+// while an intentional clear keeps a valid marker — so loss is proven, never inferred
+// from empty application data.
+const GUARD_META_KEY = 'earthRadioGuard:meta';
+const GUARD_NAMESPACE = 'default';
+const BACKUP_KEY = 'earth-radio-user-backup-v2';
+const BACKUP_PREV_KEY = 'earth-radio-user-backup-v2-prev';
 const RESTORE_FLAG_KEY = 'earth-radio-user-restore-attempted-v1';
 const SNAPSHOT_INTERVAL_MS = 20 * 1000;
 
@@ -96,14 +102,20 @@ function readBackup(storageKey) {
     const raw = localStorage.getItem(storageKey);
     if (!raw) return null;
     const parsed = JSON.parse(raw);
-    if (!parsed || parsed.v !== 1 || typeof parsed.payload !== 'string') return null;
+    if (!parsed || parsed.v !== 2 || typeof parsed.payload !== 'string') return null;
+    if (parsed.namespace !== GUARD_NAMESPACE) return null;
     if (checksum(parsed.payload) !== parsed.checksum) return null;
     const data = JSON.parse(parsed.payload);
     if (!data || typeof data !== 'object') return null;
-    return { savedAt: Number(parsed.savedAt) || 0, data };
+    return { generation: Number(parsed.generation) || 0, committedAt: Number(parsed.committedAt) || 0, data };
   } catch {
     return null;
   }
+}
+
+function isValidGuardMeta(meta) {
+  return Boolean(meta && meta.schemaVersion === 1 && Number.isFinite(Number(meta.generation)) &&
+    Number(meta.generation) > 0 && meta.namespace === GUARD_NAMESPACE);
 }
 
 function readBestBackup() {
@@ -122,26 +134,40 @@ function hasUserSubstance(data) {
     data.lastPlayed != null;
 }
 
-function writeBackup(data) {
+function writeBackup(data, generation) {
   const payload = JSON.stringify(data);
   if (payload === guard.lastSerialized) return;
   try {
     // Keep the previous good generation so a torn write of the primary never loses both.
     const current = localStorage.getItem(BACKUP_KEY);
     if (current && readBackup(BACKUP_KEY)) localStorage.setItem(BACKUP_PREV_KEY, current);
-    localStorage.setItem(BACKUP_KEY, JSON.stringify({ v: 1, savedAt: Date.now(), checksum: checksum(payload), payload }));
+    localStorage.setItem(BACKUP_KEY, JSON.stringify({
+      v: 2,
+      schemaVersion: 1,
+      namespace: GUARD_NAMESPACE,
+      generation,
+      committedAt: Date.now(),
+      checksum: checksum(payload),
+      payload
+    }));
     guard.lastSerialized = payload;
   } catch (error) {
     guard.lastError = String(error?.name || error || 'backup write failed');
   }
 }
 
+// Every intentional snapshot — including an empty state after the user clears their
+// data — advances the generation marker and writes a checksummed backup. A missing
+// marker means the store's contents are unproven (mid-session wipe): skip, so the
+// backup is never overwritten by unproven state, and the next boot restores.
 async function snapshot(db) {
-  const { data, present } = await readUserRecords(db);
-  // A totally empty read means the store is gone (fresh profile or data loss), not that
-  // the user cleared everything; never overwrite a good backup with that.
-  if (present === 0) return false;
-  writeBackup(data);
+  const meta = await idbGet(db, GUARD_META_KEY);
+  if (!isValidGuardMeta(meta)) return false;
+  const { data } = await readUserRecords(db);
+  const generation = Number(meta.generation) + 1;
+  const nextMeta = { schemaVersion: 1, generation, committedAt: Date.now(), namespace: GUARD_NAMESPACE };
+  if (!(await idbSet(db, GUARD_META_KEY, nextMeta))) return false;
+  writeBackup(data, generation);
   return true;
 }
 
@@ -154,14 +180,23 @@ function restoreAttempts() {
 }
 
 async function restoreIfLost(db) {
-  const { data } = await readUserRecords(db);
-  if (hasUserSubstance(data)) {
-    // Healthy boot: clear any pending restore accounting from a prior recovery.
+  const meta = await idbGet(db, GUARD_META_KEY);
+  if (isValidGuardMeta(meta)) {
+    // A valid generation marker proves the primary contents are intentional — even an
+    // empty state after the user cleared their data is authoritative and must never be
+    // overwritten by a stale backup.
     try { sessionStorage.removeItem(RESTORE_FLAG_KEY); } catch { /* best effort */ }
     return false;
   }
+
   const backup = readBestBackup();
-  if (!backup || !hasUserSubstance(backup.data)) return false;
+  if (!backup) {
+    // Fresh profile (no marker, no backup): establish generation 1 so future
+    // snapshots run and future loss is provable.
+    await idbSet(db, GUARD_META_KEY, { schemaVersion: 1, generation: 1, committedAt: Date.now(), namespace: GUARD_NAMESPACE });
+    return false;
+  }
+
   // At most two attempts per tab session so a hostile write path can never reload-loop.
   const attempts = restoreAttempts();
   if (attempts >= 2) return false;
@@ -171,22 +206,22 @@ async function restoreIfLost(db) {
     return false;
   }
 
-  // The runtime may be seeding initial empty records concurrently at first boot; write
-  // twice with a gap so the restored records win regardless of interleaving.
+  // Restore data and the generation marker together; a second round covers the
+  // runtime concurrently seeding initial empty records at first boot.
   let wrote = false;
   for (let round = 0; round < 2; round += 1) {
     for (const key of USER_KEYS) {
       if (backup.data[key] === undefined) continue;
       if (await idbSet(db, key, backup.data[key])) wrote = true;
     }
+    await idbSet(db, GUARD_META_KEY, { schemaVersion: 1, generation: Number(backup.generation) || 1, committedAt: Date.now(), namespace: GUARD_NAMESPACE });
     if (round === 0) await new Promise(resolve => setTimeout(resolve, 350));
   }
   if (!wrote) return false;
   guard.restored = true;
-  // The runtime hydrates user records once at boot and may already have read the empty
-  // store; a guarded reload lets it boot from the restored records.
-  location.reload();
-  return true;
+  // Reload only when the restored records change what the app would show.
+  if (hasUserSubstance(backup.data)) location.reload();
+  return hasUserSubstance(backup.data);
 }
 
 async function start() {

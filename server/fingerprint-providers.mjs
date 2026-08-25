@@ -6,7 +6,7 @@
 // Recognition APIs are metered, so results are cached and deduplicated per stream URL.
 
 import { createHmac } from 'node:crypto';
-import { requestLimited, resolvePublicTarget } from './net-guard.mjs';
+import { guardedRequest, resolvePublicTarget } from './net-guard.mjs';
 import { createBoundedTtlCache, resolveWithCache } from './shared-cache.mjs';
 
 const USER_AGENT = 'EarthRadio/0.24.0 fingerprint (+https://github.com/Protonmatter/EarthRadio)';
@@ -93,14 +93,20 @@ async function identifyUncached(streamUrl, { sampleSeconds, env, providers, samp
 // Pulls ~`seconds` of encoded audio from the stream. ICY metadata injection is avoided
 // by simply not sending Icy-MetaData, so the bytes are pure audio. HLS playlists are
 // resolved one level and the most recent segments are concatenated instead.
-async function sampleStreamAudio(streamUrl, { seconds = DEFAULT_SAMPLE_SECONDS } = {}) {
-  const target = await resolvePublicTarget(streamUrl);
+export async function sampleStreamAudio(streamUrl, { seconds = DEFAULT_SAMPLE_SECONDS, requestImpl = guardedRequest, resolveTarget = resolvePublicTarget } = {}) {
+  // One wall-clock budget for the whole sampling operation, shared across every
+  // redirect hop, playlist fetch, and segment fetch.
+  const deadlineAt = Date.now() + SAMPLE_TIMEOUT_MS;
+  const target = await resolveTarget(streamUrl);
   if (/\.m3u8(\?|#|$)/i.test(target.url.pathname + target.url.search)) {
-    return sampleHlsAudio(target, { seconds, depth: 0 });
+    return sampleHlsAudio(target.href, { seconds, depth: 0, deadlineAt, requestImpl });
   }
 
-  const response = await requestLimited(target, {
+  // Redirecting radio endpoints are normal; every hop re-passes the public-target
+  // policy inside guardedRequest before any bytes are read from it.
+  const response = await requestImpl(target.href, {
     timeoutMs: SAMPLE_TIMEOUT_MS,
+    deadlineAt,
     maxBytes: MAX_SAMPLE_BYTES,
     stopWhen: makeByteTarget(seconds),
     headers: { Accept: '*/*', 'User-Agent': USER_AGENT }
@@ -108,9 +114,9 @@ async function sampleStreamAudio(streamUrl, { seconds = DEFAULT_SAMPLE_SECONDS }
   assertAudioResponse(response);
   const contentType = String(response.headers['content-type'] || '');
   if (/mpegurl|application\/x-mpegurl/i.test(contentType)) {
-    const media = firstPlaylistLine(response.text, target.href);
+    const media = firstPlaylistLine(response.text, response.finalUrl);
     if (!media) throw new Error('empty HLS playlist');
-    return sampleHlsAudio(await resolvePublicTarget(media), { seconds, depth: 0 });
+    return sampleHlsAudio(media, { seconds, depth: 0, deadlineAt, requestImpl });
   }
   return { body: response.body, contentType };
 }
@@ -127,10 +133,11 @@ function makeByteTarget(seconds) {
   };
 }
 
-async function sampleHlsAudio(playlistTarget, { seconds, depth = 0 }) {
+async function sampleHlsAudio(playlistUrl, { seconds, depth = 0, deadlineAt = Date.now() + SAMPLE_TIMEOUT_MS, requestImpl = guardedRequest }) {
   if (depth > MAX_HLS_PLAYLIST_DEPTH) throw new Error('HLS playlist nesting too deep');
-  const playlistResponse = await requestLimited(playlistTarget, {
+  const playlistResponse = await requestImpl(playlistUrl, {
     timeoutMs: 8000,
+    deadlineAt,
     maxBytes: PLAYLIST_MAX_BYTES,
     headers: { Accept: '*/*', 'User-Agent': USER_AGENT }
   });
@@ -138,13 +145,14 @@ async function sampleHlsAudio(playlistTarget, { seconds, depth = 0 }) {
     throw new Error(`HLS playlist HTTP ${playlistResponse.statusCode}`);
   }
   const text = playlistResponse.text;
+  const baseUrl = playlistResponse.finalUrl;
   const lines = text.split(/\r?\n/).map(line => line.trim());
 
   // Master playlist: follow the first variant, once.
   if (text.includes('#EXT-X-STREAM-INF')) {
     const variant = lines.find(line => line && !line.startsWith('#'));
     if (!variant) throw new Error('empty HLS master playlist');
-    return sampleHlsAudio(await resolvePublicTarget(new URL(variant, playlistTarget.href).toString()), { seconds, depth: depth + 1 });
+    return sampleHlsAudio(new URL(variant, baseUrl).toString(), { seconds, depth: depth + 1, deadlineAt, requestImpl });
   }
 
   const segments = lines.filter(line => line && !line.startsWith('#')).slice(-HLS_SEGMENT_COUNT);
@@ -152,9 +160,9 @@ async function sampleHlsAudio(playlistTarget, { seconds, depth = 0 }) {
   const perSegmentCap = Math.floor(MAX_SAMPLE_BYTES / segments.length);
   const parts = [];
   for (const segment of segments) {
-    const segmentTarget = await resolvePublicTarget(new URL(segment, playlistTarget.href).toString());
-    const segmentResponse = await requestLimited(segmentTarget, {
+    const segmentResponse = await requestImpl(new URL(segment, baseUrl).toString(), {
       timeoutMs: 8000,
+      deadlineAt,
       maxBytes: perSegmentCap,
       headers: { Accept: '*/*', 'User-Agent': USER_AGENT }
     });

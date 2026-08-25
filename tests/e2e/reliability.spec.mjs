@@ -86,3 +86,64 @@ test.describe('dynamic directory expansion', () => {
     await expect(page.locator('.station-card').first()).toBeVisible();
   });
 });
+
+test.describe('storage intent semantics', () => {
+  test('intentionally clearing the last favorite stays cleared after reload', async ({ page }) => {
+    await setupApp(page);
+    await playFromList(page, 'E2E Paris Chanson');
+    const favorite = page.locator('#btn-favorite');
+    await favorite.click();
+    await expect(favorite).toHaveAttribute('aria-pressed', 'true');
+
+    // Snapshot so the backup definitely contains the favorite (the stale state a
+    // naive restore would resurrect).
+    await page.waitForFunction(() => Boolean(window.earthRadioStorageGuard));
+    await page.evaluate(() => window.earthRadioStorageGuard.snapshotNow());
+    await page.waitForFunction(() => window.earthRadioStorageGuard.status().hasBackup);
+
+    // Intentional deletion, then an immediate reload — before any further snapshot.
+    await favorite.click();
+    await expect(favorite).toHaveAttribute('aria-pressed', 'false');
+    await page.waitForTimeout(400);
+    await page.reload();
+    await expect(page.locator('.station-card').first()).toBeVisible({ timeout: 20_000 });
+
+    // The valid generation marker proves the empty state is intentional: no restore.
+    await page.waitForTimeout(1200);
+    await expect(card(page, 'E2E Paris Chanson').locator('.station-card__favorite--active')).toHaveCount(0);
+  });
+});
+
+test.describe('semantic country selection', () => {
+  test('the country-selected event expands coverage for keyboard and pointer alike', async ({ page }) => {
+    await setupApp(page);
+    await expect(card(page, 'E2E Tokyo FM')).toHaveCount(0);
+    await page.waitForFunction(() => Boolean(window.earthRadioDirectory));
+
+    // The picker emits this one semantic event for mouse clicks, Enter-key selection,
+    // and programmatic selection; expansion listens to the event, not to DOM clicks.
+    await page.evaluate(() => {
+      document.dispatchEvent(new CustomEvent('earthradio:country-selected', { detail: { country: 'Japan' } }));
+    });
+    await expect(card(page, 'E2E Tokyo FM')).toBeVisible({ timeout: 20_000 });
+  });
+
+  test('rapid expansions of different countries coalesce into a complete final set', async ({ page }) => {
+    await setupApp(page);
+    await page.waitForFunction(() => Boolean(window.earthRadioDirectory));
+
+    // Japan then Brazil back-to-back: the serialized scheduler queues the second
+    // refresh, which re-reads the merged code set, so the final state has both.
+    const results = await page.evaluate(async () => Promise.all([
+      window.earthRadioDirectory.expand('Japan'),
+      window.earthRadioDirectory.expand('Brazil')
+    ]));
+    expect(results.filter(item => item.expanded).length).toBe(2);
+
+    await expect(card(page, 'E2E Tokyo FM')).toBeVisible({ timeout: 30_000 });
+    await expect(card(page, 'E2E Rio Samba')).toBeVisible({ timeout: 30_000 });
+    const codes = await page.evaluate(() => window.earthRadioDirectory.activeCodes());
+    expect(codes).toContain('JP');
+    expect(codes).toContain('BR');
+  });
+});

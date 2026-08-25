@@ -396,6 +396,9 @@ function readLocale(state) {
  */
 function applyLocale(locale, persist = true) {
   const resolved = normalizeLocale(locale);
+  // A persisted apply commits (and ends any preview); a non-persisted apply is a
+  // preview unless it matches the saved locale, in which case it clears the preview.
+  previewLocale = persist || resolved === normalizeLocale(loadUiState().locale) ? null : resolved;
   applyDocumentLocale(resolved);
   applyDeclarativeI18n(document, resolved);
   localizeRuntime(resolved);
@@ -434,9 +437,15 @@ function restoreStoredTheme() {
   syncThemeColor();
 }
 
+let previewLocale = null;
+
+function effectiveLocale() {
+  return previewLocale ?? normalizeLocale(loadUiState().locale);
+}
+
 function guardDocumentLocale() {
   const observer = new MutationObserver(() => {
-    const wanted = normalizeLocale(loadUiState().locale);
+    const wanted = effectiveLocale();
     const dir = isRtlLocale(wanted) ? 'rtl' : 'ltr';
     if (document.documentElement.lang !== wanted) document.documentElement.lang = wanted;
     if (document.documentElement.dir !== dir) document.documentElement.dir = dir;
@@ -952,6 +961,9 @@ function navigateVisibleSearchResults(delta) {
 
 function selectCountry(country) {
   selectedCountry = String(country || '').trim();
+  if (selectedCountry) {
+    document.dispatchEvent(new CustomEvent('earthradio:country-selected', { detail: { country: selectedCountry } }));
+  }
   const input = byId('er-country-query');
   const clear = byId('er-country-clear');
   if (input) input.value = selectedCountry;

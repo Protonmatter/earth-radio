@@ -106,6 +106,19 @@ export const EXPANSION_STATIONS = [
     geo_long: 139.6503
   }),
   station({
+    stationuuid: 'e2e-rio-0008',
+    name: 'E2E Rio Samba',
+    url: 'https://streams.e2e.example/rio.mp3',
+    url_resolved: 'https://streams.e2e.example/rio.mp3',
+    country: 'Brazil',
+    countrycode: 'BR',
+    tags: 'samba',
+    // High click count keeps the card inside the virtualized viewport in e2e runs.
+    clickcount: 930,
+    geo_lat: -22.9068,
+    geo_long: -43.1729
+  }),
+  station({
     stationuuid: 'e2e-osaka-0007',
     name: 'E2E Osaka Beats',
     url: 'https://streams.e2e.example/osaka.mp3',
@@ -126,5 +139,6 @@ export const FIXTURE_COUNTRIES = [
   { name: 'The United States Of America', iso_3166_1: 'US', stationcount: 1 },
   { name: 'Germany', iso_3166_1: 'DE', stationcount: 1 },
   { name: 'France', iso_3166_1: 'FR', stationcount: 1 },
-  { name: 'Japan', iso_3166_1: 'JP', stationcount: 2 }
+  { name: 'Japan', iso_3166_1: 'JP', stationcount: 2 },
+  { name: 'Brazil', iso_3166_1: 'BR', stationcount: 1 }
 ];

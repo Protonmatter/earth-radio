@@ -58,7 +58,8 @@ const state = {
   fingerprintAutoKey: '',
   sameOriginApi: null,
   sameOriginApiProbe: null,
-  sameOriginApiMisses: 0
+  sameOriginApiMisses: 0,
+  streamUrl: ''
 };
 
 function config() {
@@ -707,10 +708,48 @@ function audioElement() {
   return byId('audio-player');
 }
 
+// hls.js plays through MediaSource, which makes currentSrc a blob: URL; the selected
+// station's canonical HTTP(S) stream URL is tracked separately so platform polling and
+// fingerprinting keep working for HLS-backed stations.
 function currentStreamUrl() {
   const audio = audioElement();
   const src = String(audio?.currentSrc || audio?.src || '');
-  return /^https?:\/\//i.test(src) ? src : '';
+  if (/^https?:\/\//i.test(src)) return src;
+  return state.streamUrl;
+}
+
+// Resolves the active station's stream URL from the runtime's IndexedDB directory
+// cache when the media element only exposes a blob: URL.
+function refreshCanonicalStreamUrl() {
+  const audio = audioElement();
+  const src = String(audio?.currentSrc || audio?.src || '');
+  if (/^https?:\/\//i.test(src)) {
+    state.streamUrl = src;
+    return;
+  }
+  const uuid = document.querySelector('.station-card--active')?.dataset?.uuid || '';
+  if (!uuid) return;
+  try {
+    const open = indexedDB.open('earthRadio', 1);
+    open.onsuccess = () => {
+      try {
+        const tx = open.result.transaction('cache', 'readonly');
+        const get = tx.objectStore('cache').get('stations.v3');
+        get.onsuccess = () => {
+          const station = (get.result?.stations || []).find(item => item?.stationuuid === uuid);
+          const url = String(station?.url_resolved || station?.url || '');
+          if (/^https?:\/\//i.test(url)) {
+            state.streamUrl = url;
+            syncFingerprintButton();
+          }
+          open.result.close();
+        };
+        get.onerror = () => open.result.close();
+      } catch {
+        open.result.close();
+      }
+    };
+  } catch { /* best effort */ }
 }
 
 function isPlaying() {
@@ -911,7 +950,7 @@ async function resolvePlatformNowPlaying(streamUrl) {
   // Public web: the same-origin Pages Function also covers one-shot ICY reads, which
   // the browser cannot do itself.
   if (await detectSameOriginApi()) {
-    const data = await fetchJson(`/api/nowplaying?url=${encodeURIComponent(streamUrl)}`, 12000);
+    const data = await fetchJson(`/api/nowplaying?url=${encodeURIComponent(streamUrl)}`, 25000);
     if (data?.found && (data.title || data.raw)) {
       return platformTrack(data.platform || data.source || 'platform', data.artist, data.title, data.raw, data.artworkUrl);
     }
@@ -1308,6 +1347,8 @@ function init() {
       // New stream: everything derived from the previous station is stale — trusted
       // feeds, the raw-title dedupe, the current identity, and any identify/fingerprint
       // response still in flight (its token check will now fail).
+      state.streamUrl = '';
+      refreshCanonicalStreamUrl();
       state.trustedTrack = null;
       state.fingerprintAutoKey = '';
       state.inFlight = null;
@@ -1319,6 +1360,7 @@ function init() {
       renderStationOnly();
     });
     audio.addEventListener('play', () => {
+      refreshCanonicalStreamUrl();
       syncFingerprintButton();
       void checkFingerprintAvailability();
       setTimeout(() => void pollPlatformNowPlaying(), 1500);

@@ -1,0 +1,10 @@
+# Cloudflare Pages configuration (deployable repository configuration).
+# `global_fetch_strictly_public` is mandatory for the /api/* Functions: it forces
+# global fetch() through the public Internet boundary so a same-zone hostname can
+# never short-circuit to a zone origin, complementing the manual redirect
+# revalidation in functions/_shared/guarded-fetch.js. Zone-level WAF rate limits for
+# the Functions are recorded in docs/OPERATIONS.md. No secret lives in this file.
+name = "earth-radio"
+pages_build_output_dir = ".build/site"
+compatibility_date = "2026-08-01"
+compatibility_flags = ["global_fetch_strictly_public"]

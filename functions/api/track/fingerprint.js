@@ -2,13 +2,16 @@
 // Mirrors the desktop proxy's /api/track/fingerprint contract. Strictly opt-in: without
 // ACRCloud (ACR_HOST/ACR_ACCESS_KEY/ACR_ACCESS_SECRET) or AudD (AUDD_API_TOKEN)
 // environment variables configured on the Pages project, every request reports
-// available: false and the client hides the identify button. Recognition is metered,
-// so results are edge-cached per stream URL and requests are rate-limited per client.
+// available: false and the client hides the identify button. All stream traffic goes
+// through the shared guarded boundary (manual revalidated redirects, byte caps, one
+// wall-clock deadline); HLS playlists are resolved and recent segments sampled the same
+// way the desktop implementation does. Zone-level WAF rate limits (docs/OPERATIONS.md)
+// sit in front; the in-function limiter is defense in depth.
 //
 // GET /api/track/fingerprint                 -> availability probe
 // GET /api/track/fingerprint?url=<stream>    -> identify what is playing right now
 
-import { rejectStreamUrl } from '../nowplaying.js';
+import { createRateLimiter, guardedFetch, readBodyCapped, rejectFetchUrl } from '../../_shared/guarded-fetch.js';
 import { identifyTrack } from '../../../server/metadata-providers.mjs';
 
 const USER_AGENT = 'EarthRadio/0.24.0 pages-fn (+https://github.com/Protonmatter/EarthRadio)';
@@ -19,13 +22,24 @@ const MAX_SAMPLE_BYTES = 1024 * 1024;
 const DEFAULT_BITRATE_KBPS = 160;
 const SAMPLE_TIMEOUT_MS = 20_000;
 const RECOGNIZE_TIMEOUT_MS = 15_000;
+const PLAYLIST_MAX_BYTES = 64 * 1024;
+const HLS_SEGMENT_COUNT = 3;
+const MAX_HLS_PLAYLIST_DEPTH = 2;
 const CACHE_TTL_FOUND_S = 90;
 const CACHE_TTL_MISS_S = 45;
-const RATE_LIMIT_WINDOW_MS = 60_000;
-const RATE_LIMIT_MAX = 6;
 
-// Per-isolate best-effort limiter; the edge cache above it absorbs repeats.
-const rateBuckets = new Map();
+const allowRequest = createRateLimiter({ windowMs: 60_000, max: 6 });
+
+// The cached payload includes country-specific catalog enrichment, so the country is
+// part of the cache identity; invalid or absent countries map to the US default key.
+export function normalizeCountry(value) {
+  const country = String(value || '').trim().toUpperCase();
+  return /^[A-Z]{2}$/.test(country) ? country : 'US';
+}
+
+export function fingerprintCacheKey(streamUrl, country) {
+  return `https://cache.invalid/fingerprint?c=${normalizeCountry(country)}&u=${encodeURIComponent(String(streamUrl || '').trim())}`;
+}
 
 export async function onRequestGet({ request, env }) {
   const providers = configuredProviders(env);
@@ -34,21 +48,25 @@ export async function onRequestGet({ request, env }) {
   if (!streamUrl) return json({ available: providers.length > 0, providers }, 60);
   if (!providers.length) return json({ available: false, found: false, reason: 'no fingerprint provider credentials configured' }, 300);
 
-  const rejection = rejectStreamUrl(streamUrl);
+  const rejection = rejectFetchUrl(streamUrl);
   if (rejection) return json({ available: true, found: false, reason: rejection }, CACHE_TTL_MISS_S, 400);
 
+  const country = normalizeCountry(url.searchParams.get('country'));
   const cache = await openCache();
-  const cacheKey = new Request(`https://cache.invalid/fingerprint?u=${encodeURIComponent(streamUrl)}`);
+  const cacheKey = new Request(fingerprintCacheKey(streamUrl, country));
   if (cache) {
     const cached = await cache.match(cacheKey);
     if (cached) return cached;
   }
 
-  if (!consumeRateLimit(request)) {
-    return json({ error: 'fingerprint rate limit exceeded' }, 0, 429);
+  if (!allowRequest(request)) {
+    return new Response(JSON.stringify({ error: 'fingerprint rate limit exceeded' }), {
+      status: 429,
+      headers: { 'content-type': 'application/json; charset=utf-8', 'retry-after': '60', 'cache-control': 'no-store' }
+    });
   }
 
-  const payload = await identify(streamUrl, providers, env, url.searchParams.get('country') || 'US');
+  const payload = await identify(streamUrl, providers, env, country);
   const response = json(payload, payload.found ? CACHE_TTL_FOUND_S : CACHE_TTL_MISS_S);
   if (cache) await cache.put(cacheKey, response.clone()).catch(() => {});
   return response;
@@ -109,50 +127,76 @@ async function identify(streamUrl, providers, env, country) {
       ...(catalog.found ? (catalog.sources || []).filter(source => source.provider !== 'icy') : [])
     ],
     sampleBytes: sample.length,
+    country,
     fetchedAt: new Date().toISOString()
   };
 }
 
-// ~12s of encoded audio, target size derived from icy-br; no Icy-MetaData header, so
-// the bytes are pure audio.
+// ~12s of encoded audio through the guarded boundary; no Icy-MetaData header, so the
+// bytes are pure audio. HLS playlists resolve one master hop then sample recent
+// segments, all under the same wall-clock deadline.
 async function sampleStream(streamUrl) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), SAMPLE_TIMEOUT_MS);
-  try {
-    const response = await fetch(streamUrl, {
-      signal: controller.signal,
-      redirect: 'follow',
-      headers: { Accept: '*/*', 'User-Agent': USER_AGENT }
-    });
-    if (!response.ok || !response.body) throw new Error(`stream HTTP ${response.status}`);
-    const contentType = String(response.headers.get('content-type') || '').toLowerCase();
-    if (/text\/html|application\/json|text\/plain|mpegurl/.test(contentType)) {
-      throw new Error(`unsupported content-type ${contentType.split(';')[0] || 'unknown'}`);
-    }
-    const kbps = Number.parseInt(response.headers.get('icy-br') || '', 10);
-    const bitrate = Number.isFinite(kbps) && kbps > 0 ? Math.min(kbps, 512) : DEFAULT_BITRATE_KBPS;
-    const target = Math.min(MAX_SAMPLE_BYTES, Math.max(MIN_SAMPLE_BYTES, Math.round(bitrate * 1000 / 8 * SAMPLE_SECONDS)));
-
-    const reader = response.body.getReader();
-    const chunks = [];
-    let received = 0;
-    while (received < target) {
-      const { value, done } = await reader.read();
-      if (done) break;
-      chunks.push(value);
-      received += value.length;
-    }
-    const merged = new Uint8Array(received);
-    let offset = 0;
-    for (const chunk of chunks) {
-      merged.set(chunk, offset);
-      offset += chunk.length;
-    }
-    return merged;
-  } finally {
-    clearTimeout(timer);
-    controller.abort();
+  const deadlineAt = Date.now() + SAMPLE_TIMEOUT_MS;
+  const { response, finalUrl } = await guardedFetch(streamUrl, {
+    deadlineAt,
+    headers: { Accept: '*/*', 'User-Agent': USER_AGENT }
+  });
+  if (!response.ok || !response.body) throw new Error(`stream HTTP ${response.status}`);
+  const contentType = String(response.headers.get('content-type') || '').toLowerCase();
+  if (/mpegurl/.test(contentType) || /\.m3u8(\?|#|$)/i.test(finalUrl)) {
+    const playlist = new TextDecoder().decode(await readBodyCapped(response, { maxBytes: PLAYLIST_MAX_BYTES, deadlineAt }));
+    return sampleHls(playlist, finalUrl, { deadlineAt, depth: 0 });
   }
+  if (/text\/html|application\/json|text\/plain/.test(contentType)) {
+    throw new Error(`unsupported content-type ${contentType.split(';')[0] || 'unknown'}`);
+  }
+
+  const kbps = Number.parseInt(response.headers.get('icy-br') || '', 10);
+  const bitrate = Number.isFinite(kbps) && kbps > 0 ? Math.min(kbps, 512) : DEFAULT_BITRATE_KBPS;
+  const target = Math.min(MAX_SAMPLE_BYTES, Math.max(MIN_SAMPLE_BYTES, Math.round(bitrate * 1000 / 8 * SAMPLE_SECONDS)));
+  return readBodyCapped(response, { maxBytes: target, deadlineAt });
+}
+
+async function sampleHls(playlistText, baseUrl, { deadlineAt, depth }) {
+  if (depth > MAX_HLS_PLAYLIST_DEPTH) throw new Error('HLS playlist nesting too deep');
+  const lines = String(playlistText || '').split(/\r?\n/).map(line => line.trim());
+
+  // Master playlist: follow the first variant, once, revalidated by the guard.
+  if (playlistText.includes('#EXT-X-STREAM-INF')) {
+    const variant = lines.find(line => line && !line.startsWith('#'));
+    if (!variant) throw new Error('empty HLS master playlist');
+    const variantUrl = new URL(variant, baseUrl).toString();
+    const { response, finalUrl } = await guardedFetch(variantUrl, { deadlineAt, headers: { Accept: '*/*', 'User-Agent': USER_AGENT } });
+    if (!response.ok) throw new Error(`HLS playlist HTTP ${response.status}`);
+    const media = new TextDecoder().decode(await readBodyCapped(response, { maxBytes: PLAYLIST_MAX_BYTES, deadlineAt }));
+    return sampleHls(media, finalUrl, { deadlineAt, depth: depth + 1 });
+  }
+
+  const segments = lines.filter(line => line && !line.startsWith('#')).slice(-HLS_SEGMENT_COUNT);
+  if (!segments.length) throw new Error('HLS media playlist has no segments');
+  const perSegmentCap = Math.floor(MAX_SAMPLE_BYTES / segments.length);
+  const parts = [];
+  let total = 0;
+  for (const segment of segments) {
+    if (Date.now() >= deadlineAt) break;
+    try {
+      const { response } = await guardedFetch(new URL(segment, baseUrl).toString(), { deadlineAt, headers: { Accept: '*/*', 'User-Agent': USER_AGENT } });
+      if (!response.ok || !response.body) continue;
+      const bytes = await readBodyCapped(response, { maxBytes: perSegmentCap, deadlineAt });
+      if (bytes.length) {
+        parts.push(bytes);
+        total += bytes.length;
+      }
+    } catch { /* skip unreachable segment */ }
+  }
+  if (!parts.length) throw new Error('no HLS segments could be fetched');
+  const merged = new Uint8Array(total);
+  let offset = 0;
+  for (const part of parts) {
+    merged.set(part, offset);
+    offset += part.length;
+  }
+  return merged;
 }
 
 async function recognizeAcr(sample, env) {
@@ -236,23 +280,6 @@ async function postForm(target, form) {
   } finally {
     clearTimeout(timer);
   }
-}
-
-function consumeRateLimit(request) {
-  const key = request.headers.get('cf-connecting-ip') || 'unknown';
-  const now = Date.now();
-  if (rateBuckets.size > 512) {
-    for (const [bucketKey, entry] of rateBuckets) {
-      if (now >= entry.resetAt) rateBuckets.delete(bucketKey);
-    }
-  }
-  const bucket = rateBuckets.get(key);
-  if (!bucket || now >= bucket.resetAt) {
-    rateBuckets.set(key, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
-    return true;
-  }
-  bucket.count += 1;
-  return bucket.count <= RATE_LIMIT_MAX;
 }
 
 async function openCache() {

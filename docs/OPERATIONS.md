@@ -39,6 +39,35 @@ The Cloudflare GitHub App must remain scoped to **Only select repositories**, wi
 
 Every merge to `main` triggers a production deployment. Match the Cloudflare deployment commit to the tested Git commit, inspect build logs, and then run the browser smoke procedure against `https://earth-radio.pages.dev/`. Update `docs/BUILD_STATE.md` only with verified commit, CI run, and deployment identities.
 
+## Edge metadata Functions runbook
+
+The `/api/nowplaying` and `/api/track/fingerprint` Pages Functions fetch listener-supplied
+stream URLs. Their in-code protections (manual revalidated redirects, hop caps, byte caps,
+wall-clock deadlines, per-isolate limiters) are complemented by required zone
+configuration:
+
+1. **Strict public fetch routing.** `wrangler.toml` sets the
+   `global_fetch_strictly_public` compatibility flag so global `fetch()` routes through
+   the public Internet boundary and can never privately reach a same-zone origin.
+   Confirm the flag is active on the Pages project after the first deployment with this
+   file (Settings → Functions → Compatibility flags).
+2. **WAF rate limiting (before Function execution).** Create Cloudflare rate-limiting
+   rules on the zone:
+   - `/api/nowplaying`: 30 requests per source IP per 60 seconds → block with HTTP 429
+     for 60 seconds.
+   - `/api/track/fingerprint`: 6 requests per source IP per 60 seconds → block with
+     HTTP 429 for 60 seconds.
+   These fire before the Function executes; the in-function limiters at the same
+   thresholds are defense in depth only.
+3. **Preview validation.** After deploying, verify on the preview URL that
+   (a) `/api/nowplaying` answers the probe, (b) a request for a public redirecting
+   stream resolves, (c) a request for a loopback/private URL returns HTTP 400 without
+   any outbound fetch in the Function logs, and (d) rate-limited requests receive 429
+   without invoking outbound fetches.
+4. **Fingerprint credentials** (optional): set `AUDD_API_TOKEN` or
+   `ACR_HOST`/`ACR_ACCESS_KEY`/`ACR_ACCESS_SECRET` as Pages project environment
+   variables. Without them the endpoint reports `available: false` and does nothing.
+
 ## CI inspection
 
 GitHub Actions is defined in `.github/workflows/ci.yml` with read-only contents permission and immutable action commit pins. When a repository exists, inspect both Linux and Windows jobs for the exact commit. A green local run does not substitute for remote CI.
