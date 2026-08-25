@@ -6,7 +6,7 @@ import test from 'node:test';
 import { createAuthClient } from '../site/assets/auth-core.js';
 import {
   accountDataKey, createSyncEngine, mergeFavorites, planLocalAccountTransition,
-  shouldResetLocalAccount, stableStringify
+  shouldResetBrowserAccount, shouldResetLocalAccount, stableStringify
 } from '../site/assets/sync-core.js';
 
 function memoryStorage() {
@@ -285,6 +285,12 @@ test('account boundaries reset local synced data only when switching known users
   assert.equal(shouldResetLocalAccount('user-a', 'user-b'), true);
 });
 
+test('a delayed tab resets even after another tab already activated the new account', () => {
+  assert.equal(shouldResetBrowserAccount('user-b', 'user-a', 'user-b'), true);
+  assert.equal(shouldResetBrowserAccount('user-b', 'user-b', 'user-b'), false);
+  assert.equal(shouldResetBrowserAccount(null, null, 'user-b'), false);
+});
+
 test('account transitions archive offline data and restore each user namespace', async () => {
   const values = new Map([
     ['favorites', { a: { uuid: 'a' } }],
@@ -334,6 +340,40 @@ test('the browser account switch uses one IndexedDB readwrite transaction', asyn
   assert.match(switchBody, /values\.get\(ACTIVE_NAMESPACE_KEY\)/);
   assert.match(switchBody, /store\.put\(nextUserId \|\| null, ACTIVE_NAMESPACE_KEY\)/);
   assert.doesNotMatch(switchBody, /await kv\(/);
+});
+
+test('sync local access is fenced by the active account in the same IndexedDB transaction', async () => {
+  const root = path.resolve(import.meta.dirname, '..');
+  const source = await readFile(path.join(root, 'site', 'assets', 'auth-ui.js'), 'utf8');
+  const accountKvBody = source.slice(source.indexOf('async function accountKv'), source.indexOf('function el'));
+  const syncBody = source.slice(source.indexOf('async function runSync'), source.indexOf('function startSync'));
+  assert.match(accountKvBody, /db\.transaction\('kv', operation === 'get' \? 'readonly' : 'readwrite'\)/);
+  assert.match(accountKvBody, /store\.get\(ACTIVE_NAMESPACE_KEY\)/);
+  assert.match(accountKvBody, /storedNamespace !== userId/);
+  assert.match(accountKvBody, /transaction\.abort\(\)/);
+  assert.match(syncBody, /readLocal: async key =>[\s\S]*accountKv\('get', key, undefined, userId\)/);
+  assert.match(syncBody, /writeLocal: async \(key, value\) =>[\s\S]*accountKv\('put', key, value, userId\)/);
+});
+
+test('REST requests reject a session belonging to a different expected account', async () => {
+  const storage = memoryStorage();
+  storage.setItem('earthRadio.auth.session.v1', JSON.stringify({
+    access_token: 'b', refresh_token: 'b', expires_at: 4102444800, user: { id: 'user-b' }
+  }));
+  let requests = 0;
+  const client = createAuthClient({
+    url: 'https://project.supabase.co',
+    publishableKey: 'sb_publishable_test',
+    storage,
+    location: { href: 'https://earth-radio.example/', origin: 'https://earth-radio.example', pathname: '/' },
+    fetchImpl: async () => { requests += 1; return jsonResponse([]); }
+  });
+
+  await assert.rejects(
+    client.rest('user_config_documents', { expectedUserId: 'user-a' }),
+    error => error?.code === 'ACCOUNT_CHANGED'
+  );
+  assert.equal(requests, 0);
 });
 
 test('cross-tab session replacement emits the new user before the UI can continue syncing', () => {
