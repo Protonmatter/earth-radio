@@ -36,7 +36,7 @@ supabase test db
 ```
 
 The SQL test suite is transaction-scoped and rolls back its two synthetic users. In the
-hosted SQL editor, run `supabase/tests/rls_policies.sql`; a clean run ends with `ok 20` and
+hosted SQL editor, run `supabase/tests/rls_policies.sql`; a clean run ends with `ok 23` and
 no pgTAP diagnostics. After any policy or function change, rerun the Supabase Security
 Advisor and confirm that no new errors appear.
 
