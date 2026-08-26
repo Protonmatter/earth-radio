@@ -71,3 +71,15 @@ test('service worker keeps the previous worker when reload precaching fails', as
   );
   assert.equal((worker.match(/self\.skipWaiting\(\)/g) || []).length, 1);
 });
+
+test('enforced connect-src policies admit the Listen.moe realtime gateway', async () => {
+  // The metadata overlay's only Listen.moe feed is wss://listen.moe/…/gateway_v2;
+  // both enforced response policies must admit it or the socket is blocked before it
+  // opens (the in-page meta policy's ws: alone cannot help — policies intersect).
+  const headers = await readFile(path.join(root, 'site', '_headers'), 'utf8');
+  const electronMain = await readFile(path.join(root, 'electron', 'main.mjs'), 'utf8');
+  for (const policy of [headers, electronMain]) {
+    const connect = policy.match(/connect-src ([^;]+);/)?.[1] || '';
+    assert.match(connect, /wss:\/\/listen\.moe/);
+  }
+});

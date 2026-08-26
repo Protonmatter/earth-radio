@@ -224,11 +224,6 @@
       "sha256": "b85ffac9cc88dd4c3340a4a762c6ca0d971d6bdc575b0e7e54211973959b2a1e"
     },
     {
-      "path": "server/hls-segments.mjs",
-      "bytes": 2258,
-      "sha256": "220d98f83aa4350027d44d90f37962ac540df0542ae01a1e27eb35c7827f723f"
-    },
-    {
       "path": "server/icy-title.mjs",
       "bytes": 1930,
       "sha256": "89293ffcedef5e970a3bee175e1f70378b969e2165d6cf2bc6d156f6f9b47e53"
@@ -270,8 +265,8 @@
     },
     {
       "path": "site/_headers",
-      "bytes": 1496,
-      "sha256": "74bb878956386dc5c3c28acb466925d66eaf4d1ee7380449bdb51add99e6defc"
+      "bytes": 1513,
+      "sha256": "f99b01064871711bd173807a0d7ace1b335effc93c462775882b49c9cc76f1be"
     },
     {
       "path": "site/assets/auth-core.js",
@@ -815,8 +810,8 @@
     },
     {
       "path": "tests/service-worker.test.mjs",
-      "bytes": 4047,
-      "sha256": "97a771a6cc03535ceb9a393cc21ecc271e15c9eaa5aeba205d00c4b75590d2f8"
+      "bytes": 4738,
+      "sha256": "658d1c9bb68c5c4be7e2cb12ec91313259109fe1f2f29e43fcfecec8d524a126"
     },
     {
       "path": "tests/smoke-desktop.mjs",
