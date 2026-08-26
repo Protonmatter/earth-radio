@@ -575,3 +575,37 @@ test('desktop platform miss responses do not outlive the polling interval in HTT
   const missAge = Number(miss.headers['cache-control'].match(/max-age=(\d+)/)?.[1]);
   assert.ok(missAge <= 30, `miss max-age ${missAge} must not exceed the 30s polling interval`);
 });
+
+test('provider outages never populate the negative identify cache', async () => {
+  const { clearIdentifyCache, identifyTrack } = await import('../server/metadata-providers.mjs');
+  clearIdentifyCache();
+  const realFetch = globalThis.fetch;
+  const calls = [];
+  const args = { artist: 'Miles Davis', title: 'So What', providers: ['itunes'], country: 'US', timeoutMs: 500 };
+  try {
+    globalThis.fetch = async url => { calls.push(String(url)); throw new Error('offline'); };
+    const outage = await identifyTrack(args);
+    assert.equal(outage.found, false);
+    assert.ok(calls.length > 0, 'the provider must have been queried');
+
+    // Providers recover: the same request must reach them again instead of
+    // replaying the outage as a cached Raw ICY miss for the negative TTL.
+    globalThis.fetch = async url => {
+      calls.push(String(url));
+      return new Response(JSON.stringify({ results: [] }), { headers: { 'content-type': 'application/json' } });
+    };
+    const before = calls.length;
+    const genuine = await identifyTrack(args);
+    assert.equal(genuine.found, false);
+    assert.ok(calls.length > before, 'a transient outage miss must not be served from the negative cache');
+
+    // A genuine catalog miss IS negative-cacheable: no further provider traffic.
+    const after = calls.length;
+    const cached = await identifyTrack(args);
+    assert.equal(cached.cached, true);
+    assert.equal(calls.length, after);
+  } finally {
+    globalThis.fetch = realFetch;
+    clearIdentifyCache();
+  }
+});

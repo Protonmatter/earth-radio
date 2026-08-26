@@ -208,14 +208,24 @@ export function concatChunks(chunks, total) {
 
 // Per-isolate request limiter — defense in depth beneath the zone-level WAF rules
 // documented in docs/OPERATIONS.md (which fire before the Function executes).
-export function createRateLimiter({ windowMs = 60_000, max = 30 } = {}) {
+export function createRateLimiter({ windowMs = 60_000, max = 30, maxBuckets = 512 } = {}) {
   const buckets = new Map();
   return request => {
     const key = request.headers.get('cf-connecting-ip') || 'unknown';
     const now = Date.now();
-    if (buckets.size > 512) {
+    if (buckets.size >= maxBuckets && !buckets.has(key)) {
       for (const [bucketKey, entry] of buckets) {
         if (now >= entry.resetAt) buckets.delete(bucketKey);
+      }
+      // Every bucket may still be live under distributed traffic; the map must
+      // stay bounded regardless, so evict the buckets closest to expiry. The
+      // zone WAF in front remains the durable per-IP rate policy — this
+      // in-isolate limiter is defense in depth, not the primary control.
+      if (buckets.size >= maxBuckets) {
+        const oldestFirst = [...buckets.entries()].sort((a, b) => a[1].resetAt - b[1].resetAt);
+        for (const [bucketKey] of oldestFirst.slice(0, buckets.size - maxBuckets + 1)) {
+          buckets.delete(bucketKey);
+        }
       }
     }
     const bucket = buckets.get(key);

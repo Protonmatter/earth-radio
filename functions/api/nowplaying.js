@@ -22,7 +22,9 @@ const PLATFORM_TIMEOUT_MS = 4000;
 const ICY_RESERVED_MS = 8000;
 const MAX_PLATFORM_BYTES = 256 * 1024;
 const CACHE_TTL_FOUND_S = 15;
-const CACHE_TTL_MISS_S = 60;
+// A cached miss must not outlive the client's 30-second polling interval, or a
+// transient upstream failure hides recovery for an extra cycle.
+const CACHE_TTL_MISS_S = 30;
 const DO_NOT_CACHE = Symbol('do-not-cache');
 
 export const rejectStreamUrl = rejectFetchUrl;

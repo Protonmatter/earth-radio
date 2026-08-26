@@ -1399,3 +1399,32 @@ test('Pages HLS sampling fails when the initialization segment cannot be fetched
     await assert.rejects(sampleStream('https://hls.example.net/live.m3u8'), /initialization segment/i);
   });
 });
+
+test('the in-isolate rate limiter stays bounded under distributed client IPs', () => {
+  const limiter = createRateLimiter({ windowMs: 60_000, max: 1, maxBuckets: 4 });
+  const req = ip => new Request('https://site.example/api/nowplaying', { headers: { 'cf-connecting-ip': ip } });
+  assert.equal(limiter(req('10.0.0.1')), true);
+  assert.equal(limiter(req('10.0.0.1')), false, 'a live bucket still enforces its window');
+  for (const ip of ['10.0.0.2', '10.0.0.3', '10.0.0.4', '10.0.0.5']) {
+    assert.equal(limiter(req(ip)), true, `${ip} must be admitted while the map stays bounded`);
+  }
+  // The map was full of live buckets when 10.0.0.5 arrived, so the bucket closest
+  // to expiry (10.0.0.1) must have been evicted rather than growing without bound —
+  // a fresh bucket admits that address again.
+  assert.equal(limiter(req('10.0.0.1')), true, 'eviction keeps the bucket map bounded under distributed traffic');
+});
+
+test('Pages now-playing misses are cached no longer than the polling interval', async () => {
+  await withFetch(async () => { throw new Error('offline'); }, async () => {
+    const request = new Request('https://site.example/api/nowplaying?url=https%3A%2F%2Fice.example.net%2Fmiss-ttl', {
+      headers: { 'cf-connecting-ip': '10.7.7.7' }
+    });
+    const response = await nowPlayingGet({ request });
+    const body = await response.json();
+    assert.equal(body.found, false);
+    // The renderer polls every 30 seconds; a longer miss max-age would hide upstream
+    // recovery for an extra cycle behind the browser/edge cache.
+    const maxAge = Number(response.headers.get('cache-control').match(/max-age=(\d+)/)?.[1]);
+    assert.ok(maxAge <= 30, `miss max-age ${maxAge} must not exceed the 30s polling interval`);
+  });
+});

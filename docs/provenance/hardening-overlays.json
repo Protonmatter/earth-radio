@@ -57,8 +57,8 @@
         "sha256": "648114492b64701d2a223b336d4ea9efd55fc3e8a5d9b7042d2c34d1ed3f8b93"
       },
       "current": {
-        "bytes": 19149,
-        "sha256": "490fa7b0ab15c5e76a8d9023131f86bd1d4526a936b3b69cffdba09d60e27526"
+        "bytes": 20473,
+        "sha256": "9402da298c3af4cd9b365365e79ea3b68adb93b53d73e1d0bef0869bac0334f8"
       },
       "reason": "Review-pass hardening: lowercase-only \"Title by Artist\" parsing, deduplicated Spotify token requests, market-scoped Spotify search, removal of unreachable post-promotion fallbacks, and deadline-aware catalog requests."
     },

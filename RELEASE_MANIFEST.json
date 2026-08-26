@@ -56,7 +56,7 @@
     {
       "path": "docs/provenance/hardening-overlays.json",
       "bytes": 8690,
-      "sha256": "c1557527a023173ef8014ac3e965578b41ac646d912444c945710950c48b1c8a"
+      "sha256": "1c2af39e888da0c51a85b231661fbae159f0d05fe2f6cb40732aa324c065c7e4"
     },
     {
       "path": "docs/provenance/recovery-manifest.json",
@@ -155,13 +155,13 @@
     },
     {
       "path": "functions/_shared/guarded-fetch.js",
-      "bytes": 9080,
-      "sha256": "64188defb8a9fc645ac4458bc6d5930a27d0201f6dd34fe980691f25acb7de19"
+      "bytes": 9714,
+      "sha256": "61cee304c8ef8ba1967b18bf040115befec8091b06fac1c292fb72d612372eb4"
     },
     {
       "path": "functions/api/nowplaying.js",
-      "bytes": 8022,
-      "sha256": "bf4649672e8d5e08d6735f3735b189eefc1c32ca3fa77081f9a9f8f98da261e7"
+      "bytes": 8167,
+      "sha256": "7ad75875f6b6ad04c5a1a0ddd6b56637a4596167965db9abaee0f8ed4a3ca319"
     },
     {
       "path": "functions/api/track/fingerprint.js",
@@ -235,8 +235,8 @@
     },
     {
       "path": "server/metadata-providers.mjs",
-      "bytes": 19149,
-      "sha256": "490fa7b0ab15c5e76a8d9023131f86bd1d4526a936b3b69cffdba09d60e27526"
+      "bytes": 20473,
+      "sha256": "9402da298c3af4cd9b365365e79ea3b68adb93b53d73e1d0bef0869bac0334f8"
     },
     {
       "path": "server/net-guard.mjs",
@@ -760,8 +760,8 @@
     },
     {
       "path": "tests/live-metadata.test.mjs",
-      "bytes": 26208,
-      "sha256": "760d05419160a686699ed2a7cc2f91e60f876c86a797fd931455b83eb36da96e"
+      "bytes": 27734,
+      "sha256": "9cff2471a251e24b5dbd4899f88a5b874577eb48e38cfedaca7b56721a1a8ae5"
     },
     {
       "path": "tests/net-guard.test.mjs",
@@ -775,8 +775,8 @@
     },
     {
       "path": "tests/pages-functions.test.mjs",
-      "bytes": 59368,
-      "sha256": "1d70ebec1d8784c0e6a8b460ebd81d226ebf39db2d75c0475617566a782d3e07"
+      "bytes": 61130,
+      "sha256": "70a93d48a84a3fa8a4f662428bc7d4404dcc143c09a09a328e570dc585194300"
     },
     {
       "path": "tests/player-navigation.test.mjs",

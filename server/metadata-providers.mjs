@@ -8,6 +8,9 @@ const DEFAULT_TIMEOUT_MS = 6500;
 const IDENTIFY_CACHE_MAX_ENTRIES = 512;
 const IDENTIFY_CACHE_TTL_FOUND_MS = 24 * 60 * 60 * 1000;
 const IDENTIFY_CACHE_TTL_MISS_MS = 15 * 60 * 1000;
+// Marks a miss produced while a provider was unreachable; such results are served
+// to the caller but never written to the negative cache.
+const IDENTIFY_TRANSIENT = Symbol('identify-transient-miss');
 const JUNK_TITLE = /^(unknown|n\/?a|advert(isement)?|commercial|station\s?id|live stream|loading\.{0,3}|no title|news|weather|traffic)$/i;
 const ADLIKE_TITLE = /\b(advertisement|commercial|sponsor|promo|listen live|news update|traffic|weather|sweeper|station id)\b/i;
 const COVER_OR_TRIBUTE = /\b(karaoke|tribute|cover version|instrumental version|originally performed by|as made famous by|remix tribute)\b/i;
@@ -55,7 +58,12 @@ export async function identifyTrack(args = {}) {
   identifyInFlight.set(cacheKey, promise);
   try {
     const payload = await withinDeadline(promise, request.deadlineAt);
-    writeIdentifyCache(cacheKey, payload, payload.found ? IDENTIFY_CACHE_TTL_FOUND_MS : IDENTIFY_CACHE_TTL_MISS_MS);
+    // A miss produced while a queried provider was unreachable (transport error or
+    // deadline abort) is not evidence the catalog lacks the track; caching it would
+    // pin a Raw ICY answer for the full negative TTL after the providers recover.
+    if (!payload[IDENTIFY_TRANSIENT]) {
+      writeIdentifyCache(cacheKey, payload, payload.found ? IDENTIFY_CACHE_TTL_FOUND_MS : IDENTIFY_CACHE_TTL_MISS_MS);
+    }
     return payload;
   } finally {
     identifyInFlight.delete(cacheKey);
@@ -80,10 +88,13 @@ async function identifyTrackUncached({
     wanted.has('spotify') ? searchSpotify(track, { country, timeoutMs, deadlineAt }) : []
   ]);
   const candidates = candidateGroups.flatMap(result => result.status === 'fulfilled' ? result.value : []);
+  const providerFailures = candidateGroups.filter(result => result.status === 'rejected').length;
   const scored = scoreAndRank(track, candidates);
   const best = scored[0] || null;
   if (!canPromoteCandidate(track, best, scored)) {
-    return rawIcyIdentity(track, scored, best ? blockedPromotionReason(track, best) : 'no catalog match above confidence threshold');
+    const identity = rawIcyIdentity(track, scored, best ? blockedPromotionReason(track, best) : 'no catalog match above confidence threshold');
+    if (providerFailures > 0) Object.defineProperty(identity, IDENTIFY_TRANSIENT, { value: true });
+    return identity;
   }
 
   const state = best.confidence >= 78 ? 'Identified' : 'Likely match';
@@ -167,12 +178,20 @@ async function searchItunes(track, { country = 'US', timeoutMs = DEFAULT_TIMEOUT
   url.searchParams.set('term', term);
   if (/^[A-Z]{2}$/i.test(country)) url.searchParams.set('country', country.toUpperCase());
   const data = await fetchJson(url, timeoutMs, {}, deadlineAt);
+  // null is a transport failure or deadline abort, not an empty catalog answer;
+  // the distinction keeps transient failures out of the negative identify cache.
+  if (data === null) throw new Error('iTunes search unavailable');
   return Array.isArray(data?.results) ? data.results.map(normalizeItunes).filter(Boolean) : [];
 }
 
 async function searchSpotify(track, { country = 'US', timeoutMs = DEFAULT_TIMEOUT_MS, deadlineAt = Date.now() + timeoutMs } = {}) {
   const token = await getSpotifyToken(timeoutMs, deadlineAt);
-  if (!token) return [];
+  if (!token) {
+    // No credentials means Spotify is simply unconfigured (a cacheable miss);
+    // configured credentials with no token is a transient auth/transport failure.
+    if (process.env.SPOTIFY_CLIENT_ID && process.env.SPOTIFY_CLIENT_SECRET) throw new Error('Spotify token unavailable');
+    return [];
+  }
   const queryParts = [];
   if (track.artist) queryParts.push(`artist:${quoteSpotify(track.artist)}`);
   if (track.title) queryParts.push(`track:${quoteSpotify(track.title)}`);
@@ -182,6 +201,7 @@ async function searchSpotify(track, { country = 'US', timeoutMs = DEFAULT_TIMEOU
   url.searchParams.set('q', queryParts.join(' ') || [track.artist, track.title].filter(Boolean).join(' '));
   if (/^[A-Z]{2}$/i.test(country)) url.searchParams.set('market', country.toUpperCase());
   const data = await fetchJson(url, timeoutMs, { Authorization: `Bearer ${token}` }, deadlineAt);
+  if (data === null) throw new Error('Spotify search unavailable');
   return Array.isArray(data?.tracks?.items) ? data.tracks.items.map(normalizeSpotify).filter(Boolean) : [];
 }
 
