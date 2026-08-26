@@ -670,3 +670,67 @@ test('the Pages fingerprint route budgets recognition beyond sampling', async ()
   assert.match(route, /Math\.min\(deadlineAt, Date\.now\(\) \+ SAMPLE_TIMEOUT_MS\)/);
   assert.doesNotMatch(route, /deadlineAt = Date\.now\(\) \+ SAMPLE_TIMEOUT_MS;/);
 });
+
+test('a catalog lookup aborted by the shared deadline is not negative-cached', async () => {
+  const { clearIdentifyCache, identifyTrack } = await import('../server/metadata-providers.mjs');
+  clearIdentifyCache();
+  const realFetch = globalThis.fetch;
+  const calls = [];
+  const args = { artist: 'Miles Davis', title: 'So What', providers: ['itunes'], country: 'US', timeoutMs: 80 };
+  try {
+    globalThis.fetch = (url, { signal } = {}) => new Promise((_, reject) => {
+      calls.push(String(url));
+      const fail = () => reject(Object.assign(new Error('aborted'), { name: 'AbortError' }));
+      if (signal?.aborted) {
+        fail();
+        return;
+      }
+      signal?.addEventListener('abort', fail, { once: true });
+    });
+    const aborted = await identifyTrack({ ...args, deadlineAt: Date.now() + 80 });
+    assert.equal(aborted.found, false);
+
+    globalThis.fetch = async url => {
+      calls.push(String(url));
+      return new Response(JSON.stringify({ results: [] }), { headers: { 'content-type': 'application/json' } });
+    };
+    const before = calls.length;
+    const genuine = await identifyTrack(args);
+    assert.equal(genuine.found, false);
+    assert.ok(calls.length > before, 'a deadline-aborted catalog lookup must not be served from the negative cache');
+  } finally {
+    globalThis.fetch = realFetch;
+    clearIdentifyCache();
+  }
+});
+
+test('map tooltip now-playing lookups stay well below the nowplaying WAF budget', async () => {
+  const {
+    MAP_TOOLTIP_LOOKUP_MAX,
+    MAP_TOOLTIP_LOOKUP_WINDOW_MS,
+    canSpendMapTooltipLookup,
+    retainMapTooltipLookups
+  } = await import('../site/assets/metadata-enrichment.js');
+  const { readFile } = await import('node:fs/promises');
+  // 30/min is the zone WAF for /api/nowplaying; speculative tooltip traffic must
+  // leave headroom for the playing-station poll (2/min) and other tabs.
+  assert.equal(MAP_TOOLTIP_LOOKUP_WINDOW_MS, 60_000);
+  assert.ok(MAP_TOOLTIP_LOOKUP_MAX <= 8, `tooltip budget ${MAP_TOOLTIP_LOOKUP_MAX} is not well below the 30/min WAF`);
+  const now = 1_000_000;
+  const spent = [];
+  for (let i = 0; i < MAP_TOOLTIP_LOOKUP_MAX; i += 1) {
+    assert.equal(canSpendMapTooltipLookup(spent, now + i), true);
+    spent.push(now + i);
+  }
+  assert.equal(canSpendMapTooltipLookup(spent, now + MAP_TOOLTIP_LOOKUP_MAX), false);
+  assert.equal(canSpendMapTooltipLookup(spent, now + MAP_TOOLTIP_LOOKUP_WINDOW_MS + 1), true);
+  assert.deepEqual(
+    retainMapTooltipLookups(spent, now + (MAP_TOOLTIP_LOOKUP_MAX - 1) + MAP_TOOLTIP_LOOKUP_WINDOW_MS),
+    []
+  );
+
+  const overlay = await readFile(new URL('../site/assets/metadata-enrichment.js', import.meta.url), 'utf8');
+  assert.match(overlay, /function handleMapTooltipHover/);
+  assert.match(overlay, /canSpendMapTooltipLookup\(mapTooltip\.lookupAt, fireNow\)/);
+  assert.match(overlay, /mapTooltip\.lookupAt\.push\(fireNow\)/);
+});

@@ -1321,7 +1321,31 @@ async function runFingerprint(trigger) {
 
 const MAP_TOOLTIP_NP_TTL_MS = 30 * 1000;
 const MAP_TOOLTIP_MAX_ENTRIES = 200;
-const mapTooltip = { nowPlaying: new Map(), inFlight: new Set(), hoverTimer: null, hoverUuid: '' };
+// Speculative tooltip lookups share /api/nowplaying with the playing-station poll.
+// The zone WAF allows 30 requests/minute/IP; keep this tab's map sweeps well below
+// that so hovering markers cannot starve live now-playing updates for a minute.
+export const MAP_TOOLTIP_LOOKUP_WINDOW_MS = 60_000;
+export const MAP_TOOLTIP_LOOKUP_MAX = 8;
+const mapTooltip = {
+  nowPlaying: new Map(),
+  inFlight: new Set(),
+  hoverTimer: null,
+  hoverUuid: '',
+  lookupAt: []
+};
+
+export function retainMapTooltipLookups(spentAt, now = Date.now(), windowMs = MAP_TOOLTIP_LOOKUP_WINDOW_MS) {
+  const stamps = Array.isArray(spentAt) ? spentAt : [];
+  const cutoff = now - windowMs;
+  return stamps.filter(at => Number.isFinite(at) && at > cutoff);
+}
+
+export function canSpendMapTooltipLookup(spentAt, now = Date.now(), {
+  windowMs = MAP_TOOLTIP_LOOKUP_WINDOW_MS,
+  max = MAP_TOOLTIP_LOOKUP_MAX
+} = {}) {
+  return retainMapTooltipLookups(spentAt, now, windowMs).length < max;
+}
 
 function rememberMapTooltip(uuid, text) {
   mapTooltip.nowPlaying.set(uuid, { text, at: Date.now() });
@@ -1396,11 +1420,19 @@ function handleMapTooltipHover(station) {
   if (cached && Date.now() - cached.at < MAP_TOOLTIP_NP_TTL_MS) return;
   if (mapTooltip.inFlight.has(uuid)) return;
 
+  const hoverNow = Date.now();
+  mapTooltip.lookupAt = retainMapTooltipLookups(mapTooltip.lookupAt, hoverNow);
+  if (!canSpendMapTooltipLookup(mapTooltip.lookupAt, hoverNow)) return;
+
   // Debounce sweeps across dense marker fields; only the dot the pointer rests on resolves.
   mapTooltip.hoverUuid = uuid;
   clearTimeout(mapTooltip.hoverTimer);
   mapTooltip.hoverTimer = setTimeout(() => {
     if (mapTooltip.hoverUuid !== uuid || mapTooltip.inFlight.has(uuid)) return;
+    const fireNow = Date.now();
+    mapTooltip.lookupAt = retainMapTooltipLookups(mapTooltip.lookupAt, fireNow);
+    if (!canSpendMapTooltipLookup(mapTooltip.lookupAt, fireNow)) return;
+    mapTooltip.lookupAt.push(fireNow);
     mapTooltip.inFlight.add(uuid);
     updateOpenMapTooltip(uuid);
     resolvePlatformNowPlaying(streamUrl)

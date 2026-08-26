@@ -106,10 +106,10 @@
         "sha256": "e213700a1a541139a66542e9bd8e615ad5dfc735d52c59569730d9a021e86009"
       },
       "current": {
-        "bytes": 65288,
-        "sha256": "13f21b780ed4150c6674c40e58fb5d9bc218e134f9ee8363742a01278314f8c8"
+        "bytes": 66559,
+        "sha256": "152937d0b33bbb3d9260fb287c59c0b134f6146d548ab9a619ee0f6184f7731a"
       },
-      "reason": "Layer live-metadata feeds above raw ICY: hosting-platform now-playing APIs, HLS timed ID3 text tracks, and an opt-in fingerprint identify button. Preserve the canonical selected URL and UUID through same-station MediaSource reattachment, invalidate only on correlated selection/change or explicit clear, retain the original trimmed URL after validation, and fence both cross-station and same-station out-of-order metadata polls by identity plus a monotonic poll generation."
+      "reason": "Layer live-metadata feeds above raw ICY: hosting-platform now-playing APIs, HLS timed ID3 text tracks, and an opt-in fingerprint identify button. Preserve the canonical selected URL and UUID through same-station MediaSource reattachment, invalidate only on correlated selection/change or explicit clear, retain the original trimmed URL after validation, and fence both cross-station and same-station out-of-order metadata polls by identity plus a monotonic poll generation. Cap speculative map-tooltip /api/nowplaying lookups at 8 per 60 seconds so marker sweeps cannot exhaust the zone WAF."
     },
     {
       "path": "site/config.js",
@@ -154,10 +154,10 @@
         "sha256": "b09e3207532fe7f47d14e9c53804d7e8caf31cad2fcb2c652b728a93871ea094"
       },
       "current": {
-        "bytes": 2929,
-        "sha256": "461d629def674260b93dfe581bdecc7aff632e928732b9e95d2b601f31acd853"
+        "bytes": 2928,
+        "sha256": "8cc57201de061a9a5a52bf269891a798126e5266b01b01e52ae8ad66054d5387"
       },
-      "reason": "Use network-first navigation/configuration updates, keep hashed recovered assets cache-first, reload installation requests so stale browser HTTP entries cannot seed the new service-worker cache, keep the previous worker when reload precaching fails, and precache the UI refresh stylesheet. Bump the shell cache generation to v32 for the new content-addressed runtime filename."
+      "reason": "Use network-first navigation/configuration updates, keep hashed recovered assets cache-first, reload installation requests so stale browser HTTP entries cannot seed the new service-worker cache, keep the previous worker when reload precaching fails, and precache the UI refresh stylesheet. Bump the shell cache generation to v33 for the tooltip now-playing WAF budget."
     }
   ]
 }
