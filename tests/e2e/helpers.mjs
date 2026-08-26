@@ -29,6 +29,19 @@ const AUDIO = silentWav();
 const ALL_STATIONS = [...FIXTURE_STATIONS, ...EXPANSION_STATIONS];
 
 export async function setupApp(page, { sameOriginNowPlaying = null, sameOriginFingerprint = null } = {}) {
+  // Chrome 151+ (the build CI's `playwright install chromium` provides) answers
+  // canPlayType('application/vnd.apple.mpegurl') with 'maybe', so the runtime takes
+  // its native-HLS branch and never creates the MediaSource blob: source these tests
+  // exist to pin. Force the no-native-HLS answer so every browser build exercises
+  // the hls.js path deterministically — the scenario production Firefox and older
+  // Chromium actually hit.
+  await page.addInitScript(() => {
+    const nativeCanPlayType = HTMLMediaElement.prototype.canPlayType;
+    HTMLMediaElement.prototype.canPlayType = function (type) {
+      if (/mpegurl/i.test(String(type))) return '';
+      return nativeCanPlayType.call(this, type);
+    };
+  });
   // Stream URLs the page sent to the same-origin fingerprint endpoint, in order.
   const fingerprintRequests = [];
   await page.route('**/*', route => {
