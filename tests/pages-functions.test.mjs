@@ -1364,6 +1364,25 @@ test('Pages HLS sampling honors byte ranges on map and segment fetches', async (
   assert.deepEqual(ranges, ['bytes=0-499', 'bytes=500-1499', 'bytes=1500-2499']);
 });
 
+test('Pages HLS sampling rejects ranged 200 responses that ignore Range', async () => {
+  await withFetch(async (target, init) => {
+    const url = String(target);
+    if (url.endsWith('/live.m3u8')) {
+      return new Response(
+        '#EXTM3U\n#EXT-X-MAP:URI="media.mp4",BYTERANGE="500@0"\n#EXTINF:4,\n#EXT-X-BYTERANGE:1000@500\nmedia.mp4\n',
+        { headers: { 'content-type': 'application/vnd.apple.mpegurl' } }
+      );
+    }
+    if (url.endsWith('/media.mp4')) {
+      assert.ok(new Headers(init?.headers).get('range'), 'Range must be requested');
+      return new Response(new Uint8Array(4096).fill(7), { status: 200, headers: { 'content-type': 'video/mp4' } });
+    }
+    throw new Error(`unexpected fetch ${url}`);
+  }, async () => {
+    await assert.rejects(sampleStream('https://hls.example.net/live.m3u8'), /initialization segment/i);
+  });
+});
+
 test('Pages encrypted HLS playlists are rejected before any segment fetch', async () => {
   let segmentFetches = 0;
   await withFetch(async target => {

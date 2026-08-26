@@ -698,6 +698,50 @@ test('byte-ranged HLS playlists fetch their exact fragments with Range headers',
   assert.deepEqual(ranges, ['bytes=0-499', 'bytes=500-1499', 'bytes=1500-2499']);
 });
 
+test('desktop HLS sampling rejects ranged 200 responses that ignore Range', async () => {
+  const { resolveTarget } = makeResolver();
+  const requestImpl = async (url, options = {}) => {
+    if (url.endsWith('/live.m3u8')) {
+      return {
+        statusCode: 200,
+        headers: { 'content-type': 'application/vnd.apple.mpegurl' },
+        body: Buffer.from(''),
+        text: '#EXTM3U\n#EXT-X-MAP:URI="media.mp4",BYTERANGE="500@0"\n#EXTINF:4,\n#EXT-X-BYTERANGE:1000@500\nmedia.mp4\n',
+        finalUrl: url
+      };
+    }
+    assert.ok(options.headers?.Range, 'Range must be requested');
+    return { statusCode: 200, headers: {}, body: Buffer.from('whole-file'), text: '', finalUrl: url };
+  };
+  await assert.rejects(
+    sampleStreamAudio('https://hls.example/live.m3u8', { requestImpl, resolveTarget }),
+    /initialization segment/i
+  );
+});
+
+test('desktop sampling follows a redirect to a generic-typed m3u8 as HLS', async () => {
+  const { resolveTarget } = makeResolver();
+  const playlist = '#EXTM3U\n#EXTINF:4,\nseg.ts\n';
+  const requestImpl = async url => {
+    if (url === 'https://radio.example/listen') {
+      return {
+        statusCode: 200,
+        headers: { 'content-type': 'text/plain' },
+        body: Buffer.from(playlist),
+        text: playlist,
+        finalUrl: 'https://cdn.example/live.m3u8'
+      };
+    }
+    if (String(url).endsWith('/seg.ts')) {
+      return { statusCode: 200, headers: { 'content-type': 'video/mp2t' }, body: Buffer.from('audio-seg'), text: '', finalUrl: url };
+    }
+    throw new Error(`unexpected ${url}`);
+  };
+  const sample = await sampleStreamAudio('https://radio.example/listen', { requestImpl, resolveTarget });
+  assert.equal(sample.body.toString(), 'audio-seg');
+  assert.equal(sample.contentType, 'video/mp2t');
+});
+
 test('encrypted HLS playlists are rejected before any segment fetch', async () => {
   let segmentFetches = 0;
   const { resolveTarget } = makeResolver();

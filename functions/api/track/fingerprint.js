@@ -237,7 +237,10 @@ async function sampleHls(playlistText, baseUrl, { deadlineAt, depth, forbiddenOr
         attemptBudget,
         headers
       });
-      if (!response.ok || !response.body) {
+      // A 200 on a ranged request means the origin ignored Range and returned the
+      // start of the shared resource; that sample is undecodable and must not be
+      // submitted for recognition.
+      if (!response.ok || !response.body || (segment.range && response.status !== 206)) {
         cancelResponseBody(response);
         if (segment.initialization) throw new Error('HLS initialization segment could not be fetched');
         continue;

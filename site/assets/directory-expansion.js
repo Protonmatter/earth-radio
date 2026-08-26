@@ -7,6 +7,7 @@
 // the runtime bundle so persisted expansions apply to the very first fetch.
 
 const EXPANDED_KEY = 'earth-radio-expanded-countries-v1';
+const UNVERIFIED_KEY = 'earth-radio-expanded-unverified-v1';
 const COUNTRY_INDEX_KEY = 'earth-radio-country-index-v1';
 const COUNTRY_INDEX_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 // The desktop proxy accepts at most 20 country codes; keep headroom for the defaults.
@@ -46,6 +47,25 @@ function persistCodes(codes) {
   try {
     localStorage.setItem(EXPANDED_KEY, JSON.stringify(codes));
   } catch { /* persistence is best-effort */ }
+}
+
+function readUnverifiedCodes() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(UNVERIFIED_KEY) || '[]');
+    return Array.isArray(parsed) ? parsed.filter(code => /^[A-Z]{2}$/.test(String(code))) : [];
+  } catch {
+    return [];
+  }
+}
+
+function persistUnverified() {
+  try {
+    localStorage.setItem(UNVERIFIED_KEY, JSON.stringify([...expansion.unverified]));
+  } catch { /* persistence is best-effort */ }
+}
+
+function restoreUnverified() {
+  for (const code of readUnverifiedCodes()) expansion.unverified.add(code);
 }
 
 function currentCodes() {
@@ -144,7 +164,11 @@ async function expandCountry(countryName) {
 
   const codes = currentCodes();
   if (codes.includes(entry.code)) {
-    if (expansion.unverified.has(entry.code)) {
+    // In-memory unverified is empty after reload; persisted unverified (and the
+    // stations.v3 catalog, when readable) are the source of truth across boots.
+    if (expansion.unverified.has(entry.code) || await countryCoverageMissing(entry.code)) {
+      expansion.unverified.add(entry.code);
+      persistUnverified();
       scheduleRefresh();
       return { expanded: false, reason: 'retrying incomplete load', code: entry.code };
     }
@@ -220,6 +244,7 @@ function scheduleRefresh() {
 async function recordCoverage(codes, outcome) {
   if (outcome && outcome.ok === false) {
     for (const code of codes) expansion.unverified.add(code);
+    persistUnverified();
     return;
   }
   const loaded = await readCachedCountryCodes();
@@ -227,6 +252,12 @@ async function recordCoverage(codes, outcome) {
     if (!loaded || loaded.has(code)) expansion.unverified.delete(code);
     else expansion.unverified.add(code);
   }
+  persistUnverified();
+}
+
+async function countryCoverageMissing(code) {
+  const loaded = await readCachedCountryCodes();
+  return Boolean(loaded) && !loaded.has(code);
 }
 
 // Reads the country codes present in the runtime's persisted stations.v3 catalog.
@@ -300,6 +331,7 @@ function wireSelectionListeners() {
 // Node unit tests without a DOM.
 if (typeof window !== 'undefined' && typeof document !== 'undefined') {
   applyPersistedExpansions();
+  restoreUnverified();
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wireSelectionListeners);
   else wireSelectionListeners();
 

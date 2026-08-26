@@ -60,6 +60,7 @@ const state = {
   sameOriginApiProbe: null,
   sameOriginApiMisses: 0,
   platformPollGeneration: 0,
+  platformPlayTimer: null,
   streamUrl: '',
   selectedStreamUrl: '',
   selectedStationUuid: ''
@@ -660,8 +661,9 @@ function renderIdentity(track, identity) {
   }
   if (rawEl) rawEl.textContent = `Raw ICY: ${identity.raw || track.raw}`;
 
-  // If the catalog match is strong, upgrade the visible nowcard without hiding the confidence trail.
-  if (identity.found && identity.confidence >= cfg.minIdentifiedConfidence) {
+  // If the catalog match is strong, or a structured station feed named the track,
+  // upgrade the visible nowcard without hiding the confidence trail.
+  if (shouldPromoteNowcard(identity, cfg.minIdentifiedConfidence)) {
     const titleEl = byId('nowcard-title');
     const artistEl = byId('nowcard-artist');
     if (titleEl && identity.title) titleEl.textContent = identity.title;
@@ -772,6 +774,12 @@ export function stationIdentityAfterTransition(previous, transition = {}) {
 
 export function pollResultIsCurrent(started, current) {
   return started?.generation === current?.generation && !shouldInvalidateStationIdentity(started, current);
+}
+
+export function shouldPromoteNowcard(identity, minIdentifiedConfidence = DEFAULTS.minIdentifiedConfidence) {
+  if (!identity?.found) return false;
+  if (identity.state === 'Station feed') return true;
+  return Number(identity.confidence) >= minIdentifiedConfidence;
 }
 
 function invalidateSelectedStationData() {
@@ -1133,7 +1141,9 @@ async function identifyAndRender(track, { sourceFeed = '', artworkUrl = '' } = {
   if (!identity.artworkUrl && artworkUrl) identity.artworkUrl = artworkUrl;
   if (!identity.found && sourceFeed && sourceFeed !== 'fingerprint' && track.artist && track.title) {
     // The station's own feed named artist and title; catalogs simply could not
-    // confirm it (common for K-pop/J-pop and regional releases).
+    // confirm it (common for K-pop/J-pop and regional releases). Mark found so
+    // renderIdentity can promote the title onto the primary Now Playing card.
+    identity.found = true;
     identity.state = 'Station feed';
     identity.confidence = Math.max(identity.confidence || 0, 65);
     identity.title = track.title;
@@ -1243,6 +1253,11 @@ async function runFingerprint(trigger) {
     return;
   }
   if (!(await checkFingerprintAvailability())) return;
+  // The availability probe can take the full metadata timeout. If the listener
+  // changed stations while it was in flight, do not mark the operation busy or
+  // spend metered recognition quota on the old stream.
+  const live = currentStationIdentity();
+  if (shouldInvalidateStationIdentity(identity, live) || !isPlaying() || !live.streamUrl) return;
 
   state.fingerprintBusy = true;
   state.fingerprintLastAt = Date.now();
@@ -1257,7 +1272,7 @@ async function runFingerprint(trigger) {
   try {
     const base = await metadataApiBase();
     if (base === null) { setFingerprintStatus('Fingerprinting is not available on this deployment'); return; }
-    const params = new URLSearchParams({ url: streamUrl });
+    const params = new URLSearchParams({ url: live.streamUrl });
     // Catalog enrichment (artwork, storefront links) is market-specific and the
     // server keys its cache on the country — send the listener's market.
     const country = listenerCountry();
@@ -1265,7 +1280,7 @@ async function runFingerprint(trigger) {
     const data = await fetchJson(`${base}/api/track/fingerprint?${params}`, 45000);
     // The sample takes ~15-20s; if the user switched stations meanwhile, this result
     // belongs to the old stream and must be dropped.
-    if (shouldInvalidateStationIdentity(identity, currentStationIdentity()) || state.inFlight !== token) { setFingerprintStatus(''); return; }
+    if (shouldInvalidateStationIdentity(live, currentStationIdentity()) || state.inFlight !== token) { setFingerprintStatus(''); return; }
     if (!data) { setFingerprintStatus('Fingerprint request failed'); return; }
     if (data.available === false) {
       state.fingerprintAvailable = false;
@@ -1530,7 +1545,10 @@ function init() {
       refreshCanonicalStreamUrl();
       syncFingerprintButton();
       void checkFingerprintAvailability();
-      setTimeout(() => void pollPlatformNowPlaying(), 1500);
+      // Replace any pending startup poll so rapid play/pause or station changes
+      // cannot queue one /api/nowplaying request per event.
+      clearTimeout(state.platformPlayTimer);
+      state.platformPlayTimer = setTimeout(() => void pollPlatformNowPlaying(), 1500);
     });
     audio.addEventListener('pause', syncFingerprintButton);
     audio.addEventListener('emptied', syncFingerprintButton);

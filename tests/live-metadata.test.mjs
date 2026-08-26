@@ -734,3 +734,33 @@ test('map tooltip now-playing lookups stay well below the nowplaying WAF budget'
   assert.match(overlay, /canSpendMapTooltipLookup\(mapTooltip\.lookupAt, fireNow\)/);
   assert.match(overlay, /mapTooltip\.lookupAt\.push\(fireNow\)/);
 });
+
+test('structured station-feed identities promote onto the Now Playing card', async () => {
+  const { shouldPromoteNowcard } = await import('../site/assets/metadata-enrichment.js');
+  assert.equal(shouldPromoteNowcard({ found: false, confidence: 90, state: 'Raw ICY only' }), false);
+  assert.equal(shouldPromoteNowcard({ found: true, confidence: 90, state: 'Identified' }), true);
+  assert.equal(shouldPromoteNowcard({ found: true, confidence: 65, state: 'Station feed' }), true);
+  assert.equal(shouldPromoteNowcard({ found: true, confidence: 65, state: 'Likely match' }), false);
+  const { readFile } = await import('node:fs/promises');
+  const overlay = await readFile(new URL('../site/assets/metadata-enrichment.js', import.meta.url), 'utf8');
+  assert.match(overlay, /identity\.found = true;/);
+  assert.match(overlay, /shouldPromoteNowcard\(identity, cfg\.minIdentifiedConfidence\)/);
+});
+
+test('fingerprint availability probe is rechecked against the live station before sampling', async () => {
+  const { readFile } = await import('node:fs/promises');
+  const overlay = await readFile(new URL('../site/assets/metadata-enrichment.js', import.meta.url), 'utf8');
+  const probe = overlay.indexOf('await checkFingerprintAvailability()');
+  const recheck = overlay.indexOf('shouldInvalidateStationIdentity(identity, live)');
+  const busy = overlay.indexOf('fingerprintBusy = true');
+  assert.ok(probe >= 0, 'availability probe must exist');
+  assert.ok(recheck > probe, 'live-station recheck must follow the availability probe');
+  assert.ok(busy > recheck, 'the operation must not be marked busy until after the recheck');
+});
+
+test('play events coalesce onto one delayed platform-nowplaying poll', async () => {
+  const { readFile } = await import('node:fs/promises');
+  const overlay = await readFile(new URL('../site/assets/metadata-enrichment.js', import.meta.url), 'utf8');
+  assert.match(overlay, /clearTimeout\(state\.platformPlayTimer\)/);
+  assert.match(overlay, /state\.platformPlayTimer = setTimeout\(\(\) => void pollPlatformNowPlaying\(\), 1500\)/);
+});

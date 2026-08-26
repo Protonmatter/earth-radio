@@ -1,4 +1,4 @@
-const CACHE_NAME = 'earth-radio-shell-v33-tooltip-waf-1';
+const CACHE_NAME = 'earth-radio-shell-v34-review-threads-1';
 const SHELL_ASSETS = [
   './',
   './index.html',

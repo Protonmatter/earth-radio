@@ -118,7 +118,7 @@ export async function sampleStreamAudio(streamUrl, {
   // One wall-clock budget for the whole sampling operation, shared across every
   // redirect hop, playlist fetch, and segment fetch.
   const stream = new URL(String(streamUrl || '').trim());
-  if (/\.m3u8(\?|#|$)/i.test(stream.pathname + stream.search)) {
+  if (looksLikeHlsUrl(stream)) {
     return sampleHlsAudio(stream.toString(), { seconds, depth: 0, deadlineAt, requestImpl });
   }
 
@@ -131,12 +131,28 @@ export async function sampleStreamAudio(streamUrl, {
     stopWhen: makeByteTarget(seconds),
     headers: { Accept: '*/*', 'User-Agent': USER_AGENT }
   });
+  const finalUrl = response.finalUrl || stream.toString();
+  // Pages recognizes .m3u8 on the redirected URL before rejecting generic types.
+  // A listen URL that 302s to playlist.m3u8 with text/plain or octet-stream must
+  // take the HLS path here too, before assertAudioResponse refuses the body.
+  if (looksLikeHlsUrl(finalUrl)) {
+    return sampleHlsPlaylist(response.text, finalUrl, { seconds, depth: 0, deadlineAt, requestImpl });
+  }
   assertAudioResponse(response);
   const contentType = String(response.headers['content-type'] || '');
   if (/mpegurl|application\/x-mpegurl/i.test(contentType)) {
-    return sampleHlsPlaylist(response.text, response.finalUrl || stream.toString(), { seconds, depth: 0, deadlineAt, requestImpl });
+    return sampleHlsPlaylist(response.text, finalUrl, { seconds, depth: 0, deadlineAt, requestImpl });
   }
   return { body: response.body, contentType };
+}
+
+function looksLikeHlsUrl(url) {
+  try {
+    const parsed = url instanceof URL ? url : new URL(String(url || ''));
+    return /\.m3u8(\?|#|$)/i.test(parsed.pathname + parsed.search);
+  } catch {
+    return /\.m3u8(\?|#|$)/i.test(String(url || ''));
+  }
 }
 
 function makeByteTarget(seconds) {
@@ -197,7 +213,8 @@ async function sampleHlsPlaylist(text, baseUrl, { seconds, depth, deadlineAt, re
       maxBytes: perSegmentCap,
       headers
     });
-    if (segmentResponse.statusCode >= 200 && segmentResponse.statusCode < 300 && segmentResponse.body.length) {
+    const rangedOk = !segment.range || segmentResponse.statusCode === 206;
+    if (rangedOk && segmentResponse.statusCode >= 200 && segmentResponse.statusCode < 300 && segmentResponse.body.length) {
       parts.push(segmentResponse.body);
     } else if (segment.initialization) {
       // Fragments without their EXT-X-MAP metadata are undecodable; submitting them
