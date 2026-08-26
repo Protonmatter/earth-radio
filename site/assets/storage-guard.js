@@ -111,7 +111,7 @@ function readBestV2Backup(storage, namespace) {
   ], namespace);
 }
 
-function readBestV1Backup(storage) {
+export function readBestV1Backup(storage) {
   const valid = [];
   for (const key of LEGACY_BACKUP_KEYS) {
     try {
@@ -121,7 +121,13 @@ function readBestV1Backup(storage) {
       if (!parsed || parsed.v !== 1 || typeof parsed.payload !== 'string' ||
           checksum(parsed.payload) !== parsed.checksum || !Number.isFinite(Number(parsed.savedAt))) continue;
       const data = JSON.parse(parsed.payload);
-      if (!data || typeof data !== 'object' || Array.isArray(data) || !hasUserSubstance(data)) continue;
+      if (!data || typeof data !== 'object' || Array.isArray(data)) continue;
+      // Customized preferences are worth migrating even without favorites/recents:
+      // rejecting a prefs-only v1 backup would let a lost store re-seed defaults and
+      // permanently discard theme/locale/volume settings.
+      const customizedPrefs = data.prefs && typeof data.prefs === 'object' && !Array.isArray(data.prefs) &&
+        Object.keys(data.prefs).length > 0;
+      if (!hasUserSubstance(data) && !customizedPrefs) continue;
       valid.push({ generation: 1, savedAt: Number(parsed.savedAt), data, legacy: true });
     } catch {
       // Corrupt legacy data remains in place for diagnostics and possible manual recovery.

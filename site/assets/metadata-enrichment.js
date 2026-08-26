@@ -555,9 +555,18 @@ function detailRow(term, value) {
   return [dt, dd];
 }
 
+// Provider-supplied URLs become clickable hrefs; only web schemes are acceptable
+// (a compromised provider response must never deliver javascript:/data: links).
+// Pure and exported for unit tests.
+export function safeLinkHref(url) {
+  const candidate = String(url || '');
+  return /^https?:\/\//i.test(candidate) ? candidate : '';
+}
+
 function link(label, url) {
   const a = document.createElement('a');
-  a.href = url;
+  const href = safeLinkHref(url);
+  if (href) a.href = href;
   a.target = '_blank';
   a.rel = 'noopener noreferrer';
   a.textContent = label;
@@ -1206,6 +1215,17 @@ function maybeAutoFingerprint(identity) {
   }, 8000);
 }
 
+// The listener's storefront market from the browser locale ('' when undeterminable).
+// Pure enough to export for unit tests via an explicit locale argument.
+export function listenerCountry(locale = typeof navigator !== 'undefined' ? navigator.language : '') {
+  try {
+    const region = new Intl.Locale(String(locale || '')).maximize().region || '';
+    return /^[A-Z]{2}$/.test(region) ? region : '';
+  } catch {
+    return '';
+  }
+}
+
 async function runFingerprint(trigger) {
   const cfg = config();
   if (!fingerprintConfigured() || state.fingerprintBusy) return;
@@ -1233,6 +1253,10 @@ async function runFingerprint(trigger) {
     const base = await metadataApiBase();
     if (base === null) { setFingerprintStatus('Fingerprinting is not available on this deployment'); return; }
     const params = new URLSearchParams({ url: streamUrl });
+    // Catalog enrichment (artwork, storefront links) is market-specific and the
+    // server keys its cache on the country — send the listener's market.
+    const country = listenerCountry();
+    if (country) params.set('country', country);
     const data = await fetchJson(`${base}/api/track/fingerprint?${params}`, 45000);
     // The sample takes ~15-20s; if the user switched stations meanwhile, this result
     // belongs to the old stream and must be dropped.

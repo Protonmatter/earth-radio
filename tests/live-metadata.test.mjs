@@ -473,3 +473,49 @@ test('runtime source and installed bundle dispatch selections only on truthful p
   assert.match(source, /if \(stationLoadState\.queued\) return loadStations\(\)/);
   assert.match(bundle, /if\(_erLoadQueued\)return \$s\(\)/);
 });
+
+test('provider-supplied link URLs are restricted to web schemes', async () => {
+  const { safeLinkHref } = await import('../site/assets/metadata-enrichment.js');
+  assert.equal(safeLinkHref('https://open.spotify.com/track/abc'), 'https://open.spotify.com/track/abc');
+  assert.equal(safeLinkHref('http://music.example/x'), 'http://music.example/x');
+  assert.equal(safeLinkHref('javascript:alert(1)'), '');
+  assert.equal(safeLinkHref('data:text/html,<script>1</script>'), '');
+  assert.equal(safeLinkHref(''), '');
+});
+
+test('the listener market is derived from the browser locale for catalog enrichment', async () => {
+  const { listenerCountry } = await import('../site/assets/metadata-enrichment.js');
+  assert.equal(listenerCountry('en-US'), 'US');
+  assert.equal(listenerCountry('ko'), 'KR');
+  assert.equal(listenerCountry('pt-BR'), 'BR');
+  assert.equal(listenerCountry(''), '');
+  // The fingerprint request sends it so country-keyed server caches differentiate.
+  const { readFile } = await import('node:fs/promises');
+  const overlay = await readFile(new URL('../site/assets/metadata-enrichment.js', import.meta.url), 'utf8');
+  assert.match(overlay, /params\.set\('country', country\)/);
+});
+
+test('a stalled specialized platform probe leaves budget for the generic fallbacks', async () => {
+  const { clearPlatformNowPlayingCache, resolvePlatformNowPlaying } = await import('../server/platform-nowplaying.mjs');
+  clearPlatformNowPlayingCache();
+  const budgets = [];
+  const startedAt = Date.now();
+  const result = await resolvePlatformNowPlaying('https://radio.example.org/listen/my_station/radio.mp3', {
+    timeoutMs: 800,
+    fetchTextImpl: async (endpoint, { deadlineAt }) => {
+      budgets.push({ platform: endpoint.platform, slice: deadlineAt - Date.now() });
+      if (endpoint.platform === 'azuracast') {
+        // The specialized endpoint black-holes until whatever deadline it was given.
+        await new Promise(resolve => setTimeout(resolve, Math.max(0, deadlineAt - Date.now())));
+        return '';
+      }
+      return JSON.stringify({ streamstatus: 1, songtitle: 'IU - Blueming' });
+    }
+  });
+  const elapsed = Date.now() - startedAt;
+  assert.equal(result.found, true, `generic fallback must still answer: ${JSON.stringify(result)}`);
+  const specialized = budgets.find(entry => entry.platform === 'azuracast');
+  assert.ok(specialized.slice < 700, `specialized probe must get a bounded slice, got ${specialized.slice}ms`);
+  assert.ok(elapsed < 1200, `resolution stayed within the caller budget, took ${elapsed}ms`);
+  clearPlatformNowPlayingCache();
+});

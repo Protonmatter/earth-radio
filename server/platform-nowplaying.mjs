@@ -47,10 +47,20 @@ async function resolveUncached(streamUrl, { deadlineAt, signal, fetchTextImpl })
   const generic = endpoints.filter(endpoint => endpoint.platform === 'icecast' || endpoint.platform === 'shoutcast');
   const specialized = endpoints.filter(endpoint => endpoint.platform !== 'icecast' && endpoint.platform !== 'shoutcast');
 
-  for (const endpoint of specialized) {
+  for (let index = 0; index < specialized.length; index += 1) {
+    const endpoint = specialized[index];
+    const remaining = deadlineAt - Date.now();
+    if (remaining <= 250) break;
+    // A stalled specialized endpoint must never consume the whole resolution window:
+    // half of the remaining budget stays reserved for the generic fallbacks, and the
+    // other half is divided across the remaining specialized candidates.
+    const stageDeadlineAt = Math.min(
+      deadlineAt,
+      Date.now() + Math.max(250, Math.floor(remaining / (2 * (specialized.length - index))))
+    );
     attempted.push(endpoint.platform);
     try {
-      const result = await probeEndpoint(endpoint, { deadlineAt, signal, fetchTextImpl });
+      const result = await probeEndpoint(endpoint, { deadlineAt: stageDeadlineAt, signal, fetchTextImpl });
       if (result) return { ...result, found: true, endpoint: endpoint.url, attempted, fetchedAt: new Date().toISOString() };
     } catch {
       // Platform probing is best-effort; move on to the next candidate.

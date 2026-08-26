@@ -106,8 +106,8 @@
         "sha256": "e213700a1a541139a66542e9bd8e615ad5dfc735d52c59569730d9a021e86009"
       },
       "current": {
-        "bytes": 63111,
-        "sha256": "d77e614e88d46e5c8e6126e87e7d9f45a0652fd5c514fdce2dcb2d3e4ecc8709"
+        "bytes": 64176,
+        "sha256": "a0ec5879f859536208216ecaba5230f31e9e6934d3a48ad061046d52e35ff63e"
       },
       "reason": "Layer live-metadata feeds above raw ICY: hosting-platform now-playing APIs, HLS timed ID3 text tracks, and an opt-in fingerprint identify button. Preserve the canonical selected URL and UUID through same-station MediaSource reattachment, invalidate only on correlated selection/change or explicit clear, retain the original trimmed URL after validation, and fence both cross-station and same-station out-of-order metadata polls by identity plus a monotonic poll generation."
     },

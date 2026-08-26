@@ -539,3 +539,22 @@ test('pagehide cannot certify stale primary memory after the generation marker i
   assert.equal(current.generation, 6);
   assert.deepEqual(JSON.parse(current.payload).favorites, {});
 });
+
+test('v1 migration treats customized preferences as substantive', async () => {
+  const { checksum, readBestV1Backup } = await import('../site/assets/storage-guard.js');
+  const makeV1 = data => {
+    const payload = JSON.stringify(data);
+    return JSON.stringify({ v: 1, savedAt: 4200, checksum: checksum(payload), payload });
+  };
+  const storage = values => ({ getItem: key => values[key] ?? null });
+  const prefsOnly = readBestV1Backup(storage({
+    'earth-radio-user-backup-v1': makeV1({ favorites: {}, recents: [], prefs: { theme: 'dark', locale: 'ko' } })
+  }));
+  assert.ok(prefsOnly, 'a prefs-only v1 backup migrates instead of re-seeding defaults');
+  assert.equal(prefsOnly.data.prefs.theme, 'dark');
+  // Truly empty data still has nothing worth restoring.
+  const empty = readBestV1Backup(storage({
+    'earth-radio-user-backup-v1': makeV1({ favorites: {}, recents: [], prefs: {} })
+  }));
+  assert.equal(empty, null);
+});
