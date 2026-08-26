@@ -369,7 +369,12 @@ test('sequential HLS playlist and segment reads share one absolute deadline', as
     resolveTarget: async url => fakeTargetFor(url),
     requestOnce: async target => {
       requested.push(target.href);
-      await new Promise(resolve => setTimeout(resolve, 200));
+      // Fast first reads leave the third read ~500ms of scheduler headroom to
+      // start inside the deadline; the third read then sleeps far PAST the
+      // deadline so the shared-deadline rejection can never race its resolution
+      // (an equal-sleep version of this test tied at exactly the deadline and
+      // flipped outcomes between runners).
+      await new Promise(resolve => setTimeout(resolve, target.href.endsWith('/two.aac') ? 1500 : 50));
       if (target.href.endsWith('/live.m3u8')) {
         return {
           statusCode: 200,
@@ -381,10 +386,8 @@ test('sequential HLS playlist and segment reads share one absolute deadline', as
       return { statusCode: 200, headers: { 'content-type': 'audio/aac' }, body: Buffer.from('audio'), text: 'audio' };
     }
   });
-  // Two 200ms reads fit inside the 600ms deadline with 200ms of scheduler headroom
-  // (a 45ms/100ms version of this test left ~10ms and flaked on slow CI runners);
-  // the third read must still start — proving the deadline is not reset per read —
-  // and then cross the shared deadline mid-body.
+  // The third read must still start — proving the deadline is not reset per
+  // read — and then cross the shared deadline mid-body.
   await assert.rejects(
     sampleHlsAudio('https://radio.example/live.m3u8', { seconds: 5, deadlineAt: Date.now() + 600, requestImpl }),
     /request timeout/
