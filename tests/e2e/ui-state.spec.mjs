@@ -46,3 +46,40 @@ test('an Arabic locale preview keeps lang/dir until the settings dialog closes',
   await expect(page.locator('.station-card').first()).toBeVisible({ timeout: 20_000 });
   await expect(page.locator('html')).toHaveAttribute('lang', 'en');
 });
+
+test('narrowing the window re-clamps the saved split to the live workspace', async ({ page }) => {
+  await setupApp(page);
+
+  // Persist a split that is legal against the saved viewport width but exceeds what
+  // the live workspace (which is narrower than the viewport) allows for the map's
+  // 360px minimum.
+  await page.evaluate(() => {
+    localStorage.setItem('earthRadio.ui.v1', JSON.stringify({ split: 72, viewportWidth: 1360 }));
+  });
+  await page.reload();
+  await expect(page.locator('.station-card').first()).toBeVisible({ timeout: 20_000 });
+
+  const readClamp = () => page.evaluate(async () => {
+    const ui = await import('/assets/responsive-ui.js');
+    const width = document.querySelector('main.main').getBoundingClientRect().width;
+    return {
+      pct: Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--er-list-pct')),
+      max: ui.splitBounds(width).max
+    };
+  });
+
+  // clampSplitPercent rounds to 0.1 while splitBounds rounds to integers: allow 0.6.
+  await expect.poll(async () => {
+    const { pct, max } = await readClamp();
+    return pct <= max + 0.6;
+  }, { timeout: 10_000, message: 'the saved split must be re-clamped against the live workspace' }).toBe(true);
+  const widePct = (await readClamp()).pct;
+
+  // Still desktop mode (>1099px), but the workspace is now narrower again: the split
+  // must follow it down instead of pinning the map below its pixel minimum.
+  await page.setViewportSize({ width: 1120, height: 850 });
+  await expect.poll(async () => {
+    const { pct, max } = await readClamp();
+    return pct <= max + 0.6 && pct < widePct;
+  }, { timeout: 10_000, message: 'the split must re-clamp after the window narrows' }).toBe(true);
+});

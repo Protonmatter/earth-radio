@@ -319,3 +319,29 @@ test.describe('account-scoped backup identity', () => {
     await expect(card(page, 'E2E Berlin Techno').locator('.station-card__favorite--active')).toHaveCount(0);
   });
 });
+
+test.describe('search snapshot freshness', () => {
+  test('a pre-typed tag query surfaces stations from a later country expansion', async ({ page }) => {
+    await setupApp(page);
+    await page.waitForFunction(() => Boolean(window.earthRadioDirectory));
+
+    // Type a tag-only query BEFORE Japan loads: "jpop" appears in no station name
+    // or visible result metadata, so the responsive filter must validate the match
+    // against the runtime's IndexedDB snapshot — which at this point predates the
+    // expansion.
+    await page.locator('[data-er-open-search]').click();
+    await page.locator('#er-station-query').fill('jpop');
+    await expect(page.locator('#search-results .search-result-item', { hasText: 'E2E Tokyo FM' })).toHaveCount(0);
+
+    // Expand Japan through the map-popup path (no overlay country scope), as the
+    // runtime search must keep filtering on the raw tag query.
+    const result = await page.evaluate(() => window.earthRadioDirectory.expand('Japan'));
+    expect(result.expanded).toBe(true);
+
+    // Once the load settles the snapshot must refresh: the Tokyo result may not
+    // stay hidden until the listener edits the query.
+    await expect(
+      page.locator('#search-results .search-result-item', { hasText: 'E2E Tokyo FM' }).first()
+    ).toBeVisible({ timeout: 20_000 });
+  });
+});

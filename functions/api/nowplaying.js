@@ -10,7 +10,7 @@
 // GET /api/nowplaying?url=<stream>   -> { found, source, artist, title, raw, ... }
 
 import { createRateLimiter, fetchPublic, readBodyCapped, rejectFetchUrl } from '../_shared/guarded-fetch.js';
-import { detectPlatformEndpoints, parsePlatformPayload } from '../../server/platform-detect.mjs';
+import { detectPlatformEndpoints, parsePlatformPayload, sseFrameComplete } from '../../server/platform-detect.mjs';
 import { parseNowPlaying } from '../../server/metadata-providers.mjs';
 import { extractIcyTitle, icyReadBudget } from '../../server/icy-title.mjs';
 
@@ -136,7 +136,9 @@ async function tryPlatform(endpoint, deadlineAt, forbiddenOrigins) {
   const bytes = await readBodyCapped(response, {
     maxBytes: MAX_PLATFORM_BYTES,
     deadlineAt,
-    stopWhen: endpoint.kind === 'sse' ? ({ body }) => new TextDecoder().decode(body()).includes('\n\n') : undefined
+    // Stop only after a complete data event; Zeno may delimit frames with CRLF
+    // blank lines and open with a heartbeat frame that carries no data: line.
+    stopWhen: endpoint.kind === 'sse' ? ({ body }) => sseFrameComplete(new TextDecoder().decode(body())) : undefined
   });
   const text = new TextDecoder().decode(bytes);
   if (!text) return null;

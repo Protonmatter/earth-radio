@@ -914,7 +914,7 @@ function updateCountrySummary() {
 
 function readRuntimeSearchStations() {
   if (runtimeSearchStationsPromise) return runtimeSearchStationsPromise;
-  runtimeSearchStationsPromise = new Promise(resolve => {
+  const pending = new Promise(resolve => {
     if (!globalThis.indexedDB) {
       resolve(null);
       return;
@@ -943,11 +943,16 @@ function readRuntimeSearchStations() {
       transaction.onabort = () => database.close();
     };
   }).then(stations => {
-    runtimeSearchStations = stations;
-    runtimeSearchStationsPromise = null;
+    // Commit only while still current: an invalidation (a settled directory load)
+    // may have started a fresh read that this older one must not clobber.
+    if (runtimeSearchStationsPromise === pending) {
+      runtimeSearchStations = stations;
+      runtimeSearchStationsPromise = null;
+    }
     return stations;
   });
-  return runtimeSearchStationsPromise;
+  runtimeSearchStationsPromise = pending;
+  return pending;
 }
 
 function stationResultMatches(result) {
@@ -1487,12 +1492,20 @@ function bindActions() {
     if (dest && dest !== loadUiState().destination) setDestination(dest, false);
   });
 
+  // The persisted split percentage was clamped against the workspace width it was
+  // saved at; after a resize it must be re-clamped against the width the window has
+  // NOW — without persisting the transient viewport — or a wide saved split can pin
+  // the list or map below its documented pixel minimums in a narrowed window.
+  const applyViewportReClamped = () => {
+    const state = loadUiState();
+    applyViewport({ ...state, split: clampSplitPercent(state.split, workspaceWidth()) });
+  };
   let resizeFrame = 0;
   const onResize = () => {
     if (resizeFrame) return;
     resizeFrame = requestAnimationFrame(() => {
       resizeFrame = 0;
-      applyViewport(loadUiState());
+      applyViewportReClamped();
     });
   };
   window.addEventListener('resize', onResize);
@@ -1500,7 +1513,7 @@ function bindActions() {
     onResize();
     // iOS reports stale metrics immediately after rotation.
     setTimeout(() => {
-      applyViewport(loadUiState());
+      applyViewportReClamped();
       invalidateMap(true);
     }, 250);
   });
@@ -1684,6 +1697,15 @@ function start() {
   bindActions();
   bindSeparator();
   observeRuntime();
+  // A settled directory load (boot, manual refresh, or country expansion) replaces
+  // the runtime's stations.v3 record; the search filter validates tag/language
+  // matches against that snapshot, so it must be re-read or newly loaded stations
+  // stay hidden from an already-typed query until the listener edits it.
+  window.addEventListener('earthradio:stations-load-settled', () => {
+    runtimeSearchStations = null;
+    runtimeSearchStationsPromise = null;
+    void readRuntimeSearchStations().then(() => applySearchScope());
+  });
   document.documentElement.dataset.erUiReady = 'true';
 
   // The recovered runtime renders its first catalog asynchronously.

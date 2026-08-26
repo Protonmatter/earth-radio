@@ -519,3 +519,33 @@ test('a stalled specialized platform probe leaves budget for the generic fallbac
   assert.ok(elapsed < 1200, `resolution stayed within the caller budget, took ${elapsed}ms`);
   clearPlatformNowPlayingCache();
 });
+
+test('SSE frame completion accepts CRLF delimiters and requires a data event', async () => {
+  const { sseFrameComplete } = await import('../server/platform-detect.mjs');
+  assert.equal(sseFrameComplete('data: {"streamTitle":"A - B"}\r\n\r\n'), true);
+  assert.equal(sseFrameComplete('retry: 5000\ndata: {"x":1}\n\n'), true);
+  // An initial comment/heartbeat frame carries no data and must keep the read open.
+  assert.equal(sseFrameComplete(': heartbeat\r\n\r\n'), false);
+  assert.equal(sseFrameComplete('data: {"incomplete":true}'), false);
+  assert.equal(sseFrameComplete(''), false);
+  // A heartbeat followed by a completed data frame stops the read.
+  assert.equal(sseFrameComplete(': hi\r\n\r\ndata: {"streamTitle":"T"}\r\n\r\n'), true);
+  // Both SSE readers must stop on this shared predicate, not a bare LF delimiter scan.
+  const { readFile } = await import('node:fs/promises');
+  for (const path of ['../server/platform-nowplaying.mjs', '../functions/api/nowplaying.js']) {
+    const source = await readFile(new URL(path, import.meta.url), 'utf8');
+    assert.match(source, /sseFrameComplete\(/, `${path} must gate its SSE stop condition on sseFrameComplete`);
+  }
+});
+
+test('delayed auto-fingerprints stay fenced to their originating stream and track', async () => {
+  const { readFile } = await import('node:fs/promises');
+  const overlay = await readFile(new URL('../site/assets/metadata-enrichment.js', import.meta.url), 'utf8');
+  const start = overlay.indexOf('function maybeAutoFingerprint');
+  assert.ok(start >= 0, 'maybeAutoFingerprint must exist');
+  const timer = overlay.slice(start, overlay.indexOf('\n}', start));
+  // The timer must re-derive the stream::track key when it fires and bail on any
+  // mismatch, so a station change during the delay never spends metered quota.
+  assert.match(timer, /state\.fingerprintAutoKey !== autoKey/);
+  assert.match(timer, /`\$\{currentStreamUrl\(\)\}::\$\{state\.lastTrackKey\}` !== autoKey/);
+});

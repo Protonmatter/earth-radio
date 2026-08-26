@@ -1334,3 +1334,49 @@ test('Pages fingerprinting includes the EXT-X-MAP init segment and reports provi
     assert.equal(providerBodyCancelled, true);
   });
 });
+
+test('Pages HLS sampling honors byte ranges on map and segment fetches', async () => {
+  const ranges = [];
+  await withFetch(async (target, init) => {
+    const url = String(target);
+    if (url.endsWith('/live.m3u8')) {
+      return new Response([
+        '#EXTM3U',
+        '#EXT-X-MAP:URI="media.mp4",BYTERANGE="500@0"',
+        '#EXT-X-BYTERANGE:1000@500',
+        'media.mp4',
+        // Offset-less continuation: starts where the previous sub-range ended.
+        '#EXT-X-BYTERANGE:1000',
+        'media.mp4',
+        '#EXT-X-ENDLIST'
+      ].join('\n'), { headers: { 'content-type': 'application/vnd.apple.mpegurl' } });
+    }
+    if (url.endsWith('/media.mp4')) {
+      ranges.push(new Headers(init?.headers).get('range') || '');
+      return new Response(new Uint8Array(2048).fill(7), { status: 206, headers: { 'content-type': 'video/mp4' } });
+    }
+    throw new Error(`unexpected fetch ${url}`);
+  }, async () => {
+    const sample = await sampleStream('https://hls.example.net/live.m3u8');
+    assert.ok(sample.length > 0);
+  });
+  assert.deepEqual(ranges, ['bytes=0-499', 'bytes=500-1499', 'bytes=1500-2499']);
+});
+
+test('Pages encrypted HLS playlists are rejected before any segment fetch', async () => {
+  let segmentFetches = 0;
+  await withFetch(async target => {
+    const url = String(target);
+    if (url.endsWith('/enc.m3u8')) {
+      return new Response(
+        '#EXTM3U\n#EXT-X-KEY:METHOD=AES-128,URI="key.bin",IV=0x0\n#EXTINF:4,\nseg1.ts\n#EXTINF:4,\nseg2.ts\n',
+        { headers: { 'content-type': 'application/vnd.apple.mpegurl' } }
+      );
+    }
+    segmentFetches += 1;
+    return new Response(new Uint8Array(16));
+  }, async () => {
+    await assert.rejects(sampleStream('https://hls.example.net/enc.m3u8'), /encrypted/i);
+  });
+  assert.equal(segmentFetches, 0, 'ciphertext must never be fetched or submitted to recognizers');
+});

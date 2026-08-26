@@ -6,7 +6,7 @@
 
 import { requestPublic } from './net-guard.mjs';
 import { createBoundedTtlCache, resolveWithCache } from './shared-cache.mjs';
-import { detectPlatformEndpoints, parsePlatformPayload } from './platform-detect.mjs';
+import { detectPlatformEndpoints, parsePlatformPayload, sseFrameComplete } from './platform-detect.mjs';
 export { detectPlatformEndpoints, parsePlatformPayload } from './platform-detect.mjs';
 
 const USER_AGENT = 'EarthRadio/0.24.0 platform-nowplaying (+https://github.com/Protonmatter/EarthRadio)';
@@ -98,8 +98,9 @@ async function fetchTextGuarded(endpoint, { deadlineAt, signal } = {}) {
     deadlineAt,
     signal,
     maxBytes: MAX_RESPONSE_BYTES,
-    // SSE subscriptions never end; stop after the first complete event frame.
-    stopWhen: endpoint.kind === 'sse' ? ({ chunk, body }) => chunk.includes('\n\n') || body().includes('\n\n') : undefined,
+    // SSE subscriptions never end; stop after the first complete data event,
+    // whichever blank-line convention (LF or CRLF) the server uses.
+    stopWhen: endpoint.kind === 'sse' ? ({ body }) => sseFrameComplete(body().toString('utf8')) : undefined,
     headers: {
       Accept: endpoint.kind === 'sse' ? 'text/event-stream' : 'application/json',
       'User-Agent': USER_AGENT

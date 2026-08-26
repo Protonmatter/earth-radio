@@ -208,23 +208,30 @@ async function sampleHls(playlistText, baseUrl, { deadlineAt, depth, forbiddenOr
     return sampleHls(media, finalUrl, { deadlineAt, depth: depth + 1, forbiddenOrigins, attemptBudget });
   }
 
-  const { segments, mapUri } = coherentHlsTail(lines);
+  const { segments, map, encrypted } = coherentHlsTail(lines);
   if (!segments.length) throw new Error('HLS media playlist has no segments');
+  // Encrypted segments would reach the recognizers as ciphertext and spend metered
+  // recognition quota on a guaranteed no-match; refuse before fetching anything.
+  if (encrypted) throw new Error('encrypted HLS stream not supported for fingerprinting');
   // Fragmented-MP4 playlists carry decoder metadata in an EXT-X-MAP initialization
   // segment. A map governs the segments after it, so a transition inside the recent
   // window narrows sampling to the coherent suffix governed by the newest map.
-  const fetchList = mapUri ? [new URL(mapUri, baseUrl).toString(), ...segments] : segments;
+  const fetchList = map ? [map, ...segments] : segments;
   const perSegmentCap = Math.floor(MAX_SAMPLE_BYTES / fetchList.length);
   const parts = [];
   let total = 0;
   for (const segment of fetchList) {
     if (Date.now() >= deadlineAt) throw new Error('request deadline exceeded');
     try {
-      const { response } = await guardedFetch(new URL(segment, baseUrl).toString(), {
+      const headers = { Accept: '*/*', 'User-Agent': USER_AGENT };
+      // Byte-ranged playlists address fragments inside one shared resource; without
+      // the Range header every request returns the beginning of that resource.
+      if (segment.range) headers.Range = `bytes=${segment.range.offset}-${segment.range.offset + segment.range.length - 1}`;
+      const { response } = await guardedFetch(new URL(segment.uri, baseUrl).toString(), {
         deadlineAt,
         forbiddenOrigins,
         attemptBudget,
-        headers: { Accept: '*/*', 'User-Agent': USER_AGENT }
+        headers
       });
       if (!response.ok || !response.body) {
         cancelResponseBody(response);
@@ -252,25 +259,58 @@ async function sampleHls(playlistText, baseUrl, { deadlineAt, depth, forbiddenOr
 }
 
 function coherentHlsTail(lines) {
-  let activeMap = '';
+  let activeMap = null;
+  let keyMethod = 'NONE';
+  let pendingRange = null;
+  let previous = null;
   const media = [];
   for (const line of lines) {
-    const mapUri = line.match(/^#EXT-X-MAP:.*URI="([^"]+)"/i)?.[1];
-    if (mapUri) {
-      activeMap = mapUri;
-    } else if (line && !line.startsWith('#')) {
-      media.push({ uri: line, mapUri: activeMap });
+    const mapMatch = line.match(/^#EXT-X-MAP:.*URI="([^"]+)"/i);
+    if (mapMatch) {
+      const mapRange = line.match(/BYTERANGE="(\d+)@(\d+)"/i);
+      activeMap = {
+        uri: mapMatch[1],
+        range: mapRange ? { offset: Number(mapRange[2]), length: Number(mapRange[1]) } : null
+      };
+      continue;
+    }
+    const declaredMethod = line.match(/^#EXT-X-KEY:.*METHOD=([\w-]+)/i)?.[1];
+    if (declaredMethod) {
+      keyMethod = declaredMethod.toUpperCase();
+      continue;
+    }
+    const rangeMatch = line.match(/^#EXT-X-BYTERANGE:(\d+)(?:@(\d+))?/i);
+    if (rangeMatch) {
+      pendingRange = { length: Number(rangeMatch[1]), offset: rangeMatch[2] === undefined ? null : Number(rangeMatch[2]) };
+      continue;
+    }
+    if (line && !line.startsWith('#')) {
+      let range = null;
+      if (pendingRange) {
+        // An offset-less BYTERANGE continues at the end of the previous sub-range
+        // of the same resource (RFC 8216 §4.3.2.2).
+        const offset = pendingRange.offset ?? (previous?.uri === line && previous.range
+          ? previous.range.offset + previous.range.length
+          : 0);
+        range = { offset, length: pendingRange.length };
+        pendingRange = null;
+      }
+      const segment = { uri: line, map: activeMap, range, encrypted: keyMethod !== 'NONE' };
+      media.push(segment);
+      previous = segment;
     }
   }
 
   const recent = media.slice(-HLS_SEGMENT_COUNT);
-  if (!recent.length) return { segments: [], mapUri: '' };
-  const mapUri = recent.at(-1).mapUri;
+  if (!recent.length) return { segments: [], map: null, encrypted: false };
+  const map = recent.at(-1).map;
   let coherentStart = recent.length - 1;
-  while (coherentStart > 0 && recent[coherentStart - 1].mapUri === mapUri) coherentStart -= 1;
+  while (coherentStart > 0 && recent[coherentStart - 1].map === map) coherentStart -= 1;
+  const segments = recent.slice(coherentStart);
   return {
-    segments: recent.slice(coherentStart).map(segment => segment.uri),
-    mapUri
+    segments: segments.map(({ uri, range }) => ({ uri, range })),
+    map,
+    encrypted: segments.some(segment => segment.encrypted)
   };
 }
 

@@ -659,3 +659,57 @@ test('fMP4 HLS sampling prepends the EXT-X-MAP initialization segment', async ()
   assert.ok(sample.body.subarray(0, 12).toString().startsWith('INIT-SEGMENT'), 'sample must begin with the initialization segment');
   assert.ok(sample.body.length > initBytes.length);
 });
+
+test('byte-ranged HLS playlists fetch their exact fragments with Range headers', async () => {
+  const calls = [];
+  const { resolveTarget } = makeResolver();
+  const requestImpl = async (url, options = {}) => {
+    calls.push({ url, range: options.headers?.Range || '' });
+    if (url.endsWith('/live.m3u8')) {
+      return {
+        statusCode: 200,
+        headers: { 'content-type': 'application/vnd.apple.mpegurl' },
+        body: Buffer.from(''),
+        text: [
+          '#EXTM3U',
+          '#EXT-X-MAP:URI="media.mp4",BYTERANGE="500@0"',
+          '#EXT-X-BYTERANGE:1000@500',
+          'media.mp4',
+          // Offset-less continuation: starts where the previous sub-range ended.
+          '#EXT-X-BYTERANGE:1000',
+          'media.mp4',
+          '#EXT-X-ENDLIST'
+        ].join('\n'),
+        finalUrl: url
+      };
+    }
+    return { statusCode: 206, headers: {}, body: Buffer.from('f'.repeat(64)), text: '', finalUrl: url };
+  };
+  const sample = await sampleStreamAudio('https://hls.example/live.m3u8', { requestImpl, resolveTarget });
+  assert.ok(sample.body.length > 0);
+  const ranges = calls.filter(call => call.url.endsWith('/media.mp4')).map(call => call.range);
+  assert.deepEqual(ranges, ['bytes=0-499', 'bytes=500-1499', 'bytes=1500-2499']);
+});
+
+test('encrypted HLS playlists are rejected before any segment fetch', async () => {
+  let segmentFetches = 0;
+  const { resolveTarget } = makeResolver();
+  const requestImpl = async url => {
+    if (url.endsWith('/live.m3u8')) {
+      return {
+        statusCode: 200,
+        headers: { 'content-type': 'application/vnd.apple.mpegurl' },
+        body: Buffer.from(''),
+        text: '#EXTM3U\n#EXT-X-KEY:METHOD=AES-128,URI="key.bin",IV=0x0\n#EXTINF:4,\nseg1.ts\n#EXTINF:4,\nseg2.ts\n',
+        finalUrl: url
+      };
+    }
+    segmentFetches += 1;
+    return { statusCode: 200, headers: {}, body: Buffer.from('ciphertext'), text: '', finalUrl: url };
+  };
+  await assert.rejects(
+    sampleStreamAudio('https://hls.example/live.m3u8', { requestImpl, resolveTarget }),
+    /encrypted/i
+  );
+  assert.equal(segmentFetches, 0, 'ciphertext must never be fetched or submitted to recognizers');
+});

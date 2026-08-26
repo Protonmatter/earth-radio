@@ -1211,6 +1211,11 @@ function maybeAutoFingerprint(identity) {
   if (state.fingerprintAutoKey === autoKey) return;
   state.fingerprintAutoKey = autoKey;
   setTimeout(() => {
+    // The listener may have changed stations (or the track may have rolled over)
+    // during the delay. A stale timer must never spend metered recognition quota
+    // on whatever is playing now — that stream schedules its own attempt.
+    if (state.fingerprintAutoKey !== autoKey) return;
+    if (`${currentStreamUrl()}::${state.lastTrackKey}` !== autoKey) return;
     if (state.currentIdentity?.state === 'Raw ICY only' && isPlaying()) void runFingerprint('auto');
   }, 8000);
 }

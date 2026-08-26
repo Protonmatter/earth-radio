@@ -56,7 +56,7 @@
     {
       "path": "docs/provenance/hardening-overlays.json",
       "bytes": 8690,
-      "sha256": "2032914c5727cdef8384dafe43138ec7772a931fde5c26f87696319090ce4639"
+      "sha256": "64457deeea163c8108ebbb89e65ab892046483b9aa8f045106a9f964c1152536"
     },
     {
       "path": "docs/provenance/recovery-manifest.json",
@@ -160,13 +160,13 @@
     },
     {
       "path": "functions/api/nowplaying.js",
-      "bytes": 7844,
-      "sha256": "3913de0b0f03622dc7bdc10ee9c9a0ea5e2981653522cd02cacba39e053c5ada"
+      "bytes": 8022,
+      "sha256": "bf4649672e8d5e08d6735f3735b189eefc1c32ca3fa77081f9a9f8f98da261e7"
     },
     {
       "path": "functions/api/track/fingerprint.js",
-      "bytes": 17496,
-      "sha256": "753a1111cdb94f59c1186a0b7d9ef245ad54adff2134ac518bd553fe7c706af6"
+      "bytes": 19378,
+      "sha256": "98d0dcecb2fa4584e1de47cee9774f58fc405df2ceedcbba21d17c74f827eedd"
     },
     {
       "path": "package-lock.json",
@@ -220,8 +220,8 @@
     },
     {
       "path": "server/fingerprint-providers.mjs",
-      "bytes": 15299,
-      "sha256": "b85ffac9cc88dd4c3340a4a762c6ca0d971d6bdc575b0e7e54211973959b2a1e"
+      "bytes": 17223,
+      "sha256": "0cde504887aa4239ee20a33bf2db7c42cade6a90a95beab6bc64f70a8eee359f"
     },
     {
       "path": "server/icy-title.mjs",
@@ -245,13 +245,13 @@
     },
     {
       "path": "server/platform-detect.mjs",
-      "bytes": 6764,
-      "sha256": "180adeebc3dd374e976ad701cb0158be2c2f027462476193c83aec9c83e45744"
+      "bytes": 7348,
+      "sha256": "8ed0f38648a63aac0e4a9be71c1f4a30bdf05d83155df328d5c7ec88b71026f7"
     },
     {
       "path": "server/platform-nowplaying.mjs",
-      "bytes": 6239,
-      "sha256": "f6415fedbc2bab483b021b04c990db4bdf8187b3dcd5819a3282eb7322ca04bb"
+      "bytes": 6310,
+      "sha256": "5befb475d2e5a3b7b63fb8ee0354bb77c33d96486e8a64dad1415469cb66ec07"
     },
     {
       "path": "server/public-ip-policy.mjs",
@@ -310,8 +310,8 @@
     },
     {
       "path": "site/assets/metadata-enrichment.js",
-      "bytes": 64176,
-      "sha256": "a0ec5879f859536208216ecaba5230f31e9e6934d3a48ad061046d52e35ff63e"
+      "bytes": 64547,
+      "sha256": "fc3bb75f61d2ae7109db162b236fd76efd9449235f7c379cb02b4592cb551cca"
     },
     {
       "path": "site/assets/responsive-ui.css",
@@ -320,8 +320,8 @@
     },
     {
       "path": "site/assets/responsive-ui.js",
-      "bytes": 64329,
-      "sha256": "146dd9aa81280dd0c96d6f40e631b5763861bb4df58f8414a40b26e68a0834f7"
+      "bytes": 65593,
+      "sha256": "6e5217d767a22e4dd0a5758ec5270d0f74e3e607581e9119e2016903e9b21d65"
     },
     {
       "path": "site/assets/storage-guard.js",
@@ -710,8 +710,8 @@
     },
     {
       "path": "tests/e2e/reliability.spec.mjs",
-      "bytes": 15231,
-      "sha256": "75ab6fbc4bbf469f5dc61ad67f440985533279878fd527a25d304b9be11ea557"
+      "bytes": 16565,
+      "sha256": "989605d8826ac6251a42905ec902a9e77a092b9cbb0bb0e3f7a6381c982a18f6"
     },
     {
       "path": "tests/e2e/serve-site.mjs",
@@ -720,8 +720,8 @@
     },
     {
       "path": "tests/e2e/ui-state.spec.mjs",
-      "bytes": 2175,
-      "sha256": "376f887c9e3da29cdf3c5bb9e3ba1d3c6c55d7b0c7601e48fcd1f45b0cc29d31"
+      "bytes": 3901,
+      "sha256": "77f283e183798c52753cf3a255e1f509740bb1097d1b1716b63db7a5b38cbab3"
     },
     {
       "path": "tests/e2e/web-nowplaying.spec.mjs",
@@ -760,13 +760,13 @@
     },
     {
       "path": "tests/live-metadata.test.mjs",
-      "bytes": 22968,
-      "sha256": "456663675f09d89e0fc19ac86c2cd7a1e1b9db6063d7acbaf72367c6204da46f"
+      "bytes": 24936,
+      "sha256": "f41fb5c9bd995b6694fb6f8ae60c2001327c0da7b7d24eca537f1db3d1d571b3"
     },
     {
       "path": "tests/net-guard.test.mjs",
-      "bytes": 27688,
-      "sha256": "2b3ef231e5a7ff33fe7d5778cf9bade9796b3a5dde94578c81f9c7a54ec166ca"
+      "bytes": 29856,
+      "sha256": "e93aeca61aff44fd40847bbcda00cf9f29868b397961ec3e3506725e8257bc46"
     },
     {
       "path": "tests/nowplaying-clone.test.mjs",
@@ -775,8 +775,8 @@
     },
     {
       "path": "tests/pages-functions.test.mjs",
-      "bytes": 56389,
-      "sha256": "97cfb82ef91cac6b0f49e7de0ba6df7eb59c1c25a5c736455c57a14e46e5c424"
+      "bytes": 58256,
+      "sha256": "11980b19113a44188da46ce3a5331af83f28c27654244813eaf177ba4cf4cf07"
     },
     {
       "path": "tests/player-navigation.test.mjs",

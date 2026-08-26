@@ -123,6 +123,16 @@ function parseShoutcast(data) {
   return withParsedFallback({ platform: 'shoutcast', artist: '', title: '', raw });
 }
 
+// SSE subscriptions never end on their own, so readers stop once a complete data
+// event has arrived. Servers may delimit frames with LF or CRLF blank lines, and the
+// first frame is often a comment/heartbeat carrying no data: line — waiting for a
+// terminated frame that actually contains data avoids both hanging on CRLF streams
+// and stopping before any usable event.
+export function sseFrameComplete(text) {
+  const frames = String(text || '').replace(/\r\n/g, '\n').split('\n\n');
+  return frames.length > 1 && frames.slice(0, -1).some(frame => /^data:/m.test(frame));
+}
+
 function parseZenoSse(text) {
   for (const line of String(text || '').split(/\r?\n/)) {
     if (!line.startsWith('data:')) continue;
