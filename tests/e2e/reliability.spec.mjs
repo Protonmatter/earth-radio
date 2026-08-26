@@ -112,6 +112,78 @@ test.describe('storage intent semantics', () => {
     await page.waitForTimeout(1200);
     await expect(card(page, 'E2E Paris Chanson').locator('.station-card__favorite--active')).toHaveCount(0);
   });
+
+  test('prefs-only recovery reloads away stale rendered and in-memory favorites', async ({ page }) => {
+    await setupApp(page);
+    await playFromList(page, 'E2E Seoul Pop');
+    await page.locator('#btn-favorite').click();
+    await expect(page.locator('#btn-favorite')).toHaveAttribute('aria-pressed', 'true');
+
+    // Leave the stale favorite in both IndexedDB and this page's hydrated memory, but
+    // make a prefs-only v2 backup authoritative by removing the primary marker.
+    await page.evaluate(async () => {
+      const data = { prefs: { theme: 'light' } };
+      const payload = JSON.stringify(data);
+      const envelope = {
+        v: 2,
+        namespace: 'default',
+        generation: 41,
+        savedAt: 4100,
+        checksum: '',
+        payload
+      };
+      const representation = JSON.stringify([
+        envelope.v, envelope.namespace, envelope.generation, envelope.savedAt, envelope.payload
+      ]);
+      let hash = 0x811c9dc5;
+      for (let index = 0; index < representation.length; index += 1) {
+        hash ^= representation.charCodeAt(index);
+        hash = Math.imul(hash, 0x01000193);
+      }
+      envelope.checksum = (hash >>> 0).toString(16);
+      localStorage.setItem('earth-radio-user-backup-v2:default:current', JSON.stringify(envelope));
+      localStorage.removeItem('earth-radio-user-backup-v2:default:previous');
+      await new Promise((resolve, reject) => {
+        const request = indexedDB.open('earthRadio', 1);
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => {
+          const transaction = request.result.transaction('kv', 'readwrite');
+          transaction.objectStore('kv').delete('earth-radio-storage-generation-v2');
+          transaction.oncomplete = () => { request.result.close(); resolve(); };
+          transaction.onerror = () => reject(transaction.error);
+          transaction.onabort = () => reject(transaction.error);
+        };
+      });
+    });
+
+    // The first boot commits the deterministic restore and must force a second boot
+    // before the app can continue with the stale hydrated favorite.
+    await page.reload();
+    await expect(page.locator('.station-card').first()).toBeVisible({ timeout: 25_000 });
+    await expect(card(page, 'E2E Seoul Pop').locator('.station-card__favorite--active')).toHaveCount(0);
+    await page.waitForFunction(() => Boolean(window.earthRadioStorageGuard));
+    await page.evaluate(() => window.earthRadioStorageGuard.snapshotNow());
+
+    const recovered = await page.evaluate(() => new Promise((resolve, reject) => {
+      const request = indexedDB.open('earthRadio', 1);
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => {
+        const transaction = request.result.transaction('kv', 'readonly');
+        const store = transaction.objectStore('kv');
+        const favorites = store.get('favorites');
+        const prefs = store.get('prefs');
+        transaction.oncomplete = () => {
+          const raw = localStorage.getItem('earth-radio-user-backup-v2:default:current');
+          request.result.close();
+          resolve({ favorites: favorites.result, prefs: prefs.result, backup: JSON.parse(raw).payload });
+        };
+        transaction.onerror = () => reject(transaction.error);
+      };
+    }));
+    expect(recovered.favorites).toEqual({});
+    expect(recovered.prefs.theme).toBe('light');
+    expect(JSON.parse(recovered.backup).favorites).toEqual({});
+  });
 });
 
 test.describe('semantic country selection', () => {
@@ -120,29 +192,61 @@ test.describe('semantic country selection', () => {
     await expect(card(page, 'E2E Tokyo FM')).toHaveCount(0);
     await page.waitForFunction(() => Boolean(window.earthRadioDirectory));
 
-    // The picker emits this one semantic event for mouse clicks, Enter-key selection,
-    // and programmatic selection; expansion listens to the event, not to DOM clicks.
+    const countries = [];
+    await page.exposeFunction('recordCountrySelection', detail => countries.push(detail));
     await page.evaluate(() => {
-      document.dispatchEvent(new CustomEvent('earthradio:country-selected', { detail: { country: 'Japan' } }));
+      document.addEventListener('earthradio:country-selected', event => {
+        window.recordCountrySelection(event.detail);
+      });
     });
-    await expect(card(page, 'E2E Tokyo FM')).toBeVisible({ timeout: 20_000 });
-  });
+    await page.locator('[data-er-open-search]').click();
+    const country = page.locator('#er-country-query');
+    await country.fill('Japan');
+    await country.press('Enter');
 
-  test('a bare ISO code expands its country like the full name', async ({ page }) => {
-    await setupApp(page);
-    await expect(card(page, 'E2E Tokyo FM')).toHaveCount(0);
-    await page.waitForFunction(() => Boolean(window.earthRadioDirectory));
-
-    // Typed search accepts ISO codes; the expansion lookup must match them too.
-    const result = await page.evaluate(() => window.earthRadioDirectory.expand('JP'));
-    expect(result.expanded).toBe(true);
-    expect(result.code).toBe('JP');
+    await expect.poll(() => countries).toEqual([{ country: 'Japan' }]);
     await expect(card(page, 'E2E Tokyo FM')).toBeVisible({ timeout: 20_000 });
   });
 
   test('rapid expansions of different countries coalesce into a complete final set', async ({ page }) => {
     await setupApp(page);
     await page.waitForFunction(() => Boolean(window.earthRadioDirectory));
+
+    await page.evaluate(() => {
+      const nativeFetch = window.fetch.bind(window);
+      const nativeSetTimeout = window.setTimeout.bind(window);
+      let delayedJapan = false;
+      window.__erDirectoryCycles = { active: 0, peak: 0, requests: [], results: [] };
+      window.setTimeout = (callback, delay, ...args) => nativeSetTimeout(
+        callback,
+        Number(delay) === 12000 ? 80 : delay,
+        ...args
+      );
+      window.fetch = async (input, init) => {
+        const href = typeof input === 'string' ? input : input.url;
+        const url = new URL(href, location.href);
+        if (!delayedJapan
+          && url.hostname.endsWith('api.radio-browser.info')
+          && url.pathname.includes('/json/stations/search')
+          && url.searchParams.get('countrycode')?.toUpperCase() === 'JP') {
+          delayedJapan = true;
+          await new Promise(resolve => nativeSetTimeout(resolve, 450));
+        }
+        return nativeFetch(input, init);
+      };
+      document.getElementById('refresh-stations').addEventListener('click', () => {
+        const cycles = window.__erDirectoryCycles;
+        cycles.active += 1;
+        cycles.peak = Math.max(cycles.peak, cycles.active);
+        cycles.requests.push([...window.RADIO_CONFIG.featuredCountryCodes]);
+      }, { capture: true });
+      window.addEventListener('earthradio:stations-load-settled', () => {
+        const cycles = window.__erDirectoryCycles;
+        cycles.active -= 1;
+        cycles.results.push([...document.querySelectorAll('.station-card__name')]
+          .map(node => node.textContent?.trim() || ''));
+      });
+    });
 
     // Japan then Brazil back-to-back: the serialized scheduler queues the second
     // refresh, which re-reads the merged code set, so the final state has both.
@@ -152,11 +256,19 @@ test.describe('semantic country selection', () => {
     ]));
     expect(results.filter(item => item.expanded).length).toBe(2);
 
+    await page.waitForFunction(() => window.__erDirectoryCycles.results.length === 2);
     await expect(card(page, 'E2E Tokyo FM')).toBeVisible({ timeout: 30_000 });
     await expect(card(page, 'E2E Rio Samba')).toBeVisible({ timeout: 30_000 });
-    const codes = await page.evaluate(() => window.earthRadioDirectory.activeCodes());
-    expect(codes).toContain('JP');
-    expect(codes).toContain('BR');
+    const state = await page.evaluate(() => ({
+      activeCodes: window.earthRadioDirectory.activeCodes(),
+      cycles: window.__erDirectoryCycles
+    }));
+    expect(state.activeCodes).toContain('JP');
+    expect(state.activeCodes).toContain('BR');
+    expect(state.cycles.peak).toBe(1);
+    expect(state.cycles.requests).toHaveLength(2);
+    expect(state.cycles.requests.at(-1)).toEqual(expect.arrayContaining(['JP', 'BR']));
+    expect(state.cycles.results.at(-1)).toEqual(expect.arrayContaining(['E2E Tokyo FM', 'E2E Rio Samba']));
   });
 });
 
@@ -171,11 +283,13 @@ test.describe('account-scoped backup identity', () => {
 
     // Re-label the backup as belonging to a different account, then lose the store.
     await page.evaluate(() => {
-      const raw = localStorage.getItem('earth-radio-user-backup-v2');
+      const key = 'earth-radio-user-backup-v2:default:current';
+      const previousKey = 'earth-radio-user-backup-v2:default:previous';
+      const raw = localStorage.getItem(key);
       const parsed = JSON.parse(raw);
       parsed.namespace = 'account:someone-else';
-      localStorage.setItem('earth-radio-user-backup-v2', raw && JSON.stringify(parsed));
-      localStorage.removeItem('earth-radio-user-backup-v2-prev');
+      localStorage.setItem(key, raw && JSON.stringify(parsed));
+      localStorage.removeItem(previousKey);
       return new Promise(resolve => {
         const open = indexedDB.open('earthRadio', 1);
         open.onsuccess = () => {

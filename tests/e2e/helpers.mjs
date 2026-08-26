@@ -1,6 +1,7 @@
 // Shared e2e helpers: hermetic route interception, generated audio, and common flows.
 
 import { expect } from '@playwright/test';
+import { hlsFixtureResponse } from './fixtures/hls-media.mjs';
 import { EXPANSION_STATIONS, FIXTURE_COUNTRIES, FIXTURE_STATIONS } from './fixtures/stations.mjs';
 
 // Silent 8kHz mono 16-bit PCM WAV; long enough that playback never ends mid-test.
@@ -59,6 +60,8 @@ export async function setupApp(page, { sameOriginNowPlaying = null, sameOriginFi
       return route.fulfill({ json: [] });
     }
     if (url.hostname === 'streams.e2e.example') {
+      const hls = hlsFixtureResponse(url.pathname, route.request().method());
+      if (hls) return route.fulfill(hls);
       return route.fulfill({ contentType: 'audio/wav', body: AUDIO });
     }
     // Map tiles, other directories, favicons: fail fast and deterministically.

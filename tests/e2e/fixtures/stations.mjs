@@ -40,6 +40,36 @@ export const FIXTURE_STATIONS = [
     geo_lat: 37.5665,
     geo_long: 126.978
   }),
+  // The HLS pair shares a stream URL intentionally: switching UUIDs must still fence
+  // stale metadata responses while hls.js exposes the active source as MediaSource/blob.
+  station({
+    stationuuid: 'e2e-hls-0009',
+    name: 'E2E HLS Source',
+    url: 'https://streams.e2e.example/hls/master.m3u8',
+    url_resolved: 'https://streams.e2e.example/hls/master.m3u8',
+    country: 'The Republic Of Korea',
+    countrycode: 'KR',
+    tags: 'kpop,hls',
+    codec: 'AAC',
+    hls: 1,
+    clickcount: 880,
+    geo_lat: 37.5665,
+    geo_long: 126.978
+  }),
+  station({
+    stationuuid: 'e2e-hls-0010',
+    name: 'E2E HLS Mirror',
+    url: 'https://streams.e2e.example/hls/master.m3u8',
+    url_resolved: 'https://streams.e2e.example/hls/master.m3u8',
+    country: 'The Republic Of Korea',
+    countrycode: 'KR',
+    tags: 'kpop,hls',
+    codec: 'AAC',
+    hls: 1,
+    clickcount: 870,
+    geo_lat: 37.5665,
+    geo_long: 126.978
+  }),
   station({
     stationuuid: 'e2e-london-0002',
     name: 'E2E London Jazz',

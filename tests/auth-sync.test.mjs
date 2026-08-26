@@ -6,7 +6,8 @@ import test from 'node:test';
 import { createAuthClient } from '../site/assets/auth-core.js';
 import { quiesceSignOut } from '../site/assets/auth-ui.js';
 import {
-  accountDataKey, createSyncEngine, mergeFavorites, planLocalAccountTransition,
+  accountDataKey, accountLocalRecords, createSyncEngine, mergeFavorites, planLocalAccountTransition,
+  namespaceForAccount as syncNamespaceForAccount,
   shouldResetBrowserAccount, shouldResetLocalAccount, stableStringify
 } from '../site/assets/sync-core.js';
 
@@ -471,6 +472,14 @@ test('account boundaries reset local synced data only when switching known users
   assert.equal(shouldResetLocalAccount('user-a', 'user-b'), true);
 });
 
+test('auth transitions use the same string-only nonempty namespace contract as storage recovery', () => {
+  for (const value of [null, undefined, '', false, 0]) {
+    assert.equal(syncNamespaceForAccount(value), 'default');
+  }
+  assert.equal(syncNamespaceForAccount('0'), 'account:0');
+  assert.equal(syncNamespaceForAccount('user/a@example.test'), 'account:user%2Fa%40example.test');
+});
+
 test('a delayed tab resets even after another tab already activated the new account', () => {
   assert.equal(shouldResetBrowserAccount('user-b', 'user-a', 'user-b'), true);
   assert.equal(shouldResetBrowserAccount('user-b', 'user-b', 'user-b'), false);
@@ -480,18 +489,25 @@ test('a delayed tab resets even after another tab already activated the new acco
 });
 
 test('account transitions archive offline data and restore each user namespace', async () => {
+  const markerKey = 'earth-radio-storage-generation-v2';
   const values = new Map([
     ['favorites', { a: { uuid: 'a' } }],
     ['recents', [{ uuid: 'a' }]],
     ['prefs', { theme: 'dark' }],
+    ['badStations', { badA: { failures: 1 } }],
+    ['lastPlayed', { uuid: 'last-a' }],
+    [markerKey, { v: 2, namespace: 'account:user-a', generation: 9, savedAt: 90 }],
     [accountDataKey('user-b', 'favorites'), { b: { uuid: 'b' } }],
     [accountDataKey('user-b', 'recents'), [{ uuid: 'b' }]],
-    [accountDataKey('user-b', 'prefs'), { theme: 'light' }]
+    [accountDataKey('user-b', 'prefs'), { theme: 'light' }],
+    [accountDataKey('user-b', 'badStations'), { badB: { failures: 2 } }],
+    [accountDataKey('user-b', 'lastPlayed'), { uuid: 'last-b' }],
+    [accountDataKey('user-b', markerKey), { v: 2, namespace: 'account:user-b', generation: 4, savedAt: 40 }]
   ]);
-  const defaults = { favorites: {}, recents: [], prefs: { theme: 'system' } };
+  const defaults = { favorites: {}, recents: [], prefs: { theme: 'system' }, badStations: {}, lastPlayed: null };
   const apply = (previousUserId, nextUserId) => {
-    const current = Object.fromEntries(['favorites', 'recents', 'prefs'].map(key => [key, values.get(key)]));
-    const saved = Object.fromEntries(['favorites', 'recents', 'prefs'].map(key => [
+    const current = Object.fromEntries(accountLocalRecords.map(key => [key, values.get(key)]));
+    const saved = Object.fromEntries(accountLocalRecords.map(key => [
       key, nextUserId ? values.get(accountDataKey(nextUserId, key)) : undefined
     ]));
     const plan = planLocalAccountTransition({
@@ -506,17 +522,42 @@ test('account transitions archive offline data and restore each user namespace',
   apply('user-a', 'user-b');
 
   assert.deepEqual(values.get(accountDataKey('user-a', 'favorites')), { a: { uuid: 'a' } });
+  assert.deepEqual(values.get(accountDataKey('user-a', 'badStations')), { badA: { failures: 1 } });
+  assert.deepEqual(values.get(accountDataKey('user-a', 'lastPlayed')), { uuid: 'last-a' });
+  assert.deepEqual(values.get(accountDataKey('user-a', markerKey)), { v: 2, namespace: 'account:user-a', generation: 9, savedAt: 90 });
   assert.deepEqual(values.get('favorites'), { b: { uuid: 'b' } });
   assert.deepEqual(values.get('recents'), [{ uuid: 'b' }]);
   assert.deepEqual(values.get('prefs'), { theme: 'light' });
+  assert.deepEqual(values.get('badStations'), { badB: { failures: 2 } });
+  assert.deepEqual(values.get('lastPlayed'), { uuid: 'last-b' });
+  assert.deepEqual(values.get(markerKey), { v: 2, namespace: 'account:user-b', generation: 4, savedAt: 40 });
 
   apply('user-b', null);
   assert.deepEqual(values.get(accountDataKey('user-b', 'favorites')), { b: { uuid: 'b' } });
   assert.deepEqual(values.get('favorites'), {});
+  assert.deepEqual(values.get('badStations'), {});
+  assert.equal(values.get('lastPlayed'), null);
+  assert.equal(values.get(markerKey).namespace, 'default');
 
   apply(null, 'user-a');
   assert.deepEqual(values.get('favorites'), { a: { uuid: 'a' } });
   assert.deepEqual(values.get('prefs'), { theme: 'dark' });
+  assert.deepEqual(values.get('badStations'), { badA: { failures: 1 } });
+  assert.deepEqual(values.get('lastPlayed'), { uuid: 'last-a' });
+  assert.deepEqual(values.get(markerKey), { v: 2, namespace: 'account:user-a', generation: 9, savedAt: 90 });
+});
+
+test('first sign-in keeps local records but rebinds the generation marker to the authoritative account', () => {
+  const markerKey = 'earth-radio-storage-generation-v2';
+  const current = {
+    favorites: { local: {} }, recents: [], prefs: { theme: 'dark' }, badStations: {}, lastPlayed: null,
+    [markerKey]: { v: 2, namespace: 'default', generation: 3, savedAt: 30 }
+  };
+  const plan = planLocalAccountTransition({
+    previousUserId: null, nextUserId: 'user-a', current, saved: {}, nextNamespaceExists: false,
+    defaults: { favorites: {}, recents: [], prefs: {}, badStations: {}, lastPlayed: null }
+  });
+  assert.deepEqual(plan.writes, [[markerKey, { v: 2, namespace: 'account:user-a', generation: 4, savedAt: 30 }]]);
 });
 
 test('the browser account switch uses one IndexedDB readwrite transaction', async () => {
@@ -528,6 +569,7 @@ test('the browser account switch uses one IndexedDB readwrite transaction', asyn
   assert.match(switchBody, /values\.get\(ACTIVE_NAMESPACE_KEY\)/);
   assert.match(switchBody, /namespaceMissing: storedNamespace === undefined/);
   assert.match(switchBody, /store\.put\(nextUserId \|\| null, ACTIVE_NAMESPACE_KEY\)/);
+  assert.match(switchBody, /accountLocalRecords/);
   assert.doesNotMatch(switchBody, /await kv\(/);
 });
 

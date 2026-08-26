@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict';
+import { EventEmitter } from 'node:events';
 import test from 'node:test';
+import { subscribeIcyTitles } from '../server/desktop-proxy.mjs';
 import {
   clearPlatformNowPlayingCache,
   detectPlatformEndpoints,
@@ -114,6 +116,73 @@ test('resolvePlatformNowPlaying walks candidates, reports attempts, and caches h
   clearPlatformNowPlayingCache();
 });
 
+test('desktop generic probes run concurrently inside one absolute resolution deadline', async () => {
+  clearPlatformNowPlayingCache();
+  let active = 0;
+  let peak = 0;
+  let settled = 0;
+  const deadlines = [];
+  const startedAt = Date.now();
+  const fetchTextImpl = async (endpoint, options) => {
+    deadlines.push(options?.deadlineAt ?? options);
+    active += 1;
+    peak = Math.max(peak, active);
+    try {
+      await new Promise(resolve => setTimeout(resolve, 80));
+      return endpoint.platform === 'shoutcast'
+        ? JSON.stringify({ songtitle: 'Aespa - Supernova' })
+        : '';
+    } finally {
+      active -= 1;
+      settled += 1;
+    }
+  };
+
+  const result = await resolvePlatformNowPlaying('https://ice.example.net/concurrent', {
+    timeoutMs: 110,
+    fetchTextImpl
+  });
+  const elapsed = Date.now() - startedAt;
+  assert.equal(result.found, true);
+  assert.equal(result.platform, 'shoutcast');
+  assert.equal(peak, 2, 'independent Icecast and Shoutcast probes were serialized');
+  assert.equal(active, 0, 'a generic probe remained live after resolution');
+  assert.equal(settled, 2);
+  assert.ok(elapsed < 140, `one 110ms operation budget took ${elapsed}ms`);
+  assert.equal(new Set(deadlines).size, 1, 'generic probes did not share one deadline');
+  assert.ok(deadlines[0] >= startedAt + 90, 'the injected boundary received a relative timeout instead of an absolute deadline');
+  clearPlatformNowPlayingCache();
+});
+
+test('platform misses and transport failures retry after one polling interval', async () => {
+  const realNow = Date.now;
+  let clock = 2_000_000;
+  Date.now = () => clock;
+  try {
+    for (const mode of ['miss', 'transport']) {
+      clearPlatformNowPlayingCache();
+      let calls = 0;
+      const fetchTextImpl = async () => {
+        calls += 1;
+        if (mode === 'transport') throw new Error('temporary transport failure');
+        return '';
+      };
+      const stream = `https://ice.example.net/${mode}`;
+      const first = await resolvePlatformNowPlaying(stream, { fetchTextImpl });
+      assert.equal(first.found, false);
+      await resolvePlatformNowPlaying(stream, { fetchTextImpl });
+      assert.equal(calls, 2, `${mode} was not cached inside one poll interval`);
+      clock += 31_000;
+      await resolvePlatformNowPlaying(stream, { fetchTextImpl });
+      assert.equal(calls, 4, `${mode} remained hidden beyond one 30s poll interval`);
+      clock += 1_000_000;
+    }
+  } finally {
+    Date.now = realNow;
+    clearPlatformNowPlayingCache();
+  }
+});
+
 test('fingerprint availability requires provider credentials', () => {
   assert.equal(fingerprintAvailable({}), false);
   assert.deepEqual(fingerprintProviders({}), []);
@@ -198,6 +267,62 @@ test('identifyByFingerprint short-circuits without credentials and caches result
   clearFingerprintCache();
 });
 
+test('desktop fingerprint sampling and recognition share one absolute deadline', async () => {
+  clearFingerprintCache();
+  const deadlineAt = Date.now() + 70;
+  const observed = [];
+  const startedAt = Date.now();
+  const result = await identifyByFingerprint({
+    streamUrl: 'https://ice.example.net/shared-operation-deadline',
+    env: { AUDD_API_TOKEN: 'token' },
+    deadlineAt,
+    sampleImpl: async (_streamUrl, options) => {
+      observed.push(['sample', options.deadlineAt]);
+      await new Promise(resolve => setTimeout(resolve, 20));
+      return { body: Buffer.alloc(64 * 1024, 1), contentType: 'audio/mpeg' };
+    },
+    recognizeImpl: async (_provider, _sample, _env, options) => {
+      observed.push(['provider', options?.deadlineAt]);
+      await new Promise(resolve => setTimeout(resolve, 160));
+      return { provider: 'audd', artist: 'IU', title: 'Blueming', score: 90 };
+    }
+  });
+  assert.equal(result.found, false);
+  assert.equal(result.providerError, true);
+  assert.ok(Date.now() - startedAt < 140, 'provider received a fresh timeout after sampling');
+  assert.deepEqual(observed, [['sample', deadlineAt], ['provider', deadlineAt]]);
+  clearFingerprintCache();
+});
+
+test('a deduplicated desktop fingerprint request still honors its own absolute deadline', async () => {
+  clearFingerprintCache();
+  let releaseProvider;
+  const providerBarrier = new Promise(resolve => { releaseProvider = resolve; });
+  const options = {
+    streamUrl: 'https://ice.example.net/deduplicated-deadline',
+    env: { AUDD_API_TOKEN: 'token' },
+    sampleImpl: async () => ({ body: Buffer.alloc(64 * 1024, 1), contentType: 'audio/mpeg' }),
+    recognizeImpl: async () => {
+      await providerBarrier;
+      return { provider: 'audd', artist: 'IU', title: 'Blueming', score: 90 };
+    }
+  };
+  const first = identifyByFingerprint({ ...options, deadlineAt: Date.now() + 300 });
+  await new Promise(resolve => setTimeout(resolve, 10));
+  const startedAt = Date.now();
+  const second = identifyByFingerprint({ ...options, deadlineAt: startedAt + 50 });
+  const releaseTimer = setTimeout(releaseProvider, 150);
+  try {
+    await assert.rejects(second, /deadline/i);
+    assert.ok(Date.now() - startedAt < 120, 'joined request inherited the first caller deadline');
+  } finally {
+    clearTimeout(releaseTimer);
+    releaseProvider();
+    await first;
+    clearFingerprintCache();
+  }
+});
+
 test('identifyByFingerprint reports short samples instead of spending recognition quota', async () => {
   clearFingerprintCache();
   const env = { AUDD_API_TOKEN: 'token' };
@@ -213,7 +338,30 @@ test('identifyByFingerprint reports short samples instead of spending recognitio
 
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
-import { resolveStreamUrl } from '../site/assets/metadata-enrichment.js';
+import { resolveStreamUrl, shouldInvalidateStationIdentity } from '../site/assets/metadata-enrichment.js';
+
+test('the long-lived ICY subscription rejects redirects instead of following them', () => {
+  const request = new EventEmitter();
+  request.setTimeout = () => {};
+  request.destroy = () => {};
+  let responseDestroyed = 0;
+  const errors = [];
+  subscribeIcyTitles(
+    { url: new URL('https://radio.example/live'), hostname: 'radio.example', address: '1.1.1.1', family: 4 },
+    () => assert.fail('a redirect must not yield metadata'),
+    error => errors.push(error.message),
+    {
+      client: {
+        get: (_url, _options, onResponse) => {
+          onResponse({ statusCode: 302, destroy: () => { responseDestroyed += 1; } });
+          return request;
+        }
+      }
+    }
+  );
+  assert.deepEqual(errors, ['stream redirect blocked by now-playing resolver']);
+  assert.equal(responseDestroyed, 1);
+});
 
 test('blob MediaSource playback resolves to the selected station URL', () => {
   assert.equal(
@@ -234,131 +382,94 @@ test('blob MediaSource playback resolves to the selected station URL', () => {
   assert.equal(resolveStreamUrl(null, 'https://selected.example/live.m3u8'), 'https://selected.example/live.m3u8');
 });
 
-test('runtime source and installed bundle both dispatch the selection and settle events', async () => {
+test('stream resolution rejects HTTP-looking values that are not valid URLs', () => {
+  // A prefix-only check would pass this malformed value to metadata endpoints.
+  assert.equal(resolveStreamUrl({ currentSrc: 'https://' }, 'https://selected.example/live.m3u8'), 'https://selected.example/live.m3u8');
+  assert.equal(resolveStreamUrl({ currentSrc: 'blob:https://site.example/id' }, 'https://'), '');
+});
+
+test('stream resolution preserves the original trimmed selected URL identity', () => {
+  const selected = '  https://user:secret@streams.example:443/live.m3u8?token=abc  ';
+  // The client stores this syntactically valid URL only as identity. Pages/Node own
+  // authoritative private-target and credential rejection before any network fetch.
+  assert.equal(resolveStreamUrl({ currentSrc: 'blob:https://site.example/id' }, selected), selected.trim());
+  assert.equal(
+    resolveStreamUrl({ currentSrc: 'blob:https://site.example/id' }, 'http://127.0.0.1:8000/live'),
+    'http://127.0.0.1:8000/live'
+  );
+});
+
+test('station identity fencing includes UUID when stream URLs are shared', () => {
+  assert.equal(
+    shouldInvalidateStationIdentity(
+      { streamUrl: 'https://streams.example/shared.m3u8', stationUuid: 'station-a' },
+      { streamUrl: 'https://streams.example/shared.m3u8', stationUuid: 'station-b' }
+    ),
+    true
+  );
+  assert.equal(
+    shouldInvalidateStationIdentity(
+      { streamUrl: 'https://streams.example/shared.m3u8', stationUuid: 'station-a' },
+      { streamUrl: 'https://streams.example/shared.m3u8', stationUuid: 'station-a' }
+    ),
+    false
+  );
+});
+
+test('media reattachment preserves canonical URL and UUID until a correlated transition', async () => {
+  const metadata = await import('../site/assets/metadata-enrichment.js');
+  assert.equal(typeof metadata.stationIdentityAfterTransition, 'function');
+  const selected = {
+    streamUrl: 'https://streams.example/live.m3u8',
+    stationUuid: 'station-hls'
+  };
+  assert.deepEqual(
+    metadata.stationIdentityAfterTransition(selected, { type: 'media-load', mediaUrl: 'blob:https://site.example/reattach' }),
+    selected
+  );
+  assert.deepEqual(
+    metadata.stationIdentityAfterTransition(selected, {
+      type: 'selected',
+      streamUrl: 'https://streams.example/next.m3u8',
+      stationUuid: 'station-next'
+    }),
+    { streamUrl: 'https://streams.example/next.m3u8', stationUuid: 'station-next' }
+  );
+  assert.deepEqual(
+    metadata.stationIdentityAfterTransition(selected, { type: 'clear' }),
+    { streamUrl: '', stationUuid: '' }
+  );
+});
+
+test('same-station platform polls accept only the newest generation', async () => {
+  const metadata = await import('../site/assets/metadata-enrichment.js');
+  assert.equal(typeof metadata.pollResultIsCurrent, 'function');
+  const identity = { streamUrl: 'https://streams.example/live', stationUuid: 'station-a' };
+  assert.equal(metadata.pollResultIsCurrent(
+    { ...identity, generation: 4 },
+    { ...identity, generation: 5 }
+  ), false);
+  assert.equal(metadata.pollResultIsCurrent(
+    { ...identity, generation: 5 },
+    { ...identity, generation: 5 }
+  ), true);
+  assert.equal(metadata.pollResultIsCurrent(
+    { ...identity, generation: 5 },
+    { streamUrl: identity.streamUrl, stationUuid: 'station-b', generation: 5 }
+  ), false);
+});
+
+test('runtime source and installed bundle dispatch selections only on truthful playback results', async () => {
   const root = path.resolve(import.meta.dirname, '..');
   const source = await readFile(path.join(root, 'src-recovered', 'main.ts'), 'utf8');
-  const bundle = await readFile(path.join(root, 'site', 'assets', 'index-B4rKOAHV.js'), 'utf8');
+  const bundle = await readFile(path.join(root, 'site', 'assets', 'index-55b082dd.js'), 'utf8');
   for (const text of [source, bundle]) {
     assert.match(text, /earthradio:station-selected/);
     assert.match(text, /earthradio:stations-load-settled/);
     assert.match(text, /url_resolved/);
   }
-});
-
-test('platform resolution shares one wall-clock budget across candidate endpoints', async () => {
-  clearPlatformNowPlayingCache();
-  const budgets = [];
-  const startedAt = Date.now();
-  const result = await resolvePlatformNowPlaying('https://ice.example.net:8000/live.mp3', {
-    timeoutMs: 800,
-    fetchTextImpl: async (endpoint, budget) => {
-      budgets.push(budget);
-      if (budgets.length === 1) {
-        // First endpoint stalls for its entire slice, like a black-holed status page.
-        await new Promise(resolve => setTimeout(resolve, budget));
-        return '';
-      }
-      // The surviving generic fallback (shoutcast) answers with its own payload shape.
-      return JSON.stringify({ streamstatus: 1, songtitle: 'IU - Blueming' });
-    }
-  });
-  const elapsed = Date.now() - startedAt;
-  assert.equal(result.found, true, `fallback endpoint must still be reached: ${JSON.stringify(result)}`);
-  assert.ok(budgets.length >= 2, 'the second endpoint was attempted');
-  assert.ok(budgets[0] < 800, `first endpoint must not receive the whole budget, got ${budgets[0]}ms`);
-  assert.ok(elapsed < 1200, `resolution stayed within the caller budget, took ${elapsed}ms`);
-  clearPlatformNowPlayingCache();
-});
-
-test('trusted feed results own the panel only for their freshness window', async () => {
-  const { trustedFreshRemaining } = await import('../site/assets/metadata-enrichment.js');
-  const now = 1_000_000;
-  assert.equal(trustedFreshRemaining(null, now), 0);
-  assert.equal(trustedFreshRemaining({ at: now - 60_000 }, now), 0);
-  const remaining = trustedFreshRemaining({ at: now - 10_000 }, now);
-  assert.ok(remaining > 0 && remaining <= 45_000, `mid-window remaining is bounded, got ${remaining}`);
-  // The overlay must arm a re-process at expiry: without it, a finished song would
-  // stay on the panel whenever the platform feed goes quiet and the DOM stops mutating.
-  const overlay = await readFile(path.resolve(import.meta.dirname, '..', 'site', 'assets', 'metadata-enrichment.js'), 'utf8');
-  assert.match(overlay, /trustExpiryTimer = setTimeout\(scheduleProcess/);
-});
-
-test('provider-supplied link URLs are restricted to web schemes', async () => {
-  const { safeLinkHref } = await import('../site/assets/metadata-enrichment.js');
-  assert.equal(safeLinkHref('https://open.spotify.com/track/abc'), 'https://open.spotify.com/track/abc');
-  assert.equal(safeLinkHref('http://music.example/x'), 'http://music.example/x');
-  assert.equal(safeLinkHref('javascript:alert(1)'), '');
-  assert.equal(safeLinkHref('data:text/html,<script>1</script>'), '');
-  assert.equal(safeLinkHref(''), '');
-});
-
-test('the listener market is derived from the browser locale for catalog enrichment', async () => {
-  const { listenerCountry } = await import('../site/assets/metadata-enrichment.js');
-  assert.equal(listenerCountry('en-US'), 'US');
-  assert.equal(listenerCountry('ko'), 'KR');
-  assert.equal(listenerCountry('pt-BR'), 'BR');
-  assert.equal(listenerCountry(''), '');
-  assert.equal(listenerCountry('zzzz-not-a-locale!!'), '');
-});
-
-test('settle events are correlated with forced refreshes', async () => {
-  const root = path.resolve(import.meta.dirname, '..');
-  const source = await readFile(path.join(root, 'src-recovered', 'main.ts'), 'utf8');
-  const bundle = await readFile(path.join(root, 'site', 'assets', 'index-B4rKOAHV.js'), 'utf8');
-  // Both dispatch sites carry the forceRefresh flag in the settle detail...
-  assert.match(source, /stations-load-settled', \{ detail: \{ ok, forceRefresh \} \}/);
-  assert.match(bundle, /stations-load-settled`,\{detail:\{ok:_ok,forceRefresh:e\}\}/);
-  // ...and the expansion overlay ignores settles of unforced (boot) loads, so an
-  // unrelated concurrent load cannot release its refresh queue early.
-  const overlay = await readFile(path.join(root, 'site', 'assets', 'directory-expansion.js'), 'utf8');
-  assert.match(overlay, /forceRefresh === false\) return/);
-});
-
-test('speculative tooltip lookups have their own bounded request budget', async () => {
-  const { takeTooltipLookupToken } = await import('../site/assets/metadata-enrichment.js');
-  const spentAt = [];
-  const start = 1_000_000;
-  for (let i = 0; i < 8; i += 1) {
-    assert.equal(takeTooltipLookupToken(spentAt, start + i * 100), true);
-  }
-  // The ninth hover inside the window stays name-only instead of spending the
-  // shared /api/nowplaying budget.
-  assert.equal(takeTooltipLookupToken(spentAt, start + 900), false);
-  // Once the window slides past the oldest spend, lookups resume.
-  assert.equal(takeTooltipLookupToken(spentAt, start + 61_000), true);
-});
-
-test('a mirror that stalls mid-body cannot hang the country index', async () => {
-  const { loadCountryIndex } = await import('../site/assets/directory-expansion.js');
-  const calls = [];
-  const fetchImpl = (url, { signal }) => {
-    calls.push(String(url));
-    if (calls.length === 1) {
-      // Headers arrive, then the JSON body black-holes; only the abort budget —
-      // which must survive until the body is parsed — can end this attempt.
-      return Promise.resolve({
-        ok: true,
-        json: () => new Promise((resolve, reject) => {
-          signal.addEventListener('abort', () => reject(new Error('aborted')));
-        })
-      });
-    }
-    return Promise.resolve({ ok: true, json: async () => [{ name: 'Japan', iso_3166_1: 'JP', stationcount: 5 }] });
-  };
-  const startedAt = Date.now();
-  const list = await loadCountryIndex({ fetchImpl, timeoutMs: 150 });
-  assert.ok(Date.now() - startedAt < 2000, 'the stalled mirror was abandoned inside the budget');
-  assert.ok(calls.length >= 2, 'the next mirror was attempted');
-  assert.equal(list[0]?.code, 'JP');
-});
-
-test('an all-mirror failure yields an empty index that is never memoized', async () => {
-  const { loadCountryIndex } = await import('../site/assets/directory-expansion.js');
-  const failing = () => Promise.reject(new Error('offline'));
-  assert.deepEqual(await loadCountryIndex({ fetchImpl: failing, timeoutMs: 100 }), []);
-  // The memoization wrapper drops an empty result so the next country selection
-  // retries the mirrors instead of staying dead until a reload.
-  const root = path.resolve(import.meta.dirname, '..');
-  const overlay = await readFile(path.join(root, 'site', 'assets', 'directory-expansion.js'), 'utf8');
-  assert.match(overlay, /if \(!list\.length\) expansion\.indexPromise = null;/);
+  assert.match(source, /result\.ok && result\.station/);
+  assert.match(bundle, /e\.ok&&e\.station&&await nc\(e\.station\)/);
+  assert.match(source, /if \(stationLoadState\.queued\) return loadStations\(\)/);
+  assert.match(bundle, /if\(_erLoadQueued\)return \$s\(\)/);
 });

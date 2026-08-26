@@ -16,7 +16,6 @@
 
 import { guardedFetch, readBodyCapped, rejectFetchUrl } from '../../_shared/guarded-fetch.js';
 import { identifyTrack } from '../../../server/metadata-providers.mjs';
-import { parseMapSegment, parseMediaSegments, rangeHeaderFor } from '../../../server/hls-segments.mjs';
 
 const USER_AGENT = 'EarthRadio/0.24.0 pages-fn (+https://github.com/Protonmatter/EarthRadio)';
 const SAMPLE_SECONDS = 12;
@@ -25,13 +24,12 @@ const MIN_SAMPLE_BYTES = 96 * 1024;
 const MAX_SAMPLE_BYTES = 1024 * 1024;
 const DEFAULT_BITRATE_KBPS = 160;
 const SAMPLE_TIMEOUT_MS = 20_000;
-// One budget for the whole request (sampling + every provider): the browser aborts
-// at 45s, so the route must always answer inside that.
-const TOTAL_FINGERPRINT_BUDGET_MS = 40_000;
 const RECOGNIZE_TIMEOUT_MS = 15_000;
 const PLAYLIST_MAX_BYTES = 64 * 1024;
 const HLS_SEGMENT_COUNT = 3;
 const MAX_HLS_PLAYLIST_DEPTH = 2;
+const HLS_FETCH_ATTEMPT_LIMIT = 16;
+const DO_NOT_CACHE = Symbol('do-not-cache');
 // Positive results must expire before the client's 30s retry cooldown: after a track
 // change, a retry must sample the current audio, not replay the previous song.
 const CACHE_TTL_FOUND_S = 25;
@@ -51,12 +49,11 @@ export function fingerprintCacheKey(streamUrl, country) {
 export async function onRequestGet({ request, env }) {
   const providers = configuredProviders(env);
   const url = new URL(request.url);
+  const forbiddenOrigins = [url.origin];
   const streamUrl = String(url.searchParams.get('url') || '').trim().slice(0, 2000);
   if (!streamUrl) return json({ available: providers.length > 0, providers }, 60);
   if (!providers.length) return json({ available: false, found: false, reason: 'no fingerprint provider credentials configured' }, 300);
 
-  // This deployment's own hostname is never a valid stream target (same-zone block).
-  const forbiddenOrigins = [url.origin];
   const rejection = rejectFetchUrl(streamUrl, { forbiddenOrigins });
   if (rejection) return json({ available: true, found: false, reason: rejection }, CACHE_TTL_MISS_S, 400);
 
@@ -68,9 +65,11 @@ export async function onRequestGet({ request, env }) {
     if (cached) return cached;
   }
 
-  const payload = await identify(streamUrl, providers, env, country, forbiddenOrigins);
-  const response = json(payload, payload.found ? CACHE_TTL_FOUND_S : CACHE_TTL_MISS_S);
-  if (cache) await cache.put(cacheKey, response.clone()).catch(() => {});
+  const deadlineAt = Date.now() + SAMPLE_TIMEOUT_MS;
+  const payload = await identify(streamUrl, providers, env, country, forbiddenOrigins, deadlineAt);
+  const cacheable = !payload[DO_NOT_CACHE];
+  const response = json(payload, cacheable ? (payload.found ? CACHE_TTL_FOUND_S : CACHE_TTL_MISS_S) : 0);
+  if (cache && cacheable) await cache.put(cacheKey, response.clone()).catch(() => {});
   return response;
 }
 
@@ -81,13 +80,14 @@ function configuredProviders(env = {}) {
   return providers;
 }
 
-export async function identify(streamUrl, providers, env, country, forbiddenOrigins = [], { budgetMs = TOTAL_FINGERPRINT_BUDGET_MS } = {}) {
-  const deadlineAt = Date.now() + budgetMs;
+async function identify(streamUrl, providers, env, country, forbiddenOrigins, deadlineAt) {
   let sample;
   try {
-    sample = await sampleStream(streamUrl, forbiddenOrigins, deadlineAt);
+    sample = await sampleStream(streamUrl, { deadlineAt, forbiddenOrigins });
   } catch (error) {
-    return { available: true, found: false, reason: `stream sampling failed: ${error?.message || 'unknown error'}` };
+    const payload = { available: true, found: false, reason: `stream sampling failed: ${error?.message || 'unknown error'}` };
+    if (isTerminalSamplingError(error)) Object.defineProperty(payload, DO_NOT_CACHE, { value: true });
+    return payload;
   }
   if (!sample || sample.length < MIN_RECOGNIZE_BYTES) {
     return { available: true, found: false, reason: 'stream sample was too short to fingerprint' };
@@ -96,18 +96,10 @@ export async function identify(streamUrl, providers, env, country, forbiddenOrig
   let match = null;
   let providerFailures = 0;
   for (const provider of providers) {
-    // Recognition shares the route budget with sampling: a stalled first provider
-    // must leave the next one only the remaining time, never a fresh full timeout.
-    const remaining = deadlineAt - Date.now();
-    if (remaining < 3000) {
-      providerFailures += 1;
-      continue;
-    }
-    const providerTimeoutMs = Math.min(RECOGNIZE_TIMEOUT_MS, remaining);
     try {
       match = provider === 'acrcloud'
-        ? await recognizeAcr(sample, env, providerTimeoutMs)
-        : await recognizeAudd(sample, env, providerTimeoutMs);
+        ? await withinDeadline(recognizeAcr(sample, env, deadlineAt), deadlineAt)
+        : await withinDeadline(recognizeAudd(sample, env, deadlineAt), deadlineAt);
       if (match) break;
     } catch {
       // Transport/credential failure — try the next configured provider.
@@ -123,7 +115,13 @@ export async function identify(streamUrl, providers, env, country, forbiddenOrig
   // Catalog enrichment for artwork/links; iTunes only — no server secrets required here.
   let catalog = { found: false };
   try {
-    catalog = await identifyTrack({ artist: match.artist, title: match.title, providers: ['itunes'], country });
+    catalog = await withinDeadline(identifyTrack({
+      artist: match.artist,
+      title: match.title,
+      providers: ['itunes'],
+      country,
+      deadlineAt
+    }), deadlineAt);
   } catch { /* enrichment is optional */ }
 
   const confidence = Math.max(60, Math.min(98, Number(match.score) || 90));
@@ -156,22 +154,28 @@ export async function identify(streamUrl, providers, env, country, forbiddenOrig
 // ~12s of encoded audio through the guarded boundary; no Icy-MetaData header, so the
 // bytes are pure audio. HLS playlists resolve one master hop then sample recent
 // segments, all under the same wall-clock deadline.
-async function sampleStream(streamUrl, forbiddenOrigins = [], overallDeadlineAt = 0) {
-  const deadlineAt = overallDeadlineAt > 0
-    ? Math.min(Date.now() + SAMPLE_TIMEOUT_MS, overallDeadlineAt)
-    : Date.now() + SAMPLE_TIMEOUT_MS;
+export async function sampleStream(streamUrl, {
+  deadlineAt = Date.now() + SAMPLE_TIMEOUT_MS,
+  forbiddenOrigins = []
+} = {}) {
+  const attemptBudget = { remaining: HLS_FETCH_ATTEMPT_LIMIT };
   const { response, finalUrl } = await guardedFetch(streamUrl, {
     deadlineAt,
     forbiddenOrigins,
+    attemptBudget,
     headers: { Accept: '*/*', 'User-Agent': USER_AGENT }
   });
-  if (!response.ok || !response.body) throw new Error(`stream HTTP ${response.status}`);
+  if (!response.ok || !response.body) {
+    cancelResponseBody(response);
+    throw new Error(`stream HTTP ${response.status}`);
+  }
   const contentType = String(response.headers.get('content-type') || '').toLowerCase();
   if (/mpegurl/.test(contentType) || /\.m3u8(\?|#|$)/i.test(finalUrl)) {
     const playlist = new TextDecoder().decode(await readBodyCapped(response, { maxBytes: PLAYLIST_MAX_BYTES, deadlineAt }));
-    return sampleHls(playlist, finalUrl, { deadlineAt, depth: 0, forbiddenOrigins });
+    return sampleHls(playlist, finalUrl, { deadlineAt, depth: 0, forbiddenOrigins, attemptBudget });
   }
   if (/text\/html|application\/json|text\/plain/.test(contentType)) {
+    cancelResponseBody(response);
     throw new Error(`unsupported content-type ${contentType.split(';')[0] || 'unknown'}`);
   }
 
@@ -181,7 +185,7 @@ async function sampleStream(streamUrl, forbiddenOrigins = [], overallDeadlineAt 
   return readBodyCapped(response, { maxBytes: target, deadlineAt });
 }
 
-async function sampleHls(playlistText, baseUrl, { deadlineAt, depth, forbiddenOrigins = [] }) {
+async function sampleHls(playlistText, baseUrl, { deadlineAt, depth, forbiddenOrigins, attemptBudget }) {
   if (depth > MAX_HLS_PLAYLIST_DEPTH) throw new Error('HLS playlist nesting too deep');
   const lines = String(playlistText || '').split(/\r?\n/).map(line => line.trim());
 
@@ -190,36 +194,52 @@ async function sampleHls(playlistText, baseUrl, { deadlineAt, depth, forbiddenOr
     const variant = lines.find(line => line && !line.startsWith('#'));
     if (!variant) throw new Error('empty HLS master playlist');
     const variantUrl = new URL(variant, baseUrl).toString();
-    const { response, finalUrl } = await guardedFetch(variantUrl, { deadlineAt, forbiddenOrigins, headers: { Accept: '*/*', 'User-Agent': USER_AGENT } });
-    if (!response.ok) throw new Error(`HLS playlist HTTP ${response.status}`);
+    const { response, finalUrl } = await guardedFetch(variantUrl, {
+      deadlineAt,
+      forbiddenOrigins,
+      attemptBudget,
+      headers: { Accept: '*/*', 'User-Agent': USER_AGENT }
+    });
+    if (!response.ok) {
+      cancelResponseBody(response);
+      throw new Error(`HLS playlist HTTP ${response.status}`);
+    }
     const media = new TextDecoder().decode(await readBodyCapped(response, { maxBytes: PLAYLIST_MAX_BYTES, deadlineAt }));
-    return sampleHls(media, finalUrl, { deadlineAt, depth: depth + 1, forbiddenOrigins });
+    return sampleHls(media, finalUrl, { deadlineAt, depth: depth + 1, forbiddenOrigins, attemptBudget });
   }
 
-  const segments = parseMediaSegments(lines).slice(-HLS_SEGMENT_COUNT);
+  const { segments, mapUri } = coherentHlsTail(lines);
   if (!segments.length) throw new Error('HLS media playlist has no segments');
   // Fragmented-MP4 playlists carry decoder metadata in an EXT-X-MAP initialization
-  // segment; without it the recognizers receive an undecodable container. Byte-range
-  // playlists (#EXT-X-BYTERANGE) address fragments inside one file; the parsed range
-  // becomes a Range header so repeated URIs fetch distinct fragments.
-  const fetchList = [...parseMapSegment(lines), ...segments];
+  // segment. A map governs the segments after it, so a transition inside the recent
+  // window narrows sampling to the coherent suffix governed by the newest map.
+  const fetchList = mapUri ? [new URL(mapUri, baseUrl).toString(), ...segments] : segments;
   const perSegmentCap = Math.floor(MAX_SAMPLE_BYTES / fetchList.length);
   const parts = [];
   let total = 0;
   for (const segment of fetchList) {
-    if (Date.now() >= deadlineAt) break;
+    if (Date.now() >= deadlineAt) throw new Error('request deadline exceeded');
     try {
-      const headers = { Accept: '*/*', 'User-Agent': USER_AGENT };
-      const rangeHeader = rangeHeaderFor(segment);
-      if (rangeHeader) headers.Range = rangeHeader;
-      const { response } = await guardedFetch(new URL(segment.uri, baseUrl).toString(), { deadlineAt, forbiddenOrigins, headers });
-      if (!response.ok || !response.body) continue;
+      const { response } = await guardedFetch(new URL(segment, baseUrl).toString(), {
+        deadlineAt,
+        forbiddenOrigins,
+        attemptBudget,
+        headers: { Accept: '*/*', 'User-Agent': USER_AGENT }
+      });
+      if (!response.ok || !response.body) {
+        cancelResponseBody(response);
+        continue;
+      }
       const bytes = await readBodyCapped(response, { maxBytes: perSegmentCap, deadlineAt });
       if (bytes.length) {
         parts.push(bytes);
         total += bytes.length;
       }
-    } catch { /* skip unreachable segment */ }
+    } catch (error) {
+      if (isTerminalSamplingError(error)) throw error;
+      // A missing segment is non-terminal; other recent segments may still provide
+      // a complete bounded sample.
+    }
   }
   if (!parts.length) throw new Error('no HLS segments could be fetched');
   const merged = new Uint8Array(total);
@@ -231,7 +251,34 @@ async function sampleHls(playlistText, baseUrl, { deadlineAt, depth, forbiddenOr
   return merged;
 }
 
-async function recognizeAcr(sample, env, timeoutMs = RECOGNIZE_TIMEOUT_MS) {
+function coherentHlsTail(lines) {
+  let activeMap = '';
+  const media = [];
+  for (const line of lines) {
+    const mapUri = line.match(/^#EXT-X-MAP:.*URI="([^"]+)"/i)?.[1];
+    if (mapUri) {
+      activeMap = mapUri;
+    } else if (line && !line.startsWith('#')) {
+      media.push({ uri: line, mapUri: activeMap });
+    }
+  }
+
+  const recent = media.slice(-HLS_SEGMENT_COUNT);
+  if (!recent.length) return { segments: [], mapUri: '' };
+  const mapUri = recent.at(-1).mapUri;
+  let coherentStart = recent.length - 1;
+  while (coherentStart > 0 && recent[coherentStart - 1].mapUri === mapUri) coherentStart -= 1;
+  return {
+    segments: recent.slice(coherentStart).map(segment => segment.uri),
+    mapUri
+  };
+}
+
+function isTerminalSamplingError(error) {
+  return error?.code === 'ERR_FETCH_ATTEMPT_LIMIT' || /deadline/i.test(String(error?.message || ''));
+}
+
+async function recognizeAcr(sample, env, deadlineAt) {
   const host = String(env.ACR_HOST || '').replace(/^https?:\/\//, '').replace(/\/+$/, '');
   const timestamp = Math.floor(Date.now() / 1000);
   const stringToSign = ['POST', '/v1/identify', env.ACR_ACCESS_KEY, 'audio', '1', String(timestamp)].join('\n');
@@ -246,7 +293,7 @@ async function recognizeAcr(sample, env, timeoutMs = RECOGNIZE_TIMEOUT_MS) {
   form.set('sample_bytes', String(sample.length));
   form.set('sample', new Blob([sample]), 'sample.bin');
 
-  const outcome = await postForm(`https://${host}/v1/identify`, form, timeoutMs);
+  const outcome = await postForm(`https://${host}/v1/identify`, form, deadlineAt);
   if (!outcome.ok) throw new Error('acrcloud request failed');
   const code = Number(outcome.data?.status?.code);
   if (code !== 0 && code !== 1001) throw new Error(`acrcloud status ${code}`);
@@ -268,13 +315,13 @@ async function recognizeAcr(sample, env, timeoutMs = RECOGNIZE_TIMEOUT_MS) {
   };
 }
 
-async function recognizeAudd(sample, env, timeoutMs = RECOGNIZE_TIMEOUT_MS) {
+async function recognizeAudd(sample, env, deadlineAt) {
   const form = new FormData();
   form.set('api_token', env.AUDD_API_TOKEN);
   form.set('return', 'apple_music,spotify');
   form.set('file', new Blob([sample]), 'sample.bin');
 
-  const outcome = await postForm('https://api.audd.io/', form, timeoutMs);
+  const outcome = await postForm('https://api.audd.io/', form, deadlineAt);
   if (!outcome.ok) throw new Error('audd request failed');
   if (outcome.data?.status !== 'success') throw new Error(`audd status ${outcome.data?.status || 'unknown'}`);
   if (!outcome.data?.result?.title) return null;
@@ -306,12 +353,17 @@ async function hmacSha1Base64(secret, text) {
   return btoa(binary);
 }
 
-async function postForm(target, form, timeoutMs = RECOGNIZE_TIMEOUT_MS) {
+async function postForm(target, form, deadlineAt = Date.now() + RECOGNIZE_TIMEOUT_MS) {
+  const remaining = Math.min(RECOGNIZE_TIMEOUT_MS, deadlineAt - Date.now());
+  if (remaining <= 0) return { ok: false };
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  const timer = setTimeout(() => controller.abort(), remaining);
   try {
     const response = await fetch(target, { method: 'POST', signal: controller.signal, body: form, headers: { 'User-Agent': USER_AGENT } });
-    if (!response.ok) return { ok: false };
+    if (!response.ok) {
+      cancelResponseBody(response);
+      return { ok: false };
+    }
     return { ok: true, data: await response.json() };
   } catch {
     return { ok: false };
@@ -320,12 +372,28 @@ async function postForm(target, form, timeoutMs = RECOGNIZE_TIMEOUT_MS) {
   }
 }
 
+function withinDeadline(promise, deadlineAt) {
+  const remaining = deadlineAt - Date.now();
+  if (remaining <= 0) return Promise.reject(new Error('fingerprint deadline exceeded'));
+  let timer;
+  return Promise.race([
+    Promise.resolve(promise),
+    new Promise((_, reject) => {
+      timer = setTimeout(() => reject(new Error('fingerprint deadline exceeded')), remaining);
+    })
+  ]).finally(() => clearTimeout(timer));
+}
+
 async function openCache() {
   try {
     return globalThis.caches?.default || (globalThis.caches?.open ? await globalThis.caches.open('earth-radio-fingerprint') : null);
   } catch {
     return null;
   }
+}
+
+function cancelResponseBody(response) {
+  response?.body?.cancel?.().catch?.(() => {});
 }
 
 function json(body, maxAgeSeconds, status = 200) {

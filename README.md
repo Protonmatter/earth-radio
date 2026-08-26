@@ -12,10 +12,11 @@ Use Node.js 24.18.0 and npm 11.16.0:
 
 ```powershell
 npm ci
+npm run release:manifest
 npm run verify
 ```
 
-`npm run verify` scans the candidate repository for common secret and binary-artifact mistakes, syntax-checks the runtime, runs deterministic and security regressions, stages the static site under `.build/site`, validates references and deployment boundaries, and writes `RELEASE_MANIFEST.json` plus `sha256sums.txt`.
+`npm run release:manifest` writes `RELEASE_MANIFEST.json` and `sha256sums.txt` after source changes settle. `npm run verify` scans the candidate repository for common secret and binary-artifact mistakes, syntax-checks the runtime, runs deterministic and security regressions, stages the static site under `.build/site`, validates references and deployment boundaries, and fails without rewriting files when either committed release artifact is stale.
 
 To serve the web build locally:
 

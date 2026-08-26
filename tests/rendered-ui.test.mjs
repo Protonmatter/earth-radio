@@ -82,6 +82,10 @@ test('responsive UI rendered matrix preserves layout, actions, and locale contra
     'country search leaked stations from another country'
   );
 
+  const keyboardCountrySearch = byId(payload.results, 'mobile-country-search-keyboard-390x844').probe;
+  assert.equal(keyboardCountrySearch.countryQuery.value, 'Japan');
+  assert.deepEqual(keyboardCountrySearch.countrySelections, [{ country: 'Japan' }]);
+
   // The ui-refresh layer re-ramps the palette: mobile header/body take the
   // refresh surface and background, and the primary action takes --er2-action.
   const palette = byId(payload.results, 'mobile-listen-390x844').probe.palette;
@@ -171,4 +175,38 @@ test('responsive UI rendered matrix preserves layout, actions, and locale contra
   assert.equal(traditional.lang, 'zh-Hant');
   assert.equal(traditional.fontProfile, 'zh-Hant');
   assert.notEqual(simplified.navButtons[0].text, traditional.navButtons[0].text);
+
+  const arabicPreview = byId(payload.results, 'settings-locale-preview-ar-390x844').probe;
+  assert.equal(arabicPreview.lang, 'ar');
+  assert.equal(arabicPreview.dir, 'rtl');
+  assert.equal(arabicPreview.fontProfile, 'ar');
+  assert.match(arabicPreview.settingsModal.text, /الإعدادات/);
+  assert.equal(arabicPreview.settingsLocale.value, 'ar');
+
+  for (const id of [
+    'settings-locale-preview-cancel-390x844',
+    'settings-locale-preview-close-390x844',
+    'settings-locale-preview-backdrop-390x844',
+    'settings-locale-preview-escape-390x844',
+    'settings-locale-preview-reopen-390x844'
+  ]) {
+    const dismissedPreview = byId(payload.results, id).probe;
+    assert.equal(dismissedPreview.lang, 'en', `${id}: lang`);
+    assert.equal(dismissedPreview.dir, 'ltr', `${id}: dir`);
+    assert.equal(dismissedPreview.fontProfile, 'en', `${id}: font profile`);
+    assert.equal(dismissedPreview.settingsLocale.value, 'en', `${id}: select reset`);
+    assert.equal(dismissedPreview.storedUiState.locale, 'en', `${id}: persisted locale`);
+  }
+
+  const savedScenario = byId(payload.results, 'settings-locale-preview-save-390x844');
+  const savedPreview = savedScenario.probe;
+  assert.equal(savedPreview.lang, 'ar');
+  assert.equal(savedPreview.dir, 'rtl');
+  assert.equal(savedPreview.fontProfile, 'ar');
+  assert.equal(savedPreview.settingsLocale.value, 'ar');
+  assert.equal(savedPreview.storedUiState.locale, 'ar');
+  assert.equal(savedPreview.storedRuntimePreferences.locale, 'ar');
+  const reloadBarrier = savedScenario.actionLog.find(entry => entry.action.type === 'waitForNavigation')?.result.navigation;
+  assert.equal(reloadBarrier?.observed, true);
+  assert.ok(reloadBarrier.finishedLoads > reloadBarrier.checkpoint);
 });

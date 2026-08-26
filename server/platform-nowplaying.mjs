@@ -4,7 +4,7 @@
 // Every candidate endpoint is derived from the station's own stream URL (or a fixed
 // well-known platform API host) and fetched through the shared public-target guard.
 
-import { requestLimited, resolvePublicTarget } from './net-guard.mjs';
+import { requestPublic } from './net-guard.mjs';
 import { createBoundedTtlCache, resolveWithCache } from './shared-cache.mjs';
 import { detectPlatformEndpoints, parsePlatformPayload } from './platform-detect.mjs';
 export { detectPlatformEndpoints, parsePlatformPayload } from './platform-detect.mjs';
@@ -14,53 +14,79 @@ const DEFAULT_TIMEOUT_MS = 6000;
 const MAX_RESPONSE_BYTES = 256 * 1024;
 const CACHE_MAX_ENTRIES = 256;
 const CACHE_TTL_HIT_MS = 20 * 1000;
-const CACHE_TTL_MISS_MS = 5 * 60 * 1000;
+// The browser polls platform feeds every 30 seconds. A genuine miss or temporary
+// transport failure must be retried on that cadence instead of hiding recovery for
+// five minutes.
+const CACHE_TTL_MISS_MS = 30 * 1000;
 
 const nowPlayingCache = createBoundedTtlCache({ maxEntries: CACHE_MAX_ENTRIES });
 const inFlight = new Map();
 
-export async function resolvePlatformNowPlaying(streamUrl, { timeoutMs = DEFAULT_TIMEOUT_MS, fetchTextImpl = fetchTextGuarded } = {}) {
+export async function resolvePlatformNowPlaying(streamUrl, {
+  timeoutMs = DEFAULT_TIMEOUT_MS,
+  deadlineAt = Date.now() + timeoutMs,
+  signal,
+  fetchTextImpl = fetchTextGuarded
+} = {}) {
   const cacheKey = String(streamUrl || '').trim();
   if (!cacheKey) return notFound('missing stream url');
-  return resolveWithCache({
+  const deadline = Number(deadlineAt);
+  if (!Number.isFinite(deadline) || deadline <= Date.now()) return notFound('platform resolution deadline exceeded');
+  return withinResolutionDeadline(resolveWithCache({
     cache: nowPlayingCache,
     inFlight,
     key: cacheKey,
-    produce: () => resolveUncached(cacheKey, { timeoutMs, fetchTextImpl }),
+    produce: () => resolveUncached(cacheKey, { deadlineAt: deadline, signal, fetchTextImpl }),
     ttlFor: payload => payload.found ? CACHE_TTL_HIT_MS : CACHE_TTL_MISS_MS
-  });
+  }), deadline, signal);
 }
 
-async function resolveUncached(streamUrl, { timeoutMs, fetchTextImpl }) {
+async function resolveUncached(streamUrl, { deadlineAt, signal, fetchTextImpl }) {
   const endpoints = detectPlatformEndpoints(streamUrl);
   const attempted = [];
-  // One wall-clock budget across every candidate: the remaining time is divided over
-  // the remaining endpoints, so a stalled first probe cannot consume the caller's whole
-  // client timeout and starve the generic fallbacks, while a fast failure donates its
-  // unused slice to the next endpoint.
-  const deadlineAt = Date.now() + timeoutMs;
-  for (let index = 0; index < endpoints.length; index += 1) {
-    const endpoint = endpoints[index];
-    const remaining = deadlineAt - Date.now();
-    if (remaining <= 250) break;
-    const budget = Math.max(250, Math.floor(remaining / (endpoints.length - index)));
+  const generic = endpoints.filter(endpoint => endpoint.platform === 'icecast' || endpoint.platform === 'shoutcast');
+  const specialized = endpoints.filter(endpoint => endpoint.platform !== 'icecast' && endpoint.platform !== 'shoutcast');
+
+  for (const endpoint of specialized) {
     attempted.push(endpoint.platform);
     try {
-      const text = await fetchTextImpl(endpoint, budget);
-      if (!text) continue;
-      const result = parsePlatformPayload(endpoint, text);
+      const result = await probeEndpoint(endpoint, { deadlineAt, signal, fetchTextImpl });
       if (result) return { ...result, found: true, endpoint: endpoint.url, attempted, fetchedAt: new Date().toISOString() };
     } catch {
       // Platform probing is best-effort; move on to the next candidate.
     }
   }
+
+  // Icecast and Shoutcast status endpoints are independent views of the same stream
+  // origin. Probe both under the one remaining operation budget, then choose the
+  // first valid result in deterministic endpoint order after every request settles.
+  attempted.push(...generic.map(endpoint => endpoint.platform));
+  const genericResults = await Promise.allSettled(generic.map(endpoint => (
+    probeEndpoint(endpoint, { deadlineAt, signal, fetchTextImpl })
+  )));
+  for (let index = 0; index < genericResults.length; index += 1) {
+    const outcome = genericResults[index];
+    if (outcome.status === 'fulfilled' && outcome.value) {
+      const endpoint = generic[index];
+      return { ...outcome.value, found: true, endpoint: endpoint.url, attempted, fetchedAt: new Date().toISOString() };
+    }
+  }
   return { ...notFound('no platform now-playing endpoint answered'), attempted };
 }
 
-async function fetchTextGuarded(endpoint, timeoutMs) {
-  const target = await resolvePublicTarget(endpoint.url);
-  const response = await requestLimited(target, {
-    timeoutMs,
+async function probeEndpoint(endpoint, { deadlineAt, signal, fetchTextImpl }) {
+  const text = await withinResolutionDeadline(
+    fetchTextImpl(endpoint, { deadlineAt, signal }),
+    deadlineAt,
+    signal
+  );
+  return text ? parsePlatformPayload(endpoint, text) : null;
+}
+
+async function fetchTextGuarded(endpoint, { deadlineAt, signal } = {}) {
+  const response = await requestPublic(endpoint.url, {
+    deadlineAt,
+    signal,
     maxBytes: MAX_RESPONSE_BYTES,
     // SSE subscriptions never end; stop after the first complete event frame.
     stopWhen: endpoint.kind === 'sse' ? ({ chunk, body }) => chunk.includes('\n\n') || body().includes('\n\n') : undefined,
@@ -71,6 +97,27 @@ async function fetchTextGuarded(endpoint, timeoutMs) {
   });
   if (response.statusCode < 200 || response.statusCode >= 300) return '';
   return response.text;
+}
+
+function withinResolutionDeadline(promise, deadlineAt, signal) {
+  const remaining = Number(deadlineAt) - Date.now();
+  if (remaining <= 0) return Promise.reject(new Error('platform resolution deadline exceeded'));
+  if (signal?.aborted) return Promise.reject(new Error('platform resolution aborted'));
+  let timer;
+  let onAbort;
+  const races = [Promise.resolve(promise), new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error('platform resolution deadline exceeded')), remaining);
+  })];
+  if (signal) {
+    races.push(new Promise((_, reject) => {
+      onAbort = () => reject(new Error('platform resolution aborted'));
+      signal.addEventListener('abort', onAbort, { once: true });
+    }));
+  }
+  return Promise.race(races).finally(() => {
+    clearTimeout(timer);
+    if (onAbort) signal.removeEventListener('abort', onAbort);
+  });
 }
 
 function notFound(reason) {

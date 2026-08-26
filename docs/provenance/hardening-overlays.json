@@ -9,10 +9,10 @@
         "sha256": "942d2d61015289e649cf74ff509a95fd2ca20090fc40cb9fd3e5f21d89c29dcc"
       },
       "current": {
-        "bytes": 3566,
-        "sha256": "606065ec150d32644f668894f3849cf6a1fdd6346e0221d195687f573fb8e62f"
+        "bytes": 3549,
+        "sha256": "6aa303ed9cbf06edae50a98f64f21a3f40b114b8afb3078c645b041be24be5bc"
       },
-      "reason": "Load the selected site directory and validate complete supported network-proxy rules with URL parsing. Allow the Listen.moe realtime gateway (wss://listen.moe) in the renderer connect-src policy."
+      "reason": "Load the selected site directory and validate complete supported network-proxy rules with URL parsing."
     },
     {
       "path": "server/desktop-proxy.mjs",
@@ -21,8 +21,8 @@
         "sha256": "329c8af7c7fa7b0921dd2c0028a057e8fea8ff4ac706c0760b8d8de629ede401"
       },
       "current": {
-        "bytes": 22025,
-        "sha256": "403d023a0ec8355b819ae6b4c2cad3db19592d8afa7905658d80e8a4176a3eeb"
+        "bytes": 21889,
+        "sha256": "03a15bc63b9a1e9ada8ee1c15342c00f570b46badb88a325f1a20903555266cd"
       },
       "reason": "Require a per-launch capability path and Origin on API routes, and reject mapped IPv6, CGNAT, and other private stream targets. Mount the combined metadata API (platform now-playing, fingerprint) and import the shared outbound network guard extracted to server/net-guard.mjs."
     },
@@ -45,10 +45,10 @@
         "sha256": "0c66fa9ea4dcd4689081b9e3220a098a8e8342db96f14f230ecec39b3e39dca3"
       },
       "current": {
-        "bytes": 6940,
-        "sha256": "305d7ca9530b15a6936b32583ad434f41dd36d08b70566b7db5b6da46928cc0f"
+        "bytes": 8152,
+        "sha256": "2a77d8440c0167f25ec0f164b5f117948a15c40cdd9811e13ce61e06bf8011f0"
       },
-      "reason": "Add platform now-playing and on-demand fingerprint endpoints with a tighter metered-request rate limit."
+      "reason": "Add platform now-playing and on-demand fingerprint endpoints with a tighter metered-request rate limit. Keep desktop sampling, provider recognition, and optional catalog enrichment inside one absolute 40-second route deadline."
     },
     {
       "path": "server/metadata-providers.mjs",
@@ -57,10 +57,10 @@
         "sha256": "648114492b64701d2a223b336d4ea9efd55fc3e8a5d9b7042d2c34d1ed3f8b93"
       },
       "current": {
-        "bytes": 18001,
-        "sha256": "47358d228c09be34f746e491fe3bd644c3f060493c4758b80716910dbb52bc17"
+        "bytes": 19149,
+        "sha256": "490fa7b0ab15c5e76a8d9023131f86bd1d4526a936b3b69cffdba09d60e27526"
       },
-      "reason": "Review-pass hardening: lowercase-only \"Title by Artist\" parsing, deduplicated Spotify token requests, market-scoped Spotify search, and removal of unreachable post-promotion fallbacks."
+      "reason": "Review-pass hardening: lowercase-only \"Title by Artist\" parsing, deduplicated Spotify token requests, market-scoped Spotify search, removal of unreachable post-promotion fallbacks, and deadline-aware catalog requests."
     },
     {
       "path": "site/assets/hls.light-Dr1Fv81C.js",
@@ -75,16 +75,17 @@
       "reason": "Remove a reference to an excluded source map from the vendored HLS runtime."
     },
     {
-      "path": "site/assets/index-B4rKOAHV.js",
+      "path": "site/assets/index-55b082dd.js",
+      "intakePath": "site/assets/index-B4rKOAHV.js",
       "intake": {
         "bytes": 273352,
         "sha256": "610e3cdbea0e98b748aef94a24ea8362024430e01647b35bb4cd62038a04fa13"
       },
       "current": {
-        "bytes": 273913,
-        "sha256": "c692da7f217b40aaa603391c8141d3dd76868e407606e81a4ed55d7d0df6a935"
+        "bytes": 274877,
+        "sha256": "55b082dd03b1cf19410a2531dccd74f8cfd29341353319710404bc5f3e808955"
       },
-      "reason": "Register the service worker after asynchronous startup and remove a reference to an excluded source map. Bind a station tooltip on map markers for pre-selection progressive disclosure, delegating content to the maintained metadata overlay hook. Dispatch earthradio:station-selected after successful station playback (canonical stream identity for MediaSource/blob playback) and earthradio:stations-load-settled from loadStations' finally block (directory-refresh serialization signal); both mirrored in src-recovered/main.ts."
+      "reason": "Register the service worker after asynchronous startup and remove a reference to an excluded source map. Bind a station tooltip on map markers for pre-selection progressive disclosure, delegating content to the maintained metadata overlay hook. Dispatch earthradio:station-selected after successful station playback (canonical stream identity for MediaSource/blob playback). Serialize and coalesce boot, manual, retry, cloned, and directory-owned station loads behind one runtime drain promise; settlement now carries a monotonic load ID, and the correlated runtime API is mirrored in src-recovered/main.ts. Previous/next and Media Session navigation carry explicit playback results and dispatch selection only when playback succeeded. Rename the deployed immutable bundle to the deterministic first eight hexadecimal characters of its final SHA-256 while retaining the installed intake path as provenance evidence."
     },
     {
       "path": "site/assets/metadata-enrichment.css",
@@ -105,10 +106,10 @@
         "sha256": "e213700a1a541139a66542e9bd8e615ad5dfc735d52c59569730d9a021e86009"
       },
       "current": {
-        "bytes": 62936,
-        "sha256": "d6f8ca27275c22e5038c617ddf5e16ae009acae322c09a328e2122ce2bb55916"
+        "bytes": 62834,
+        "sha256": "dbe97a33efe62768ce9a4e70d5075a7b6c5b956c66c5d449de6155177dcbfb41"
       },
-      "reason": "Layer live-metadata feeds above raw ICY: hosting-platform now-playing APIs, HLS timed ID3 text tracks, and an opt-in fingerprint identify button."
+      "reason": "Layer live-metadata feeds above raw ICY: hosting-platform now-playing APIs, HLS timed ID3 text tracks, and an opt-in fingerprint identify button. Preserve the canonical selected URL and UUID through same-station MediaSource reattachment, invalidate only on correlated selection/change or explicit clear, retain the original trimmed URL after validation, and fence both cross-station and same-station out-of-order metadata polls by identity plus a monotonic poll generation."
     },
     {
       "path": "site/config.js",
@@ -130,9 +131,9 @@
       },
       "current": {
         "bytes": 22115,
-        "sha256": "406a0d4d03d647d389dd90b3586101e662d585738e0c9ab78842b29bf77328c0"
+        "sha256": "e248d42f38716ffbf89e702df24fd913020049f81b8185af7cf710627b1af181"
       },
-      "reason": "Move frame-ancestors enforcement to the deployable response header policy, then add responsive landmarks, iOS viewport/audio attributes, mobile destinations, compact header icons, additive responsive assets, country and station search controls, complete Now Playing metadata and sleep actions, the additive UI refresh stylesheet, and header actions ordered in the rail's reading sequence so keyboard focus follows the visual order."
+      "reason": "Move frame-ancestors enforcement to the deployable response header policy, then add responsive landmarks, iOS viewport/audio attributes, mobile destinations, compact header icons, additive responsive assets, country and station search controls, complete Now Playing metadata and sleep actions, the additive UI refresh stylesheet, and header actions ordered in the rail's reading sequence so keyboard focus follows the visual order. Reference the deployed runtime through its content-addressed filename."
     },
     {
       "path": "site/manifest.webmanifest",
@@ -153,10 +154,10 @@
         "sha256": "b09e3207532fe7f47d14e9c53804d7e8caf31cad2fcb2c652b728a93871ea094"
       },
       "current": {
-        "bytes": 2928,
-        "sha256": "e932a3a7d0e31f3c1e4048d63376be5f9e8ed2b53ddcf2e043e6e11f52b78f9c"
+        "bytes": 2929,
+        "sha256": "f19b608c6f8cd58feb69a8ae169f674360cafec1edaf625ef77380a74c2b984b"
       },
-      "reason": "Use network-first navigation/configuration updates, keep hashed recovered assets cache-first, reload installation requests so stale browser HTTP entries cannot seed the new service-worker cache, keep the previous worker when reload precaching fails, and precache the UI refresh stylesheet under cache generation v26. Bump the shell cache generation for the live-metadata overlay update."
+      "reason": "Use network-first navigation/configuration updates, keep hashed recovered assets cache-first, reload installation requests so stale browser HTTP entries cannot seed the new service-worker cache, keep the previous worker when reload precaching fails, and precache the UI refresh stylesheet. Bump the shell cache generation to v32 for the new content-addressed runtime filename."
     }
   ]
 }

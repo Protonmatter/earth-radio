@@ -1,11 +1,11 @@
-const CACHE_NAME = 'earth-radio-shell-v29-remediation-1';
+const CACHE_NAME = 'earth-radio-shell-v32-runtime-hash-2';
 const SHELL_ASSETS = [
   './',
   './index.html',
   './config.js',
   './manifest.webmanifest',
   './assets/hls.light-Dr1Fv81C.js',
-  './assets/index-B4rKOAHV.js',
+  './assets/index-55b082dd.js',
   './assets/index-CSoL7F-Y.css',
   './assets/storage-guard.js',
   './assets/directory-expansion.js',
@@ -75,7 +75,7 @@ async function cacheFirst(request) {
 }
 
 function isImmutableAsset(pathname) {
-  return /index-B4rKOAHV|index-CSoL7F-Y|hls\.light-Dr1Fv81C/.test(pathname);
+  return /index-55b082dd|index-CSoL7F-Y|hls\.light-Dr1Fv81C/.test(pathname);
 }
 
 self.addEventListener('fetch', event => {

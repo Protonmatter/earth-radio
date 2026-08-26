@@ -379,6 +379,33 @@ export function resolveInitialLocale(state, browserLocales = []) {
   return detectBrowserLocale(browserLocales);
 }
 
+/**
+ * Keep the Settings selection, its transient preview, and its stored locale
+ * distinct. This pure transition is shared by the DOM paths so it remains
+ * verifiable when a rendered Electron harness is unavailable.
+ */
+export function advanceLocalePreview(state, action = {}) {
+  const persistedLocale = normalizeLocale(state?.persistedLocale);
+  const selectedLocale = normalizeLocale(state?.selectedLocale ?? state?.previewLocale ?? persistedLocale);
+  const previewLocale = state?.previewLocale ? normalizeLocale(state.previewLocale) : null;
+
+  if (action.type === 'preview') {
+    const next = normalizeLocale(action.locale);
+    return {
+      persistedLocale,
+      previewLocale: next === persistedLocale ? null : next,
+      selectedLocale: next
+    };
+  }
+  if (action.type === 'save') {
+    return { persistedLocale: selectedLocale, previewLocale: null, selectedLocale };
+  }
+  if (action.type === 'dismiss') {
+    return { persistedLocale, previewLocale: null, selectedLocale: persistedLocale };
+  }
+  return { persistedLocale, previewLocale, selectedLocale };
+}
+
 function readLocale(state) {
   if (state?.localeExplicit) return normalizeLocale(state.locale);
   const select = byId('setting-locale');
@@ -394,11 +421,8 @@ function readLocale(state) {
  * attributes from its own three-locale table, so they are re-asserted here and
  * defended by a narrowly scoped attribute observer.
  */
-function applyLocale(locale, persist = true) {
+function applyLocale(locale) {
   const resolved = normalizeLocale(locale);
-  // A persisted apply commits (and ends any preview); a non-persisted apply is a
-  // preview unless it matches the saved locale, in which case it clears the preview.
-  previewLocale = persist || resolved === normalizeLocale(loadUiState().locale) ? null : resolved;
   applyDocumentLocale(resolved);
   applyDeclarativeI18n(document, resolved);
   localizeRuntime(resolved);
@@ -406,7 +430,7 @@ function applyLocale(locale, persist = true) {
 
   const select = byId('setting-locale');
   if (select && [...select.options].some(option => option.value === resolved)) select.value = resolved;
-  return persist ? saveUiState({ locale: resolved, localeExplicit: true }) : loadUiState();
+  return resolved;
 }
 
 function syncThemeColor() {
@@ -443,6 +467,40 @@ function effectiveLocale() {
   return previewLocale ?? normalizeLocale(loadUiState().locale);
 }
 
+function transitionLocalePreview(type, selectedLocale) {
+  const next = advanceLocalePreview({
+    persistedLocale: loadUiState().locale,
+    previewLocale,
+    selectedLocale
+  }, { type, locale: selectedLocale });
+  previewLocale = next.previewLocale;
+  return next;
+}
+
+function previewLocaleSelection(locale) {
+  const next = transitionLocalePreview('preview', locale);
+  applyLocale(next.selectedLocale);
+  return next;
+}
+
+function dismissLocalePreview() {
+  const next = transitionLocalePreview('dismiss');
+  applyLocale(next.selectedLocale);
+  return next;
+}
+
+function saveLocalePreview(locale) {
+  const next = transitionLocalePreview('save', locale);
+  const saved = saveUiState({ locale: next.persistedLocale, localeExplicit: true });
+  previewLocale = null;
+  applyLocale(saved.locale);
+  return saved;
+}
+
+function settingsModalIsVisible(modal) {
+  return Boolean(modal && !modal.hidden && modal.style.display !== 'none' && modal.getAttribute('aria-hidden') !== 'true');
+}
+
 function guardDocumentLocale() {
   const observer = new MutationObserver(() => {
     const wanted = effectiveLocale();
@@ -459,7 +517,7 @@ function guardDocumentLocale() {
     }
     syncThemeColor();
   });
-  observer.observe(document.documentElement, { attributes: true, attributeFilter: ['lang', 'dir', 'data-theme'] });
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ['lang', 'dir', 'data-font-profile', 'data-theme'] });
   globalThis.matchMedia?.('(prefers-color-scheme: dark)')?.addEventListener?.('change', () => restoreStoredTheme());
   syncThemeColor();
 }
@@ -490,18 +548,28 @@ function bindLocaleOptions() {
 
   select.addEventListener('change', () => {
     // Preview only; the Save button commits and closing the modal reverts.
-    applyLocale(select.value, false);
+    previewLocaleSelection(select.value);
     applyViewport(loadUiState());
   });
 
   const modal = byId('settings-modal');
   if (modal) {
+    let wasVisible = settingsModalIsVisible(modal);
+    const restorePersistedLocale = () => {
+      dismissLocalePreview();
+      wasVisible = false;
+    };
+    modal.addEventListener('click', event => {
+      if (event.target instanceof Element && event.target.closest('[data-close-settings]')) restorePersistedLocale();
+    }, true);
     new MutationObserver(() => {
-      if (!modal.hidden) return;
-      const saved = normalizeLocale(loadUiState().locale);
-      if ([...select.options].some(option => option.value === saved)) select.value = saved;
-      applyLocale(saved, false);
-    }).observe(modal, { attributes: true, attributeFilter: ['hidden'] });
+      const visible = settingsModalIsVisible(modal);
+      if (visible === wasVisible) return;
+      wasVisible = visible;
+      // Opening also clears any interrupted/stale preview before the runtime
+      // repopulates Settings; hidden/style/aria-hidden all reach this path.
+      dismissLocalePreview();
+    }).observe(modal, { attributes: true, attributeFilter: ['hidden', 'style', 'aria-hidden'] });
   }
 }
 
@@ -1227,11 +1295,23 @@ function syncNowPlaying() {
 
 function cloneWithoutIds(source) {
   const clone = source.cloneNode(true);
+  linkClonedFingerprintAction(clone);
   if (clone instanceof Element) {
     clone.removeAttribute('id');
     for (const element of clone.querySelectorAll('[id]')) element.removeAttribute('id');
   }
   return clone;
+}
+
+// cloneNode intentionally does not copy event listeners. Mark the cloned Identify
+// button as a proxy for the canonical metadata control; the shared action router then
+// invokes the one fingerprint state machine, while runtime observation re-clones its
+// disabled/text/status state into the open Now Playing surface.
+export function linkClonedFingerprintAction(clone) {
+  const button = clone?.querySelector?.('#metadata-fingerprint-btn');
+  if (!button) return false;
+  button.setAttribute('data-click-id', 'metadata-fingerprint-btn');
+  return true;
 }
 
 function syncNowPlayingMetadata() {
@@ -1385,9 +1465,7 @@ function bindActions() {
 
   byId('settings-save')?.addEventListener('click', () => {
     const select = byId('setting-locale');
-    const locale = normalizeLocale(select?.value);
-    saveUiState({ locale });
-    applyLocale(locale);
+    saveLocalePreview(select?.value);
   }, true);
 
   window.addEventListener('popstate', event => {
@@ -1430,6 +1508,15 @@ function bindActions() {
 
   document.addEventListener('keydown', event => {
     if (event.key === 'Escape') {
+      const settings = byId('settings-modal');
+      if (settingsModalIsVisible(settings)) {
+        event.preventDefault();
+        dismissLocalePreview();
+        settings.hidden = true;
+        settings.style.display = 'none';
+        settings.setAttribute('aria-hidden', 'true');
+        return;
+      }
       if (!byId('er-overflow')?.hidden) {
         setOverflowOpen(false);
         return;
@@ -1529,7 +1616,7 @@ function observeRuntime() {
     if (frame) return;
     frame = requestAnimationFrame(() => {
       frame = 0;
-      const locale = normalizeLocale(loadUiState().locale);
+      const locale = effectiveLocale();
       applyDeclarativeI18n(document, locale);
       localizeRuntime(locale);
       if (document.documentElement.classList.contains('er-nowplaying-open')) syncNowPlaying();
@@ -1591,7 +1678,7 @@ function start() {
   });
 
   restoreStoredTheme();
-  applyLocale(state.locale, false);
+  applyLocale(state.locale);
   guardDocumentLocale();
   applyViewport(loadUiState());
   bindActions();
@@ -1602,7 +1689,7 @@ function start() {
   // The recovered runtime renders its first catalog asynchronously.
   window.addEventListener('load', () => {
     applyViewport(loadUiState());
-    localizeRuntime(normalizeLocale(loadUiState().locale));
+    localizeRuntime(effectiveLocale());
     invalidateMap(true);
   }, { once: true });
 }

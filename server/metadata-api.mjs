@@ -11,6 +11,9 @@ const RATE_LIMIT_MAX_REQUESTS = 120;
 // Fingerprint recognition is metered per request on the provider side, so its
 // budget is far tighter than the free catalog lookups.
 const FINGERPRINT_RATE_LIMIT_MAX_REQUESTS = 10;
+// The renderer waits 45 seconds. Keep sampling, recognition providers, and optional
+// catalog enrichment inside one slightly smaller operation deadline.
+const FINGERPRINT_OPERATION_TIMEOUT_MS = 40_000;
 const rateBuckets = new Map();
 const fingerprintRateBuckets = new Map();
 
@@ -57,39 +60,60 @@ export async function handleTrackFingerprint(req, res) {
   }
 
   try {
-    const fingerprint = await identifyByFingerprint({ streamUrl });
-    if (!fingerprint.found) return sendJson(res, 200, fingerprint);
-
-    // Enrich the fingerprint hit with catalog artwork/links through the existing
-    // identify pipeline; the fingerprint identity itself stays authoritative.
-    const catalog = await identifyTrack({
-      artist: fingerprint.artist,
-      title: fingerprint.title,
-      country: sanitizeCountry(url.searchParams.get('country') || 'US')
+    const payload = await resolveFingerprintPayload({
+      streamUrl,
+      country: sanitizeCountry(url.searchParams.get('country') || 'US'),
+      deadlineAt: Date.now() + FINGERPRINT_OPERATION_TIMEOUT_MS
     });
-    const confidence = Math.max(60, Math.min(98, Number(fingerprint.score) || 90));
-    return sendJson(res, 200, {
-      ...fingerprint,
-      state: confidence >= 78 ? 'Identified' : 'Likely match',
-      confidence,
-      album: fingerprint.album || catalog.album || '',
-      releaseYear: fingerprint.releaseYear || catalog.releaseYear || '',
-      genre: catalog.genre || '',
-      isrc: fingerprint.isrc || catalog.isrc || '',
-      artworkUrl: catalog.found ? catalog.artworkUrl || '' : '',
-      previewUrl: catalog.found ? catalog.previewUrl || '' : '',
-      spotifyUrl: fingerprint.spotifyUrl || (catalog.found ? catalog.spotifyUrl || '' : ''),
-      appleMusicUrl: fingerprint.appleMusicUrl || (catalog.found ? catalog.appleMusicUrl || '' : ''),
-      links: catalog.links || {},
-      reasons: ['audio fingerprint match', ...(catalog.found ? ['catalog enrichment matched'] : [])],
-      sources: [
-        { provider: `fingerprint:${fingerprint.provider}`, confidence: confidence / 100, fetchedAt: fingerprint.fetchedAt },
-        ...(catalog.found ? (catalog.sources || []).filter(source => source.provider !== 'icy') : [])
-      ]
-    });
+    return sendJson(res, 200, payload);
   } catch (error) {
     return sendJson(res, 400, { error: error?.message || 'fingerprint failed' });
   }
+}
+
+export async function resolveFingerprintPayload({
+  streamUrl,
+  country = 'US',
+  deadlineAt = Date.now() + FINGERPRINT_OPERATION_TIMEOUT_MS,
+  fingerprintImpl = identifyByFingerprint,
+  catalogImpl = identifyTrack
+} = {}) {
+  const fingerprint = await withinDeadline(fingerprintImpl({ streamUrl, deadlineAt }), deadlineAt);
+  if (!fingerprint.found) return fingerprint;
+
+  // Enrichment is optional, but it consumes the same absolute operation deadline as
+  // stream sampling and provider recognition. A late catalog must never delay or
+  // invalidate the authoritative fingerprint hit.
+  let catalog = { found: false };
+  try {
+    catalog = await withinDeadline(catalogImpl({
+      artist: fingerprint.artist,
+      title: fingerprint.title,
+      country,
+      deadlineAt
+    }), deadlineAt);
+  } catch { /* the fingerprint remains authoritative */ }
+
+  const confidence = Math.max(60, Math.min(98, Number(fingerprint.score) || 90));
+  return {
+    ...fingerprint,
+    state: confidence >= 78 ? 'Identified' : 'Likely match',
+    confidence,
+    album: fingerprint.album || catalog.album || '',
+    releaseYear: fingerprint.releaseYear || catalog.releaseYear || '',
+    genre: catalog.genre || '',
+    isrc: fingerprint.isrc || catalog.isrc || '',
+    artworkUrl: catalog.found ? catalog.artworkUrl || '' : '',
+    previewUrl: catalog.found ? catalog.previewUrl || '' : '',
+    spotifyUrl: fingerprint.spotifyUrl || (catalog.found ? catalog.spotifyUrl || '' : ''),
+    appleMusicUrl: fingerprint.appleMusicUrl || (catalog.found ? catalog.appleMusicUrl || '' : ''),
+    links: catalog.links || {},
+    reasons: ['audio fingerprint match', ...(catalog.found ? ['catalog enrichment matched'] : [])],
+    sources: [
+      { provider: `fingerprint:${fingerprint.provider}`, confidence: confidence / 100, fetchedAt: fingerprint.fetchedAt },
+      ...(catalog.found ? (catalog.sources || []).filter(source => source.provider !== 'icy') : [])
+    ]
+  };
 }
 
 export async function handleTrackIdentify(req, res) {
@@ -150,4 +174,16 @@ function consumeRateLimit(req, buckets, maxRequests) {
   }
   bucket.count += 1;
   return bucket.count <= maxRequests;
+}
+
+function withinDeadline(promise, deadlineAt) {
+  const remaining = Number(deadlineAt) - Date.now();
+  if (remaining <= 0) return Promise.reject(new Error('fingerprint deadline exceeded'));
+  let timer;
+  return Promise.race([
+    Promise.resolve(promise),
+    new Promise((_, reject) => {
+      timer = setTimeout(() => reject(new Error('fingerprint deadline exceeded')), remaining);
+    })
+  ]).finally(() => clearTimeout(timer));
 }

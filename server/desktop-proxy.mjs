@@ -8,7 +8,7 @@ import net from 'node:net';
 import { URL, pathToFileURL } from 'node:url';
 import { TextDecoder } from 'node:util';
 import { handleMetadataApi } from './metadata-api.mjs';
-import { createPinnedLookup, isRedirect, normalizeHostname, requestLimited, resolvePublicTarget } from './net-guard.mjs';
+import { createPinnedLookup, isRedirect, normalizeHostname, requestPublic, resolvePublicTarget } from './net-guard.mjs';
 
 const USER_AGENT = 'EarthRadio/0.24.0 desktop-proxy (+https://github.com/Protonmatter/EarthRadio)';
 const RADIO_BROWSER_BASES = [
@@ -353,8 +353,8 @@ async function recordClick(uuid) {
 async function resolveStream(streamTarget) {
   const streamUrl = streamTarget.href;
   if (!isPlaylistUrl(streamUrl)) return { url: streamUrl, resolved: false };
-  const text = await fetchText(streamTarget, 6000, { Range: `bytes=0-${MAX_PLAYLIST_BYTES - 1}` });
-  const resolved = firstPlayableUrl(text, streamUrl);
+  const playlist = await fetchText(streamTarget, 6000, { Range: `bytes=0-${MAX_PLAYLIST_BYTES - 1}` });
+  const resolved = firstPlayableUrl(playlist.text, playlist.finalUrl);
   if (resolved) {
     const resolvedTarget = await resolvePublicTarget(resolved);
     return { url: resolvedTarget.href, resolved: true };
@@ -365,7 +365,7 @@ async function resolveStream(streamTarget) {
 async function probeStream(streamTarget) {
   const startedAt = Date.now();
   try {
-    const response = await requestLimited(streamTarget, {
+    const response = await requestPublic(streamTarget.href, {
       timeoutMs: STREAM_TIMEOUT_MS,
       maxBytes: MAX_PROBE_BYTES,
       headers: {
@@ -375,13 +375,6 @@ async function probeStream(streamTarget) {
         'User-Agent': USER_AGENT
       }
     });
-
-    if (isRedirect(response.statusCode)) {
-      const location = response.headers.location || '';
-      const redirected = new URL(location, streamTarget.href).toString();
-      await resolvePublicTarget(redirected);
-      return { ok: false, status: 'redirect', redirectedUrl: redirected, latencyMs: Date.now() - startedAt, observedAt: new Date().toISOString() };
-    }
 
     const ok = response.statusCode >= 200 && response.statusCode < 300;
     return {
@@ -419,8 +412,11 @@ function streamNowPlayingSse(req, res, streamUrl) {
   req.on('close', () => close());
 }
 
-function subscribeIcyTitles(streamTarget, onTitle, onError) {
-  const client = streamTarget.url.protocol === 'https:' ? https : http;
+// This is intentionally a long-lived, DNS-pinned ICY subscription rather than a
+// requestPublic call: its lifetime is owned by the renderer's SSE connection. It
+// rejects redirects so a new live subscription cannot silently cross a trust boundary.
+export function subscribeIcyTitles(streamTarget, onTitle, onError, { client: clientOverride } = {}) {
+  const client = clientOverride || (streamTarget.url.protocol === 'https:' ? https : http);
   let closed = false;
   let request = null;
   let lastTitle = '';
@@ -513,14 +509,13 @@ async function fetchJson(url, timeoutMs = 8000) {
 }
 
 async function fetchText(streamTarget, timeoutMs = 8000, headers = {}) {
-  const response = await requestLimited(streamTarget, {
+  const response = await requestPublic(streamTarget.href, {
     timeoutMs,
     maxBytes: MAX_PLAYLIST_BYTES,
     headers: { Accept: '*/*', ...headers }
   });
-  if (isRedirect(response.statusCode)) throw new Error('playlist redirect blocked by resolver');
   if (!(response.statusCode >= 200 && response.statusCode < 300)) throw new Error(`HTTP ${response.statusCode}`);
-  return response.text;
+  return response;
 }
 
 

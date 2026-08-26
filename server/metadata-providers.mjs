@@ -49,12 +49,12 @@ export async function identifyTrack(args = {}) {
   const cacheKey = identifyCacheKey(request);
   const cached = readIdentifyCache(cacheKey);
   if (cached) return { ...cached, cached: true };
-  if (identifyInFlight.has(cacheKey)) return { ...await identifyInFlight.get(cacheKey), cached: true };
+  if (identifyInFlight.has(cacheKey)) return { ...await withinDeadline(identifyInFlight.get(cacheKey), request.deadlineAt), cached: true };
 
   const promise = identifyTrackUncached(request);
   identifyInFlight.set(cacheKey, promise);
   try {
-    const payload = await promise;
+    const payload = await withinDeadline(promise, request.deadlineAt);
     writeIdentifyCache(cacheKey, payload, payload.found ? IDENTIFY_CACHE_TTL_FOUND_MS : IDENTIFY_CACHE_TTL_MISS_MS);
     return payload;
   } finally {
@@ -62,14 +62,22 @@ export async function identifyTrack(args = {}) {
   }
 }
 
-async function identifyTrackUncached({ artist = '', title = '', raw = '', providers = ['itunes', 'spotify'], country = 'US', timeoutMs = DEFAULT_TIMEOUT_MS } = {}) {
+async function identifyTrackUncached({
+  artist = '',
+  title = '',
+  raw = '',
+  providers = ['itunes', 'spotify'],
+  country = 'US',
+  timeoutMs = DEFAULT_TIMEOUT_MS,
+  deadlineAt = Date.now() + timeoutMs
+} = {}) {
   const track = title ? { artist: String(artist || ''), title: String(title || ''), raw: raw || [artist, title].filter(Boolean).join(' - ') } : parseNowPlaying(raw);
   if (!track?.title) return { found: false, state: 'Unresolved', confidence: 0, candidates: [], sources: [] };
 
   const wanted = new Set(providers);
   const candidateGroups = await Promise.allSettled([
-    wanted.has('itunes') ? searchItunes(track, { country, timeoutMs }) : [],
-    wanted.has('spotify') ? searchSpotify(track, { country, timeoutMs }) : []
+    wanted.has('itunes') ? searchItunes(track, { country, timeoutMs, deadlineAt }) : [],
+    wanted.has('spotify') ? searchSpotify(track, { country, timeoutMs, deadlineAt }) : []
   ]);
   const candidates = candidateGroups.flatMap(result => result.status === 'fulfilled' ? result.value : []);
   const scored = scoreAndRank(track, candidates);
@@ -149,7 +157,7 @@ export function getIdentifyCacheSize() {
   return identifyCache.size;
 }
 
-async function searchItunes(track, { country = 'US', timeoutMs = DEFAULT_TIMEOUT_MS } = {}) {
+async function searchItunes(track, { country = 'US', timeoutMs = DEFAULT_TIMEOUT_MS, deadlineAt = Date.now() + timeoutMs } = {}) {
   const term = [track.artist, track.title].filter(Boolean).join(' ').trim();
   if (!term) return [];
   const url = new URL(ITUNES_SEARCH_URL);
@@ -158,12 +166,12 @@ async function searchItunes(track, { country = 'US', timeoutMs = DEFAULT_TIMEOUT
   url.searchParams.set('limit', '8');
   url.searchParams.set('term', term);
   if (/^[A-Z]{2}$/i.test(country)) url.searchParams.set('country', country.toUpperCase());
-  const data = await fetchJson(url, timeoutMs);
+  const data = await fetchJson(url, timeoutMs, {}, deadlineAt);
   return Array.isArray(data?.results) ? data.results.map(normalizeItunes).filter(Boolean) : [];
 }
 
-async function searchSpotify(track, { country = 'US', timeoutMs = DEFAULT_TIMEOUT_MS } = {}) {
-  const token = await getSpotifyToken(timeoutMs);
+async function searchSpotify(track, { country = 'US', timeoutMs = DEFAULT_TIMEOUT_MS, deadlineAt = Date.now() + timeoutMs } = {}) {
+  const token = await getSpotifyToken(timeoutMs, deadlineAt);
   if (!token) return [];
   const queryParts = [];
   if (track.artist) queryParts.push(`artist:${quoteSpotify(track.artist)}`);
@@ -173,25 +181,27 @@ async function searchSpotify(track, { country = 'US', timeoutMs = DEFAULT_TIMEOU
   url.searchParams.set('limit', '8');
   url.searchParams.set('q', queryParts.join(' ') || [track.artist, track.title].filter(Boolean).join(' '));
   if (/^[A-Z]{2}$/i.test(country)) url.searchParams.set('market', country.toUpperCase());
-  const data = await fetchJson(url, timeoutMs, { Authorization: `Bearer ${token}` });
+  const data = await fetchJson(url, timeoutMs, { Authorization: `Bearer ${token}` }, deadlineAt);
   return Array.isArray(data?.tracks?.items) ? data.tracks.items.map(normalizeSpotify).filter(Boolean) : [];
 }
 
-async function getSpotifyToken(timeoutMs) {
+async function getSpotifyToken(timeoutMs, deadlineAt) {
   const id = process.env.SPOTIFY_CLIENT_ID;
   const secret = process.env.SPOTIFY_CLIENT_SECRET;
   if (!id || !secret) return null;
   if (spotifyToken && spotifyTokenExpiresAt > Date.now() + 30_000) return spotifyToken;
   if (!spotifyTokenPromise) {
-    spotifyTokenPromise = requestSpotifyToken(id, secret, timeoutMs).finally(() => { spotifyTokenPromise = null; });
+    spotifyTokenPromise = requestSpotifyToken(id, secret, timeoutMs, deadlineAt).finally(() => { spotifyTokenPromise = null; });
   }
   return spotifyTokenPromise;
 }
 
-async function requestSpotifyToken(id, secret, timeoutMs) {
+async function requestSpotifyToken(id, secret, timeoutMs, deadlineAt) {
+  const remaining = Math.min(timeoutMs, deadlineAt - Date.now());
+  if (remaining <= 0) return null;
   const auth = Buffer.from(`${id}:${secret}`).toString('base64');
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  const timer = setTimeout(() => controller.abort(), remaining);
   try {
     const response = await fetch(TOKEN_URL, {
       method: 'POST',
@@ -359,13 +369,16 @@ function normalizeIdentifyRequest(args = {}) {
   const sanitizedProviders = [...new Set(providers
     .map(provider => String(provider || '').trim().toLowerCase())
     .filter(provider => PROVIDERS.has(provider)))];
+  const timeoutMs = clampInteger(args.timeoutMs, DEFAULT_TIMEOUT_MS, 1000, 30_000);
+  const suppliedDeadline = Number(args.deadlineAt);
   return {
     artist: sanitizeText(args.artist, 200),
     title: sanitizeText(args.title, 200),
     raw: sanitizeText(args.raw, 500),
     providers: sanitizedProviders.length ? sanitizedProviders : ['itunes', 'spotify'],
     country: /^[A-Z]{2}$/i.test(String(args.country || 'US')) ? String(args.country || 'US').toUpperCase() : 'US',
-    timeoutMs: clampInteger(args.timeoutMs, DEFAULT_TIMEOUT_MS, 1000, 30_000)
+    timeoutMs,
+    deadlineAt: Number.isFinite(suppliedDeadline) && suppliedDeadline > 0 ? suppliedDeadline : Date.now() + timeoutMs
   };
 }
 
@@ -410,9 +423,11 @@ function clampInteger(value, fallback, min, max) {
   return Math.min(max, Math.max(min, parsed));
 }
 
-async function fetchJson(url, timeoutMs, headers = {}) {
+async function fetchJson(url, timeoutMs, headers = {}, deadlineAt = Date.now() + timeoutMs) {
+  const remaining = Math.min(timeoutMs, deadlineAt - Date.now());
+  if (remaining <= 0) return null;
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  const timer = setTimeout(() => controller.abort(), remaining);
   try {
     const response = await fetch(url, { signal: controller.signal, headers: { Accept: 'application/json', ...headers } });
     if (!response.ok) return null;
@@ -422,4 +437,16 @@ async function fetchJson(url, timeoutMs, headers = {}) {
   } finally {
     clearTimeout(timer);
   }
+}
+
+function withinDeadline(promise, deadlineAt) {
+  const remaining = deadlineAt - Date.now();
+  if (remaining <= 0) return Promise.reject(new Error('metadata deadline exceeded'));
+  let timer;
+  return Promise.race([
+    Promise.resolve(promise),
+    new Promise((_, reject) => {
+      timer = setTimeout(() => reject(new Error('metadata deadline exceeded')), remaining);
+    })
+  ]).finally(() => clearTimeout(timer));
 }

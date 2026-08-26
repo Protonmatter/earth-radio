@@ -6,9 +6,8 @@
 // Recognition APIs are metered, so results are cached and deduplicated per stream URL.
 
 import { createHmac } from 'node:crypto';
-import { guardedRequest, resolvePublicTarget } from './net-guard.mjs';
+import { requestPublic } from './net-guard.mjs';
 import { createBoundedTtlCache, resolveWithCache } from './shared-cache.mjs';
-import { parseMapSegment, parseMediaSegments, rangeHeaderFor } from './hls-segments.mjs';
 
 const USER_AGENT = 'EarthRadio/0.24.0 fingerprint (+https://github.com/Protonmatter/EarthRadio)';
 const ACR_IDENTIFY_PATH = '/v1/identify';
@@ -45,27 +44,36 @@ export function fingerprintAvailable(env = process.env) {
   return fingerprintProviders(env).length > 0;
 }
 
-export async function identifyByFingerprint({ streamUrl, sampleSeconds = DEFAULT_SAMPLE_SECONDS, env = process.env, sampleImpl = sampleStreamAudio, recognizeImpl = recognizeSample } = {}) {
+export async function identifyByFingerprint({
+  streamUrl,
+  sampleSeconds = DEFAULT_SAMPLE_SECONDS,
+  env = process.env,
+  deadlineAt = Date.now() + SAMPLE_TIMEOUT_MS,
+  sampleImpl = sampleStreamAudio,
+  recognizeImpl = recognizeSample
+} = {}) {
   const providers = fingerprintProviders(env);
   if (!providers.length) {
     return { available: false, found: false, reason: 'no fingerprint provider credentials configured' };
   }
   const cacheKey = String(streamUrl || '').trim();
   if (!cacheKey) return { available: true, found: false, reason: 'missing stream url' };
-  return resolveWithCache({
+  const joined = inFlight.has(cacheKey);
+  const outcome = resolveWithCache({
     cache: fingerprintCache,
     inFlight,
     key: cacheKey,
-    produce: () => identifyUncached(cacheKey, { sampleSeconds, env, providers, sampleImpl, recognizeImpl }),
+    produce: () => identifyUncached(cacheKey, { sampleSeconds, env, providers, deadlineAt, sampleImpl, recognizeImpl }),
     ttlFor: payload => payload.found ? CACHE_TTL_HIT_MS : CACHE_TTL_MISS_MS
   });
+  return joined ? withinDeadline(outcome, deadlineAt) : outcome;
 }
 
-async function identifyUncached(streamUrl, { sampleSeconds, env, providers, sampleImpl, recognizeImpl }) {
+async function identifyUncached(streamUrl, { sampleSeconds, env, providers, deadlineAt, sampleImpl, recognizeImpl }) {
   const seconds = Math.min(MAX_SAMPLE_SECONDS, Math.max(5, Number(sampleSeconds) || DEFAULT_SAMPLE_SECONDS));
   let sample;
   try {
-    sample = await sampleImpl(streamUrl, { seconds });
+    sample = await withinDeadline(sampleImpl(streamUrl, { seconds, deadlineAt }), deadlineAt);
   } catch (error) {
     return { available: true, found: false, reason: `stream sampling failed: ${error?.message || 'unknown error'}` };
   }
@@ -76,7 +84,7 @@ async function identifyUncached(streamUrl, { sampleSeconds, env, providers, samp
   let providerFailures = 0;
   for (const provider of providers) {
     try {
-      const result = await recognizeImpl(provider, sample, env);
+      const result = await withinDeadline(recognizeImpl(provider, sample, env, { deadlineAt }), deadlineAt);
       if (result) {
         return {
           available: true,
@@ -102,18 +110,21 @@ async function identifyUncached(streamUrl, { sampleSeconds, env, providers, samp
 // Pulls ~`seconds` of encoded audio from the stream. ICY metadata injection is avoided
 // by simply not sending Icy-MetaData, so the bytes are pure audio. HLS playlists are
 // resolved one level and the most recent segments are concatenated instead.
-export async function sampleStreamAudio(streamUrl, { seconds = DEFAULT_SAMPLE_SECONDS, requestImpl = guardedRequest, resolveTarget = resolvePublicTarget } = {}) {
+export async function sampleStreamAudio(streamUrl, {
+  seconds = DEFAULT_SAMPLE_SECONDS,
+  deadlineAt = Date.now() + SAMPLE_TIMEOUT_MS,
+  requestImpl = requestPublic
+} = {}) {
   // One wall-clock budget for the whole sampling operation, shared across every
   // redirect hop, playlist fetch, and segment fetch.
-  const deadlineAt = Date.now() + SAMPLE_TIMEOUT_MS;
-  const target = await resolveTarget(streamUrl);
-  if (/\.m3u8(\?|#|$)/i.test(target.url.pathname + target.url.search)) {
-    return sampleHlsAudio(target.href, { seconds, depth: 0, deadlineAt, requestImpl });
+  const stream = new URL(String(streamUrl || '').trim());
+  if (/\.m3u8(\?|#|$)/i.test(stream.pathname + stream.search)) {
+    return sampleHlsAudio(stream.toString(), { seconds, depth: 0, deadlineAt, requestImpl });
   }
 
   // Redirecting radio endpoints are normal; every hop re-passes the public-target
-  // policy inside guardedRequest before any bytes are read from it.
-  const response = await requestImpl(target.href, {
+  // policy inside requestPublic before any bytes are read from it.
+  const response = await requestImpl(stream.toString(), {
     timeoutMs: SAMPLE_TIMEOUT_MS,
     deadlineAt,
     maxBytes: MAX_SAMPLE_BYTES,
@@ -123,10 +134,7 @@ export async function sampleStreamAudio(streamUrl, { seconds = DEFAULT_SAMPLE_SE
   assertAudioResponse(response);
   const contentType = String(response.headers['content-type'] || '');
   if (/mpegurl|application\/x-mpegurl/i.test(contentType)) {
-    // The playlist body is already in hand; parse it directly. Guessing that the first
-    // URI is a child playlist would misread a media playlist's first segment as a
-    // playlist for HLS URLs that lack an .m3u8 suffix.
-    return sampleHlsFromText(response.text, response.finalUrl, { seconds, depth: 0, deadlineAt, requestImpl });
+    return sampleHlsPlaylist(response.text, response.finalUrl || stream.toString(), { seconds, depth: 0, deadlineAt, requestImpl });
   }
   return { body: response.body, contentType };
 }
@@ -143,7 +151,7 @@ function makeByteTarget(seconds) {
   };
 }
 
-async function sampleHlsAudio(playlistUrl, { seconds, depth = 0, deadlineAt = Date.now() + SAMPLE_TIMEOUT_MS, requestImpl = guardedRequest }) {
+export async function sampleHlsAudio(playlistUrl, { seconds, depth = 0, deadlineAt = Date.now() + SAMPLE_TIMEOUT_MS, requestImpl = requestPublic }) {
   if (depth > MAX_HLS_PLAYLIST_DEPTH) throw new Error('HLS playlist nesting too deep');
   const playlistResponse = await requestImpl(playlistUrl, {
     timeoutMs: 8000,
@@ -154,11 +162,12 @@ async function sampleHlsAudio(playlistUrl, { seconds, depth = 0, deadlineAt = Da
   if (playlistResponse.statusCode < 200 || playlistResponse.statusCode >= 300) {
     throw new Error(`HLS playlist HTTP ${playlistResponse.statusCode}`);
   }
-  return sampleHlsFromText(playlistResponse.text, playlistResponse.finalUrl, { seconds, depth, deadlineAt, requestImpl });
+  return sampleHlsPlaylist(playlistResponse.text, playlistResponse.finalUrl || playlistUrl, { seconds, depth, deadlineAt, requestImpl });
 }
 
-async function sampleHlsFromText(text, baseUrl, { seconds, depth = 0, deadlineAt, requestImpl }) {
-  const lines = String(text || '').split(/\r?\n/).map(line => line.trim());
+async function sampleHlsPlaylist(text, baseUrl, { seconds, depth, deadlineAt, requestImpl }) {
+  if (depth > MAX_HLS_PLAYLIST_DEPTH) throw new Error('HLS playlist nesting too deep');
+  const lines = text.split(/\r?\n/).map(line => line.trim());
 
   // Master playlist: follow the first variant, once.
   if (text.includes('#EXT-X-STREAM-INF')) {
@@ -167,29 +176,46 @@ async function sampleHlsFromText(text, baseUrl, { seconds, depth = 0, deadlineAt
     return sampleHlsAudio(new URL(variant, baseUrl).toString(), { seconds, depth: depth + 1, deadlineAt, requestImpl });
   }
 
-  const segments = parseMediaSegments(lines).slice(-HLS_SEGMENT_COUNT);
+  const { segments, mapUri } = coherentHlsTail(lines);
   if (!segments.length) throw new Error('HLS media playlist has no segments');
   // Fragmented-MP4 playlists carry decoder metadata in an EXT-X-MAP initialization
   // segment; without it the recognizers receive an undecodable container.
-  const fetchList = [...parseMapSegment(lines), ...segments];
+  const fetchList = mapUri ? [mapUri, ...segments] : segments;
   const perSegmentCap = Math.floor(MAX_SAMPLE_BYTES / fetchList.length);
   const parts = [];
   for (const segment of fetchList) {
-    const headers = { Accept: '*/*', 'User-Agent': USER_AGENT };
-    const rangeHeader = rangeHeaderFor(segment);
-    if (rangeHeader) headers.Range = rangeHeader;
-    const segmentResponse = await requestImpl(new URL(segment.uri, baseUrl).toString(), {
+    const segmentResponse = await requestImpl(new URL(segment, baseUrl).toString(), {
       timeoutMs: 8000,
       deadlineAt,
       maxBytes: perSegmentCap,
-      headers
+      headers: { Accept: '*/*', 'User-Agent': USER_AGENT }
     });
     if (segmentResponse.statusCode >= 200 && segmentResponse.statusCode < 300 && segmentResponse.body.length) {
       parts.push(segmentResponse.body);
     }
   }
   if (!parts.length) throw new Error('no HLS segments could be fetched');
-  return { body: Buffer.concat(parts), contentType: 'video/mp2t' };
+  return { body: Buffer.concat(parts), contentType: mapUri ? 'video/mp4' : 'video/mp2t' };
+}
+
+function coherentHlsTail(lines) {
+  let activeMap = '';
+  const media = [];
+  for (const line of lines) {
+    const mapUri = line.match(/^#EXT-X-MAP:.*URI="([^"]+)"/i)?.[1];
+    if (mapUri) activeMap = mapUri;
+    else if (line && !line.startsWith('#')) media.push({ uri: line, mapUri: activeMap });
+  }
+
+  const recent = media.slice(-HLS_SEGMENT_COUNT);
+  if (!recent.length) return { segments: [], mapUri: '' };
+  const mapUri = recent.at(-1).mapUri;
+  let coherentStart = recent.length - 1;
+  while (coherentStart > 0 && recent[coherentStart - 1].mapUri === mapUri) coherentStart -= 1;
+  return {
+    segments: recent.slice(coherentStart).map(segment => segment.uri),
+    mapUri
+  };
 }
 
 function assertAudioResponse(response) {
@@ -202,9 +228,9 @@ function assertAudioResponse(response) {
   }
 }
 
-async function recognizeSample(provider, sample, env = process.env) {
-  if (provider === 'acrcloud') return recognizeWithAcrCloud(sample, env);
-  if (provider === 'audd') return recognizeWithAudd(sample, env);
+async function recognizeSample(provider, sample, env = process.env, { deadlineAt = Date.now() + RECOGNIZE_TIMEOUT_MS } = {}) {
+  if (provider === 'acrcloud') return recognizeWithAcrCloud(sample, env, { deadlineAt });
+  if (provider === 'audd') return recognizeWithAudd(sample, env, { deadlineAt });
   return null;
 }
 
@@ -216,7 +242,7 @@ export function buildAcrSignature({ accessKey, accessSecret, timestamp }) {
 }
 
 // Throws on transport/credential failure; returns null only for a genuine no-match.
-async function recognizeWithAcrCloud(sample, env) {
+async function recognizeWithAcrCloud(sample, env, { deadlineAt }) {
   const host = String(env.ACR_HOST || '').replace(/^https?:\/\//, '').replace(/\/+$/, '');
   const timestamp = Math.floor(Date.now() / 1000);
   const form = new FormData();
@@ -228,7 +254,7 @@ async function recognizeWithAcrCloud(sample, env) {
   form.set('sample_bytes', String(sample.body.length));
   form.set('sample', new Blob([sample.body]), 'sample.bin');
 
-  const outcome = await postForm(`https://${host}${ACR_IDENTIFY_PATH}`, form);
+  const outcome = await postForm(`https://${host}${ACR_IDENTIFY_PATH}`, form, { deadlineAt });
   if (!outcome.ok) throw new Error('acrcloud request failed');
   const code = Number(outcome.data?.status?.code);
   // 0 = hit; 1001 = analyzed but no result — a genuine miss. Anything else is a
@@ -255,13 +281,13 @@ export function normalizeAcrResult(data) {
   };
 }
 
-async function recognizeWithAudd(sample, env) {
+async function recognizeWithAudd(sample, env, { deadlineAt }) {
   const form = new FormData();
   form.set('api_token', env.AUDD_API_TOKEN);
   form.set('return', 'apple_music,spotify');
   form.set('file', new Blob([sample.body]), 'sample.bin');
 
-  const outcome = await postForm(AUDD_IDENTIFY_URL, form);
+  const outcome = await postForm(AUDD_IDENTIFY_URL, form, { deadlineAt });
   if (!outcome.ok) throw new Error('audd request failed');
   if (outcome.data?.status !== 'success') throw new Error(`audd status ${outcome.data?.status || 'unknown'}`);
   return normalizeAuddResult(outcome.data);
@@ -284,9 +310,11 @@ export function normalizeAuddResult(data) {
   };
 }
 
-async function postForm(url, form) {
+async function postForm(url, form, { deadlineAt = Date.now() + RECOGNIZE_TIMEOUT_MS } = {}) {
+  const remaining = Math.min(RECOGNIZE_TIMEOUT_MS, deadlineAt - Date.now());
+  if (remaining <= 0) return { ok: false };
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), RECOGNIZE_TIMEOUT_MS);
+  const timer = setTimeout(() => controller.abort(), remaining);
   try {
     const response = await fetch(url, {
       method: 'POST',
@@ -301,6 +329,18 @@ async function postForm(url, form) {
   } finally {
     clearTimeout(timer);
   }
+}
+
+function withinDeadline(promise, deadlineAt) {
+  const remaining = deadlineAt - Date.now();
+  if (remaining <= 0) return Promise.reject(new Error('fingerprint deadline exceeded'));
+  let timer;
+  return Promise.race([
+    Promise.resolve(promise),
+    new Promise((_, reject) => {
+      timer = setTimeout(() => reject(new Error('fingerprint deadline exceeded')), remaining);
+    })
+  ]).finally(() => clearTimeout(timer));
 }
 
 

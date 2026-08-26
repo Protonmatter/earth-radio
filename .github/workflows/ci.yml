@@ -32,6 +32,8 @@ jobs:
         run: npm ci
       - name: Verify repository and build
         run: npm run verify
+      - name: Run focused remediation tests
+        run: node --test tests/directory-expansion.test.mjs tests/hls-fixture.test.mjs tests/player-navigation.test.mjs tests/rendered-ui.test.mjs
       - name: Exercise recovery importer
         if: runner.os == 'Windows'
         shell: powershell

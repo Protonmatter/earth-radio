@@ -61,7 +61,6 @@ function uuid(index) {
   const hex = (index + 1).toString(16).padStart(12, '0');
   return `00000000-0000-4000-8000-${hex}`;
 }
-
 export function fixtureStations() {
   return SEED.map(([name, country, countrycode, codec, bitrate, tags, lat, lon], index) => {
     const secure = index % 5 !== 4;
@@ -97,4 +96,3 @@ export function fixtureStations() {
     };
   });
 }
-

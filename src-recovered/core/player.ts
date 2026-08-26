@@ -2,6 +2,7 @@
 // Media Session integration, bounded reconnect, and stall detection. See SPEC-PLAYBACK-001.
 import { getRuntimeConfig } from './config';
 import { firstPlayableUrl, isHlsUrl, isPlaylistUrl } from './playlist.js';
+import { playbackResult } from './playback-result.js';
 import type { Station } from './types';
 
 export type PlayerStatus = 'idle' | 'loading' | 'playing' | 'paused' | 'error' | 'ended';
@@ -15,6 +16,11 @@ export interface PlayerCallbacks {
   onVolumeChange?: (volume: number) => void;
   onPrev?: () => void;
   onNext?: () => void;
+}
+
+export interface PlaybackResult {
+  station: Station | null;
+  ok: boolean;
 }
 
 const MAX_RECONNECTS = 2;
@@ -195,16 +201,14 @@ export function getErrorCount(): number {
   return errorCount;
 }
 
-export async function playNext(stations: Station[]): Promise<Station | null> {
+export async function playNext(stations: Station[]): Promise<PlaybackResult> {
   const station = getRelativeStation(stations, 1);
-  if (station) await playStation(station);
-  return station;
+  return playbackResult(station, station ? await playStation(station) : false);
 }
 
-export async function playPrev(stations: Station[]): Promise<Station | null> {
+export async function playPrev(stations: Station[]): Promise<PlaybackResult> {
   const station = getRelativeStation(stations, -1);
-  if (station) await playStation(station);
-  return station;
+  return playbackResult(station, station ? await playStation(station) : false);
 }
 
 /** Push a live now-playing title into the Media Session metadata. */

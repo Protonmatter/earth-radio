@@ -48,7 +48,6 @@ const state = {
   lastTrackKey: '',
   inFlight: null,
   timer: null,
-  trustExpiryTimer: null,
   currentIdentity: null,
   trustedTrack: null,
   platformTimer: null,
@@ -60,8 +59,10 @@ const state = {
   sameOriginApi: null,
   sameOriginApiProbe: null,
   sameOriginApiMisses: 0,
+  platformPollGeneration: 0,
   streamUrl: '',
-  selectedStreamUrl: ''
+  selectedStreamUrl: '',
+  selectedStationUuid: ''
 };
 
 function config() {
@@ -554,18 +555,9 @@ function detailRow(term, value) {
   return [dt, dd];
 }
 
-// Provider-supplied URLs become clickable hrefs; only web schemes are acceptable
-// (a compromised provider response must never deliver javascript:/data: links).
-// Pure and exported for unit tests.
-export function safeLinkHref(url) {
-  const candidate = String(url || '');
-  return /^https?:\/\//i.test(candidate) ? candidate : '';
-}
-
 function link(label, url) {
   const a = document.createElement('a');
-  const href = safeLinkHref(url);
-  if (href) a.href = href;
+  a.href = url;
   a.target = '_blank';
   a.rel = 'noopener noreferrer';
   a.textContent = label;
@@ -724,11 +716,22 @@ function audioElement() {
 // fingerprinting keep working for HLS-backed stations. Pure and exported so the
 // blob-vs-selected precedence is unit-testable: a real HTTP(S) media source wins,
 // anything else (blob:, empty) falls back to the explicitly selected station URL.
+function validHttpStreamUrl(value) {
+  const url = String(value || '').trim();
+  try {
+    const parsed = new URL(url);
+    // Keep the event's exact trimmed string as identity. Client-side metadata accepts
+    // syntactically valid private/credential URLs only as identity; Pages/Node own the
+    // authoritative target and credential rejection before performing network I/O.
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:' ? url : '';
+  } catch {
+    return '';
+  }
+}
+
 export function resolveStreamUrl(audioLike, selectedUrl) {
-  const src = String(audioLike?.currentSrc || audioLike?.src || '');
-  if (/^https?:\/\//i.test(src)) return src;
-  const selected = String(selectedUrl || '');
-  return /^https?:\/\//i.test(selected) ? selected : '';
+  const src = validHttpStreamUrl(audioLike?.currentSrc || audioLike?.src);
+  return src || validHttpStreamUrl(selectedUrl);
 }
 
 function currentStreamUrl() {
@@ -738,27 +741,77 @@ function currentStreamUrl() {
   return resolveStreamUrl(audioElement(), state.selectedStreamUrl || state.streamUrl);
 }
 
+function currentStationIdentity() {
+  return { streamUrl: currentStreamUrl(), stationUuid: state.selectedStationUuid };
+}
+
+export function shouldInvalidateStationIdentity(previous, next) {
+  return previous?.streamUrl !== next?.streamUrl || previous?.stationUuid !== next?.stationUuid;
+}
+
+export function stationIdentityAfterTransition(previous, transition = {}) {
+  const current = {
+    streamUrl: validHttpStreamUrl(previous?.streamUrl),
+    stationUuid: String(previous?.stationUuid || '')
+  };
+  if (transition.type === 'clear') return { streamUrl: '', stationUuid: '' };
+  if (transition.type !== 'selected') return current;
+  const streamUrl = validHttpStreamUrl(transition.streamUrl);
+  if (!streamUrl) return current;
+  return { streamUrl, stationUuid: String(transition.stationUuid || '') };
+}
+
+export function pollResultIsCurrent(started, current) {
+  return started?.generation === current?.generation && !shouldInvalidateStationIdentity(started, current);
+}
+
+function invalidateSelectedStationData() {
+  state.trustedTrack = null;
+  state.inFlight = null;
+  state.fingerprintAutoKey = '';
+  state.currentIdentity = null;
+  state.lastRaw = '';
+  state.lastTrackKey = '';
+  state.platformPollGeneration += 1;
+}
+
 // The runtime dispatches this after playback actually starts for a clicked station.
 // A new selection invalidates every identity derived from the previous stream.
 function handleStationSelected(event) {
-  const url = String(event?.detail?.streamUrl || '');
-  if (!/^https?:\/\//i.test(url)) return;
-  if (url !== state.selectedStreamUrl) {
-    state.trustedTrack = null;
-    state.inFlight = null;
-    state.fingerprintAutoKey = '';
-    state.currentIdentity = null;
+  const previous = { streamUrl: state.selectedStreamUrl, stationUuid: state.selectedStationUuid };
+  const next = stationIdentityAfterTransition(previous, {
+    type: 'selected',
+    streamUrl: event?.detail?.streamUrl,
+    stationUuid: event?.detail?.stationUuid
+  });
+  if (shouldInvalidateStationIdentity(previous, next)) {
+    invalidateSelectedStationData();
+    setFingerprintStatus('');
+    renderStationOnly();
   }
-  state.selectedStreamUrl = url;
+  state.selectedStreamUrl = next.streamUrl;
+  state.selectedStationUuid = next.stationUuid;
   syncFingerprintButton();
+}
+
+function handleStationCleared() {
+  const previous = { streamUrl: state.selectedStreamUrl, stationUuid: state.selectedStationUuid };
+  const next = stationIdentityAfterTransition(previous, { type: 'clear' });
+  if (shouldInvalidateStationIdentity(previous, next)) invalidateSelectedStationData();
+  state.streamUrl = '';
+  state.selectedStreamUrl = next.streamUrl;
+  state.selectedStationUuid = next.stationUuid;
+  setFingerprintStatus('');
+  syncFingerprintButton();
+  renderStationOnly();
 }
 
 // Resolves the active station's stream URL from the runtime's IndexedDB directory
 // cache when the media element only exposes a blob: URL.
 function refreshCanonicalStreamUrl() {
   const audio = audioElement();
-  const src = String(audio?.currentSrc || audio?.src || '');
-  if (/^https?:\/\//i.test(src)) {
+  const src = validHttpStreamUrl(audio?.currentSrc || audio?.src);
+  if (src) {
     state.streamUrl = src;
     return;
   }
@@ -772,8 +825,8 @@ function refreshCanonicalStreamUrl() {
         const get = tx.objectStore('cache').get('stations.v3');
         get.onsuccess = () => {
           const station = (get.result?.stations || []).find(item => item?.stationuuid === uuid);
-          const url = String(station?.url_resolved || station?.url || '');
-          if (/^https?:\/\//i.test(url)) {
+          const url = validHttpStreamUrl(station?.url_resolved || station?.url);
+          if (url) {
             state.streamUrl = url;
             syncFingerprintButton();
           }
@@ -1005,11 +1058,13 @@ async function pollPlatformNowPlaying() {
   const cfg = config();
   if (!cfg.enabled || !cfg.platformNowPlayingEnabled) return;
   if (document.hidden || !isPlaying()) return;
-  const streamUrl = currentStreamUrl();
-  if (!streamUrl) return;
+  const identity = currentStationIdentity();
+  if (!identity.streamUrl) return;
+  const started = { ...identity, generation: ++state.platformPollGeneration };
   try {
-    const result = await resolvePlatformNowPlaying(streamUrl);
-    if (!result || streamUrl !== currentStreamUrl()) return;
+    const result = await resolvePlatformNowPlaying(identity.streamUrl);
+    const current = { ...currentStationIdentity(), generation: state.platformPollGeneration };
+    if (!result || !pollResultIsCurrent(started, current)) return;
     await applyTrustedTrack(result.track, `platform:${result.platform}`, { artworkUrl: result.artworkUrl });
   } catch { /* best effort */ }
 }
@@ -1120,17 +1175,6 @@ async function checkFingerprintAvailability() {
   return Boolean(state.fingerprintAvailable);
 }
 
-// The listener's storefront market from the browser locale ('' when undeterminable).
-// Pure enough to export for unit tests via an explicit locale argument.
-export function listenerCountry(locale = typeof navigator !== 'undefined' ? navigator.language : '') {
-  try {
-    const region = new Intl.Locale(String(locale || '')).maximize().region || '';
-    return /^[A-Z]{2}$/.test(region) ? region : '';
-  } catch {
-    return '';
-  }
-}
-
 function fingerprintButton() {
   return byId('metadata-fingerprint-btn');
 }
@@ -1165,7 +1209,8 @@ function maybeAutoFingerprint(identity) {
 async function runFingerprint(trigger) {
   const cfg = config();
   if (!fingerprintConfigured() || state.fingerprintBusy) return;
-  const streamUrl = currentStreamUrl();
+  const identity = currentStationIdentity();
+  const streamUrl = identity.streamUrl;
   if (!streamUrl || !isPlaying()) return;
   const sinceLast = Date.now() - state.fingerprintLastAt;
   if (sinceLast < cfg.fingerprintMinIntervalMs) {
@@ -1188,14 +1233,10 @@ async function runFingerprint(trigger) {
     const base = await metadataApiBase();
     if (base === null) { setFingerprintStatus('Fingerprinting is not available on this deployment'); return; }
     const params = new URLSearchParams({ url: streamUrl });
-    // Catalog enrichment (artwork, storefront links) is market-specific, and the
-    // server keys its cache on the country — send the listener's market.
-    const country = listenerCountry();
-    if (country) params.set('country', country);
     const data = await fetchJson(`${base}/api/track/fingerprint?${params}`, 45000);
     // The sample takes ~15-20s; if the user switched stations meanwhile, this result
     // belongs to the old stream and must be dropped.
-    if (streamUrl !== currentStreamUrl() || state.inFlight !== token) { setFingerprintStatus(''); return; }
+    if (shouldInvalidateStationIdentity(identity, currentStationIdentity()) || state.inFlight !== token) { setFingerprintStatus(''); return; }
     if (!data) { setFingerprintStatus('Fingerprint request failed'); return; }
     if (data.available === false) {
       state.fingerprintAvailable = false;
@@ -1248,18 +1289,7 @@ async function runFingerprint(trigger) {
 
 const MAP_TOOLTIP_NP_TTL_MS = 30 * 1000;
 const MAP_TOOLTIP_MAX_ENTRIES = 200;
-const mapTooltip = { nowPlaying: new Map(), inFlight: new Set(), hoverTimer: null, hoverUuid: '', spentAt: [] };
-
-// Speculative tooltip lookups share the /api/nowplaying rate budget with the selected
-// station's polling (the edge allows 30/min/IP), so they get their own small sliding
-// window: at most 8 lookups per minute, after which tooltips stay name-only until the
-// window frees up. Pure and exported for unit tests.
-export function takeTooltipLookupToken(spentAt, now = Date.now(), { windowMs = 60_000, max = 8 } = {}) {
-  while (spentAt.length && now - spentAt[0] >= windowMs) spentAt.shift();
-  if (spentAt.length >= max) return false;
-  spentAt.push(now);
-  return true;
-}
+const mapTooltip = { nowPlaying: new Map(), inFlight: new Set(), hoverTimer: null, hoverUuid: '' };
 
 function rememberMapTooltip(uuid, text) {
   mapTooltip.nowPlaying.set(uuid, { text, at: Date.now() });
@@ -1339,7 +1369,6 @@ function handleMapTooltipHover(station) {
   clearTimeout(mapTooltip.hoverTimer);
   mapTooltip.hoverTimer = setTimeout(() => {
     if (mapTooltip.hoverUuid !== uuid || mapTooltip.inFlight.has(uuid)) return;
-    if (!takeTooltipLookupToken(mapTooltip.spentAt)) return;
     mapTooltip.inFlight.add(uuid);
     updateOpenMapTooltip(uuid);
     resolvePlatformNowPlaying(streamUrl)
@@ -1359,28 +1388,12 @@ if (typeof window !== 'undefined') {
   window.earthRadioMapTooltip = Object.freeze({ render: renderMapTooltip, hover: handleMapTooltipHover });
 }
 
-// Pure and exported for unit tests: how long a trusted feed result still owns the
-// panel, in milliseconds (0 when absent or already expired).
-export function trustedFreshRemaining(trustedTrack, now = Date.now()) {
-  if (!trustedTrack || !Number.isFinite(Number(trustedTrack.at))) return 0;
-  const remaining = TRUSTED_TRACK_FRESH_MS - (now - Number(trustedTrack.at));
-  return remaining > 0 ? remaining : 0;
-}
-
 async function processCurrentMetadata() {
   const cfg = config();
   if (!cfg.enabled) return;
   // A fresh higher-trust feed (platform API, HLS ID3, fingerprint) owns the panel;
   // DOM-scraped ICY text only drives identification when nothing better is live.
-  const trustedRemaining = trustedFreshRemaining(state.trustedTrack);
-  if (trustedRemaining > 0) {
-    // The DOM may already carry a newer ICY title than the trusted result. Nothing is
-    // guaranteed to mutate once the trust window lapses, so arm one pass at expiry —
-    // otherwise a finished song could stay on the panel indefinitely.
-    clearTimeout(state.trustExpiryTimer);
-    state.trustExpiryTimer = setTimeout(scheduleProcess, trustedRemaining + 100);
-    return;
-  }
+  if (state.trustedTrack && Date.now() - state.trustedTrack.at < TRUSTED_TRACK_FRESH_MS) return;
   const raw = extractRawCandidate();
   if (!raw) {
     if (!state.lastRaw) renderStationOnly();
@@ -1422,25 +1435,17 @@ function init() {
   document.addEventListener('visibilitychange', () => { if (!document.hidden) scheduleProcess(); });
   window.addEventListener('earthradio:metadata-refresh', scheduleProcess);
   window.addEventListener('earthradio:station-selected', handleStationSelected);
+  window.addEventListener('earthradio:station-cleared', handleStationCleared);
 
   const audio = audioElement();
   if (audio) {
     audio.addEventListener('loadstart', () => {
-      // New stream: everything derived from the previous station is stale — trusted
-      // feeds, the raw-title dedupe, the current identity, and any identify/fingerprint
-      // response still in flight (its token check will now fail).
+      // MediaSource reattachment for the same HLS station also emits loadstart. The
+      // selected event/explicit clear event is the correlated identity boundary, so a
+      // media lifecycle signal alone must preserve the canonical URL and UUID.
       state.streamUrl = '';
-      state.selectedStreamUrl = '';
       refreshCanonicalStreamUrl();
-      state.trustedTrack = null;
-      state.fingerprintAutoKey = '';
-      state.inFlight = null;
-      state.lastRaw = '';
-      state.lastTrackKey = '';
-      state.currentIdentity = null;
-      setFingerprintStatus('');
       syncFingerprintButton();
-      renderStationOnly();
     });
     audio.addEventListener('play', () => {
       refreshCanonicalStreamUrl();

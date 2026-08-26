@@ -357,15 +357,19 @@ async function onStationClick(station: Station): Promise<void> {
     presentNowPlaying(station);
     setStatus(t('status.playing', { name: station.name }));
     syncRoute(getActiveFilters());
-    // Overlays (metadata enrichment) need the canonical HTTP(S) stream identity even
-    // when playback runs through MediaSource and exposes only a blob: URL.
-    window.dispatchEvent(new CustomEvent('earthradio:station-selected', {
-      detail: {
-        streamUrl: String(station.url_resolved || station.url || ''),
-        stationUuid: String(station.stationuuid || '')
-      }
-    }));
+    dispatchStationSelected(station);
   }
+}
+
+function dispatchStationSelected(station: Station): void {
+  // Overlays need the selected source only after playStation() has actually started
+  // playback, including previous/next and Media Session navigation paths.
+  window.dispatchEvent(new CustomEvent('earthradio:station-selected', {
+    detail: {
+      streamUrl: String(station.url_resolved || station.url || ''),
+      stationUuid: String(station.stationuuid || '')
+    }
+  }));
 }
 
 // Drop the map beacon, fly to the station, open the now-playing sidecar, start ICY metadata,
@@ -486,7 +490,52 @@ function renderEmptyState(message: string, actions: EmptyAction[] = [], spinner 
   }
 }
 
-async function loadStations({ forceRefresh = false } = {}): Promise<void> {
+interface StationLoadOutcome {
+  ok: boolean;
+  loadId: number;
+}
+
+const stationLoadState: {
+  promise: Promise<StationLoadOutcome> | null;
+  queued: boolean;
+  forceRefresh: boolean;
+  nextLoadId: number;
+} = {
+  promise: null,
+  queued: false,
+  forceRefresh: false,
+  nextLoadId: 0
+};
+
+async function loadStations({ forceRefresh = false } = {}): Promise<StationLoadOutcome> {
+  stationLoadState.queued = true;
+  stationLoadState.forceRefresh ||= forceRefresh;
+  if (stationLoadState.promise) return stationLoadState.promise;
+
+  const drain = async (): Promise<StationLoadOutcome> => {
+    let outcome: StationLoadOutcome = { ok: false, loadId: stationLoadState.nextLoadId };
+    while (stationLoadState.queued) {
+      stationLoadState.queued = false;
+      const nextForceRefresh = stationLoadState.forceRefresh;
+      stationLoadState.forceRefresh = false;
+      const loadId = ++stationLoadState.nextLoadId;
+      outcome = await performStationLoad({ forceRefresh: nextForceRefresh, loadId });
+    }
+    return outcome;
+  };
+  const promise = drain().finally(() => {
+    if (stationLoadState.promise !== promise) return;
+    stationLoadState.promise = null;
+    // A caller can enqueue in the microtask gap between drain's last loop check and
+    // this finalizer. Adopt the restarted drain so every caller still owns a promise
+    // that settles only after its queued refresh has physically completed.
+    if (stationLoadState.queued) return loadStations();
+  });
+  stationLoadState.promise = promise;
+  return promise;
+}
+
+async function performStationLoad({ forceRefresh, loadId }: { forceRefresh: boolean; loadId: number }): Promise<StationLoadOutcome> {
   showLoadingState();
   let ok = true;
   try {
@@ -541,12 +590,19 @@ async function loadStations({ forceRefresh = false } = {}): Promise<void> {
     ok = false;
   } finally {
     // Directory-expansion serializes forced refreshes on this settle signal instead of
-    // guessing with a timer; it fires on success and failure alike. forceRefresh lets
-    // listeners correlate the settle with the forced load they triggered, so an
-    // unrelated boot load settling cannot end their cycle early.
-    window.dispatchEvent(new CustomEvent('earthradio:stations-load-settled', { detail: { ok, forceRefresh } }));
+    // guessing with a timer; it fires on success and failure alike.
+    window.dispatchEvent(new CustomEvent('earthradio:stations-load-settled', { detail: { ok, loadId } }));
   }
+  return { ok, loadId };
 }
+
+const runtimeWindow = window as typeof window & {
+  earthRadioRuntime?: { refreshStations?: () => Promise<StationLoadOutcome> };
+};
+runtimeWindow.earthRadioRuntime = Object.freeze({
+  ...(runtimeWindow.earthRadioRuntime || {}),
+  refreshStations: () => loadStations({ forceRefresh: true })
+});
 
 function applyCountry(country: string): void {
   view = 'all';
@@ -563,13 +619,13 @@ function setupPlayerEvents(): void {
   });
 
   btnPrev?.addEventListener('click', async () => {
-    const station = await playPrev(currentStations);
-    if (station) await afterNeighbor(station);
+    const result = await playPrev(currentStations);
+    if (result.ok && result.station) await afterNeighbor(result.station);
   });
 
   btnNext?.addEventListener('click', async () => {
-    const station = await playNext(currentStations);
-    if (station) await afterNeighbor(station);
+    const result = await playNext(currentStations);
+    if (result.ok && result.station) await afterNeighbor(result.station);
   });
 
   btnSimilar?.addEventListener('click', () => {
@@ -608,6 +664,7 @@ async function afterNeighbor(station: Station): Promise<void> {
   updatePlayerBar(station);
   highlightCard(station.stationuuid);
   presentNowPlaying(station);
+  dispatchStationSelected(station);
 }
 
 function setupSleepTimer(): void {
