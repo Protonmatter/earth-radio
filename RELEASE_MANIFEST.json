@@ -700,8 +700,8 @@
     },
     {
       "path": "tests/e2e/helpers.mjs",
-      "bytes": 4534,
-      "sha256": "b83eec9d25da8758ecc59b70a5de9546dd99a3600b6474136e456c2ab9a35522"
+      "bytes": 5264,
+      "sha256": "af2c464bb50b066a57be3caa6dd32c933a0f1c3f2e420c56d18d50d93b42cb8a"
     },
     {
       "path": "tests/e2e/playwright.config.mjs",
