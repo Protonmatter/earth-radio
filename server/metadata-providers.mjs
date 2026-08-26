@@ -52,7 +52,14 @@ export async function identifyTrack(args = {}) {
   const cacheKey = identifyCacheKey(request);
   const cached = readIdentifyCache(cacheKey);
   if (cached) return { ...cached, cached: true };
-  if (identifyInFlight.has(cacheKey)) return { ...await withinDeadline(identifyInFlight.get(cacheKey), request.deadlineAt), cached: true };
+  if (identifyInFlight.has(cacheKey)) {
+    try {
+      return { ...await withinDeadline(identifyInFlight.get(cacheKey), request.deadlineAt), cached: true };
+    } catch (error) {
+      if (isDeadlineError(error)) return transientDeadlineMiss(request);
+      throw error;
+    }
+  }
 
   const promise = identifyTrackUncached(request);
   identifyInFlight.set(cacheKey, promise);
@@ -65,6 +72,12 @@ export async function identifyTrack(args = {}) {
       writeIdentifyCache(cacheKey, payload, payload.found ? IDENTIFY_CACHE_TTL_FOUND_MS : IDENTIFY_CACHE_TTL_MISS_MS);
     }
     return payload;
+  } catch (error) {
+    // The outer race can fire before fetchJson's abort settles, especially under
+    // a loaded CI event loop. Treat that the same as a provider throw: a miss
+    // that must not occupy the negative cache.
+    if (isDeadlineError(error)) return transientDeadlineMiss(request);
+    throw error;
   } finally {
     identifyInFlight.delete(cacheKey);
   }
@@ -157,6 +170,21 @@ function rawIcyIdentity(track, candidates = [], reason = TITLE_ONLY_PROMOTION_RE
     candidates: candidates.slice(0, 8),
     sources: [{ provider: 'icy', confidence: confidence / 100, raw: track.raw, fetchedAt: new Date().toISOString() }]
   };
+}
+
+function isDeadlineError(error) {
+  return /deadline/i.test(String(error?.message || ''));
+}
+
+function transientDeadlineMiss(request) {
+  const track = request.title
+    ? { artist: String(request.artist || ''), title: String(request.title || ''), raw: request.raw || [request.artist, request.title].filter(Boolean).join(' - ') }
+    : parseNowPlaying(request.raw);
+  const identity = track?.title
+    ? rawIcyIdentity(track, [], 'metadata deadline exceeded')
+    : { found: false, state: 'Unresolved', confidence: 0, candidates: [], sources: [] };
+  Object.defineProperty(identity, IDENTIFY_TRANSIENT, { value: true });
+  return identity;
 }
 
 export function clearIdentifyCache() {

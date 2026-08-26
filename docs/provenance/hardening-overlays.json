@@ -57,10 +57,10 @@
         "sha256": "648114492b64701d2a223b336d4ea9efd55fc3e8a5d9b7042d2c34d1ed3f8b93"
       },
       "current": {
-        "bytes": 20473,
-        "sha256": "9402da298c3af4cd9b365365e79ea3b68adb93b53d73e1d0bef0869bac0334f8"
+        "bytes": 21575,
+        "sha256": "883c3494e70ac8d9d7e037d06c4d6de76a587522b0c41b75bb989813c8a3dbe5"
       },
-      "reason": "Review-pass hardening: lowercase-only \"Title by Artist\" parsing, deduplicated Spotify token requests, market-scoped Spotify search, removal of unreachable post-promotion fallbacks, and deadline-aware catalog requests."
+      "reason": "Review-pass hardening: lowercase-only \"Title by Artist\" parsing, deduplicated Spotify token requests, market-scoped Spotify search, removal of unreachable post-promotion fallbacks, deadline-aware catalog requests, and treating a deadline abort as a transient uncached miss."
     },
     {
       "path": "site/assets/hls.light-Dr1Fv81C.js",

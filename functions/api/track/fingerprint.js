@@ -15,6 +15,7 @@
 // GET /api/track/fingerprint?url=<stream>    -> identify what is playing right now
 
 import { guardedFetch, readBodyCapped, rejectFetchUrl } from '../../_shared/guarded-fetch.js';
+import { coherentHlsTail } from '../../../server/hls-playlist.mjs';
 import { identifyTrack } from '../../../server/metadata-providers.mjs';
 
 const USER_AGENT = 'EarthRadio/0.24.0 pages-fn (+https://github.com/Protonmatter/EarthRadio)';
@@ -30,7 +31,6 @@ const SAMPLE_TIMEOUT_MS = 20_000;
 const TOTAL_FINGERPRINT_BUDGET_MS = 40_000;
 const RECOGNIZE_TIMEOUT_MS = 15_000;
 const PLAYLIST_MAX_BYTES = 64 * 1024;
-const HLS_SEGMENT_COUNT = 3;
 const MAX_HLS_PLAYLIST_DEPTH = 2;
 const HLS_FETCH_ATTEMPT_LIMIT = 16;
 const DO_NOT_CACHE = Symbol('do-not-cache');
@@ -268,62 +268,6 @@ async function sampleHls(playlistText, baseUrl, { deadlineAt, depth, forbiddenOr
     offset += part.length;
   }
   return merged;
-}
-
-function coherentHlsTail(lines) {
-  let activeMap = null;
-  let keyMethod = 'NONE';
-  let pendingRange = null;
-  let previous = null;
-  const media = [];
-  for (const line of lines) {
-    const mapMatch = line.match(/^#EXT-X-MAP:.*URI="([^"]+)"/i);
-    if (mapMatch) {
-      const mapRange = line.match(/BYTERANGE="(\d+)@(\d+)"/i);
-      activeMap = {
-        uri: mapMatch[1],
-        range: mapRange ? { offset: Number(mapRange[2]), length: Number(mapRange[1]) } : null
-      };
-      continue;
-    }
-    const declaredMethod = line.match(/^#EXT-X-KEY:.*METHOD=([\w-]+)/i)?.[1];
-    if (declaredMethod) {
-      keyMethod = declaredMethod.toUpperCase();
-      continue;
-    }
-    const rangeMatch = line.match(/^#EXT-X-BYTERANGE:(\d+)(?:@(\d+))?/i);
-    if (rangeMatch) {
-      pendingRange = { length: Number(rangeMatch[1]), offset: rangeMatch[2] === undefined ? null : Number(rangeMatch[2]) };
-      continue;
-    }
-    if (line && !line.startsWith('#')) {
-      let range = null;
-      if (pendingRange) {
-        // An offset-less BYTERANGE continues at the end of the previous sub-range
-        // of the same resource (RFC 8216 §4.3.2.2).
-        const offset = pendingRange.offset ?? (previous?.uri === line && previous.range
-          ? previous.range.offset + previous.range.length
-          : 0);
-        range = { offset, length: pendingRange.length };
-        pendingRange = null;
-      }
-      const segment = { uri: line, map: activeMap, range, encrypted: keyMethod !== 'NONE' };
-      media.push(segment);
-      previous = segment;
-    }
-  }
-
-  const recent = media.slice(-HLS_SEGMENT_COUNT);
-  if (!recent.length) return { segments: [], map: null, encrypted: false };
-  const map = recent.at(-1).map;
-  let coherentStart = recent.length - 1;
-  while (coherentStart > 0 && recent[coherentStart - 1].map === map) coherentStart -= 1;
-  const segments = recent.slice(coherentStart);
-  return {
-    segments: segments.map(({ uri, range }) => ({ uri, range })),
-    map,
-    encrypted: segments.some(segment => segment.encrypted)
-  };
 }
 
 function isTerminalSamplingError(error) {

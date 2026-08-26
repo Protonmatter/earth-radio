@@ -73,7 +73,8 @@ changes are required.
 
 ## On-demand audio fingerprinting (metered)
 
-`server/fingerprint-providers.mjs` and `functions/api/track/fingerprint.js` sample about
+`server/fingerprint-providers.mjs` and `functions/api/track/fingerprint.js` share HLS
+playlist parsing in `server/hls-playlist.mjs`, sample about
 12 seconds of encoded audio bytes directly from the stream (no decoding; ICY injection
 is avoided by not requesting metadata) and submit the sample to a configured provider:
 
@@ -92,7 +93,9 @@ identify pipeline and rendered as `Identified` with a `fingerprint:<provider>` s
 HLS sampling uses the final redirected URL as the base for relative references, follows
 a bounded master/media playlist chain, and concatenates at most the three most recent
 media segments. Fragmented MP4 includes an `EXT-X-MAP` initialization segment; Pages
-and Node both keep only the coherent suffix after a map transition. A playlist identified
+and Node both keep only the coherent suffix after a map transition. Byte-ranged fMP4
+maps and segments accept RFC 8216 `BYTERANGE` with an optional `@offset`; an omitted
+offset continues after the previous sub-range of the same resource. A playlist identified
 only by its HLS content type is parsed from the body already fetched, for both master and
 media playlists. Playlist reads are capped at 64 KiB and the combined sample at 1 MiB.
 Pages shares a 16-attempt allowance across playlists, initialization data, segments, and

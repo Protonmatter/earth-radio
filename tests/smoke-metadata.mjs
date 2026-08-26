@@ -22,6 +22,7 @@ const required = [
   'server/platform-detect.mjs',
   'server/icy-title.mjs',
   'server/fingerprint-providers.mjs',
+  'server/hls-playlist.mjs',
   'functions/api/nowplaying.js',
   'functions/api/track/fingerprint.js',
   'docs/recovered/METADATA_ENRICHMENT_IMPLEMENTATION.md',

@@ -698,6 +698,36 @@ test('byte-ranged HLS playlists fetch their exact fragments with Range headers',
   assert.deepEqual(ranges, ['bytes=0-499', 'bytes=500-1499', 'bytes=1500-2499']);
 });
 
+test('offset-less EXT-X-MAP byte ranges continue from the previous sub-range', async () => {
+  const calls = [];
+  const { resolveTarget } = makeResolver();
+  const requestImpl = async (url, options = {}) => {
+    calls.push({ url, range: options.headers?.Range || '' });
+    if (url.endsWith('/live.m3u8')) {
+      return {
+        statusCode: 200,
+        headers: { 'content-type': 'application/vnd.apple.mpegurl' },
+        body: Buffer.from(''),
+        text: [
+          '#EXTM3U',
+          '#EXT-X-MAP:URI="media.mp4",BYTERANGE="500"',
+          '#EXT-X-BYTERANGE:1000',
+          'media.mp4',
+          '#EXT-X-BYTERANGE:1000',
+          'media.mp4',
+          '#EXT-X-ENDLIST'
+        ].join('\n'),
+        finalUrl: url
+      };
+    }
+    return { statusCode: 206, headers: {}, body: Buffer.from('f'.repeat(64)), text: '', finalUrl: url };
+  };
+  const sample = await sampleStreamAudio('https://hls.example/live.m3u8', { requestImpl, resolveTarget });
+  assert.ok(sample.body.length > 0);
+  const ranges = calls.filter(call => call.url.endsWith('/media.mp4')).map(call => call.range);
+  assert.deepEqual(ranges, ['bytes=0-499', 'bytes=500-1499', 'bytes=1500-2499']);
+});
+
 test('desktop HLS sampling rejects ranged 200 responses that ignore Range', async () => {
   const { resolveTarget } = makeResolver();
   const requestImpl = async (url, options = {}) => {

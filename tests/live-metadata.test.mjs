@@ -687,8 +687,14 @@ test('a catalog lookup aborted by the shared deadline is not negative-cached', a
       }
       signal?.addEventListener('abort', fail, { once: true });
     });
-    const aborted = await identifyTrack({ ...args, deadlineAt: Date.now() + 80 });
+    // Inner fetch abort: keep the outer wrapper well above timeoutMs so a loaded
+    // event loop cannot let withinDeadline reject first and throw past the caller.
+    const aborted = await identifyTrack({ ...args, timeoutMs: 40, deadlineAt: Date.now() + 30_000 });
     assert.equal(aborted.found, false);
+
+    // Outer wrapper already expired: must miss without throwing, and must not cache.
+    const expired = await identifyTrack({ ...args, timeoutMs: 5_000, deadlineAt: Date.now() - 1 });
+    assert.equal(expired.found, false);
 
     globalThis.fetch = async url => {
       calls.push(String(url));

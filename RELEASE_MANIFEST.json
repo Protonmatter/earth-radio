@@ -40,8 +40,8 @@
     },
     {
       "path": "docs/LIVE_METADATA.md",
-      "bytes": 10989,
-      "sha256": "4f2c0cd11f40803d854775834d119cc1e93fd18fb46b08cde868567d5fc7c6e3"
+      "bytes": 11216,
+      "sha256": "a72c7274fc7fb114dc10ec90509af51749b968670e265988c55b7fff6e03b960"
     },
     {
       "path": "docs/OPERATIONS.md",
@@ -55,8 +55,8 @@
     },
     {
       "path": "docs/provenance/hardening-overlays.json",
-      "bytes": 8945,
-      "sha256": "3f708f2037e2218dd289f06d9950a0448818382b3f1193710037e3f33ca00dd6"
+      "bytes": 9001,
+      "sha256": "42338bcfeb5c93898ea0a9376d854c817555aad917230370dba13a600889d213"
     },
     {
       "path": "docs/provenance/recovery-manifest.json",
@@ -165,8 +165,8 @@
     },
     {
       "path": "functions/api/track/fingerprint.js",
-      "bytes": 20388,
-      "sha256": "01e9850b7205584d7aa252ff0f0817b4241ca1d76450b0614e7a67845352d404"
+      "bytes": 18377,
+      "sha256": "67dfcdf9fb31069801d73cfa56ac9b5f58918dbf3be98e76c8148f363c0f6f8a"
     },
     {
       "path": "package-lock.json",
@@ -175,8 +175,8 @@
     },
     {
       "path": "package.json",
-      "bytes": 3200,
-      "sha256": "e2519253d41639916225983d3cdf148d697d6c712b5bca0dce4c83653e8263a1"
+      "bytes": 3240,
+      "sha256": "cc50c0099331897a58c0d740c93875494498ae819894fa6b7a5371f3d5ab75b9"
     },
     {
       "path": "scripts/Import-EarthRadioRecovery.ps1",
@@ -220,8 +220,13 @@
     },
     {
       "path": "server/fingerprint-providers.mjs",
-      "bytes": 18237,
-      "sha256": "28668494cda9bee45502209d5e40223a942c2ba7342aaf068ce758564a50f848"
+      "bytes": 16212,
+      "sha256": "c5543aa1b0c8548e373d991311e0080898dcaa37f46f776b54b25e64b6c6eadb"
+    },
+    {
+      "path": "server/hls-playlist.mjs",
+      "bytes": 2612,
+      "sha256": "622ac902e9fb65a9dd1e476e21b5e268d3e0c7e4d833860722b288bd8664e6c7"
     },
     {
       "path": "server/icy-title.mjs",
@@ -235,8 +240,8 @@
     },
     {
       "path": "server/metadata-providers.mjs",
-      "bytes": 20473,
-      "sha256": "9402da298c3af4cd9b365365e79ea3b68adb93b53d73e1d0bef0869bac0334f8"
+      "bytes": 21575,
+      "sha256": "883c3494e70ac8d9d7e037d06c4d6de76a587522b0c41b75bb989813c8a3dbe5"
     },
     {
       "path": "server/net-guard.mjs",
@@ -730,8 +735,8 @@
     },
     {
       "path": "tests/fingerprint-deadline.test.mjs",
-      "bytes": 1368,
-      "sha256": "c538d765e4aeec9521ba9e4cd52aa79cec242e697c7f55758e0c82371e6c1c2a"
+      "bytes": 1980,
+      "sha256": "dd7eff18e9d0e191123c4c71b0d310651f56a012b2cecb42a679616f9d8dde11"
     },
     {
       "path": "tests/fixtures/inventory/a.txt",
@@ -760,13 +765,13 @@
     },
     {
       "path": "tests/live-metadata.test.mjs",
-      "bytes": 36236,
-      "sha256": "15f08c6304b1747d60d1d11c4e58eecde5e7089933bf789302223c49b1ea1e3e"
+      "bytes": 36648,
+      "sha256": "d37d862088af6959b89ae11e072242f7a10fd75ee25c74cca857cf8e257c9cf9"
     },
     {
       "path": "tests/net-guard.test.mjs",
-      "bytes": 33204,
-      "sha256": "dbaf0cc9ff21a7b8b53d24d6d66b322b18d39639b12c755ab1ae362a3d43e71c"
+      "bytes": 34387,
+      "sha256": "000c5d9acef99033544e13237428862a2a9b2d77ec1b3bfbc671fa88b0cdf594"
     },
     {
       "path": "tests/nowplaying-clone.test.mjs",
@@ -775,8 +780,8 @@
     },
     {
       "path": "tests/pages-functions.test.mjs",
-      "bytes": 61982,
-      "sha256": "b75e0c41ef6c67993e84edee4239cbeb99ad860defde3095994c4cec5033d4fe"
+      "bytes": 63022,
+      "sha256": "dc5e4343778c5eae49f770da70c2feabb50619a225c57d1cc8ce171d0a599271"
     },
     {
       "path": "tests/player-navigation.test.mjs",
@@ -820,8 +825,8 @@
     },
     {
       "path": "tests/smoke-metadata.mjs",
-      "bytes": 5717,
-      "sha256": "363a2305fca209bb9ec7e72a39a7653265e2d1c2e2271034ad00b5a6521a6779"
+      "bytes": 5746,
+      "sha256": "9c71183ea7fc0af9cb1cc4daefc83c5a3f157d9fa2dffb579bfcdf0067e7c9c5"
     },
     {
       "path": "tests/smoke-recovery-import.ps1",

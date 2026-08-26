@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { resolveFingerprintPayload } from '../server/metadata-api.mjs';
+import { coherentHlsTail } from '../server/hls-playlist.mjs';
 
 test('desktop catalog enrichment inherits the sampling and provider deadline', async () => {
   const deadlineAt = Date.now() + 70;
@@ -33,4 +34,20 @@ test('desktop catalog enrichment inherits the sampling and provider deadline', a
   assert.equal(payload.artworkUrl, '');
   assert.ok(Date.now() - startedAt < 140, 'catalog enrichment received a fresh timeout');
   assert.deepEqual(observed, [['fingerprint', deadlineAt], ['catalog', deadlineAt]]);
+});
+
+test('offset-less EXT-X-MAP BYTERANGE continues after the previous sub-range', () => {
+  const parsed = coherentHlsTail([
+    '#EXTM3U',
+    '#EXT-X-MAP:URI="media.mp4",BYTERANGE="500"',
+    '#EXT-X-BYTERANGE:1000',
+    'media.mp4',
+    '#EXT-X-BYTERANGE:1000',
+    'media.mp4'
+  ]);
+  assert.deepEqual(parsed.map, { uri: 'media.mp4', range: { offset: 0, length: 500 } });
+  assert.deepEqual(parsed.segments, [
+    { uri: 'media.mp4', range: { offset: 500, length: 1000 } },
+    { uri: 'media.mp4', range: { offset: 1500, length: 1000 } }
+  ]);
 });
