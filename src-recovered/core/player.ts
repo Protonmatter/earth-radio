@@ -139,9 +139,15 @@ export async function playStation(station: Station | null): Promise<boolean> {
     try {
       await attachSource(playable);
     } catch (error) {
-      handleFatalError(error as Error);
+      if (token === loadToken) handleFatalError(error as Error);
       return false;
     }
+    // The play attempt itself must also be fenced: a superseded selection's play()
+    // rejects with AbortError when the next selection tears the element down, and an
+    // unfenced attempt would misattribute that failure to the NEW currentStation and
+    // fight the user's navigation with an auto-skip.
+    if (token !== loadToken) return false;
+    return startPlayback(token);
   }
 
   return startPlayback();
@@ -221,16 +227,20 @@ export function setNowPlayingMetadata(title: string): void {
   }
 }
 
-async function startPlayback(): Promise<boolean> {
+async function startPlayback(token?: number): Promise<boolean> {
   if (!audio) return false;
   try {
     await audio.play();
+    if (token !== undefined && token !== loadToken) return false;
     hasPlayedCurrent = true;
     clearConnectTimer();
     setStatus('playing');
     setMediaSessionState('playing');
     return true;
   } catch (error) {
+    // A stale attempt reports neither status nor error: its failure belongs to the
+    // superseded selection, not to whatever station is current by now.
+    if (token !== undefined && token !== loadToken) return false;
     setStatus('error');
     callbacks.onError?.(currentStation, error as Error);
     return false;

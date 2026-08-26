@@ -78,6 +78,14 @@ export function card(page, name) {
 
 export async function playFromList(page, name) {
   const target = card(page, name);
+  // The station list is virtualized: a card below the fold has no DOM node until the
+  // grid scrolls near it, and scrollIntoViewIfNeeded on a nonexistent node waits
+  // forever. Step the grid until the card materializes.
+  await expect.poll(async () => {
+    if (await target.count()) return true;
+    await page.locator('#station-grid').evaluate(grid => { grid.scrollTop += grid.clientHeight; });
+    return false;
+  }, { timeout: 15_000, message: `station card "${name}" never materialized` }).toBe(true);
   await target.scrollIntoViewIfNeeded();
   await target.locator('.station-card__play').click();
   await expect(page.locator('#player-station')).toHaveText(name, { timeout: 15_000 });

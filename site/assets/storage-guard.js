@@ -20,6 +20,7 @@ const LEGACY_BACKUP_KEYS = Object.freeze([
   'earth-radio-user-backup-v1-prev'
 ]);
 const RESTORE_ATTEMPT_PREFIX = 'earth-radio-user-restore-attempt-v2';
+const RESTORE_REAPPLY_KEY = 'earth-radio-user-restore-reapply-v2';
 const SNAPSHOT_INTERVAL_MS = 20 * 1000;
 
 const guard = {
@@ -247,7 +248,10 @@ function runtimeEnvironment() {
     location: seam?.location ?? globalThis.location,
     window: seam?.window ?? globalThis.window,
     document: seam?.document ?? globalThis.document,
-    setInterval: seam?.setInterval ?? globalThis.setInterval,
+    // Wrapped, never detached: calling a bare `window.setInterval` reference with an
+    // undefined `this` throws "Illegal invocation" in browsers (the unit-test seam
+    // masks this, so only the real page would break).
+    setInterval: seam?.setInterval ?? ((...timerArgs) => globalThis.setInterval(...timerArgs)),
     now: seam?.now ?? Date.now,
     openDb: seam?.openDb ?? (() => openDatabase(globalThis.indexedDB)),
     transact: seam?.transact ?? runIndexedDbTransaction
@@ -307,8 +311,46 @@ async function restoreBackup(db, env, namespace, backup) {
   }
   guard.restored = true;
   guard.hasBackup = true;
+  // The runtime bundle keeps executing between this commit and the reload actually
+  // tearing the page down; a late default-prefs write in that gap would survive under
+  // the now-valid marker. Stash the committed records so the next boot re-applies
+  // them ahead of every runtime read/write (the guard module evaluates first, so its
+  // transaction enters the IndexedDB queue first).
+  try {
+    env.sessionStorage.setItem(RESTORE_REAPPLY_KEY, JSON.stringify({
+      namespace,
+      generation: backup.generation,
+      savedAt: backup.savedAt,
+      data: records
+    }));
+  } catch { /* the committed restore still stands without the re-apply layer */ }
   env.location.reload();
   return { committed: true };
+}
+
+function consumeReapplyRecord(env) {
+  try {
+    const raw = env.sessionStorage.getItem(RESTORE_REAPPLY_KEY);
+    if (!raw) return null;
+    env.sessionStorage.removeItem(RESTORE_REAPPLY_KEY);
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object' || !parsed.data || typeof parsed.data !== 'object') return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+async function reapplyRestoredRecords(env, record) {
+  try {
+    const db = await env.openDb();
+    await env.transact(db, 'readwrite', async store => {
+      const accountId = await store.get(ACTIVE_NAMESPACE_KEY);
+      if (namespaceForAccount(accountId || null) !== record.namespace) return;
+      for (const key of USER_KEYS) await store.put(record.data[key], key);
+      await store.put(primaryMarker(record.namespace, record.generation, record.savedAt), PRIMARY_GENERATION_KEY);
+    });
+  } catch { /* the restore committed on the previous boot; re-apply is best-effort */ }
 }
 
 async function snapshot(db, env, { allowInitialize = false } = {}) {
@@ -400,6 +442,12 @@ if (env.seam) env.seam.status = guardStatus;
 if (!env.indexedDB) {
   guard.enabled = false;
 } else {
+  // Post-restore boots re-commit the restored records before anything else touches
+  // the store: this open/transaction is issued during module evaluation, ahead of the
+  // runtime bundle, so any stale value written in the previous boot's commit-to-reload
+  // gap is overwritten before the runtime hydrates.
+  const reapplyRecord = consumeReapplyRecord(env);
+  if (reapplyRecord) void reapplyRestoredRecords(env, reapplyRecord);
   const startPromise = start(env);
   if (env.seam) env.seam.startPromise = startPromise;
   void startPromise;

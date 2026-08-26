@@ -5,7 +5,7 @@ const SHELL_ASSETS = [
   './config.js',
   './manifest.webmanifest',
   './assets/hls.light-Dr1Fv81C.js',
-  './assets/index-55b082dd.js',
+  './assets/index-690938fe.js',
   './assets/index-CSoL7F-Y.css',
   './assets/storage-guard.js',
   './assets/directory-expansion.js',
@@ -75,7 +75,7 @@ async function cacheFirst(request) {
 }
 
 function isImmutableAsset(pathname) {
-  return /index-55b082dd|index-CSoL7F-Y|hls\.light-Dr1Fv81C/.test(pathname);
+  return /index-690938fe|index-CSoL7F-Y|hls\.light-Dr1Fv81C/.test(pathname);
 }
 
 self.addEventListener('fetch', event => {

@@ -1250,7 +1250,10 @@ async function runFingerprint(trigger) {
     }
 
     const track = { artist: data.artist || '', title: data.title || '', raw: [data.artist, data.title].filter(Boolean).join(' - ') };
-    const identity = {
+    // Named distinctly from the captured station `identity` above: a same-name const
+    // here would shadow it across the whole try block and turn the staleness guard
+    // into a temporal-dead-zone ReferenceError on every successful match.
+    const resolvedIdentity = {
       version: VERSION,
       found: true,
       state: data.state || 'Identified',
@@ -1271,10 +1274,10 @@ async function runFingerprint(trigger) {
       raw: state.lastRaw || track.raw,
       sourceFeed: 'fingerprint'
     };
-    state.trustedTrack = { key: trackKey(track), source: 'fingerprint', at: Date.now(), artworkUrl: identity.artworkUrl };
+    state.trustedTrack = { key: trackKey(track), source: 'fingerprint', at: Date.now(), artworkUrl: resolvedIdentity.artworkUrl };
     state.lastTrackKey = trackKey(track);
-    state.currentIdentity = identity;
-    renderIdentity(track, identity);
+    state.currentIdentity = resolvedIdentity;
+    renderIdentity(track, resolvedIdentity);
     setFingerprintStatus(`Matched by audio fingerprint (${data.provider || 'provider'})`);
   } finally {
     state.fingerprintBusy = false;

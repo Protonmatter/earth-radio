@@ -9,8 +9,8 @@
         "sha256": "942d2d61015289e649cf74ff509a95fd2ca20090fc40cb9fd3e5f21d89c29dcc"
       },
       "current": {
-        "bytes": 3549,
-        "sha256": "6aa303ed9cbf06edae50a98f64f21a3f40b114b8afb3078c645b041be24be5bc"
+        "bytes": 3566,
+        "sha256": "606065ec150d32644f668894f3849cf6a1fdd6346e0221d195687f573fb8e62f"
       },
       "reason": "Load the selected site directory and validate complete supported network-proxy rules with URL parsing."
     },
@@ -75,15 +75,15 @@
       "reason": "Remove a reference to an excluded source map from the vendored HLS runtime."
     },
     {
-      "path": "site/assets/index-55b082dd.js",
+      "path": "site/assets/index-690938fe.js",
       "intakePath": "site/assets/index-B4rKOAHV.js",
       "intake": {
         "bytes": 273352,
         "sha256": "610e3cdbea0e98b748aef94a24ea8362024430e01647b35bb4cd62038a04fa13"
       },
       "current": {
-        "bytes": 274877,
-        "sha256": "55b082dd03b1cf19410a2531dccd74f8cfd29341353319710404bc5f3e808955"
+        "bytes": 274966,
+        "sha256": "690938fe203af7441935d6411154f863fdfbc5a02b397886ca678447dd216aef"
       },
       "reason": "Register the service worker after asynchronous startup and remove a reference to an excluded source map. Bind a station tooltip on map markers for pre-selection progressive disclosure, delegating content to the maintained metadata overlay hook. Dispatch earthradio:station-selected after successful station playback (canonical stream identity for MediaSource/blob playback). Serialize and coalesce boot, manual, retry, cloned, and directory-owned station loads behind one runtime drain promise; settlement now carries a monotonic load ID, and the correlated runtime API is mirrored in src-recovered/main.ts. Previous/next and Media Session navigation carry explicit playback results and dispatch selection only when playback succeeded. Rename the deployed immutable bundle to the deterministic first eight hexadecimal characters of its final SHA-256 while retaining the installed intake path as provenance evidence."
     },
@@ -94,8 +94,8 @@
         "sha256": "414a84caf03ab56acbe274977475ee72f8dbea3fb1d6526a4fa65dd33f1a8a1d"
       },
       "current": {
-        "bytes": 5110,
-        "sha256": "0ac2b222f65828c32dc4481e778773052a9d4a4799a6fd23d808b729c7a6bdcf"
+        "bytes": 5106,
+        "sha256": "7e9b851638d8824eb71bd414623d6c8637b28257d0810f2bd533130aa414362a"
       },
       "reason": "Style the fingerprint identify row and live-metadata source pills."
     },
@@ -106,8 +106,8 @@
         "sha256": "e213700a1a541139a66542e9bd8e615ad5dfc735d52c59569730d9a021e86009"
       },
       "current": {
-        "bytes": 62834,
-        "sha256": "dbe97a33efe62768ce9a4e70d5075a7b6c5b956c66c5d449de6155177dcbfb41"
+        "bytes": 63111,
+        "sha256": "d77e614e88d46e5c8e6126e87e7d9f45a0652fd5c514fdce2dcb2d3e4ecc8709"
       },
       "reason": "Layer live-metadata feeds above raw ICY: hosting-platform now-playing APIs, HLS timed ID3 text tracks, and an opt-in fingerprint identify button. Preserve the canonical selected URL and UUID through same-station MediaSource reattachment, invalidate only on correlated selection/change or explicit clear, retain the original trimmed URL after validation, and fence both cross-station and same-station out-of-order metadata polls by identity plus a monotonic poll generation."
     },
@@ -131,7 +131,7 @@
       },
       "current": {
         "bytes": 22115,
-        "sha256": "e248d42f38716ffbf89e702df24fd913020049f81b8185af7cf710627b1af181"
+        "sha256": "289a6b3d69bd33f09ffd9f523fc267755f17772451272757f3a1b93c7042dcff"
       },
       "reason": "Move frame-ancestors enforcement to the deployable response header policy, then add responsive landmarks, iOS viewport/audio attributes, mobile destinations, compact header icons, additive responsive assets, country and station search controls, complete Now Playing metadata and sleep actions, the additive UI refresh stylesheet, and header actions ordered in the rail's reading sequence so keyboard focus follows the visual order. Reference the deployed runtime through its content-addressed filename."
     },
@@ -155,7 +155,7 @@
       },
       "current": {
         "bytes": 2929,
-        "sha256": "f19b608c6f8cd58feb69a8ae169f674360cafec1edaf625ef77380a74c2b984b"
+        "sha256": "461d629def674260b93dfe581bdecc7aff632e928732b9e95d2b601f31acd853"
       },
       "reason": "Use network-first navigation/configuration updates, keep hashed recovered assets cache-first, reload installation requests so stale browser HTTP entries cannot seed the new service-worker cache, keep the previous worker when reload precaching fails, and precache the UI refresh stylesheet. Bump the shell cache generation to v32 for the new content-addressed runtime filename."
     }

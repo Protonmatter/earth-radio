@@ -234,17 +234,27 @@ test.describe('semantic country selection', () => {
         }
         return nativeFetch(input, init);
       };
-      document.getElementById('refresh-stations').addEventListener('click', () => {
-        const cycles = window.__erDirectoryCycles;
-        cycles.active += 1;
-        cycles.peak = Math.max(cycles.peak, cycles.active);
-        cycles.requests.push([...window.RADIO_CONFIG.featuredCountryCodes]);
-      }, { capture: true });
-      window.addEventListener('earthradio:stations-load-settled', () => {
-        const cycles = window.__erDirectoryCycles;
-        cycles.active -= 1;
-        cycles.results.push([...document.querySelectorAll('.station-card__name')]
-          .map(node => node.textContent?.trim() || ''));
+      // The expansion overlay drives refreshes through the runtime's
+      // earthRadioRuntime.refreshStations() hook (not the DOM button), so cycle
+      // accounting wraps that hook. The runtime freezes the object; replacing the
+      // window property with a wrapped copy is the supported observation seam.
+      const nativeRuntime = window.earthRadioRuntime;
+      const nativeRefresh = nativeRuntime.refreshStations;
+      window.earthRadioRuntime = Object.freeze({
+        ...nativeRuntime,
+        refreshStations: async (...args) => {
+          const cycles = window.__erDirectoryCycles;
+          cycles.active += 1;
+          cycles.peak = Math.max(cycles.peak, cycles.active);
+          cycles.requests.push([...window.RADIO_CONFIG.featuredCountryCodes]);
+          try {
+            return await nativeRefresh.apply(nativeRuntime, args);
+          } finally {
+            cycles.active -= 1;
+            cycles.results.push([...document.querySelectorAll('.station-card__name')]
+              .map(node => node.textContent?.trim() || ''));
+          }
+        }
       });
     });
 

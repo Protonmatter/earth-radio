@@ -56,7 +56,7 @@
     {
       "path": "docs/provenance/hardening-overlays.json",
       "bytes": 8690,
-      "sha256": "a05721cc98b30c1a511edebe9e2fd7fbbb2bd9c239248487a9d488f5cb0286e1"
+      "sha256": "e4ea9647daffe93cdea0c3c30180bded879396645ecf61244eb58abc3588c61e"
     },
     {
       "path": "docs/provenance/recovery-manifest.json",
@@ -135,8 +135,8 @@
     },
     {
       "path": "electron/main.mjs",
-      "bytes": 3549,
-      "sha256": "6aa303ed9cbf06edae50a98f64f21a3f40b114b8afb3078c645b041be24be5bc"
+      "bytes": 3566,
+      "sha256": "606065ec150d32644f668894f3849cf6a1fdd6346e0221d195687f573fb8e62f"
     },
     {
       "path": "electron/preload.cjs",
@@ -224,6 +224,11 @@
       "sha256": "b85ffac9cc88dd4c3340a4a762c6ca0d971d6bdc575b0e7e54211973959b2a1e"
     },
     {
+      "path": "server/hls-segments.mjs",
+      "bytes": 2258,
+      "sha256": "220d98f83aa4350027d44d90f37962ac540df0542ae01a1e27eb35c7827f723f"
+    },
+    {
       "path": "server/icy-title.mjs",
       "bytes": 1930,
       "sha256": "89293ffcedef5e970a3bee175e1f70378b969e2165d6cf2bc6d156f6f9b47e53"
@@ -266,7 +271,7 @@
     {
       "path": "site/_headers",
       "bytes": 1496,
-      "sha256": "8fa507aac443f8df12007d3df2255bd71105a4a66ee952c837776190006a4ea7"
+      "sha256": "74bb878956386dc5c3c28acb466925d66eaf4d1ee7380449bdb51add99e6defc"
     },
     {
       "path": "site/assets/auth-core.js",
@@ -294,9 +299,9 @@
       "sha256": "6560373fba977682d3acc4290af72029fb722879a2edce30504f8a93caec069c"
     },
     {
-      "path": "site/assets/index-55b082dd.js",
-      "bytes": 274877,
-      "sha256": "55b082dd03b1cf19410a2531dccd74f8cfd29341353319710404bc5f3e808955"
+      "path": "site/assets/index-690938fe.js",
+      "bytes": 274966,
+      "sha256": "690938fe203af7441935d6411154f863fdfbc5a02b397886ca678447dd216aef"
     },
     {
       "path": "site/assets/index-CSoL7F-Y.css",
@@ -305,13 +310,13 @@
     },
     {
       "path": "site/assets/metadata-enrichment.css",
-      "bytes": 5110,
-      "sha256": "0ac2b222f65828c32dc4481e778773052a9d4a4799a6fd23d808b729c7a6bdcf"
+      "bytes": 5106,
+      "sha256": "7e9b851638d8824eb71bd414623d6c8637b28257d0810f2bd533130aa414362a"
     },
     {
       "path": "site/assets/metadata-enrichment.js",
-      "bytes": 62834,
-      "sha256": "dbe97a33efe62768ce9a4e70d5075a7b6c5b956c66c5d449de6155177dcbfb41"
+      "bytes": 63111,
+      "sha256": "d77e614e88d46e5c8e6126e87e7d9f45a0652fd5c514fdce2dcb2d3e4ecc8709"
     },
     {
       "path": "site/assets/responsive-ui.css",
@@ -325,8 +330,8 @@
     },
     {
       "path": "site/assets/storage-guard.js",
-      "bytes": 14932,
-      "sha256": "99f8f4126ea0c91faa7305b87755d66a28c1e3f534d692e65c309cefd4c5b280"
+      "bytes": 17335,
+      "sha256": "d3a1c5ffd22909b9ae6abd11717cfbf505424ed63a872c66b640f394f5c8b75e"
     },
     {
       "path": "site/assets/sync-core.js",
@@ -401,7 +406,7 @@
     {
       "path": "site/index.html",
       "bytes": 22115,
-      "sha256": "e248d42f38716ffbf89e702df24fd913020049f81b8185af7cf710627b1af181"
+      "sha256": "289a6b3d69bd33f09ffd9f523fc267755f17772451272757f3a1b93c7042dcff"
     },
     {
       "path": "site/manifest.webmanifest",
@@ -411,7 +416,7 @@
     {
       "path": "site/sw.js",
       "bytes": 2929,
-      "sha256": "f19b608c6f8cd58feb69a8ae169f674360cafec1edaf625ef77380a74c2b984b"
+      "sha256": "461d629def674260b93dfe581bdecc7aff632e928732b9e95d2b601f31acd853"
     },
     {
       "path": "src-recovered/core/config.ts",
@@ -465,8 +470,8 @@
     },
     {
       "path": "src-recovered/core/player.ts",
-      "bytes": 14076,
-      "sha256": "c2b3af136109585354c4abeb2b3c5b47b3b4e52730e3f93e1d9c6ba48156cff8"
+      "bytes": 14789,
+      "sha256": "3f8e9ffec06ad3e413bc106e7b4d48c2174658f12e118e699115c1c09f82af63"
     },
     {
       "path": "src-recovered/core/playlist.js",
@@ -690,8 +695,8 @@
     },
     {
       "path": "tests/e2e/fixtures/hls-media.mjs",
-      "bytes": 3296,
-      "sha256": "e36e002d78c45366f20bc88d74dcc6c8925d9dcd8dff53faf02a84f218eabbbb"
+      "bytes": 11339,
+      "sha256": "88965eb3ab090af45163c1ef7b789f66447cd73c29365b4f463d140aebe707de"
     },
     {
       "path": "tests/e2e/fixtures/stations.mjs",
@@ -700,8 +705,8 @@
     },
     {
       "path": "tests/e2e/helpers.mjs",
-      "bytes": 4022,
-      "sha256": "c1a212d9eb07fb8950fa7f68c5523efdda42fc8fb6c3f245068d74e5b23dc601"
+      "bytes": 4534,
+      "sha256": "b83eec9d25da8758ecc59b70a5de9546dd99a3600b6474136e456c2ab9a35522"
     },
     {
       "path": "tests/e2e/playwright.config.mjs",
@@ -710,8 +715,8 @@
     },
     {
       "path": "tests/e2e/reliability.spec.mjs",
-      "bytes": 14774,
-      "sha256": "02f279defeb390776c394294aca0df132d5cfb62e2199deed91341fca38e1bd4"
+      "bytes": 15231,
+      "sha256": "75ab6fbc4bbf469f5dc61ad67f440985533279878fd527a25d304b9be11ea557"
     },
     {
       "path": "tests/e2e/serve-site.mjs",
@@ -720,8 +725,8 @@
     },
     {
       "path": "tests/e2e/ui-state.spec.mjs",
-      "bytes": 1775,
-      "sha256": "34e1b8f795e5c1e38b985eff89bc695175b04a8abd684bbb7dc952036909a232"
+      "bytes": 2175,
+      "sha256": "376f887c9e3da29cdf3c5bb9e3ba1d3c6c55d7b0c7601e48fcd1f45b0cc29d31"
     },
     {
       "path": "tests/e2e/web-nowplaying.spec.mjs",
@@ -761,7 +766,7 @@
     {
       "path": "tests/live-metadata.test.mjs",
       "bytes": 20373,
-      "sha256": "cc67c94828be442650b94a9d35d177cd58a2d87efc3819cc0269f20e44b5f753"
+      "sha256": "10fa74bb327fbb10d99be57b409832686e18bd584156dca197bb0a6c36b945cb"
     },
     {
       "path": "tests/net-guard.test.mjs",
@@ -806,12 +811,12 @@
     {
       "path": "tests/responsive-ui.test.mjs",
       "bytes": 7240,
-      "sha256": "ce8f138b59be5b47d121860ff6307bb9602691c65315c4196e5d4d93ccbc8181"
+      "sha256": "1bc3a6d04aa321f2245735953469acdf184c5dc0c030ef7236edda366f75d5e7"
     },
     {
       "path": "tests/service-worker.test.mjs",
       "bytes": 4047,
-      "sha256": "2c92e48498c795d3704349f67ff0aadef78f383a2a0896791089bcc42af51f16"
+      "sha256": "97a771a6cc03535ceb9a393cc21ecc271e15c9eaa5aeba205d00c4b75590d2f8"
     },
     {
       "path": "tests/smoke-desktop.mjs",
@@ -821,7 +826,7 @@
     {
       "path": "tests/smoke-metadata.mjs",
       "bytes": 5717,
-      "sha256": "b774ac827dcefaeedcf637dec426d56999b9c762ed5222a202c78081a558439a"
+      "sha256": "363a2305fca209bb9ec7e72a39a7653265e2d1c2e2271034ad00b5a6521a6779"
     },
     {
       "path": "tests/smoke-recovery-import.ps1",

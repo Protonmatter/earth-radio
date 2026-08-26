@@ -123,7 +123,7 @@ test('Now Playing history state is distinct from runtime hash writes', () => {
 
 test('responsive assets are referenced after the recovered runtime and staged as site files', async () => {
   const html = await readFile(path.join(root, 'site', 'index.html'), 'utf8');
-  const runtime = html.indexOf('index-55b082dd.js');
+  const runtime = html.indexOf('index-690938fe.js');
   const layer = html.indexOf('responsive-ui.js');
   assert.ok(runtime >= 0 && layer > runtime);
   assert.match(html, /viewport-fit=cover/);

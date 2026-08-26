@@ -7,11 +7,18 @@ import { setupApp } from './helpers.mjs';
 test('an Arabic locale preview keeps lang/dir until the settings dialog closes', async ({ page }) => {
   await setupApp(page);
 
-  // Open the settings surface and preview Arabic without saving.
+  // Open the settings surface exactly the way the runtime does (hidden, display,
+  // AND aria-hidden). The open must settle before the user's locale change: the
+  // visibility tracker clears stale previews on the open transition.
   await page.evaluate(() => {
     const modal = document.getElementById('settings-modal');
-    modal.removeAttribute('hidden');
-    modal.style.display = '';
+    modal.hidden = false;
+    modal.style.display = 'flex';
+    modal.setAttribute('aria-hidden', 'false');
+  });
+  await page.waitForTimeout(50);
+  // Preview Arabic without saving.
+  await page.evaluate(() => {
     const select = document.getElementById('setting-locale');
     select.value = 'ar';
     select.dispatchEvent(new Event('change', { bubbles: true }));
@@ -24,11 +31,13 @@ test('an Arabic locale preview keeps lang/dir until the settings dialog closes',
   await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
   await expect(page.locator('html')).toHaveAttribute('lang', 'ar');
 
-  // Cancelling (closing without Save) reverts to the persisted locale.
+  // Cancelling (closing without Save) reverts to the persisted locale; the close
+  // mirrors the runtime's own close path.
   await page.evaluate(() => {
     const modal = document.getElementById('settings-modal');
-    modal.setAttribute('hidden', '');
+    modal.hidden = true;
     modal.style.display = 'none';
+    modal.setAttribute('aria-hidden', 'true');
   });
   await expect(page.locator('html')).toHaveAttribute('dir', 'ltr');
   await expect(page.locator('html')).toHaveAttribute('lang', 'en');

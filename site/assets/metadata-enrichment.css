@@ -150,11 +150,9 @@
   opacity: 0.72;
   overflow-wrap: anywhere;
 }
-/* The Now Playing sheet clones the metadata card without its ids or listeners; a
-   cloned identify button would be dead, so hide the row inside the clone. */
-#er-nowplaying-metadata .metadata-fingerprint-row {
-  display: none;
-}
+/* The Now Playing sheet clones the metadata card without ids or listeners, but the
+   cloned Identify button is a live proxy (data-click-id routes it to the canonical
+   control), so the row stays visible inside the clone. */
 /* Map hover tooltip: progressive disclosure of the station under the pointer. */
 .leaflet-tooltip.er-station-tooltip {
   background: rgba(252, 252, 253, 0.97);
