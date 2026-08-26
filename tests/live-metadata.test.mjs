@@ -609,3 +609,64 @@ test('provider outages never populate the negative identify cache', async () => 
     clearIdentifyCache();
   }
 });
+
+test('a mirror that stalls mid-body cannot hang the country index', async () => {
+  const { loadCountryIndex } = await import('../site/assets/directory-expansion.js');
+  const calls = [];
+  const fetchImpl = (url, { signal }) => {
+    calls.push(String(url));
+    if (calls.length === 1) {
+      // Headers arrive, then the JSON body black-holes; only the abort budget —
+      // which must survive until the body is parsed — can end this attempt.
+      return Promise.resolve({
+        ok: true,
+        json: () => new Promise((resolve, reject) => {
+          signal.addEventListener('abort', () => reject(new Error('aborted')));
+        })
+      });
+    }
+    return Promise.resolve({ ok: true, json: async () => [{ name: 'Japan', iso_3166_1: 'JP', stationcount: 5 }] });
+  };
+  const startedAt = Date.now();
+  const list = await loadCountryIndex({ fetchImpl, timeoutMs: 150 });
+  assert.ok(Date.now() - startedAt < 2000, 'the stalled mirror was abandoned inside the budget');
+  assert.ok(calls.length >= 2, 'the next mirror was attempted');
+  assert.equal(list[0]?.code, 'JP');
+});
+
+test('an all-mirror failure yields an empty index that is never memoized', async () => {
+  const { loadCountryIndex } = await import('../site/assets/directory-expansion.js');
+  const failing = () => Promise.reject(new Error('offline'));
+  assert.deepEqual(await loadCountryIndex({ fetchImpl: failing, timeoutMs: 100 }), []);
+  // The memoization wrapper drops an empty result so the next country selection
+  // retries the mirrors instead of staying dead until a reload.
+  const { readFile } = await import('node:fs/promises');
+  const overlay = await readFile(new URL('../site/assets/directory-expansion.js', import.meta.url), 'utf8');
+  assert.match(overlay, /if \(!list\.length\) expansion\.indexPromise = null;/);
+});
+
+test('trusted feed results own the panel only for their freshness window', async () => {
+  const { trustedFreshRemaining } = await import('../site/assets/metadata-enrichment.js');
+  const now = 1_000_000;
+  assert.equal(trustedFreshRemaining(null, now), 0);
+  assert.equal(trustedFreshRemaining({ at: now - 60_000 }, now), 0);
+  const remaining = trustedFreshRemaining({ at: now - 10_000 }, now);
+  assert.ok(remaining > 0 && remaining <= 45_000, `mid-window remaining is bounded, got ${remaining}`);
+  // The overlay must arm a re-process at expiry: without it, a finished song would
+  // stay on the panel whenever the platform feed goes quiet and the DOM stops mutating.
+  const { readFile } = await import('node:fs/promises');
+  const overlay = await readFile(new URL('../site/assets/metadata-enrichment.js', import.meta.url), 'utf8');
+  assert.match(overlay, /trustExpiryTimer = setTimeout\(scheduleProcess/);
+});
+
+test('the Pages fingerprint route budgets recognition beyond sampling', async () => {
+  const { readFile } = await import('node:fs/promises');
+  const route = await readFile(new URL('../functions/api/track/fingerprint.js', import.meta.url), 'utf8');
+  // The request deadline must come from the 40-second operation budget — never the
+  // 20-second sampling timeout — and sampling alone stays capped at its own timeout
+  // so a slow live stream cannot consume the recognition stages' time.
+  assert.match(route, /TOTAL_FINGERPRINT_BUDGET_MS = 40_000/);
+  assert.match(route, /deadlineAt = Date\.now\(\) \+ TOTAL_FINGERPRINT_BUDGET_MS/);
+  assert.match(route, /Math\.min\(deadlineAt, Date\.now\(\) \+ SAMPLE_TIMEOUT_MS\)/);
+  assert.doesNotMatch(route, /deadlineAt = Date\.now\(\) \+ SAMPLE_TIMEOUT_MS;/);
+});

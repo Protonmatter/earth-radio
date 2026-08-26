@@ -24,6 +24,10 @@ const MIN_SAMPLE_BYTES = 96 * 1024;
 const MAX_SAMPLE_BYTES = 1024 * 1024;
 const DEFAULT_BITRATE_KBPS = 160;
 const SAMPLE_TIMEOUT_MS = 20_000;
+// One route-level budget shared by sampling, every recognition provider, and
+// catalog enrichment; sampling alone is additionally capped at SAMPLE_TIMEOUT_MS
+// so a slow live stream cannot consume the recognition stages' time.
+const TOTAL_FINGERPRINT_BUDGET_MS = 40_000;
 const RECOGNIZE_TIMEOUT_MS = 15_000;
 const PLAYLIST_MAX_BYTES = 64 * 1024;
 const HLS_SEGMENT_COUNT = 3;
@@ -65,7 +69,7 @@ export async function onRequestGet({ request, env }) {
     if (cached) return cached;
   }
 
-  const deadlineAt = Date.now() + SAMPLE_TIMEOUT_MS;
+  const deadlineAt = Date.now() + TOTAL_FINGERPRINT_BUDGET_MS;
   const payload = await identify(streamUrl, providers, env, country, forbiddenOrigins, deadlineAt);
   const cacheable = !payload[DO_NOT_CACHE];
   const response = json(payload, cacheable ? (payload.found ? CACHE_TTL_FOUND_S : CACHE_TTL_MISS_S) : 0);
@@ -83,7 +87,7 @@ function configuredProviders(env = {}) {
 async function identify(streamUrl, providers, env, country, forbiddenOrigins, deadlineAt) {
   let sample;
   try {
-    sample = await sampleStream(streamUrl, { deadlineAt, forbiddenOrigins });
+    sample = await sampleStream(streamUrl, { deadlineAt: Math.min(deadlineAt, Date.now() + SAMPLE_TIMEOUT_MS), forbiddenOrigins });
   } catch (error) {
     const payload = { available: true, found: false, reason: `stream sampling failed: ${error?.message || 'unknown error'}` };
     if (isTerminalSamplingError(error)) Object.defineProperty(payload, DO_NOT_CACHE, { value: true });

@@ -83,3 +83,32 @@ test('narrowing the window re-clamps the saved split to the live workspace', asy
     return pct <= max + 0.6 && pct < widePct;
   }, { timeout: 10_000, message: 'the split must re-clamp after the window narrows' }).toBe(true);
 });
+
+test('the saved theme survives without the legacy preference key', async ({ page }) => {
+  await setupApp(page);
+  // The runtime's authoritative preference store is IndexedDB kv/prefs; a migrated
+  // profile may have no legacy localStorage key at all.
+  await page.evaluate(async () => {
+    localStorage.removeItem('earthRadio.preferences.v1');
+    await new Promise((resolve, reject) => {
+      const request = indexedDB.open('earthRadio', 1);
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => {
+        const db = request.result;
+        const tx = db.transaction('kv', 'readwrite');
+        const store = tx.objectStore('kv');
+        const get = store.get('prefs');
+        get.onsuccess = () => { store.put({ ...(get.result || {}), theme: 'dark' }, 'prefs'); };
+        tx.oncomplete = () => { db.close(); resolve(); };
+        tx.onabort = () => reject(tx.error);
+      };
+    });
+  });
+  await page.reload();
+  await expect(page.locator('.station-card').first()).toBeVisible({ timeout: 20_000 });
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark', { timeout: 5_000 });
+  // The attribute observer must keep honoring the stored choice instead of
+  // reverting it to the system palette after boot or a settings change.
+  await page.waitForTimeout(800);
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+});

@@ -444,13 +444,67 @@ export function resolveThemePreference(preference, systemDark = false) {
   return systemDark ? 'dark' : 'light';
 }
 
+// The runtime's authoritative preference store is IndexedDB (kv/prefs); the legacy
+// localStorage key only serves migrated-from profiles and the synchronous first
+// paint. Policing data-theme from the legacy key alone overwrote the user's saved
+// choice on any profile where that key is absent or stale.
+let themePreference = null;
+let themePreferenceHydration = null;
+
+function hydrateThemePreference() {
+  if (themePreferenceHydration) return themePreferenceHydration;
+  themePreferenceHydration = new Promise(resolve => {
+    if (!globalThis.indexedDB) {
+      resolve(null);
+      return;
+    }
+    let request;
+    try {
+      request = globalThis.indexedDB.open('earthRadio', 1);
+    } catch {
+      resolve(null);
+      return;
+    }
+    request.onerror = () => resolve(null);
+    request.onupgradeneeded = () => {
+      request.transaction?.abort();
+      resolve(null);
+    };
+    request.onsuccess = () => {
+      const database = request.result;
+      if (!database.objectStoreNames.contains('kv')) {
+        database.close();
+        resolve(null);
+        return;
+      }
+      const transaction = database.transaction('kv', 'readonly');
+      const get = transaction.objectStore('kv').get('prefs');
+      get.onerror = () => resolve(null);
+      get.onsuccess = () => {
+        const theme = get.result?.theme;
+        resolve(['system', 'light', 'dark'].includes(theme) ? theme : null);
+      };
+      transaction.oncomplete = () => database.close();
+      transaction.onabort = () => database.close();
+    };
+  }).then(preference => {
+    themePreferenceHydration = null;
+    if (preference) themePreference = preference;
+    return preference;
+  });
+  return themePreferenceHydration;
+}
+
 function readStoredTheme() {
-  let preference = 'system';
-  try {
-    const preferences = JSON.parse(globalThis.localStorage?.getItem('earthRadio.preferences.v1') || 'null');
-    if (['system', 'light', 'dark'].includes(preferences?.theme)) preference = preferences.theme;
-  } catch {
-    /* Invalid recovered preferences safely fall back to the system palette. */
+  let preference = themePreference;
+  if (!preference) {
+    preference = 'system';
+    try {
+      const preferences = JSON.parse(globalThis.localStorage?.getItem('earthRadio.preferences.v1') || 'null');
+      if (['system', 'light', 'dark'].includes(preferences?.theme)) preference = preferences.theme;
+    } catch {
+      /* Invalid recovered preferences safely fall back to the system palette. */
+    }
   }
   return resolveThemePreference(preference, Boolean(globalThis.matchMedia?.('(prefers-color-scheme: dark)')?.matches));
 }
@@ -459,6 +513,14 @@ function restoreStoredTheme() {
   const theme = readStoredTheme();
   document.documentElement.dataset.theme = theme;
   syncThemeColor();
+  void hydrateThemePreference().then(preference => {
+    if (!preference) return;
+    const fresh = readStoredTheme();
+    if (document.documentElement.dataset.theme !== fresh) {
+      document.documentElement.dataset.theme = fresh;
+      syncThemeColor();
+    }
+  });
 }
 
 let previewLocale = null;
@@ -513,7 +575,18 @@ function guardDocumentLocale() {
     }
     const wantedTheme = readStoredTheme();
     if (document.documentElement.dataset.theme !== wantedTheme) {
-      document.documentElement.dataset.theme = wantedTheme;
+      // The runtime may have just persisted a different choice; re-read the
+      // authoritative store before enforcing rather than stomping a fresh save
+      // with a stale or legacy value.
+      themePreference = null;
+      void hydrateThemePreference().then(() => {
+        const fresh = readStoredTheme();
+        if (document.documentElement.dataset.theme !== fresh) {
+          document.documentElement.dataset.theme = fresh;
+        }
+        syncThemeColor();
+      });
+      return;
     }
     syncThemeColor();
   });

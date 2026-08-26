@@ -558,3 +558,28 @@ test('v1 migration treats customized preferences as substantive', async () => {
   }));
   assert.equal(empty, null);
 });
+
+test('the reapply record survives a failed corrective transaction and applies on retry', async () => {
+  const session = memoryStorage();
+  session.setItem('earth-radio-user-restore-reapply-v2', JSON.stringify({
+    namespace: 'default', generation: 4, savedAt: 400, data: completePayload
+  }));
+
+  // First boot: the corrective transaction cannot commit. The record exists exactly
+  // because stale runtime writes can survive under a still-valid marker, so it must
+  // be retained for the next boot rather than consumed on the failed attempt.
+  const failing = makeFakeIndexedDb({});
+  failing.failCommit();
+  await startRuntime({ fake: failing, session });
+  assert.ok(session.values.get('earth-radio-user-restore-reapply-v2'), 'record must be retained after a failed reapply');
+
+  // Second boot: the transaction commits; records and marker are applied and only
+  // then is the record consumed.
+  const working = makeFakeIndexedDb({});
+  const runtime = await startRuntime({ fake: working, session });
+  assert.equal(runtime.sessionStorage.values.get('earth-radio-user-restore-reapply-v2'), undefined);
+  assert.deepEqual(working.state.get('favorites'), completePayload.favorites);
+  // The reapply committed marker generation 4; the boot's own snapshot may then
+  // legitimately advance it, so assert it moved past the stale pre-restore state.
+  assert.ok((working.state.get('earth-radio-storage-generation-v2')?.generation ?? 0) >= 4);
+});

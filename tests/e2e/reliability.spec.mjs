@@ -345,3 +345,17 @@ test.describe('search snapshot freshness', () => {
     ).toBeVisible({ timeout: 20_000 });
   });
 });
+
+test.describe('ISO-code expansion', () => {
+  test('a bare ISO code expands its country like the full name', async ({ page }) => {
+    await setupApp(page);
+    await expect(card(page, 'E2E Tokyo FM')).toHaveCount(0);
+    await page.waitForFunction(() => Boolean(window.earthRadioDirectory));
+
+    // Typed search accepts ISO codes; the expansion lookup must match them too.
+    const result = await page.evaluate(() => window.earthRadioDirectory.expand('JP'));
+    expect(result.expanded).toBe(true);
+    expect(result.code).toBe('JP');
+    await expect(card(page, 'E2E Tokyo FM')).toBeVisible({ timeout: 20_000 });
+  });
+});

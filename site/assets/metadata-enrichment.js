@@ -1420,12 +1420,27 @@ if (typeof window !== 'undefined') {
   window.earthRadioMapTooltip = Object.freeze({ render: renderMapTooltip, hover: handleMapTooltipHover });
 }
 
+// Remaining freshness of a trusted feed result; pure and exported for unit tests.
+export function trustedFreshRemaining(trustedTrack, now = Date.now()) {
+  if (!trustedTrack || !Number.isFinite(Number(trustedTrack.at))) return 0;
+  const remaining = TRUSTED_TRACK_FRESH_MS - (now - Number(trustedTrack.at));
+  return remaining > 0 ? remaining : 0;
+}
+
 async function processCurrentMetadata() {
   const cfg = config();
   if (!cfg.enabled) return;
   // A fresh higher-trust feed (platform API, HLS ID3, fingerprint) owns the panel;
   // DOM-scraped ICY text only drives identification when nothing better is live.
-  if (state.trustedTrack && Date.now() - state.trustedTrack.at < TRUSTED_TRACK_FRESH_MS) return;
+  const trustedRemaining = trustedFreshRemaining(state.trustedTrack);
+  if (trustedRemaining > 0) {
+    // The DOM may already carry a newer ICY title than the trusted result. Nothing is
+    // guaranteed to mutate once the trust window lapses, so arm one pass at expiry —
+    // otherwise a finished song could stay on the panel indefinitely.
+    clearTimeout(state.trustExpiryTimer);
+    state.trustExpiryTimer = setTimeout(scheduleProcess, trustedRemaining + 100);
+    return;
+  }
   const raw = extractRawCandidate();
   if (!raw) {
     if (!state.lastRaw) renderStationOnly();

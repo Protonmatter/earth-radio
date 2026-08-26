@@ -66,7 +66,9 @@ function applyPersistedExpansions() {
   applyCodes(merged);
 }
 
-async function loadCountryIndex() {
+// Exported (with injectable fetch/timeout) for direct unit testing of the mirror
+// walk, the abort budget, and empty-result semantics.
+export async function loadCountryIndex({ fetchImpl = fetch, timeoutMs = 8000 } = {}) {
   try {
     const cached = JSON.parse(localStorage.getItem(COUNTRY_INDEX_KEY) || 'null');
     if (cached && Array.isArray(cached.list) && Date.now() - Number(cached.savedAt || 0) < COUNTRY_INDEX_TTL_MS) {
@@ -75,12 +77,13 @@ async function loadCountryIndex() {
   } catch { /* refetch below */ }
 
   for (const base of COUNTRY_LIST_BASES) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
     try {
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), 8000);
-      const response = await fetch(`${base}/json/countries`, { signal: controller.signal, headers: { Accept: 'application/json' } });
-      clearTimeout(timer);
+      const response = await fetchImpl(`${base}/json/countries`, { signal: controller.signal, headers: { Accept: 'application/json' } });
       if (!response.ok) continue;
+      // The abort timer must survive until the body is parsed: a mirror that sends
+      // headers and then stalls the JSON would otherwise hang this attempt forever.
       const raw = await response.json();
       if (!Array.isArray(raw)) continue;
       const list = raw
@@ -95,13 +98,22 @@ async function loadCountryIndex() {
         localStorage.setItem(COUNTRY_INDEX_KEY, JSON.stringify({ savedAt: Date.now(), list }));
       } catch { /* cache is best-effort */ }
       return list;
-    } catch { /* try the next mirror */ }
+    } catch { /* try the next mirror */ } finally {
+      clearTimeout(timer);
+    }
   }
   return [];
 }
 
 function countryIndex() {
-  if (!expansion.indexPromise) expansion.indexPromise = loadCountryIndex();
+  if (!expansion.indexPromise) {
+    expansion.indexPromise = loadCountryIndex().then(list => {
+      // An empty result (offline boot, all mirrors down) must not be memoized
+      // forever — drop it so the next country selection retries the mirrors.
+      if (!list.length) expansion.indexPromise = null;
+      return list;
+    });
+  }
   return expansion.indexPromise;
 }
 
@@ -124,7 +136,10 @@ async function expandCountry(countryName) {
   if (!name || name === 'Unknown') return { expanded: false, reason: 'no country' };
 
   const index = await countryIndex();
-  const entry = index.find(item => item.name.toLowerCase() === name.toLowerCase());
+  // Selections arrive as full names (map popups, picker) or bare ISO codes (typed
+  // search accepts either); every index record carries both.
+  const needle = name.toLowerCase();
+  const entry = index.find(item => item.name.toLowerCase() === needle || item.code.toLowerCase() === needle);
   if (!entry) return { expanded: false, reason: 'country not in directory index' };
 
   const codes = currentCodes();
@@ -281,14 +296,18 @@ function wireSelectionListeners() {
   }, true);
 }
 
-applyPersistedExpansions();
-if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wireSelectionListeners);
-else wireSelectionListeners();
+// Browser-only bootstrap; guarded so the exported helpers stay importable from
+// Node unit tests without a DOM.
+if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+  applyPersistedExpansions();
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wireSelectionListeners);
+  else wireSelectionListeners();
 
-// Debug/e2e hook.
-window.earthRadioDirectory = Object.freeze({
-  version: '1.0.0',
-  expand: expandCountry,
-  expandedCodes: readPersistedCodes,
-  activeCodes: currentCodes
-});
+  // Debug/e2e hook.
+  window.earthRadioDirectory = Object.freeze({
+    version: '1.0.0',
+    expand: expandCountry,
+    expandedCodes: readPersistedCodes,
+    activeCodes: currentCodes
+  });
+}

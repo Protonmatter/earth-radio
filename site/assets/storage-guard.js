@@ -334,13 +334,16 @@ async function restoreBackup(db, env, namespace, backup) {
   return { committed: true };
 }
 
-function consumeReapplyRecord(env) {
+function readReapplyRecord(env) {
   try {
     const raw = env.sessionStorage.getItem(RESTORE_REAPPLY_KEY);
     if (!raw) return null;
-    env.sessionStorage.removeItem(RESTORE_REAPPLY_KEY);
     const parsed = JSON.parse(raw);
-    if (!parsed || typeof parsed !== 'object' || !parsed.data || typeof parsed.data !== 'object') return null;
+    if (!parsed || typeof parsed !== 'object' || !parsed.data || typeof parsed.data !== 'object') {
+      // Malformed records can never become applicable; drop them immediately.
+      env.sessionStorage.removeItem(RESTORE_REAPPLY_KEY);
+      return null;
+    }
     return parsed;
   } catch {
     return null;
@@ -356,7 +359,14 @@ async function reapplyRestoredRecords(env, record) {
       for (const key of USER_KEYS) await store.put(record.data[key], key);
       await store.put(primaryMarker(record.namespace, record.generation, record.savedAt), PRIMARY_GENERATION_KEY);
     });
-  } catch { /* the restore committed on the previous boot; re-apply is best-effort */ }
+    // Drop the record only after the corrective transaction committed (or the
+    // namespace moved on, making it permanently inapplicable). A transient open or
+    // commit failure keeps it in sessionStorage so the next boot retries instead of
+    // snapshotting the stale primary values under the still-valid marker.
+    try {
+      env.sessionStorage.removeItem(RESTORE_REAPPLY_KEY);
+    } catch { /* removal is best-effort; a duplicate re-apply is idempotent */ }
+  } catch { /* transient failure: retain the record for the next boot's retry */ }
 }
 
 async function snapshot(db, env, { allowInitialize = false } = {}) {
@@ -452,7 +462,7 @@ if (!env.indexedDB) {
   // the store: this open/transaction is issued during module evaluation, ahead of the
   // runtime bundle, so any stale value written in the previous boot's commit-to-reload
   // gap is overwritten before the runtime hydrates.
-  const reapplyRecord = consumeReapplyRecord(env);
+  const reapplyRecord = readReapplyRecord(env);
   if (reapplyRecord) void reapplyRestoredRecords(env, reapplyRecord);
   const startPromise = start(env);
   if (env.seam) env.seam.startPromise = startPromise;

@@ -748,8 +748,8 @@ test('Pages catalog enrichment stays inside the fingerprint operation deadline',
       }
       if (url === 'https://api.audd.io/') {
         // Sampling and recognition have consumed all but 500ms of the route's
-        // original 20-second operation budget.
-        clock += 19_500;
+        // 40-second operation budget.
+        clock += 39_500;
         fingerprintAnswered = true;
         return Response.json({
           status: 'success',
