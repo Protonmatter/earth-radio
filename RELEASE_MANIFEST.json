@@ -765,8 +765,8 @@
     },
     {
       "path": "tests/net-guard.test.mjs",
-      "bytes": 30880,
-      "sha256": "330c786e8110a00ae06a813724ee561ceb73e86242496d1cb6219cb5a686cfbf"
+      "bytes": 31186,
+      "sha256": "e45912bc76d86fc9a82482941fa786d4f879b4be675e91db6b03cbb59bbe096e"
     },
     {
       "path": "tests/nowplaying-clone.test.mjs",
