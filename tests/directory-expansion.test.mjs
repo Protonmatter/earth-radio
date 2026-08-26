@@ -124,3 +124,86 @@ test('an unrelated load cannot settle an owned refresh or leave a stale terminal
     }
   }
 });
+
+test('a country whose forced refresh failed is retried on re-selection', async () => {
+  const originalGlobals = {
+    CustomEvent: globalThis.CustomEvent,
+    HTMLInputElement: globalThis.HTMLInputElement,
+    document: globalThis.document,
+    fetch: globalThis.fetch,
+    localStorage: globalThis.localStorage,
+    requestAnimationFrame: globalThis.requestAnimationFrame,
+    setTimeout: globalThis.setTimeout,
+    window: globalThis.window
+  };
+  const nativeSetTimeout = globalThis.setTimeout;
+  const localValues = new Map([
+    ['earth-radio-country-index-v1', JSON.stringify({
+      savedAt: Date.now(),
+      list: [{ name: 'Japan', code: 'JP', stationcount: 2 }]
+    })]
+  ]);
+  const runtimeWindow = new EventTarget();
+  runtimeWindow.RADIO_CONFIG = { featuredCountryCodes: ['US'] };
+  const runtimeDocument = new EventTarget();
+  runtimeDocument.readyState = 'complete';
+  runtimeDocument.getElementById = () => null;
+
+  const outcomes = [{ ok: false }, { ok: true }];
+  let refreshes = 0;
+  try {
+    globalThis.CustomEvent ??= class CustomEvent extends Event {
+      constructor(type, options = {}) {
+        super(type, options);
+        this.detail = options.detail;
+      }
+    };
+    globalThis.HTMLInputElement = class HTMLInputElement {};
+    globalThis.document = runtimeDocument;
+    globalThis.fetch = async () => { throw new Error('cached country index should avoid fetch'); };
+    globalThis.localStorage = {
+      getItem: key => localValues.get(key) ?? null,
+      removeItem: key => localValues.delete(key),
+      setItem: (key, value) => localValues.set(key, String(value))
+    };
+    globalThis.requestAnimationFrame = callback => callback(0);
+    globalThis.setTimeout = (callback, delay, ...args) => nativeSetTimeout(
+      callback,
+      Math.min(Number(delay) || 0, 5),
+      ...args
+    );
+    globalThis.window = runtimeWindow;
+    runtimeWindow.earthRadioRuntime = Object.freeze({
+      refreshStations() {
+        refreshes += 1;
+        // First forced load fails outright (the runtime would fall back to the
+        // pre-expansion cache); the retry succeeds.
+        return Promise.resolve(outcomes[Math.min(refreshes - 1, outcomes.length - 1)]);
+      }
+    });
+
+    await import(`${scriptUrl.href}?retry=${Date.now()}`);
+    const first = await runtimeWindow.earthRadioDirectory.expand('Japan');
+    assert.equal(first.expanded, true);
+    await new Promise(resolve => nativeSetTimeout(resolve, 30));
+    assert.equal(refreshes, 1);
+
+    // The code is applied but its stations never arrived: re-selection must retry
+    // the load instead of reporting the country as covered.
+    const second = await runtimeWindow.earthRadioDirectory.expand('Japan');
+    assert.equal(second.expanded, false);
+    assert.equal(second.reason, 'retrying incomplete load');
+    await new Promise(resolve => nativeSetTimeout(resolve, 30));
+    assert.equal(refreshes, 2);
+
+    // After the successful retry the country counts as covered again.
+    const third = await runtimeWindow.earthRadioDirectory.expand('Japan');
+    assert.equal(third.reason, 'already covered');
+    assert.equal(refreshes, 2);
+  } finally {
+    for (const [name, value] of Object.entries(originalGlobals)) {
+      if (value === undefined) delete globalThis[name];
+      else globalThis[name] = value;
+    }
+  }
+});

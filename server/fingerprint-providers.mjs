@@ -183,7 +183,7 @@ async function sampleHlsPlaylist(text, baseUrl, { seconds, depth, deadlineAt, re
   if (encrypted) throw new Error('encrypted HLS stream not supported for fingerprinting');
   // Fragmented-MP4 playlists carry decoder metadata in an EXT-X-MAP initialization
   // segment; without it the recognizers receive an undecodable container.
-  const fetchList = map ? [map, ...segments] : segments;
+  const fetchList = map ? [{ ...map, initialization: true }, ...segments] : segments;
   const perSegmentCap = Math.floor(MAX_SAMPLE_BYTES / fetchList.length);
   const parts = [];
   for (const segment of fetchList) {
@@ -199,6 +199,10 @@ async function sampleHlsPlaylist(text, baseUrl, { seconds, depth, deadlineAt, re
     });
     if (segmentResponse.statusCode >= 200 && segmentResponse.statusCode < 300 && segmentResponse.body.length) {
       parts.push(segmentResponse.body);
+    } else if (segment.initialization) {
+      // Fragments without their EXT-X-MAP metadata are undecodable; submitting them
+      // would spend recognition quota on a predictable miss.
+      throw new Error('HLS initialization segment could not be fetched');
     }
   }
   if (!parts.length) throw new Error('no HLS segments could be fetched');

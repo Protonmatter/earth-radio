@@ -45,8 +45,8 @@
         "sha256": "0c66fa9ea4dcd4689081b9e3220a098a8e8342db96f14f230ecec39b3e39dca3"
       },
       "current": {
-        "bytes": 8152,
-        "sha256": "2a77d8440c0167f25ec0f164b5f117948a15c40cdd9811e13ce61e06bf8011f0"
+        "bytes": 8420,
+        "sha256": "4396557045155dda0d758a4958d5507f68722ebced17defb4454aad34d360870"
       },
       "reason": "Add platform now-playing and on-demand fingerprint endpoints with a tighter metered-request rate limit. Keep desktop sampling, provider recognition, and optional catalog enrichment inside one absolute 40-second route deadline."
     },

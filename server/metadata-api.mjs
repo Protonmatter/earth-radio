@@ -25,7 +25,7 @@ export async function handleMetadataApi(req, res) {
   return false;
 }
 
-export async function handlePlatformNowPlaying(req, res) {
+export async function handlePlatformNowPlaying(req, res, { resolveImpl = resolvePlatformNowPlaying } = {}) {
   const url = new URL(req.url, 'http://localhost');
   if (url.pathname !== '/api/streams/platform-nowplaying') return false;
   if (req.method !== 'GET') return sendJson(res, 405, { error: 'method not allowed' });
@@ -35,8 +35,11 @@ export async function handlePlatformNowPlaying(req, res) {
   const streamUrl = boundedParam(url.searchParams.get('url'), 2000);
   if (!streamUrl) return sendJson(res, 400, { error: 'missing stream url' });
   try {
-    const payload = await resolvePlatformNowPlaying(streamUrl);
-    return sendJson(res, 200, payload, { 'cache-control': payload.found ? 'public, max-age=15' : 'public, max-age=120' });
+    const payload = await resolveImpl(streamUrl);
+    // A miss must not outlive the client's 30-second polling interval in the browser
+    // HTTP cache, or a transient outage suppresses live metadata for several cycles
+    // after the resolver's own miss TTL has already expired.
+    return sendJson(res, 200, payload, { 'cache-control': payload.found ? 'public, max-age=15' : 'public, max-age=30' });
   } catch (error) {
     return sendJson(res, 400, { error: error?.message || 'platform now-playing failed' });
   }

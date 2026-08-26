@@ -713,3 +713,26 @@ test('encrypted HLS playlists are rejected before any segment fetch', async () =
   );
   assert.equal(segmentFetches, 0, 'ciphertext must never be fetched or submitted to recognizers');
 });
+
+test('a failed HLS initialization segment fetch is terminal', async () => {
+  const { resolveTarget } = makeResolver();
+  const requestImpl = async url => {
+    if (url.endsWith('/live.m3u8')) {
+      return {
+        statusCode: 200,
+        headers: { 'content-type': 'application/vnd.apple.mpegurl' },
+        body: Buffer.from(''),
+        text: '#EXTM3U\n#EXT-X-MAP:URI="init.mp4"\n#EXTINF:4,\nseg1.m4s\n#EXTINF:4,\nseg2.m4s\n',
+        finalUrl: url
+      };
+    }
+    if (url.endsWith('/init.mp4')) return { statusCode: 404, headers: {}, body: Buffer.from(''), text: '', finalUrl: url };
+    return { statusCode: 200, headers: {}, body: Buffer.from('m'.repeat(64)), text: '', finalUrl: url };
+  };
+  // Fragments without their EXT-X-MAP metadata are undecodable: the sampler must
+  // fail rather than submit them and spend recognition quota on a predictable miss.
+  await assert.rejects(
+    sampleStreamAudio('https://hls.example/live.m3u8', { requestImpl, resolveTarget }),
+    /initialization segment/i
+  );
+});

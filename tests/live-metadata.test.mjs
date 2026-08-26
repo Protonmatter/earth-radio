@@ -549,3 +549,29 @@ test('delayed auto-fingerprints stay fenced to their originating stream and trac
   assert.match(timer, /state\.fingerprintAutoKey !== autoKey/);
   assert.match(timer, /`\$\{currentStreamUrl\(\)\}::\$\{state\.lastTrackKey\}` !== autoKey/);
 });
+
+test('desktop platform miss responses do not outlive the polling interval in HTTP caches', async () => {
+  const { handlePlatformNowPlaying } = await import('../server/metadata-api.mjs');
+  const call = async payload => {
+    const captured = {};
+    const req = {
+      url: '/api/streams/platform-nowplaying?url=https%3A%2F%2Fstream.example%2Fa.mp3',
+      method: 'GET',
+      socket: { remoteAddress: `10.9.${Math.floor(Math.random() * 250)}.${Math.floor(Math.random() * 250)}` },
+      headers: {}
+    };
+    const res = {
+      writeHead: (status, headers) => Object.assign(captured, { status, headers }),
+      end: () => {}
+    };
+    await handlePlatformNowPlaying(req, res, { resolveImpl: async () => payload });
+    return captured;
+  };
+  const hit = await call({ found: true, artist: 'A', title: 'B' });
+  assert.equal(hit.headers['cache-control'], 'public, max-age=15');
+  // The renderer polls every 30 seconds; a longer miss max-age lets the browser
+  // HTTP cache replay the miss after the resolver's own miss TTL expired.
+  const miss = await call({ found: false });
+  const missAge = Number(miss.headers['cache-control'].match(/max-age=(\d+)/)?.[1]);
+  assert.ok(missAge <= 30, `miss max-age ${missAge} must not exceed the 30s polling interval`);
+});

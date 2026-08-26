@@ -1099,11 +1099,12 @@ test('Pages HLS rejects translated private init and segment URLs before fetch', 
     outcomes.push({ stage, calls, error });
   }
 
-  assert.deepEqual(outcomes[0].calls, [
-    'https://8.8.8.8/translated-init.m3u8',
-    'https://8.8.4.4/segment.m4s'
-  ], 'init');
-  assert.equal(outcomes[0].error, undefined, 'the public media suffix remains sampleable after the private init is skipped');
+  // A rejected initialization segment is terminal (matching the Node sampler):
+  // fragments without their EXT-X-MAP metadata are undecodable, so continuing would
+  // spend recognition quota on a predictable miss. The private target is still never
+  // fetched, and neither is the now-pointless media segment.
+  assert.deepEqual(outcomes[0].calls, ['https://8.8.8.8/translated-init.m3u8'], 'init');
+  assert.match(outcomes[0].error?.message || '', /private|blocked/, 'init');
   assert.deepEqual(outcomes[1].calls, ['https://8.8.8.8/translated-segment.m3u8'], 'segment');
   assert.match(outcomes[1].error?.message || '', /no HLS segments/, 'segment');
 });
@@ -1379,4 +1380,22 @@ test('Pages encrypted HLS playlists are rejected before any segment fetch', asyn
     await assert.rejects(sampleStream('https://hls.example.net/enc.m3u8'), /encrypted/i);
   });
   assert.equal(segmentFetches, 0, 'ciphertext must never be fetched or submitted to recognizers');
+});
+
+test('Pages HLS sampling fails when the initialization segment cannot be fetched', async () => {
+  await withFetch(async target => {
+    const url = String(target);
+    if (url.endsWith('/live.m3u8')) {
+      return new Response(
+        '#EXTM3U\n#EXT-X-MAP:URI="init.mp4"\n#EXTINF:4,\nseg1.m4s\n#EXTINF:4,\nseg2.m4s\n',
+        { headers: { 'content-type': 'application/vnd.apple.mpegurl' } }
+      );
+    }
+    if (url.endsWith('/init.mp4')) return new Response('', { status: 404 });
+    return new Response(new Uint8Array(64).fill(7), { headers: { 'content-type': 'video/mp4' } });
+  }, async () => {
+    // Fragments without their EXT-X-MAP metadata are undecodable: the sampler must
+    // fail rather than submit them and spend recognition quota on a predictable miss.
+    await assert.rejects(sampleStream('https://hls.example.net/live.m3u8'), /initialization segment/i);
+  });
 });

@@ -23,7 +23,10 @@ const COUNTRY_LIST_BASES = [
 // normally awaits the runtime-owned correlated drain promise. The legacy
 // earthradio:stations-load-settled event remains only as a compatibility fallback for
 // an older installed runtime that does not expose earthRadioRuntime.refreshStations.
-const expansion = { indexPromise: null, refreshPromise: null, queued: false };
+// unverified: country codes that were applied to the config but whose stations never
+// actually arrived (the forced refresh failed, or fell back to the pre-expansion
+// cache). Re-selecting such a country retries the load instead of no-opping.
+const expansion = { indexPromise: null, refreshPromise: null, queued: false, unverified: new Set() };
 
 function radioConfig() {
   if (!window.RADIO_CONFIG || typeof window.RADIO_CONFIG !== 'object') window.RADIO_CONFIG = {};
@@ -125,7 +128,13 @@ async function expandCountry(countryName) {
   if (!entry) return { expanded: false, reason: 'country not in directory index' };
 
   const codes = currentCodes();
-  if (codes.includes(entry.code)) return { expanded: false, reason: 'already covered', code: entry.code };
+  if (codes.includes(entry.code)) {
+    if (expansion.unverified.has(entry.code)) {
+      scheduleRefresh();
+      return { expanded: false, reason: 'retrying incomplete load', code: entry.code };
+    }
+    return { expanded: false, reason: 'already covered', code: entry.code };
+  }
   if (codes.length >= MAX_TOTAL_COUNTRY_CODES) {
     // Drop the oldest persisted expansion (never a built-in default) to make room.
     const persisted = readPersistedCodes();
@@ -175,8 +184,10 @@ function scheduleRefresh() {
   const run = async () => {
     while (expansion.queued) {
       expansion.queued = false;
-      applyCodes([...new Set([...currentCodes(), ...readPersistedCodes()])].slice(0, MAX_TOTAL_COUNTRY_CODES));
-      await runRuntimeRefresh();
+      const codes = [...new Set([...currentCodes(), ...readPersistedCodes()])].slice(0, MAX_TOTAL_COUNTRY_CODES);
+      applyCodes(codes);
+      const outcome = await runRuntimeRefresh();
+      await recordCoverage(codes, outcome);
     }
   };
   const refreshPromise = run().finally(() => {
@@ -185,6 +196,62 @@ function scheduleRefresh() {
   });
   expansion.refreshPromise = refreshPromise;
   return refreshPromise;
+}
+
+// A refresh that "settled" is not proof the selected countries actually loaded: a
+// failed forced load falls back to the pre-expansion cache with ok=true. Verify
+// coverage against the catalog the runtime actually persisted; codes with no
+// stations stay retryable via re-selection.
+async function recordCoverage(codes, outcome) {
+  if (outcome && outcome.ok === false) {
+    for (const code of codes) expansion.unverified.add(code);
+    return;
+  }
+  const loaded = await readCachedCountryCodes();
+  for (const code of codes) {
+    if (!loaded || loaded.has(code)) expansion.unverified.delete(code);
+    else expansion.unverified.add(code);
+  }
+}
+
+// Reads the country codes present in the runtime's persisted stations.v3 catalog.
+// Resolves null when the record is unreadable (no IndexedDB, schema drift) — the
+// caller then treats the load as verified rather than retrying forever blind.
+function readCachedCountryCodes() {
+  return new Promise(resolve => {
+    const idb = globalThis.indexedDB;
+    if (!idb) return resolve(null);
+    let request;
+    try {
+      request = idb.open('earthRadio', 1);
+    } catch {
+      return resolve(null);
+    }
+    request.onerror = () => resolve(null);
+    request.onupgradeneeded = () => {
+      request.transaction?.abort();
+      resolve(null);
+    };
+    request.onsuccess = () => {
+      const database = request.result;
+      if (!database.objectStoreNames.contains('cache')) {
+        database.close();
+        resolve(null);
+        return;
+      }
+      const transaction = database.transaction('cache', 'readonly');
+      const get = transaction.objectStore('cache').get('stations.v3');
+      get.onerror = () => resolve(null);
+      get.onsuccess = () => {
+        const stations = Array.isArray(get.result?.stations) ? get.result.stations : null;
+        resolve(stations
+          ? new Set(stations.map(station => String(station?.countrycode || '').toUpperCase()).filter(Boolean))
+          : null);
+      };
+      transaction.oncomplete = () => database.close();
+      transaction.onabort = () => database.close();
+    };
+  });
 }
 
 function countryFromEventTarget(target) {

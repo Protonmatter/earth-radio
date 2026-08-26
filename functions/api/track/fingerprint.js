@@ -216,7 +216,7 @@ async function sampleHls(playlistText, baseUrl, { deadlineAt, depth, forbiddenOr
   // Fragmented-MP4 playlists carry decoder metadata in an EXT-X-MAP initialization
   // segment. A map governs the segments after it, so a transition inside the recent
   // window narrows sampling to the coherent suffix governed by the newest map.
-  const fetchList = map ? [map, ...segments] : segments;
+  const fetchList = map ? [{ ...map, initialization: true }, ...segments] : segments;
   const perSegmentCap = Math.floor(MAX_SAMPLE_BYTES / fetchList.length);
   const parts = [];
   let total = 0;
@@ -235,15 +235,20 @@ async function sampleHls(playlistText, baseUrl, { deadlineAt, depth, forbiddenOr
       });
       if (!response.ok || !response.body) {
         cancelResponseBody(response);
+        if (segment.initialization) throw new Error('HLS initialization segment could not be fetched');
         continue;
       }
       const bytes = await readBodyCapped(response, { maxBytes: perSegmentCap, deadlineAt });
       if (bytes.length) {
         parts.push(bytes);
         total += bytes.length;
+      } else if (segment.initialization) {
+        throw new Error('HLS initialization segment could not be fetched');
       }
     } catch (error) {
-      if (isTerminalSamplingError(error)) throw error;
+      // Fragments without their EXT-X-MAP metadata are undecodable; submitting them
+      // would spend recognition quota on a predictable miss.
+      if (isTerminalSamplingError(error) || segment.initialization) throw error;
       // A missing segment is non-terminal; other recent segments may still provide
       // a complete bounded sample.
     }
