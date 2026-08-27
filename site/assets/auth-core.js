@@ -85,18 +85,14 @@ function createDocumentCookieJar(locationRef) {
     write(value, maxAgeSec) {
       if (typeof document === 'undefined') return;
       try {
-        const secure = String(locationRef?.protocol || '') === 'https:' || locationRef?.hostname === 'localhost'
-          ? '; Secure'
-          : '';
+        const secure = String(locationRef?.protocol || '') === 'https:' ? '; Secure' : '';
         document.cookie = `${COOKIE_NAME}=${encodeURIComponent(value)}; Path=/; Max-Age=${maxAgeSec}; SameSite=Lax${secure}`;
       } catch {}
     },
     clear() {
       if (typeof document === 'undefined') return;
       try {
-        const secure = String(locationRef?.protocol || '') === 'https:' || locationRef?.hostname === 'localhost'
-          ? '; Secure'
-          : '';
+        const secure = String(locationRef?.protocol || '') === 'https:' ? '; Secure' : '';
         document.cookie = `${COOKIE_NAME}=; Path=/; Max-Age=0; SameSite=Lax${secure}`;
       } catch {}
     }

@@ -55,8 +55,8 @@
     },
     {
       "path": "docs/provenance/hardening-overlays.json",
-      "bytes": 10265,
-      "sha256": "795fada0a9e4c8113c06bf7edeaa32472b6576959de1b23c4f6cfe8a7f77e4a3"
+      "bytes": 10243,
+      "sha256": "63a47cabe00e10e13279ead095c1dd4f7ce44d440c2b8e6d4e4c7199134d2000"
     },
     {
       "path": "docs/provenance/recovery-manifest.json",
@@ -275,8 +275,8 @@
     },
     {
       "path": "site/assets/auth-core.js",
-      "bytes": 16165,
-      "sha256": "37ece7c3995215278f779ac0b0777d08a192c51e682b257259f8e745e44f2ae0"
+      "bytes": 16043,
+      "sha256": "82bcea8fbf1758d0cc35749d8fc74ff519504714da8c6e5db7b18e4c7582d332"
     },
     {
       "path": "site/assets/auth-ui.css",

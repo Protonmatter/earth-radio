@@ -154,10 +154,10 @@
         "sha256": "b09e3207532fe7f47d14e9c53804d7e8caf31cad2fcb2c652b728a93871ea094"
       },
       "current": {
-        "bytes": 2959,
-        "sha256": "5302c8376a51402fa866abfb706936c04827b1c5506a5730cc3488128e4cc4a9"
+        "bytes": 2963,
+        "sha256": "671748ba1956309bb8486a9d2471113b07b896dbfaa319b3bf7b73097cfa045b"
       },
-      "reason": "Use network-first navigation/configuration updates, keep hashed recovered assets cache-first, reload installation requests so stale browser HTTP entries cannot seed the new service-worker cache, keep the previous worker when reload precaching fails, and precache the UI refresh stylesheet. Precache pinned-stations.js for LISTEN.moe catalog pinning. Bump the shell cache generation to v39 so clients pick up review-P2 parser and promotion-gate overlays."
+      "reason": "Use network-first navigation/configuration updates, keep hashed recovered assets cache-first, reload installation requests so stale browser HTTP entries cannot seed the new service-worker cache, keep the previous worker when reload precaching fails, and precache the UI refresh stylesheet. Precache pinned-stations.js for LISTEN.moe catalog pinning. Bump the shell cache generation to v40 so clients pick up PKCE callback recovery."
     }
   ]
 }
