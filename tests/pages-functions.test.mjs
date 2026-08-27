@@ -116,6 +116,25 @@ test('nowplaying falls back to a one-shot ICY read', async () => {
   });
 });
 
+test('nowplaying parses iHeart current-song text= ICY blobs', async () => {
+  const metaint = 64;
+  const title = 'Olivia Rodrigo - text="Stupid Song" song_spot="M" MediaBaseId="1"';
+  await withFetch(async (target, init) => {
+    const url = String(target);
+    if (url === 'https://stream.revma.example/zc1') {
+      assert.equal(new Headers(init.headers).get('icy-metadata'), '1');
+      return new Response(icyStreamBody(metaint, title), { headers: { 'icy-metaint': String(metaint) } });
+    }
+    return new Response('nope', { status: 404 });
+  }, async () => {
+    const request = new Request(`https://site.example/api/nowplaying?url=${encodeURIComponent('https://stream.revma.example/zc1')}`);
+    const body = await (await nowPlayingGet({ request })).json();
+    assert.equal(body.found, true);
+    assert.equal(body.artist, 'Olivia Rodrigo');
+    assert.equal(body.title, 'Stupid Song');
+  });
+});
+
 test('nowplaying reports station-name ICY text instead of promoting it', async () => {
   const metaint = 32;
   await withFetch(async target => {

@@ -24,6 +24,12 @@ test('same-origin now-playing feed surfaces the track in the metadata panel', as
   // Catalogs are unreachable in the hermetic run, so the honest state is the
   // structured station feed, not a fabricated identification.
   await expect(page.locator('#metadata-state')).toHaveText(/Station feed|Identified|Likely match/);
+  await expect(page.locator('#nowcard-title')).toHaveText('Blueming');
+  await expect(page.locator('#player-track')).toContainText('Blueming');
+  await expect(page.locator('#player-track')).toContainText('IU');
+  await page.locator('#er-open-nowplaying').click();
+  await expect(page.locator('#er-nowplaying-title')).toHaveText('Blueming');
+  await expect(page.locator('#er-nowplaying-meta')).toContainText('IU');
 });
 
 test('successful playback dispatches the original selected stream URL and station UUID', async ({ page }) => {

@@ -2,6 +2,7 @@
 // No network or Node APIs: shared by the Node resolvers (server/platform-nowplaying.mjs)
 // and the Cloudflare Pages Function (functions/api/nowplaying.js).
 
+import { looksLikeStationBranding } from './icy-title.mjs';
 import { parseNowPlaying } from './metadata-providers.mjs';
 
 // Ordered platform candidates for a stream URL. Specific hosted platforms come first
@@ -184,16 +185,41 @@ function parseZenoSse(text) {
   return null;
 }
 
+function titleNeedsReparse(title) {
+  const text = String(title || '');
+  return looksLikeStationBranding(text) || /\b(?:text|title)\s*=\s*"/i.test(text);
+}
+
+function artistsAgree(left, right) {
+  const a = String(left || '').trim().toLowerCase();
+  const b = String(right || '').trim().toLowerCase();
+  return Boolean(a && b && (a === b || a.includes(b) || b.includes(a)));
+}
+
 // Platforms that only expose a combined "Artist - Title" string reuse the shared
-// ICY parser so junk/ad text is rejected consistently.
+// ICY parser so junk/ad text is rejected consistently. Icecast often puts the
+// branded "Title by Artist - Station on example.com" string in `title` even when
+// `artist` is already populated; reparse those instead of promoting the blob.
+// A real title that happens to contain lowercase "by" ("Stand by Me") must keep
+// the structured artist: only apply a reparse when it agrees with that artist.
 function withParsedFallback(result) {
-  if (result.artist && result.title) return result;
-  const parsed = parseNowPlaying(result.raw);
-  if (!parsed) return null;
+  if (result.artist && result.title && !titleNeedsReparse(result.title)) {
+    const parsed = parseNowPlaying(result.title);
+    if (parsed?.artist && parsed?.title && artistsAgree(parsed.artist, result.artist)) {
+      return { ...result, title: parsed.title, raw: parsed.raw || result.raw };
+    }
+    return result;
+  }
+  const parsed = parseNowPlaying(result.title && titleNeedsReparse(result.title) ? result.title : result.raw);
+  if (!parsed) return result.artist && result.title ? result : null;
   if (result.artist && !result.title) {
     // An artist-only payload carries no track identity; without a real title the
     // parse would just echo the artist name back as the "song".
     return parsed.artist && parsed.title ? { ...result, artist: parsed.artist, title: parsed.title, raw: parsed.raw } : null;
+  }
+  if (parsed.artist && parsed.title) {
+    if (result.artist && !artistsAgree(parsed.artist, result.artist)) return result;
+    return { ...result, artist: result.artist || parsed.artist, title: parsed.title, raw: parsed.raw };
   }
   return { ...result, artist: result.artist || parsed.artist, title: result.title || parsed.title, raw: parsed.raw };
 }

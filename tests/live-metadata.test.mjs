@@ -79,11 +79,21 @@ test('iHeart MediaBase StreamTitle blobs yield artist and title', async () => {
   const parsed = parseNowPlaying(blob);
   assert.equal(parsed.artist, 'Lady Gaga / Kardinal Offishall');
   assert.equal(parsed.title, 'JUST DANCE');
+  const currentBlob = 'Olivia Rodrigo - text="Stupid Song" song_spot="M" MediaBaseId="3233895" amgArtworkURL="https://i.iheart.com/v3/catalog/track/1?ops=fit(200,200)"';
+  const currentSong = parseNowPlaying(currentBlob);
+  assert.equal(currentSong.artist, 'Olivia Rodrigo');
+  assert.equal(currentSong.title, 'Stupid Song');
+  const commaArtist = parseNowPlaying('Earth, Wind & Fire - text="September" song_spot="M" MediaBaseId="1"');
+  assert.equal(commaArtist.artist, 'Earth, Wind & Fire');
+  assert.equal(commaArtist.title, 'September');
   const branded = parseNowPlaying('But Beautiful by Jackie Gleason - Classic Vinyl on walmradio.com');
   assert.equal(branded.artist, 'Jackie Gleason');
   assert.equal(branded.title, 'But Beautiful');
+  assert.equal(parseNowPlaying('_'), null);
   const overlay = await import('../site/assets/metadata-enrichment.js');
   assert.deepEqual(overlay.parseNowPlaying(blob), parsed);
+  assert.deepEqual(overlay.parseNowPlaying(currentBlob), currentSong);
+  assert.deepEqual(overlay.parseNowPlaying('Earth, Wind & Fire - text="September" song_spot="M" MediaBaseId="1"'), commaArtist);
   assert.equal(overlay.shouldAutoFingerprint({ found: true, state: 'Station feed' }), false);
   assert.equal(overlay.shouldAutoFingerprint({ found: true, state: 'Identified' }), false);
   assert.equal(overlay.shouldAutoFingerprint({ found: false, state: 'Raw ICY only' }), true);
@@ -126,6 +136,30 @@ test('icecast payloads match the requested mount before trusting titles', () => 
   const result = parsePlatformPayload({ platform: 'icecast', kind: 'json', mount: '/mount.aac' }, payload);
   assert.equal(result.artist, 'BTS');
   assert.equal(result.title, 'Dynamite');
+
+  const branded = parsePlatformPayload({ platform: 'icecast', kind: 'json', mount: '/classic' }, JSON.stringify({
+    icestats: {
+      source: {
+        listenurl: 'https://icecast.example.com/classic',
+        artist: 'Robert Goulet',
+        title: 'Autumn Leaves by Robert Goulet - Classic Vinyl on walmradio.com'
+      }
+    }
+  }));
+  assert.equal(branded.artist, 'Robert Goulet');
+  assert.equal(branded.title, 'Autumn Leaves');
+
+  const standByMe = parsePlatformPayload({ platform: 'icecast', kind: 'json', mount: '/classic' }, JSON.stringify({
+    icestats: {
+      source: {
+        listenurl: 'https://icecast.example.com/classic',
+        artist: 'Ben E. King',
+        title: 'Stand by Me'
+      }
+    }
+  }));
+  assert.equal(standByMe.artist, 'Ben E. King');
+  assert.equal(standByMe.title, 'Stand by Me');
 });
 
 test('zeno SSE frames resolve the first streamTitle event', () => {
@@ -805,6 +839,8 @@ test('structured station-feed identities promote onto the Now Playing card', asy
   assert.equal(shouldPromoteNowcard({ found: true, confidence: 90, state: 'Identified' }), true);
   assert.equal(shouldPromoteNowcard({ found: true, confidence: 65, state: 'Station feed' }), true);
   assert.equal(shouldPromoteNowcard({ found: true, confidence: 65, state: 'Likely match' }), false);
+  assert.equal(shouldPromoteNowcard({ found: true, confidence: 80, state: 'Identified' }, 90), false);
+  assert.equal(shouldPromoteNowcard({ found: true, confidence: 80, state: 'Identified' }, 78), true);
   assert.equal(nowcardArtworkHref('https://art.example/cover.jpg'), 'https://art.example/cover.jpg');
   assert.equal(nowcardArtworkHref('http://insecure.example/cover.jpg'), '');
   assert.equal(nowcardArtworkHref(''), '');
@@ -815,7 +851,7 @@ test('structured station-feed identities promote onto the Now Playing card', asy
   const { readFile } = await import('node:fs/promises');
   const overlay = await readFile(new URL('../site/assets/metadata-enrichment.js', import.meta.url), 'utf8');
   assert.match(overlay, /identity\.found = true;/);
-  assert.match(overlay, /shouldPromoteNowcard\(identity, cfg\.minIdentifiedConfidence\)/);
+  assert.equal(overlay.match(/shouldPromoteNowcard\(identity, cfg\.minIdentifiedConfidence\)/g)?.length, 2);
   assert.match(overlay, /if \(state\.fingerprintBusy && sourceFeed !== 'fingerprint'\) return null;/);
   assert.match(overlay, /if \(!shouldApplyTrustedFeed\(source, state\.fingerprintBusy\)\) return;/);
   assert.match(overlay, /artEl\.replaceChildren\(\);/);

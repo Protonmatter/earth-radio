@@ -79,6 +79,20 @@ if (iheart.artist !== 'Lady Gaga / Kardinal Offishall' || iheart.title !== 'JUST
   throw new Error('parseNowPlaying failed iHeart MediaBase StreamTitle');
 }
 
+const iheartNow = parseNowPlaying('Olivia Rodrigo - text="Stupid Song" song_spot="M" MediaBaseId="1" amgArtworkURL="https://i.iheart.com/v3/catalog/track/1"');
+if (iheartNow.artist !== 'Olivia Rodrigo' || iheartNow.title !== 'Stupid Song') {
+  throw new Error('parseNowPlaying failed iHeart current-song text= StreamTitle');
+}
+
+const commaArtist = parseNowPlaying('Earth, Wind & Fire - text="September" song_spot="M" MediaBaseId="1"');
+if (commaArtist.artist !== 'Earth, Wind & Fire' || commaArtist.title !== 'September') {
+  throw new Error('parseNowPlaying failed MediaBase artist names that contain commas');
+}
+
+if (parseNowPlaying('_') !== null) {
+  throw new Error('placeholder StreamTitle should be rejected');
+}
+
 if (parseNowPlaying('Weather update sponsored by Example') !== null) {
   throw new Error('sponsorship metadata should be rejected as non-track content');
 }

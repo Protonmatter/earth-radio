@@ -13,7 +13,7 @@ const IDENTIFY_CACHE_TTL_MISS_MS = 15 * 60 * 1000;
 // Marks a miss produced while a provider was unreachable; such results are served
 // to the caller but never written to the negative cache.
 const IDENTIFY_TRANSIENT = Symbol('identify-transient-miss');
-const JUNK_TITLE = /^(unknown|n\/?a|advert(isement)?|commercial|station\s?id|live stream|loading\.{0,3}|no title|news|weather|traffic)$/i;
+const JUNK_TITLE = /^(unknown|n\/?a|advert(isement)?|commercial|station\s?id|live stream|loading\.{0,3}|no title|news|weather|traffic|[_./-]+)$/i;
 const ADLIKE_TITLE = /\b(advertisement|commercial|sponsor|promo|listen live|news update|traffic|weather|sweeper|station id)\b/i;
 const COVER_OR_TRIBUTE = /\b(karaoke|tribute|cover version|instrumental version|originally performed by|as made famous by|remix tribute)\b/i;
 const PROVIDERS = new Set(['itunes', 'spotify']);

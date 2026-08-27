@@ -9,7 +9,7 @@
 
 const VERSION = '0.25.0-metadata-overlay';
 const CACHE_KEY = 'earth-radio-track-identity-cache-v1';
-const JUNK_TITLE = /^(unknown|n\/?a|advert(isement)?|commercial|station\s?id|live stream|loading\.{0,3}|no title|news|weather|traffic)$/i;
+const JUNK_TITLE = /^(unknown|n\/?a|advert(isement)?|commercial|station\s?id|live stream|loading\.{0,3}|no title|news|weather|traffic|[_./-]+)$/i;
 const COVER_OR_TRIBUTE = /\b(karaoke|tribute|cover version|instrumental version|originally performed by|as made famous by|remix tribute)\b/i;
 const ADLIKE = /\b(advertisement|commercial|sponsor|promo|listen live|news update|traffic|weather|sweeper|station id)\b/i;
 const TITLE_ONLY_PROMOTION_REASON = 'title-only ICY metadata is raw broadcast text, not enough to identify a track';
@@ -104,19 +104,40 @@ function stripRadioNoise(value) {
     .trim();
 }
 
+function quotedTag(text, key) {
+  return String(text || '').match(new RegExp(`\\b${key}\\s*=\\s*"([^"]*)"`, 'i'))?.[1]?.trim() || '';
+}
+
 function parseTaggedIcyMetadata(rawInput) {
   const text = String(rawInput || '');
-  if (!/\btitle\s*=\s*"/i.test(text) || !/\bartist\s*=\s*"/i.test(text)) return null;
-  const title = text.match(/\btitle\s*=\s*"([^"]*)"/i)?.[1]?.trim() || '';
-  const artist = text.match(/\bartist\s*=\s*"([^"]*)"/i)?.[1]?.trim() || '';
-  if (!title || !artist) return null;
-  return { artist, title, raw: `${artist} - ${title}` };
+  const title = quotedTag(text, 'title') || quotedTag(text, 'text');
+  const artistField = quotedTag(text, 'artist');
+  if (title && artistField) return { artist: artistField, title, raw: `${artistField} - ${title}` };
+  if (title) {
+    const prefix = text.split(/\s[-\u2013\u2014]\s+(?:text|title)\s*=/i)[0]?.trim() || '';
+    if (prefix && prefix !== text.trim() && !/=/.test(prefix) && prefix.length <= 120) {
+      return { artist: prefix, title, raw: `${prefix} - ${title}` };
+    }
+  }
+  return null;
 }
 
 function looksLikeStationBranding(value) {
   const text = String(value || '').trim();
   if (!text) return false;
-  return /\bon\s+[\w.-]+\.[a-z]{2,}\b/i.test(text) || /\b[\w-]+\.(com|net|org|fm)\b/i.test(text);
+  if (/\bon\s+[\w.-]+\.[a-z]{2,}\b/i.test(text)) return true;
+  return /^[\w-]+\.(com|net|org|fm)$/i.test(text);
+}
+
+function titleNeedsReparse(title) {
+  const text = String(title || '');
+  return looksLikeStationBranding(text) || /\b(?:text|title)\s*=\s*"/i.test(text);
+}
+
+function artistsAgree(left, right) {
+  const a = String(left || '').trim().toLowerCase();
+  const b = String(right || '').trim().toLowerCase();
+  return Boolean(a && b && (a === b || a.includes(b) || b.includes(a)));
 }
 
 export function parseNowPlaying(rawInput) {
@@ -602,6 +623,35 @@ function link(label, url) {
   return a;
 }
 
+function playerTrackLine() {
+  let line = byId('player-track');
+  if (line) return line;
+  const station = byId('player-station');
+  if (!station) return null;
+  line = document.createElement('div');
+  line.id = 'player-track';
+  line.className = 'player-track';
+  line.hidden = true;
+  station.insertAdjacentElement('afterend', line);
+  return line;
+}
+
+function renderPlayerTrack(identity) {
+  const line = playerTrackLine();
+  if (!line) return;
+  const cfg = config();
+  const song = String(identity?.title || '').trim();
+  const artist = String(identity?.artist || '').trim();
+  const label = [artist, song].filter(Boolean).join(' \u2013 ');
+  if (!shouldPromoteNowcard(identity, cfg.minIdentifiedConfidence) || !label) {
+    line.hidden = true;
+    line.textContent = '';
+    return;
+  }
+  line.hidden = false;
+  line.textContent = label;
+}
+
 function renderStationOnly() {
   ensureMetadataUI();
   const stateEl = byId('metadata-state');
@@ -614,6 +664,7 @@ function renderStationOnly() {
   if (providersEl) providersEl.replaceChildren(pill('station', 'metadata-pill--muted'));
   if (detailsEl) detailsEl.replaceChildren(...detailRow('Status', 'Waiting for live ICY StreamTitle metadata'));
   if (rawEl) rawEl.textContent = '';
+  renderPlayerTrack(null);
 }
 
 function renderIdentifying(track) {
@@ -711,6 +762,7 @@ function renderIdentity(track, identity) {
       }
     }
   }
+  renderPlayerTrack(identity);
 }
 
 function describeSourceFeed(sourceFeed) {
@@ -1019,7 +1071,19 @@ function platformTrack(platform, artist, title, combined, artworkUrl) {
   const cleanArtist = String(artist || '').trim();
   const cleanTitle = String(title || '').trim();
   const raw = String(combined || '').trim() || [cleanArtist, cleanTitle].filter(Boolean).join(' - ');
-  let track = cleanArtist && cleanTitle ? { artist: cleanArtist, title: cleanTitle, raw: raw || `${cleanArtist} - ${cleanTitle}` } : parseNowPlaying(raw);
+  const messyTitle = titleNeedsReparse(cleanTitle);
+  let track;
+  if (cleanArtist && cleanTitle && !messyTitle) {
+    const parsed = parseNowPlaying(cleanTitle);
+    track = parsed?.artist && parsed?.title && artistsAgree(parsed.artist, cleanArtist)
+      ? { artist: cleanArtist, title: parsed.title, raw: parsed.raw || raw }
+      : { artist: cleanArtist, title: cleanTitle, raw: raw || `${cleanArtist} - ${cleanTitle}` };
+  } else {
+    track = parseNowPlaying(messyTitle ? cleanTitle : raw);
+    if (track?.artist && track?.title && cleanArtist && !artistsAgree(track.artist, cleanArtist)) {
+      track = cleanTitle ? { artist: cleanArtist, title: cleanTitle, raw: raw || `${cleanArtist} - ${cleanTitle}` } : null;
+    }
+  }
   if (!track?.title) return null;
   // An artist-only payload parses into title === artist; that is not a track identity.
   if (cleanArtist && !cleanTitle && track.title === cleanArtist) return null;
