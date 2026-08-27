@@ -133,9 +133,17 @@ sample. The 30-second client interval and the zone WAF (6/min/IP) remain the bud
 The Identify button stays available for a manual retry. Structured Station feed
 results (LISTEN.moe, SomaFM, parsed ICY with artist and title) skip fingerprinting.
 
-iHeart / MediaBase ICY blobs (`title="…",artist="…"`) are parsed into artist/title
-before the generic dash splitter. Trailing station branding such as
+iHeart / MediaBase ICY blobs are parsed into artist/title before the generic dash
+splitter. Two encoder shapes are covered: `title="…",artist="…"` and the current-song
+form `Artist - text="Title" song_spot="M" MediaBaseId="…"`. Artwork URLs inside that
+blob are not treated as station branding. Trailing station branding such as
 `Classic Vinyl on walmradio.com` is stripped so a `Title by Artist` payload survives.
+
+A promoted Station feed or Identified track is written onto the Now Playing card, the
+player-bar `#player-track` line, and the mobile Now Playing sheet headline, so live
+titles are visible without opening the confidence panel. LISTEN.moe is not special
+here: any feed that names artist and title takes the same path. Title-only ICY that is
+the station's own name, `_`, or other junk stays off those surfaces.
 
 ## Same-origin Pages Functions (public web)
 

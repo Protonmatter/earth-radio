@@ -10,6 +10,7 @@ import {
   clampSplitPercent,
   advanceLocalePreview,
   nextCollapse,
+  nowPlayingSheetCopy,
   parseDestination,
   parseNowPlayingHistory,
   resolveInitialLocale,
@@ -43,6 +44,26 @@ test('collapse invariants refuse to hide both panels', () => {
   assert.deepEqual(nextCollapse('map', 'map'), null);
   assert.deepEqual(nextCollapse('map', 'list'), 'list');
   assert.deepEqual(nextCollapse('list', 'list'), null);
+});
+
+test('Now Playing sheet copy prefers a live track over the station name', () => {
+  assert.deepEqual(nowPlayingSheetCopy({
+    station: '102.7 KIIS FM',
+    facts: 'United States · 0 kbps · AAC',
+    trackTitle: 'Stupid Song',
+    trackArtist: 'Olivia Rodrigo | Pop'
+  }), { title: 'Stupid Song', meta: 'Olivia Rodrigo | Pop' });
+  assert.deepEqual(nowPlayingSheetCopy({
+    station: 'BBC World Service',
+    facts: 'United Kingdom · 56 kbps · MP3',
+    trackTitle: '-',
+    playerTrack: ''
+  }), { title: 'BBC World Service', meta: 'United Kingdom · 56 kbps · MP3' });
+  assert.deepEqual(nowPlayingSheetCopy({
+    station: 'LISTEN.moe',
+    facts: 'Japan · 128 kbps · MP3',
+    playerTrack: 'GARNiDELiA \u2013 Diamond'
+  }), { title: 'Diamond', meta: 'GARNiDELiA' });
 });
 
 test('invalid presentation preferences are ignored and clamped', () => {

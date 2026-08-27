@@ -29,24 +29,36 @@ export function parseIcyTitle(metadata) {
   return match ? match[1].trim() : '';
 }
 
-// iHeart / MediaBase and similar encoders dump title="…",artist="…" into StreamTitle
-// instead of "Artist - Title". Recover the pair before the generic dash splitter
-// treats the rest of the blob as the song name.
-export function parseTaggedIcyMetadata(rawInput) {
-  const text = String(rawInput || '');
-  if (!/\btitle\s*=\s*"/i.test(text) || !/\bartist\s*=\s*"/i.test(text)) return null;
-  const title = text.match(/\btitle\s*=\s*"([^"]*)"/i)?.[1]?.trim() || '';
-  const artist = text.match(/\bartist\s*=\s*"([^"]*)"/i)?.[1]?.trim() || '';
-  if (!title || !artist) return null;
-  return { artist, title, raw: `${artist} - ${title}` };
+function quotedTag(text, key) {
+  return String(text || '').match(new RegExp(`\\b${key}\\s*=\\s*"([^"]*)"`, 'i'))?.[1]?.trim() || '';
 }
 
-// Trailing " - Classic Vinyl on walmradio.com" (and similar) is station branding,
-// not a track title. A bare "radio"/"FM" word is not enough: "Radio Ga Ga" is a song.
+// iHeart / MediaBase encoders dump either title="…",artist="…" or
+// `Artist - text="Title" song_spot="M" MediaBaseId="…" amgArtworkURL="https://…"` into
+// StreamTitle. Recover the pair before the generic dash splitter treats encoder
+// keys (and artwork URLs) as the song name.
+export function parseTaggedIcyMetadata(rawInput) {
+  const text = String(rawInput || '');
+  const title = quotedTag(text, 'title') || quotedTag(text, 'text');
+  const artistField = quotedTag(text, 'artist');
+  if (title && artistField) return { artist: artistField, title, raw: `${artistField} - ${title}` };
+  if (title) {
+    const prefix = text.split(/\s[-\u2013\u2014]\s+(?:text|title)\s*=/i)[0]?.trim() || '';
+    if (prefix && prefix !== text.trim() && !/[=,]/.test(prefix) && prefix.length <= 120) {
+      return { artist: prefix, title, raw: `${prefix} - ${title}` };
+    }
+  }
+  return null;
+}
+
+// Trailing " - Classic Vinyl on walmradio.com" is station branding, not a track
+// title. A URL buried in encoder junk (iHeart artwork) is not branding; only a
+// whole-token host or an "on example.com" clause counts.
 export function looksLikeStationBranding(value) {
   const text = String(value || '').trim();
   if (!text) return false;
-  return /\bon\s+[\w.-]+\.[a-z]{2,}\b/i.test(text) || /\b[\w-]+\.(com|net|org|fm)\b/i.test(text);
+  if (/\bon\s+[\w.-]+\.[a-z]{2,}\b/i.test(text)) return true;
+  return /^[\w-]+\.(com|net|org|fm)$/i.test(text);
 }
 
 function decodeMetadata(bytes) {

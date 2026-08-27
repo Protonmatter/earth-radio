@@ -150,6 +150,18 @@
   opacity: 0.72;
   overflow-wrap: anywhere;
 }
+.player-track {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.78rem;
+  font-weight: 650;
+  opacity: 0.92;
+}
+.player-track[hidden] {
+  display: none;
+}
 /* The Now Playing sheet clones the metadata card without ids or listeners, but the
    cloned Identify button is a live proxy (data-click-id routes it to the canonical
    control), so the row stays visible inside the clone. */

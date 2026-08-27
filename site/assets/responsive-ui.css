@@ -166,6 +166,7 @@ html.er-root[data-font-profile="zh-Hant"] .grid-title {
 html.er-root .station-card__name,
 html.er-root .station-card__meta,
 html.er-root .player-station,
+html.er-root .player-track,
 html.er-root .player-meta,
 html.er-root .search-result-item__name,
 html.er-root .search-result-item__meta,
@@ -384,6 +385,7 @@ html.er-root .player-info {
 }
 
 html.er-root .player-station,
+html.er-root .player-track,
 html.er-root .player-meta {
   color: inherit;
   overflow: hidden;

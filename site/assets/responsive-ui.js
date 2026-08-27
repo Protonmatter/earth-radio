@@ -1345,13 +1345,37 @@ function closeNowPlaying() {
   if (wasOpen) restoreFocus('er-open-nowplaying');
 }
 
+export function nowPlayingSheetCopy({ station = '', facts = '', trackTitle = '', trackArtist = '', playerTrack = '' } = {}) {
+  const stationName = String(station || '').trim();
+  const song = String(trackTitle || '').trim();
+  const artistLine = String(trackArtist || '').trim();
+  const liveLine = String(playerTrack || '').trim();
+  const usableSong = Boolean(song) && song !== '-' && song !== stationName;
+  if (usableSong) {
+    return { title: song, meta: artistLine || liveLine || facts };
+  }
+  if (liveLine && liveLine !== stationName) {
+    const parts = liveLine.split(/\s\u2013\s|\s-\s/).map(part => part.trim()).filter(Boolean);
+    if (parts.length >= 2) return { title: parts.slice(1).join(' - '), meta: parts[0] };
+    return { title: liveLine, meta: facts };
+  }
+  return { title: stationName, meta: facts };
+}
+
 function syncNowPlaying() {
   const title = byId('er-nowplaying-title');
   const meta = byId('er-nowplaying-meta');
   const live = byId('er-nowplaying-live');
   const art = byId('er-nowplaying-art');
-  if (title) title.textContent = byId('player-station')?.textContent?.trim() || t('player.select');
-  if (meta) meta.textContent = byId('player-meta')?.textContent?.trim() || '';
+  const copy = nowPlayingSheetCopy({
+    station: byId('player-station')?.textContent,
+    facts: byId('player-meta')?.textContent,
+    trackTitle: byId('nowcard-title')?.textContent,
+    trackArtist: byId('nowcard-artist')?.textContent,
+    playerTrack: byId('player-track')?.textContent
+  });
+  if (title) title.textContent = copy.title || t('player.select');
+  if (meta) meta.textContent = copy.meta || '';
   if (live) {
     const audio = byId('audio-player');
     live.textContent = audio && !audio.paused ? t('nowplaying.live') : t('player.live');
@@ -1714,6 +1738,9 @@ function observeRuntime() {
     ...RUNTIME_TEXT_SCOPES.map(scope => scope.id),
     'player-station',
     'player-meta',
+    'player-track',
+    'nowcard-title',
+    'nowcard-artist',
     'nowcard-art',
     'nowcard',
     'btn-play',

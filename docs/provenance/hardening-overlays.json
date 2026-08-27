@@ -57,10 +57,10 @@
         "sha256": "648114492b64701d2a223b336d4ea9efd55fc3e8a5d9b7042d2c34d1ed3f8b93"
       },
       "current": {
-        "bytes": 22364,
-        "sha256": "7bd951e4892f5954396f5da61c9603f851584bf79e5031c1e40e3d77d48163f3"
+        "bytes": 22372,
+        "sha256": "b3b5ecb1627cae348ce681a6cd8b94e9cf3fe4f5969e3cfefcd62513c5ab219f"
       },
-      "reason": "Review-pass hardening: lowercase-only \"Title by Artist\" parsing, deduplicated Spotify token requests, market-scoped Spotify search, removal of unreachable post-promotion fallbacks, deadline-aware catalog requests, and treating a deadline abort as a transient uncached miss. Parse iHeart/MediaBase title= artist= StreamTitle blobs and strip trailing station-branding suffixes such as on walmradio.com."
+      "reason": "Review-pass hardening: lowercase-only \"Title by Artist\" parsing, deduplicated Spotify token requests, market-scoped Spotify search, removal of unreachable post-promotion fallbacks, deadline-aware catalog requests, and treating a deadline abort as a transient uncached miss. Parse iHeart/MediaBase title= artist= StreamTitle blobs, the current-song text= form, and strip trailing station-branding suffixes such as on walmradio.com. Reject placeholder StreamTitles such as _."
     },
     {
       "path": "site/assets/hls.light-Dr1Fv81C.js",
@@ -94,10 +94,10 @@
         "sha256": "414a84caf03ab56acbe274977475ee72f8dbea3fb1d6526a4fa65dd33f1a8a1d"
       },
       "current": {
-        "bytes": 5106,
-        "sha256": "7e9b851638d8824eb71bd414623d6c8637b28257d0810f2bd533130aa414362a"
+        "bytes": 5312,
+        "sha256": "1c50652b1659a6605794954bb502a66ccc1a388ca00e078aa765382525315586"
       },
-      "reason": "Style the fingerprint identify row and live-metadata source pills."
+      "reason": "Style the fingerprint identify row, live-metadata source pills, and the player-bar live track line."
     },
     {
       "path": "site/assets/metadata-enrichment.js",
@@ -106,10 +106,10 @@
         "sha256": "e213700a1a541139a66542e9bd8e615ad5dfc735d52c59569730d9a021e86009"
       },
       "current": {
-        "bytes": 70372,
-        "sha256": "627f09524aaef559bd7f214316b765459faba7e8a53f09379ce0df0f92e070eb"
+        "bytes": 71844,
+        "sha256": "1b0ea70c4fd6611df87b7b4b602941376890c2909b46a1174e26b2cc7151d702"
       },
-      "reason": "Layer live-metadata feeds above raw ICY: hosting-platform now-playing APIs, HLS timed ID3 text tracks, and an opt-in fingerprint identify button. Preserve the canonical selected URL and UUID through same-station MediaSource reattachment, invalidate only on correlated selection/change or explicit clear, retain the original trimmed URL after validation, and fence both cross-station and same-station out-of-order metadata polls by identity plus a monotonic poll generation. Cap speculative map-tooltip /api/nowplaying lookups at 8 per 60 seconds so marker sweeps cannot exhaust the zone WAF. Coalesce play-event polls, recheck fingerprint identity after the availability probe, and promote structured Station feed results onto the primary card. Export detectPlatformEndpoints so catalogued LISTEN.moe stream URLs can be tested against the browser WebSocket gateway. Hold background platform and HLS feeds while Identify is sampling so they cannot steal the in-flight token, and clear Now Playing art when a promoted identity has no https artwork. Auto-fingerprint the playing stream when free feeds miss, parse iHeart MediaBase ICY, and resolve SomaFM songs JSON from ice*.somafm.com URLs."
+      "reason": "Layer live-metadata feeds above raw ICY: hosting-platform now-playing APIs, HLS timed ID3 text tracks, and an opt-in fingerprint identify button. Preserve the canonical selected URL and UUID through same-station MediaSource reattachment, invalidate only on correlated selection/change or explicit clear, retain the original trimmed URL after validation, and fence both cross-station and same-station out-of-order metadata polls by identity plus a monotonic poll generation. Cap speculative map-tooltip /api/nowplaying lookups at 8 per 60 seconds so marker sweeps cannot exhaust the zone WAF. Coalesce play-event polls, recheck fingerprint identity after the availability probe, and promote structured Station feed results onto the primary card. Export detectPlatformEndpoints so catalogued LISTEN.moe stream URLs can be tested against the browser WebSocket gateway. Hold background platform and HLS feeds while Identify is sampling so they cannot steal the in-flight token, and clear Now Playing art when a promoted identity has no https artwork. Auto-fingerprint the playing stream when free feeds miss, parse iHeart MediaBase ICY including the current-song text= form, resolve SomaFM songs JSON from ice*.somafm.com URLs, and mirror promoted tracks onto the player-bar live line."
     },
     {
       "path": "site/config.js",
@@ -154,10 +154,10 @@
         "sha256": "b09e3207532fe7f47d14e9c53804d7e8caf31cad2fcb2c652b728a93871ea094"
       },
       "current": {
-        "bytes": 2969,
-        "sha256": "3c9c65d906072197b2f18c3d97f0ad4e1ffa2968681ed8050c79f0265f3ef93e"
+        "bytes": 2968,
+        "sha256": "8578a74c600d7f3dd14e36daa31213146a9b00bd4799716f30d83aa912e3ac1b"
       },
-      "reason": "Use network-first navigation/configuration updates, keep hashed recovered assets cache-first, reload installation requests so stale browser HTTP entries cannot seed the new service-worker cache, keep the previous worker when reload precaching fails, and precache the UI refresh stylesheet. Precache pinned-stations.js for LISTEN.moe catalog pinning. Bump the shell cache generation to v37 so clients pick up now-playing coverage overlays (auto-fingerprint on miss, iHeart ICY, SomaFM)."
+      "reason": "Use network-first navigation/configuration updates, keep hashed recovered assets cache-first, reload installation requests so stale browser HTTP entries cannot seed the new service-worker cache, keep the previous worker when reload precaching fails, and precache the UI refresh stylesheet. Precache pinned-stations.js for LISTEN.moe catalog pinning. Bump the shell cache generation to v38 so clients pick up visible now-playing overlays (iHeart text= ICY, player-bar track line)."
     }
   ]
 }

@@ -79,11 +79,17 @@ test('iHeart MediaBase StreamTitle blobs yield artist and title', async () => {
   const parsed = parseNowPlaying(blob);
   assert.equal(parsed.artist, 'Lady Gaga / Kardinal Offishall');
   assert.equal(parsed.title, 'JUST DANCE');
+  const currentBlob = 'Olivia Rodrigo - text="Stupid Song" song_spot="M" MediaBaseId="3233895" amgArtworkURL="https://i.iheart.com/v3/catalog/track/1?ops=fit(200,200)"';
+  const currentSong = parseNowPlaying(currentBlob);
+  assert.equal(currentSong.artist, 'Olivia Rodrigo');
+  assert.equal(currentSong.title, 'Stupid Song');
   const branded = parseNowPlaying('But Beautiful by Jackie Gleason - Classic Vinyl on walmradio.com');
   assert.equal(branded.artist, 'Jackie Gleason');
   assert.equal(branded.title, 'But Beautiful');
+  assert.equal(parseNowPlaying('_'), null);
   const overlay = await import('../site/assets/metadata-enrichment.js');
   assert.deepEqual(overlay.parseNowPlaying(blob), parsed);
+  assert.deepEqual(overlay.parseNowPlaying(currentBlob), currentSong);
   assert.equal(overlay.shouldAutoFingerprint({ found: true, state: 'Station feed' }), false);
   assert.equal(overlay.shouldAutoFingerprint({ found: true, state: 'Identified' }), false);
   assert.equal(overlay.shouldAutoFingerprint({ found: false, state: 'Raw ICY only' }), true);
@@ -126,6 +132,18 @@ test('icecast payloads match the requested mount before trusting titles', () => 
   const result = parsePlatformPayload({ platform: 'icecast', kind: 'json', mount: '/mount.aac' }, payload);
   assert.equal(result.artist, 'BTS');
   assert.equal(result.title, 'Dynamite');
+
+  const branded = parsePlatformPayload({ platform: 'icecast', kind: 'json', mount: '/classic' }, JSON.stringify({
+    icestats: {
+      source: {
+        listenurl: 'https://icecast.example.com/classic',
+        artist: 'Robert Goulet',
+        title: 'Autumn Leaves by Robert Goulet - Classic Vinyl on walmradio.com'
+      }
+    }
+  }));
+  assert.equal(branded.artist, 'Robert Goulet');
+  assert.equal(branded.title, 'Autumn Leaves');
 });
 
 test('zeno SSE frames resolve the first streamTitle event', () => {
