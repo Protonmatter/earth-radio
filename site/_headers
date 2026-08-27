@@ -3,16 +3,25 @@
   X-Frame-Options: DENY
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
-  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; media-src https: http: blob:; connect-src 'self' https: http:; font-src 'self'; worker-src 'self' blob:; manifest-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; media-src https: http: blob:; connect-src 'self' https: http: wss://listen.moe; font-src 'self'; worker-src 'self' blob:; manifest-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
 
 /assets/hls.light-Dr1Fv81C.js
   Cache-Control: public, max-age=31536000, immutable
 
-/assets/index-B4rKOAHV.js
+/assets/index-690938fe.js
   Cache-Control: public, max-age=31536000, immutable
 
 /assets/index-CSoL7F-Y.css
   Cache-Control: public, max-age=31536000, immutable
+
+/assets/storage-guard.js
+  Cache-Control: public, max-age=300, must-revalidate
+
+/assets/directory-expansion.js
+  Cache-Control: public, max-age=300, must-revalidate
+
+/assets/pinned-stations.js
+  Cache-Control: public, max-age=300, must-revalidate
 
 /assets/metadata-enrichment.css
   Cache-Control: public, max-age=300, must-revalidate

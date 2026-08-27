@@ -3,7 +3,7 @@ import { mkdtemp, mkdir, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
-import { validateRepository } from '../scripts/validate-repository.mjs';
+import { validateCloudflareConfig, validateRepository } from '../scripts/validate-repository.mjs';
 
 test('rejects executable and credential file extensions', async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), 'earth-radio-repo-guard-'));
@@ -25,6 +25,36 @@ test('rejects real secret assignments but allows documented variable names', asy
     const errors = await validateRepository(root);
     assert.equal(errors.some(error => error.includes('bad.txt')), true);
     assert.equal(errors.some(error => error.includes('good.md')), false);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test('requires strict-public Cloudflare configuration whenever Pages Functions exist', async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), 'earth-radio-wrangler-guard-'));
+  try {
+    // Functions without any wrangler.jsonc: the strict-public control is missing.
+    await mkdir(path.join(root, 'functions', 'api'), { recursive: true });
+    await writeFile(path.join(root, 'functions', 'api', 'nowplaying.js'), 'export const x = 1;\n');
+    let errors = await validateCloudflareConfig(root);
+    assert.ok(errors.some(error => error.includes('Missing wrangler.jsonc')));
+
+    // Declared strict-public flag (with JSONC comments) passes.
+    await writeFile(path.join(root, 'wrangler.jsonc'),
+      '// deployable configuration\n{\n  "name": "earth-radio",\n  "compatibility_flags": ["global_fetch_strictly_public"]\n}\n');
+    assert.deepEqual(await validateCloudflareConfig(root), []);
+
+    // A dropped strict-public flag or any private-origin flag fails closed.
+    await writeFile(path.join(root, 'wrangler.jsonc'), '{\n  "compatibility_flags": []\n}\n');
+    errors = await validateCloudflareConfig(root);
+    assert.ok(errors.some(error => error.includes('global_fetch_strictly_public')));
+
+    await writeFile(path.join(root, 'wrangler.jsonc'),
+      '{\n  "compatibility_flags": ["global_fetch_strictly_public", "global_fetch_private_origin"]\n}\n');
+    errors = await validateCloudflareConfig(root);
+    assert.ok(errors.some(error => error.includes('global_fetch_private_origin')));
+
+    // The full repository validation surfaces the same failure.
+    const repositoryErrors = await validateRepository(root);
+    assert.ok(repositoryErrors.some(error => error.includes('global_fetch_private_origin')));
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 

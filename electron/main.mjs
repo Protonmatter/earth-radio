@@ -55,7 +55,7 @@ async function createMainWindow(proxyBaseUrl) {
       responseHeaders: {
         ...details.responseHeaders,
         'Content-Security-Policy': [
-          "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; media-src https: http: blob:; connect-src 'self' https: http:; font-src 'self'; worker-src 'self' blob:; manifest-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+          "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; media-src https: http: blob:; connect-src 'self' https: http: wss://listen.moe; font-src 'self'; worker-src 'self' blob:; manifest-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
         ]
       }
     });
@@ -68,21 +68,21 @@ function registerIpc() {
   ipcMain.handle('earth-radio:get-network-proxy', async () => networkProxyRules);
   ipcMain.handle('earth-radio:set-network-proxy', async (_event, rawValue) => {
     const value = parseNetworkProxyRule(rawValue);
-    networkProxyRules = value;
+    // Apply first, record after: a rejected setProxy must not leave get-network-proxy
+    // reporting a proxy that was never applied.
     if (!value || value.toLowerCase() === 'direct') {
       await session.defaultSession.setProxy({ mode: 'direct' });
+      networkProxyRules = '';
       return '';
     }
     await session.defaultSession.setProxy({ proxyRules: value });
+    networkProxyRules = value;
     return value;
   });
 }
 
 app.on('web-contents-created', (_event, contents) => {
   contents.on('will-attach-webview', event => event.preventDefault());
-  contents.on('before-input-event', (_event, input) => {
-    if (input.control || input.meta) return;
-  });
 });
 
 app.whenReady().then(async () => {

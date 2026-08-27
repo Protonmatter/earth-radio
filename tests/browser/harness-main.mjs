@@ -213,6 +213,7 @@ const PROBE = `(() => {
     visibleSearchResultNames: [...document.querySelectorAll('#search-results .search-result-item:not([hidden]) .search-result-item__name')]
       .map(node => (node.textContent || '').trim()),
     settledSearchNames: Array.isArray(window.__erSettledSearchNames) ? window.__erSettledSearchNames : null,
+    countrySelections: Array.isArray(window.__erCountrySelections) ? window.__erCountrySelections : null,
     activatedSearchName: (document.querySelector('#search-results [data-er-activated] .search-result-item__name')?.textContent || '').trim(),
     searchResultMetadata: [...document.querySelectorAll('#search-results .search-result-item:not([hidden]) .search-result-item__meta')]
       .map(node => (node.textContent || '').trim()),
@@ -229,6 +230,7 @@ const PROBE = `(() => {
     dashboard: query('#daily-dashboard'),
     dashboardActions: queryAll('#daily-dashboard [data-dashboard-action]'),
     settingsModal: query('#settings-modal'),
+    settingsLocale: query('#setting-locale'),
     filterSidebar: query('#filter-sidebar'),
     stationRows: [...document.querySelectorAll('#station-grid .station-card')].slice(0, 4).map(card => ({
       rect: rectOf(card),
@@ -262,6 +264,9 @@ const PROBE = `(() => {
     })(),
     storedUiState: (() => {
       try { return JSON.parse(localStorage.getItem('earthRadio.ui.v1') || 'null'); } catch { return null; }
+    })(),
+    storedRuntimePreferences: (() => {
+      try { return JSON.parse(localStorage.getItem('earthRadio.preferences.v1') || 'null'); } catch { return null; }
     })()
   };
 })()`;
@@ -269,7 +274,7 @@ const PROBE = `(() => {
 async function waitFor(contents, expression, { timeout = 20000, interval = 120 } = {}) {
   const deadline = Date.now() + timeout;
   for (;;) {
-    let value = false;
+    let value;
     try {
       value = await contents.executeJavaScript(expression, true);
     } catch {
@@ -279,6 +284,38 @@ async function waitFor(contents, expression, { timeout = 20000, interval = 120 }
     if (Date.now() > deadline) return false;
     await new Promise(resolve => setTimeout(resolve, interval));
   }
+}
+
+function navigationTracker(contents) {
+  const tracker = { finishedLoads: 0, waiters: new Set(), marker: null };
+  const onFinishedLoad = () => {
+    tracker.finishedLoads += 1;
+    for (const waiter of tracker.waiters) waiter();
+  };
+  contents.on('did-finish-load', onFinishedLoad);
+  return {
+    tracker,
+    dispose() {
+      contents.removeListener('did-finish-load', onFinishedLoad);
+    }
+  };
+}
+
+function waitForNavigation(tracker, checkpoint, timeout = 20_000) {
+  if (tracker.finishedLoads > checkpoint) return Promise.resolve(true);
+  return new Promise(resolve => {
+    let timer = 0;
+    const finish = value => {
+      clearTimeout(timer);
+      tracker.waiters.delete(onNavigation);
+      resolve(value);
+    };
+    const onNavigation = () => {
+      if (tracker.finishedLoads > checkpoint) finish(true);
+    };
+    timer = setTimeout(() => finish(false), timeout);
+    tracker.waiters.add(onNavigation);
+  });
 }
 
 function seedScript(scenario) {
@@ -362,7 +399,6 @@ async function sendKey(contents, action) {
     target.dispatchEvent(new KeyboardEvent('keyup', options));
     return true;
   })()`, true);
-  await new Promise(resolve => setTimeout(resolve, 120));
 }
 
 const ACTION_PROBE = `(() => ({
@@ -371,11 +407,19 @@ const ACTION_PROBE = `(() => ({
   split: document.getElementById('er-separator')?.getAttribute('aria-valuenow') || '',
   overflowOpen: !document.getElementById('er-overflow')?.hidden,
   nowPlayingOpen: document.getElementById('er-nowplaying')?.classList.contains('is-open') || false,
+  localeProfile: {
+    lang: document.documentElement.lang,
+    dir: document.documentElement.dir,
+    fontProfile: document.documentElement.dataset.fontProfile || '',
+    storedLocale: (() => {
+      try { return JSON.parse(localStorage.getItem('earthRadio.ui.v1') || 'null')?.locale || ''; } catch { return ''; }
+    })()
+  },
   activeElement: document.activeElement?.id || '',
   trustedPointer: window.__erTrustedPointer || null
 }))()`;
 
-async function runAction(window_, action) {
+async function runAction(window_, action, tracker) {
   const contents = window_.webContents;
   if (action.type === 'wait') {
     await new Promise(resolve => setTimeout(resolve, action.ms ?? 100));
@@ -388,7 +432,6 @@ async function runAction(window_, action) {
       node.click();
       return true;
     })()`, true);
-    await new Promise(resolve => setTimeout(resolve, 150));
     return contents.executeJavaScript(ACTION_PROBE, true);
   }
   if (action.type === 'pointer') {
@@ -427,6 +470,42 @@ async function runAction(window_, action) {
   if (action.type === 'key') {
     await sendKey(contents, action);
     return contents.executeJavaScript(ACTION_PROBE, true);
+  }
+  if (action.type === 'waitFor') {
+    const reached = await waitFor(contents, action.expression, {
+      timeout: action.timeout ?? 20_000,
+      interval: action.interval ?? 40
+    });
+    if (!reached) throw new Error(`Timed out waiting for rendered action barrier: ${action.expression}`);
+    return contents.executeJavaScript(ACTION_PROBE, true);
+  }
+  if (action.type === 'markNavigation') {
+    if (!action.key) throw new Error('Navigation marker requires a sessionStorage key');
+    await contents.executeJavaScript(`sessionStorage.setItem(${JSON.stringify(action.key)}, ${JSON.stringify(action.value ?? '')})`, true);
+    tracker.marker = { key: action.key, value: String(action.value ?? ''), checkpoint: tracker.finishedLoads };
+    return {
+      ...(await contents.executeJavaScript(ACTION_PROBE, true)),
+      navigation: { marked: true, ...tracker.marker }
+    };
+  }
+  if (action.type === 'waitForNavigation') {
+    const marker = tracker.marker;
+    if (!marker || marker.key !== action.key || marker.value !== String(action.value ?? '')) {
+      throw new Error('Navigation barrier did not receive its matching marker');
+    }
+    const observed = await waitForNavigation(tracker, marker.checkpoint, action.timeout ?? 20_000);
+    if (!observed) throw new Error(`Timed out waiting for cross-navigation after ${marker.key}`);
+    const markerPresent = await contents.executeJavaScript(`sessionStorage.getItem(${JSON.stringify(marker.key)}) === ${JSON.stringify(marker.value)}`, true);
+    if (!markerPresent) throw new Error(`Navigation marker did not survive reload: ${marker.key}`);
+    const reached = await waitFor(contents, action.expression, {
+      timeout: action.timeout ?? 20_000,
+      interval: action.interval ?? 40
+    });
+    if (!reached) throw new Error(`Timed out waiting for post-navigation rendered state: ${action.expression}`);
+    return {
+      ...(await contents.executeJavaScript(ACTION_PROBE, true)),
+      navigation: { observed: true, checkpoint: marker.checkpoint, finishedLoads: tracker.finishedLoads, ...marker }
+    };
   }
   if (action.type === 'ime') {
     // Korean and Chinese input arrives through composition events. Filtering must wait for
@@ -555,11 +634,12 @@ async function runScenario(scenario, baseUrl) {
     }
 
     const actionLog = [];
+    const navigation = navigationTracker(contents);
     observedStreamHosts = [];
     for (const action of scenario.actions ?? []) {
-      actionLog.push({ action, result: await runAction(window_, action) });
+      actionLog.push({ action, result: await runAction(window_, action, navigation.tracker) });
     }
-    await new Promise(resolve => setTimeout(resolve, 250));
+    navigation.dispose();
     await settle(contents);
 
     const probe = await contents.executeJavaScript(PROBE, true);
@@ -634,8 +714,13 @@ app.whenReady().then(async () => {
     await persist(false);
   }
   await persist(true);
-  server.close();
+  await new Promise(resolve => server.close(resolve));
   await rm(harnessProfile, { recursive: true, force: true }).catch(() => {});
   process.stdout.write(`RENDERED_RESULTS ${resultsFile}\n`);
   app.exit(results.some(result => result.error) ? 1 : 0);
+}).catch(error => {
+  // Without this, a startup failure becomes an unhandled rejection and the harness
+  // hangs instead of reporting a structured failure.
+  process.stderr.write(`RENDERED_HARNESS_ERROR ${error?.stack || error}\n`);
+  app.exit(1);
 });

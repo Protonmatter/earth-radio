@@ -1,6 +1,6 @@
 import { createAuthClient } from './auth-core.js';
 import {
-  accountDataKey, createSyncEngine, planLocalAccountTransition,
+  accountDataKey, accountLocalRecords, createSyncEngine, planLocalAccountTransition,
   shouldResetBrowserAccount, stableStringify, syncDocuments
 } from './sync-core.js';
 
@@ -16,7 +16,9 @@ const ACTIVE_NAMESPACE_KEY = 'account:active';
 const DEFAULT_LOCAL_DATA = Object.freeze({
   favorites: {},
   recents: [],
-  prefs: { secureOnly: false, minQuality: 0, volume: 0.8, theme: 'system', locale: 'en' }
+  prefs: { secureOnly: false, minQuality: 0, volume: 0.8, theme: 'system', locale: 'en' },
+  badStations: {},
+  lastPlayed: null
 });
 
 const PROVIDERS = Object.freeze({
@@ -112,9 +114,9 @@ async function switchLocalAccount(previousUserId, nextUserId) {
     return await new Promise((resolve, reject) => {
       const transaction = db.transaction('kv', 'readwrite');
       const store = transaction.objectStore('kv');
-      const keys = [ACTIVE_NAMESPACE_KEY, ...syncDocuments.map(({ localKey }) => localKey)];
+      const keys = [ACTIVE_NAMESPACE_KEY, ...accountLocalRecords];
       if (nextUserId) {
-        keys.push(...syncDocuments.map(({ localKey }) => accountDataKey(nextUserId, localKey)));
+        keys.push(...accountLocalRecords.map(localKey => accountDataKey(nextUserId, localKey)));
       }
       const values = new Map();
       let pending = keys.length;
@@ -130,8 +132,8 @@ async function switchLocalAccount(previousUserId, nextUserId) {
           values.set(key, request.result);
           pending -= 1;
           if (pending !== 0) return;
-          const current = Object.fromEntries(syncDocuments.map(({ localKey }) => [localKey, values.get(localKey)]));
-          const saved = Object.fromEntries(syncDocuments.map(({ localKey }) => [
+          const current = Object.fromEntries(accountLocalRecords.map(localKey => [localKey, values.get(localKey)]));
+          const saved = Object.fromEntries(accountLocalRecords.map(localKey => [
             localKey,
             nextUserId ? values.get(accountDataKey(nextUserId, localKey)) : undefined
           ]));

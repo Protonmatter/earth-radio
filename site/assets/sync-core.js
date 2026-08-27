@@ -16,6 +16,26 @@ const DOCUMENTS = Object.freeze([
   }
 ]);
 
+const STORAGE_GENERATION_KEY = 'earth-radio-storage-generation-v2';
+const ACCOUNT_LOCAL_RECORDS = Object.freeze([
+  'favorites', 'recents', 'prefs', 'badStations', 'lastPlayed', STORAGE_GENERATION_KEY
+]);
+
+export function namespaceForAccount(accountId) {
+  return typeof accountId !== 'string' || accountId.length === 0
+    ? 'default'
+    : `account:${encodeURIComponent(accountId)}`;
+}
+
+function reboundMarker(marker, accountId) {
+  return {
+    v: 2,
+    namespace: namespaceForAccount(accountId),
+    generation: Math.max(0, Number(marker?.generation) || 0) + 1,
+    savedAt: Math.max(0, Number(marker?.savedAt) || 0)
+  };
+}
+
 export function stableStringify(value) {
   if (value === undefined) return 'undefined';
   if (value === null || typeof value !== 'object') return JSON.stringify(value);
@@ -138,7 +158,7 @@ export function shouldResetBrowserAccount(activeUserId, tabUserId, nextUserId, t
 }
 
 export function accountDataKey(userId, localKey) {
-  if (!userId || !DOCUMENTS.some(document => document.localKey === localKey)) {
+  if (!userId || !ACCOUNT_LOCAL_RECORDS.includes(localKey)) {
     throw new Error('A user and synchronized local key are required.');
   }
   return `account:${encodeURIComponent(String(userId))}:${localKey}`;
@@ -158,23 +178,29 @@ export function planLocalAccountTransition({
   if (previous === next) return { writes, archived: false, restored: false, detached: false, unchanged: true };
 
   if (previous) {
-    for (const { localKey } of DOCUMENTS) {
-      writes.push([accountDataKey(previous, localKey), structuredClone(current[localKey] ?? defaults[localKey])]);
+    for (const localKey of ACCOUNT_LOCAL_RECORDS) {
+      const fallback = localKey === STORAGE_GENERATION_KEY ? reboundMarker(null, previous) : defaults[localKey];
+      writes.push([accountDataKey(previous, localKey), structuredClone(current[localKey] ?? fallback)]);
     }
   }
 
   if (!next) {
-    for (const { localKey } of DOCUMENTS) {
-      writes.push([localKey, structuredClone(defaults[localKey])]);
+    for (const localKey of ACCOUNT_LOCAL_RECORDS) {
+      const value = localKey === STORAGE_GENERATION_KEY ? reboundMarker(current[localKey], null) : defaults[localKey];
+      writes.push([localKey, structuredClone(value)]);
     }
     return { writes, archived: Boolean(previous), restored: false, detached: Boolean(previous), unchanged: false };
   }
 
   if (!nextNamespaceExists && !previous) {
+    writes.push([STORAGE_GENERATION_KEY, reboundMarker(current[STORAGE_GENERATION_KEY], next)]);
     return { writes, archived: false, restored: false, detached: false, unchanged: false };
   }
-  for (const { localKey } of DOCUMENTS) {
-    writes.push([localKey, structuredClone(saved[localKey] ?? defaults[localKey])]);
+  for (const localKey of ACCOUNT_LOCAL_RECORDS) {
+    const value = localKey === STORAGE_GENERATION_KEY
+      ? (saved[localKey] ?? reboundMarker(current[localKey], next))
+      : (saved[localKey] ?? defaults[localKey]);
+    writes.push([localKey, structuredClone(value)]);
   }
   return { writes, archived: Boolean(previous), restored: Boolean(nextNamespaceExists), detached: false, unchanged: false };
 }
@@ -322,3 +348,4 @@ export function createSyncEngine({
 }
 
 export const syncDocuments = DOCUMENTS.map(({ localKey, documentKey }) => ({ localKey, documentKey }));
+export const accountLocalRecords = ACCOUNT_LOCAL_RECORDS;

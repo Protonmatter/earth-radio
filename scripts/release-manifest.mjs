@@ -3,8 +3,8 @@ import { readFile, readdir, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const includeRoots = ['.github', 'site', 'electron', 'server', 'docs', 'tests', 'src-recovered', 'scripts'];
-const includeFiles = ['package.json', 'package-lock.json', 'electron-builder.yml'];
+const includeRoots = ['.github', 'site', 'electron', 'server', 'docs', 'tests', 'src-recovered', 'scripts', 'functions', 'supabase'];
+const includeFiles = ['.node-version', 'eslint.config.mjs', 'package.json', 'package-lock.json', 'electron-builder.yml', 'wrangler.jsonc'];
 
 async function collectFiles(root) {
   const files = [];
@@ -60,15 +60,54 @@ export async function buildReleaseManifest(rootInput) {
 export async function writeReleaseManifest(rootInput) {
   const root = path.resolve(rootInput);
   const manifest = await buildReleaseManifest(root);
-  const checksumText = `${manifest.files.map(item => `${item.sha256}  ${item.path}`).join('\n')}\n`;
-  await writeFile(path.join(root, 'RELEASE_MANIFEST.json'), `${JSON.stringify(manifest, null, 2)}\n`);
-  await writeFile(path.join(root, 'sha256sums.txt'), checksumText);
+  const artifacts = renderReleaseArtifacts(manifest);
+  await writeFile(path.join(root, 'RELEASE_MANIFEST.json'), artifacts.manifestText);
+  await writeFile(path.join(root, 'sha256sums.txt'), artifacts.checksumText);
   return manifest;
+}
+
+export async function verifyReleaseManifest(rootInput) {
+  const root = path.resolve(rootInput);
+  const manifest = await buildReleaseManifest(root);
+  const expected = renderReleaseArtifacts(manifest);
+  const stale = [];
+  for (const [file, expectedText] of [
+    ['RELEASE_MANIFEST.json', expected.manifestText],
+    ['sha256sums.txt', expected.checksumText]
+  ]) {
+    let actual = '';
+    try {
+      actual = await readFile(path.join(root, file), 'utf8');
+    } catch (error) {
+      if (error?.code !== 'ENOENT') throw error;
+    }
+    if (actual !== expectedText) stale.push(file);
+  }
+  return { ok: stale.length === 0, stale, manifest };
+}
+
+function renderReleaseArtifacts(manifest) {
+  return {
+    manifestText: `${JSON.stringify(manifest, null, 2)}\n`,
+    checksumText: `${manifest.files.map(item => `${item.sha256}  ${item.path}`).join('\n')}\n`
+  };
 }
 
 const modulePath = fileURLToPath(import.meta.url);
 if (process.argv[1] && path.resolve(process.argv[1]) === modulePath) {
-  const root = path.resolve(process.argv[2] ?? path.join(path.dirname(modulePath), '..'));
-  const manifest = await writeReleaseManifest(root);
-  process.stdout.write(`Release manifest wrote ${manifest.files.length} deterministic file hashes.\n`);
+  const checking = process.argv[2] === '--check';
+  const rootArgument = process.argv[checking ? 3 : 2];
+  const root = path.resolve(rootArgument ?? path.join(path.dirname(modulePath), '..'));
+  if (checking) {
+    const result = await verifyReleaseManifest(root);
+    if (!result.ok) {
+      process.stderr.write(`Release metadata is stale: ${result.stale.join(', ')}\n`);
+      process.exitCode = 1;
+    } else {
+      process.stdout.write(`Release manifest verified ${result.manifest.files.length} deterministic file hashes.\n`);
+    }
+  } else {
+    const manifest = await writeReleaseManifest(root);
+    process.stdout.write(`Release manifest wrote ${manifest.files.length} deterministic file hashes.\n`);
+  }
 }

@@ -9,8 +9,8 @@
         "sha256": "942d2d61015289e649cf74ff509a95fd2ca20090fc40cb9fd3e5f21d89c29dcc"
       },
       "current": {
-        "bytes": 3491,
-        "sha256": "8e7a18a2fc8a8f27750348c692baf161805d5ad22d14a6db3c350ad6f55e06cb"
+        "bytes": 3566,
+        "sha256": "606065ec150d32644f668894f3849cf6a1fdd6346e0221d195687f573fb8e62f"
       },
       "reason": "Load the selected site directory and validate complete supported network-proxy rules with URL parsing."
     },
@@ -21,10 +21,10 @@
         "sha256": "329c8af7c7fa7b0921dd2c0028a057e8fea8ff4ac706c0760b8d8de629ede401"
       },
       "current": {
-        "bytes": 26751,
-        "sha256": "02e5017566aee3bf997cf479d6ed77f1498274bbbbaa741f8aa6468e0fb0ce65"
+        "bytes": 21889,
+        "sha256": "03a15bc63b9a1e9ada8ee1c15342c00f570b46badb88a325f1a20903555266cd"
       },
-      "reason": "Require a per-launch capability path and Origin on API routes, and reject mapped IPv6, CGNAT, and other private stream targets."
+      "reason": "Require a per-launch capability path and Origin on API routes, and reject mapped IPv6, CGNAT, and other private stream targets. Mount the combined metadata API (platform now-playing, fingerprint) and import the shared outbound network guard extracted to server/net-guard.mjs."
     },
     {
       "path": "server/example-proxy.mjs",
@@ -33,10 +33,34 @@
         "sha256": "d839161c06ea67188b9573b10bcc2962ccdc692df73be44b7596ff4080bff941"
       },
       "current": {
-        "bytes": 786,
-        "sha256": "7aa65e87a5b6c0dedd323c36c3a7188d5c8ac62a3a8095f1be092f81c67316c4"
+        "bytes": 880,
+        "sha256": "523ce1e056cc12ba178efca3f9b91c8f311acf9d8c3e80abfa1c0297b52198d6"
       },
-      "reason": "Bind the local example metadata proxy to 127.0.0.1 only."
+      "reason": "Bind the local example metadata proxy to 127.0.0.1 only. Mount the combined metadata API so the standalone proxy serves platform now-playing and fingerprint endpoints."
+    },
+    {
+      "path": "server/metadata-api.mjs",
+      "intake": {
+        "bytes": 2375,
+        "sha256": "0c66fa9ea4dcd4689081b9e3220a098a8e8342db96f14f230ecec39b3e39dca3"
+      },
+      "current": {
+        "bytes": 8420,
+        "sha256": "4396557045155dda0d758a4958d5507f68722ebced17defb4454aad34d360870"
+      },
+      "reason": "Add platform now-playing and on-demand fingerprint endpoints with a tighter metered-request rate limit. Keep desktop sampling, provider recognition, and optional catalog enrichment inside one absolute 40-second route deadline."
+    },
+    {
+      "path": "server/metadata-providers.mjs",
+      "intake": {
+        "bytes": 17799,
+        "sha256": "648114492b64701d2a223b336d4ea9efd55fc3e8a5d9b7042d2c34d1ed3f8b93"
+      },
+      "current": {
+        "bytes": 21575,
+        "sha256": "883c3494e70ac8d9d7e037d06c4d6de76a587522b0c41b75bb989813c8a3dbe5"
+      },
+      "reason": "Review-pass hardening: lowercase-only \"Title by Artist\" parsing, deduplicated Spotify token requests, market-scoped Spotify search, removal of unreachable post-promotion fallbacks, deadline-aware catalog requests, and treating a deadline abort as a transient uncached miss."
     },
     {
       "path": "site/assets/hls.light-Dr1Fv81C.js",
@@ -51,16 +75,41 @@
       "reason": "Remove a reference to an excluded source map from the vendored HLS runtime."
     },
     {
-      "path": "site/assets/index-B4rKOAHV.js",
+      "path": "site/assets/index-690938fe.js",
+      "intakePath": "site/assets/index-B4rKOAHV.js",
       "intake": {
         "bytes": 273352,
         "sha256": "610e3cdbea0e98b748aef94a24ea8362024430e01647b35bb4cd62038a04fa13"
       },
       "current": {
-        "bytes": 273377,
-        "sha256": "77eb908050d7a2ef4220ac1af0ae78b061bd141f348d0f8886710cb3d4a9609d"
+        "bytes": 274966,
+        "sha256": "690938fe203af7441935d6411154f863fdfbc5a02b397886ca678447dd216aef"
       },
-      "reason": "Register the service worker after asynchronous startup and remove a reference to an excluded source map."
+      "reason": "Register the service worker after asynchronous startup and remove a reference to an excluded source map. Bind a station tooltip on map markers for pre-selection progressive disclosure, delegating content to the maintained metadata overlay hook. Dispatch earthradio:station-selected after successful station playback (canonical stream identity for MediaSource/blob playback). Serialize and coalesce boot, manual, retry, cloned, and directory-owned station loads behind one runtime drain promise; settlement now carries a monotonic load ID, and the correlated runtime API is mirrored in src-recovered/main.ts. Previous/next and Media Session navigation carry explicit playback results and dispatch selection only when playback succeeded. Rename the deployed immutable bundle to the deterministic first eight hexadecimal characters of its final SHA-256 while retaining the installed intake path as provenance evidence."
+    },
+    {
+      "path": "site/assets/metadata-enrichment.css",
+      "intake": {
+        "bytes": 3229,
+        "sha256": "414a84caf03ab56acbe274977475ee72f8dbea3fb1d6526a4fa65dd33f1a8a1d"
+      },
+      "current": {
+        "bytes": 5106,
+        "sha256": "7e9b851638d8824eb71bd414623d6c8637b28257d0810f2bd533130aa414362a"
+      },
+      "reason": "Style the fingerprint identify row and live-metadata source pills."
+    },
+    {
+      "path": "site/assets/metadata-enrichment.js",
+      "intake": {
+        "bytes": 29141,
+        "sha256": "e213700a1a541139a66542e9bd8e615ad5dfc735d52c59569730d9a021e86009"
+      },
+      "current": {
+        "bytes": 68038,
+        "sha256": "8df810b69aef223f44a33e8ce0a664cb4c514aac07749a129be68d6027a99bc4"
+      },
+      "reason": "Layer live-metadata feeds above raw ICY: hosting-platform now-playing APIs, HLS timed ID3 text tracks, and an opt-in fingerprint identify button. Preserve the canonical selected URL and UUID through same-station MediaSource reattachment, invalidate only on correlated selection/change or explicit clear, retain the original trimmed URL after validation, and fence both cross-station and same-station out-of-order metadata polls by identity plus a monotonic poll generation. Cap speculative map-tooltip /api/nowplaying lookups at 8 per 60 seconds so marker sweeps cannot exhaust the zone WAF. Coalesce play-event polls, recheck fingerprint identity after the availability probe, and promote structured Station feed results onto the primary card. Export detectPlatformEndpoints so catalogued LISTEN.moe stream URLs can be tested against the browser WebSocket gateway. Hold background platform and HLS feeds while Identify is sampling so they cannot steal the in-flight token, and clear Now Playing art when a promoted identity has no https artwork."
     },
     {
       "path": "site/config.js",
@@ -69,10 +118,10 @@
         "sha256": "c83167f40ae7df3b389e35707b4abac834b10dc223ecb836d7840f90a7ef92a6"
       },
       "current": {
-        "bytes": 2155,
-        "sha256": "9639b5bef751920e5ecae684ba0b6b854250746aed057cb2240c10c846c021af"
+        "bytes": 3060,
+        "sha256": "8406d5b3a2891f94e32084aded5140f4a40dfa97e81c600b13dcace7c0f539b6"
       },
-      "reason": "Keep Cloudflare Pages on an empty proxy URL, restrict deployable authentication to the exact production origin, configure the public Supabase project and enabled providers, and load the same-origin account overlay without changing the recovered bundle."
+      "reason": "Keep Cloudflare Pages on an empty proxy URL and document that only Electron injects the loopback capability path. Add live-metadata runtime options (platform now-playing, HLS ID3, fingerprint) with metered fingerprinting off unless a proxy provides credentials. Keep Cloudflare Pages on an empty proxy URL, restrict deployable authentication to the exact production origin, configure the public Supabase project and enabled providers, and load the same-origin account overlay without changing the recovered bundle."
     },
     {
       "path": "site/index.html",
@@ -81,10 +130,10 @@
         "sha256": "c007984ee6349eaee532c1b3e2297e7fdac81610d4fae167c7595e127cef2d42"
       },
       "current": {
-        "bytes": 21977,
-        "sha256": "fb3146b5f9594c643bd904a1441dd7c63c82a0b4502923f72eef2539fdf498b9"
+        "bytes": 22200,
+        "sha256": "e0ee2baec8d4eaa8273e394a808c4401aba20e8b7266b61713ea2b42e29e34ce"
       },
-      "reason": "Move frame-ancestors enforcement to the deployable response header policy, then add responsive landmarks, iOS viewport/audio attributes, mobile destinations, compact header icons, additive responsive assets, country and station search controls, complete Now Playing metadata and sleep actions, the additive UI refresh stylesheet, and header actions ordered in the rail's reading sequence so keyboard focus follows the visual order."
+      "reason": "Move frame-ancestors enforcement to the deployable response header policy, then add responsive landmarks, iOS viewport/audio attributes, mobile destinations, compact header icons, additive responsive assets, country and station search controls, complete Now Playing metadata and sleep actions, the additive UI refresh stylesheet, and header actions ordered in the rail's reading sequence so keyboard focus follows the visual order. Reference the deployed runtime through its content-addressed filename. Load the git-catalogued LISTEN.moe station overlay before the recovered bundle, and admit wss://listen.moe in the in-page connect-src policy."
     },
     {
       "path": "site/manifest.webmanifest",
@@ -105,10 +154,10 @@
         "sha256": "b09e3207532fe7f47d14e9c53804d7e8caf31cad2fcb2c652b728a93871ea094"
       },
       "current": {
-        "bytes": 2588,
-        "sha256": "4d8c61148913a6171f09e48be2bc8b5b6588b5bf6d5a9afa918e5ac04da8f509"
+        "bytes": 2964,
+        "sha256": "41bb953ebecdfa93fd524ba1be57f656b7020b13cfb15edabaf0a361052d1a7f"
       },
-      "reason": "Use network-first navigation and configuration updates, keep hashed recovered assets cache-first, and precache the account, sync, responsive, and i18n overlays under cache generation v27."
+      "reason": "Use network-first navigation/configuration updates, keep hashed recovered assets cache-first, reload installation requests so stale browser HTTP entries cannot seed the new service-worker cache, keep the previous worker when reload precaching fails, and precache the UI refresh stylesheet. Precache pinned-stations.js for LISTEN.moe catalog pinning. Bump the shell cache generation to v36 so clients pick up the review-closure metadata and storage-guard overlays."
     }
   ]
 }

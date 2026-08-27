@@ -67,7 +67,7 @@ test('provenance separates immutable intake hashes from hardened overlays', asyn
   const provenance = await document('docs/PROVENANCE.md');
   const overlay = JSON.parse(await document('docs/provenance/hardening-overlays.json'));
   const intake = JSON.parse(await document('docs/provenance/recovery-manifest.json'));
-  const overlayByPath = new Map(overlay.files.map(entry => [entry.path, entry]));
+  const overlayByPath = new Map(overlay.files.map(entry => [entry.intakePath || entry.path, entry]));
   assert.match(provenance, /hardening overlay/i);
   assert.equal(overlay.schemaVersion, 1);
   assert.ok(overlay.files.some(entry => entry.path === 'site/sw.js'));
@@ -80,12 +80,13 @@ test('provenance separates immutable intake hashes from hardened overlays', asyn
   for (const row of intake.files) {
     const relative = installedRuntimePath(row);
     if (!relative) continue;
-    const absolute = path.join(root, ...relative.split('/'));
+    const recorded = overlayByPath.get(relative);
+    const currentRelative = recorded?.path || relative;
+    const absolute = path.join(root, ...currentRelative.split('/'));
     const content = await readFile(absolute);
     const diskBytes = (await stat(absolute)).size;
     const diskSha = createHash('sha256').update(content).digest('hex');
     if (diskBytes === row.bytes && diskSha === row.sha256) continue;
-    const recorded = overlayByPath.get(relative);
     assert.ok(recorded, `${relative} drifted from intake without a hardening overlay`);
     assert.equal(recorded.intake.bytes, row.bytes, `${relative} overlay intake byte count is stale`);
     assert.equal(recorded.intake.sha256, row.sha256, `${relative} overlay intake hash is stale`);

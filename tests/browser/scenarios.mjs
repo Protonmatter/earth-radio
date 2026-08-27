@@ -12,6 +12,56 @@ const SEEDED = {
   recent: ['00000000-0000-4000-8000-000000000002', '00000000-0000-4000-8000-000000000010']
 };
 
+const SAVE_NAVIGATION_MARKER = 'earth-radio.test.locale-save-navigation';
+const SAVE_NAVIGATION_VALUE = 'arabic-preview-committed';
+
+const ARABIC_PREVIEW_OBSERVED = `document.documentElement.lang === 'ar'
+  && document.documentElement.dir === 'rtl'
+  && document.documentElement.dataset.fontProfile === 'ar'
+  && document.querySelector('#setting-locale')?.value === 'ar'`;
+
+const ENGLISH_DISMISSAL_OBSERVED = `document.querySelector('#settings-modal')?.hidden === true
+  && document.documentElement.lang === 'en'
+  && document.documentElement.dir === 'ltr'
+  && document.documentElement.dataset.fontProfile === 'en'
+  && document.querySelector('#setting-locale')?.value === 'en'
+  && JSON.parse(localStorage.getItem('earthRadio.ui.v1') || 'null')?.locale === 'en'`;
+
+const ARABIC_RELOAD_OBSERVED = `document.documentElement.dataset.erUiReady === 'true'
+  && document.querySelector('#settings-modal')?.hidden === true
+  && document.documentElement.lang === 'ar'
+  && document.documentElement.dir === 'rtl'
+  && document.documentElement.dataset.fontProfile === 'ar'
+  && document.querySelector('#setting-locale')?.value === 'ar'
+  && JSON.parse(localStorage.getItem('earthRadio.ui.v1') || 'null')?.locale === 'ar'
+  && JSON.parse(localStorage.getItem('earthRadio.preferences.v1') || 'null')?.locale === 'ar'
+  && sessionStorage.getItem('${SAVE_NAVIGATION_MARKER}') === '${SAVE_NAVIGATION_VALUE}'`;
+
+const ARABIC_REOPEN_OBSERVED = `document.querySelector('#settings-modal')?.hidden === false
+  && document.documentElement.lang === 'ar'
+  && document.documentElement.dir === 'rtl'
+  && document.documentElement.dataset.fontProfile === 'ar'
+  && document.querySelector('#setting-locale')?.value === 'ar'`;
+
+function arabicPreviewActions() {
+  return [
+    { type: 'click', selector: '#settings-toggle' },
+    {
+      type: 'script',
+      code: `(() => {
+        const select = document.querySelector('#setting-locale');
+        select.value = 'ar';
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+        document.documentElement.lang = 'en';
+        document.documentElement.dir = 'ltr';
+        document.documentElement.dataset.fontProfile = 'en';
+        return true;
+      })()`
+    },
+    { type: 'waitFor', expression: ARABIC_PREVIEW_OBSERVED }
+  ];
+}
+
 export const SCENARIOS = [
   {
     id: 'mobile-listen-390x844',
@@ -57,6 +107,35 @@ export const SCENARIOS = [
           return Boolean(option);
         })()`
       },
+      { type: 'wait', ms: 200 }
+    ]
+  },
+  {
+    id: 'mobile-country-search-keyboard-390x844',
+    title: 'iPhone 14 portrait — keyboard country selection',
+    width: 390,
+    height: 844,
+    destination: 'listen',
+    safeArea: IPHONE_SAFE_AREA,
+    seed: SEEDED,
+    actions: [
+      { type: 'click', selector: '[data-er-dest="search"]' },
+      {
+        type: 'script',
+        code: `(() => {
+          window.__erCountrySelections = [];
+          document.addEventListener('earthradio:country-selected', event => {
+            window.__erCountrySelections.push({ country: event.detail?.country || '' });
+          });
+          const input = document.querySelector('#er-country-query');
+          input.focus();
+          input.value = 'Jap';
+          input.dispatchEvent(new Event('input', { bubbles: true }));
+          return true;
+        })()`
+      },
+      { type: 'key', key: 'ArrowDown' },
+      { type: 'key', key: 'Enter' },
       { type: 'wait', ms: 200 }
     ]
   },
@@ -203,6 +282,93 @@ export const SCENARIOS = [
       { type: 'click', selector: '[data-er-overflow]' },
       { type: 'click', selector: '#er-overflow [data-click-id="settings-toggle"]' },
       { type: 'wait', ms: 200 }
+    ]
+  },
+  {
+    id: 'settings-locale-preview-ar-390x844',
+    title: 'Settings — Arabic preview survives the locale observer',
+    width: 390,
+    height: 844,
+    destination: 'listen',
+    safeArea: IPHONE_SAFE_AREA,
+    seed: SEEDED,
+    actions: arabicPreviewActions()
+  },
+  {
+    id: 'settings-locale-preview-cancel-390x844',
+    title: 'Settings — cancelling an Arabic preview restores the saved locale',
+    width: 390,
+    height: 844,
+    destination: 'listen',
+    safeArea: IPHONE_SAFE_AREA,
+    seed: SEEDED,
+    actions: [...arabicPreviewActions(), { type: 'click', selector: '#settings-modal .btn-clear' }, { type: 'waitFor', expression: ENGLISH_DISMISSAL_OBSERVED }]
+  },
+  {
+    id: 'settings-locale-preview-save-390x844',
+    title: 'Settings — saving an Arabic preview commits the locale',
+    width: 390,
+    height: 844,
+    destination: 'listen',
+    safeArea: IPHONE_SAFE_AREA,
+    seed: SEEDED,
+    actions: [
+      ...arabicPreviewActions(),
+      { type: 'markNavigation', key: SAVE_NAVIGATION_MARKER, value: SAVE_NAVIGATION_VALUE },
+      { type: 'click', selector: '#settings-save' },
+      { type: 'waitForNavigation', key: SAVE_NAVIGATION_MARKER, value: SAVE_NAVIGATION_VALUE, expression: ARABIC_RELOAD_OBSERVED },
+      { type: 'click', selector: '#settings-toggle' },
+      { type: 'waitFor', expression: ARABIC_REOPEN_OBSERVED }
+    ]
+  },
+  {
+    id: 'settings-locale-preview-close-390x844',
+    title: 'Settings — explicit close restores the saved locale',
+    width: 390,
+    height: 844,
+    destination: 'listen',
+    safeArea: IPHONE_SAFE_AREA,
+    seed: SEEDED,
+    actions: [...arabicPreviewActions(), { type: 'click', selector: '#settings-modal .close-btn' }, { type: 'waitFor', expression: ENGLISH_DISMISSAL_OBSERVED }]
+  },
+  {
+    id: 'settings-locale-preview-backdrop-390x844',
+    title: 'Settings — backdrop dismissal restores the saved locale',
+    width: 390,
+    height: 844,
+    destination: 'listen',
+    safeArea: IPHONE_SAFE_AREA,
+    seed: SEEDED,
+    actions: [...arabicPreviewActions(), { type: 'click', selector: '#settings-modal .settings-backdrop' }, { type: 'waitFor', expression: ENGLISH_DISMISSAL_OBSERVED }]
+  },
+  {
+    id: 'settings-locale-preview-escape-390x844',
+    title: 'Settings — Escape restores the saved locale',
+    width: 390,
+    height: 844,
+    destination: 'listen',
+    safeArea: IPHONE_SAFE_AREA,
+    seed: SEEDED,
+    actions: [...arabicPreviewActions(), { type: 'key', key: 'Escape' }, { type: 'waitFor', expression: ENGLISH_DISMISSAL_OBSERVED }]
+  },
+  {
+    id: 'settings-locale-preview-reopen-390x844',
+    title: 'Settings — reopening has no stale locale preview',
+    width: 390,
+    height: 844,
+    destination: 'listen',
+    safeArea: IPHONE_SAFE_AREA,
+    seed: SEEDED,
+    actions: [
+      ...arabicPreviewActions(),
+      { type: 'click', selector: '#settings-modal .btn-clear' },
+      { type: 'waitFor', expression: ENGLISH_DISMISSAL_OBSERVED },
+      { type: 'click', selector: '#settings-toggle' },
+      { type: 'waitFor', expression: `document.querySelector('#settings-modal')?.hidden === false
+        && document.documentElement.lang === 'en'
+        && document.documentElement.dir === 'ltr'
+        && document.documentElement.dataset.fontProfile === 'en'
+        && document.querySelector('#setting-locale')?.value === 'en'` }
     ]
   },
   {
@@ -415,12 +581,3 @@ export const SCENARIOS = [
     seed: SEEDED
   }
 ];
-
-export const REQUIRED_EVIDENCE_VIEWPORTS = Object.freeze([
-  '390x844',
-  '430x932',
-  '844x390',
-  '1024x768',
-  '1440x900',
-  '1920x1080'
-]);

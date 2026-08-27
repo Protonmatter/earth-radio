@@ -32,6 +32,8 @@ jobs:
         run: npm ci
       - name: Verify repository and build
         run: npm run verify
+      - name: Run focused remediation tests
+        run: node --test tests/directory-expansion.test.mjs tests/hls-fixture.test.mjs tests/player-navigation.test.mjs tests/rendered-ui.test.mjs
       - name: Exercise recovery importer
         if: runner.os == 'Windows'
         shell: powershell
@@ -44,3 +46,28 @@ jobs:
           path: .build/site
           if-no-files-found: error
           retention-days: 14
+
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+      - name: Set up Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Run end-to-end UI tests
+        run: npm run test:e2e
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: playwright-report-${{ github.sha }}
+          path: playwright-report
+          if-no-files-found: ignore
+          retention-days: 7

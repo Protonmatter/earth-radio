@@ -15,7 +15,7 @@ export async function inventoryTree(rootInput, source) {
   const files = [];
   async function walk(directory) {
     const entries = await readdir(directory, { withFileTypes: true });
-    entries.sort((a, b) => a.name.localeCompare(b.name));
+    entries.sort((a, b) => a.name.localeCompare(b.name, 'en'));
     for (const entry of entries) {
       const absolute = path.join(directory, entry.name);
       if (entry.isDirectory()) await walk(absolute);

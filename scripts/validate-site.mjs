@@ -102,7 +102,7 @@ export async function validateSite(rootInput) {
     errors.push('config.js does not fail closed to browser-direct mode');
   }
   const textExtensions = new Set(['.html', '.js', '.css', '.json', '.webmanifest', '.svg', '']);
-  const forbidden = /localhost|127\.0\.0\.1|file:\/\/|[A-Za-z]:\\Users\\/i;
+  const forbidden = /localhost|127\.\d{1,3}(?:\.\d{1,3}){0,2}\b|\[::1\]|0\.0\.0\.0|file:\/\/|[A-Za-z]:\\Users\\/i;
   for (const relative of files) {
     if (!textExtensions.has(path.extname(relative))) continue;
     const content = await readFile(path.join(root, ...relative.split('/')), 'utf8');

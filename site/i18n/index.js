@@ -47,8 +47,11 @@ export function normalizeLocale(input) {
 
   const lower = raw.toLowerCase().replace(/_/g, '-');
   if (SUPPORTED_LOCALES.includes(lower)) return lower;
-  if (lower === 'zh-hans' || lower === 'zh-cn' || lower === 'zh-sg' || lower === 'zh-my') return 'zh-Hans';
-  if (lower === 'zh-hant' || lower === 'zh-tw' || lower === 'zh-hk' || lower === 'zh-mo') return 'zh-Hant';
+  // Full script+region tags (zh-Hant-TW, zh-Hans-CN) are the standard browser form;
+  // match on prefix so they resolve to a Chinese catalog instead of falling to English.
+  // Bare `zh` stays ambiguous and deliberately falls through to the default locale.
+  if (/^zh-(hant|tw|hk|mo)/.test(lower)) return 'zh-Hant';
+  if (/^zh-(hans|cn|sg|my)/.test(lower)) return 'zh-Hans';
   if (lower === 'zh' || lower.startsWith('zh-')) return DEFAULT_LOCALE;
 
   const base = lower.split('-')[0];
@@ -96,15 +99,22 @@ export function applyDocumentLocale(locale = activeLocale, documentRef = globalT
 
 export function applyDeclarativeI18n(documentRef = globalThis.document, locale = activeLocale) {
   if (!documentRef) return;
+  // Write only when the value actually changes: unconditional writes emit mutation
+  // records even for identical values, and the runtime observer that calls this
+  // would otherwise feed itself into a permanent rAF loop.
   for (const element of documentRef.querySelectorAll('[data-i18n]')) {
     const key = element.getAttribute('data-i18n');
     const attr = element.getAttribute('data-i18n-attr');
     const value = t(key, undefined, locale);
-    if (attr) element.setAttribute(attr, value);
-    else element.textContent = value;
+    if (attr) {
+      if (element.getAttribute(attr) !== value) element.setAttribute(attr, value);
+    } else if (element.textContent !== value) {
+      element.textContent = value;
+    }
   }
   for (const element of documentRef.querySelectorAll('[data-i18n-placeholder]')) {
-    element.setAttribute('placeholder', t(element.getAttribute('data-i18n-placeholder'), undefined, locale));
+    const value = t(element.getAttribute('data-i18n-placeholder'), undefined, locale);
+    if (element.getAttribute('placeholder') !== value) element.setAttribute('placeholder', value);
   }
 }
 

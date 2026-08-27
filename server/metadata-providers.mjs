@@ -8,6 +8,9 @@ const DEFAULT_TIMEOUT_MS = 6500;
 const IDENTIFY_CACHE_MAX_ENTRIES = 512;
 const IDENTIFY_CACHE_TTL_FOUND_MS = 24 * 60 * 60 * 1000;
 const IDENTIFY_CACHE_TTL_MISS_MS = 15 * 60 * 1000;
+// Marks a miss produced while a provider was unreachable; such results are served
+// to the caller but never written to the negative cache.
+const IDENTIFY_TRANSIENT = Symbol('identify-transient-miss');
 const JUNK_TITLE = /^(unknown|n\/?a|advert(isement)?|commercial|station\s?id|live stream|loading\.{0,3}|no title|news|weather|traffic)$/i;
 const ADLIKE_TITLE = /\b(advertisement|commercial|sponsor|promo|listen live|news update|traffic|weather|sweeper|station id)\b/i;
 const COVER_OR_TRIBUTE = /\b(karaoke|tribute|cover version|instrumental version|originally performed by|as made famous by|remix tribute)\b/i;
@@ -21,6 +24,7 @@ const AMBIGUOUS_TITLE_ONLY_TERMS = new Set([
 
 let spotifyToken = null;
 let spotifyTokenExpiresAt = 0;
+let spotifyTokenPromise = null;
 const identifyCache = new Map();
 const identifyInFlight = new Map();
 
@@ -37,7 +41,8 @@ export function parseNowPlaying(streamTitle = '') {
     }
   }
 
-  const byMatch = raw.match(/^(.+?)\s+by\s+(.+?)$/i);
+  // Lowercase "by" only: title-cased "By" ("Stand By Me") is part of the title.
+  const byMatch = raw.match(/^(.+?)\s+by\s+(.+)$/);
   if (byMatch) return { artist: byMatch[2].trim(), title: byMatch[1].trim(), raw };
   return { artist: '', title: raw, raw };
 }
@@ -47,41 +52,70 @@ export async function identifyTrack(args = {}) {
   const cacheKey = identifyCacheKey(request);
   const cached = readIdentifyCache(cacheKey);
   if (cached) return { ...cached, cached: true };
-  if (identifyInFlight.has(cacheKey)) return { ...await identifyInFlight.get(cacheKey), cached: true };
+  if (identifyInFlight.has(cacheKey)) {
+    try {
+      return { ...await withinDeadline(identifyInFlight.get(cacheKey), request.deadlineAt), cached: true };
+    } catch (error) {
+      if (isDeadlineError(error)) return transientDeadlineMiss(request);
+      throw error;
+    }
+  }
 
   const promise = identifyTrackUncached(request);
   identifyInFlight.set(cacheKey, promise);
   try {
-    const payload = await promise;
-    writeIdentifyCache(cacheKey, payload, payload.found ? IDENTIFY_CACHE_TTL_FOUND_MS : IDENTIFY_CACHE_TTL_MISS_MS);
+    const payload = await withinDeadline(promise, request.deadlineAt);
+    // A miss produced while a queried provider was unreachable (transport error or
+    // deadline abort) is not evidence the catalog lacks the track; caching it would
+    // pin a Raw ICY answer for the full negative TTL after the providers recover.
+    if (!payload[IDENTIFY_TRANSIENT]) {
+      writeIdentifyCache(cacheKey, payload, payload.found ? IDENTIFY_CACHE_TTL_FOUND_MS : IDENTIFY_CACHE_TTL_MISS_MS);
+    }
     return payload;
+  } catch (error) {
+    // The outer race can fire before fetchJson's abort settles, especially under
+    // a loaded CI event loop. Treat that the same as a provider throw: a miss
+    // that must not occupy the negative cache.
+    if (isDeadlineError(error)) return transientDeadlineMiss(request);
+    throw error;
   } finally {
     identifyInFlight.delete(cacheKey);
   }
 }
 
-async function identifyTrackUncached({ artist = '', title = '', raw = '', providers = ['itunes', 'spotify'], country = 'US', timeoutMs = DEFAULT_TIMEOUT_MS } = {}) {
+async function identifyTrackUncached({
+  artist = '',
+  title = '',
+  raw = '',
+  providers = ['itunes', 'spotify'],
+  country = 'US',
+  timeoutMs = DEFAULT_TIMEOUT_MS,
+  deadlineAt = Date.now() + timeoutMs
+} = {}) {
   const track = title ? { artist: String(artist || ''), title: String(title || ''), raw: raw || [artist, title].filter(Boolean).join(' - ') } : parseNowPlaying(raw);
   if (!track?.title) return { found: false, state: 'Unresolved', confidence: 0, candidates: [], sources: [] };
 
   const wanted = new Set(providers);
   const candidateGroups = await Promise.allSettled([
-    wanted.has('itunes') ? searchItunes(track, { country, timeoutMs }) : [],
-    wanted.has('spotify') ? searchSpotify(track, { country, timeoutMs }) : []
+    wanted.has('itunes') ? searchItunes(track, { country, timeoutMs, deadlineAt }) : [],
+    wanted.has('spotify') ? searchSpotify(track, { country, timeoutMs, deadlineAt }) : []
   ]);
   const candidates = candidateGroups.flatMap(result => result.status === 'fulfilled' ? result.value : []);
+  const providerFailures = candidateGroups.filter(result => result.status === 'rejected').length;
   const scored = scoreAndRank(track, candidates);
   const best = scored[0] || null;
   if (!canPromoteCandidate(track, best, scored)) {
-    return rawIcyIdentity(track, scored, best ? blockedPromotionReason(track, best) : 'no catalog match above confidence threshold');
+    const identity = rawIcyIdentity(track, scored, best ? blockedPromotionReason(track, best) : 'no catalog match above confidence threshold');
+    if (providerFailures > 0) Object.defineProperty(identity, IDENTIFY_TRANSIENT, { value: true });
+    return identity;
   }
 
-  const state = best?.confidence >= 78 ? 'Identified' : best?.confidence >= 58 ? 'Likely match' : 'Raw ICY only';
-  const resolvedTrack = best || { provider: 'icy', title: track.title, artist: track.artist, raw: track.raw, reasons: ['no catalog match above confidence threshold'] };
-  const confidence = best?.confidence || (track.artist ? 42 : 28);
+  const state = best.confidence >= 78 ? 'Identified' : 'Likely match';
+  const resolvedTrack = best;
+  const confidence = best.confidence;
 
   return {
-    found: Boolean(best && best.confidence >= 58),
+    found: true,
     state,
     confidence,
     provider: resolvedTrack.provider || 'icy',
@@ -138,6 +172,21 @@ function rawIcyIdentity(track, candidates = [], reason = TITLE_ONLY_PROMOTION_RE
   };
 }
 
+function isDeadlineError(error) {
+  return /deadline/i.test(String(error?.message || ''));
+}
+
+function transientDeadlineMiss(request) {
+  const track = request.title
+    ? { artist: String(request.artist || ''), title: String(request.title || ''), raw: request.raw || [request.artist, request.title].filter(Boolean).join(' - ') }
+    : parseNowPlaying(request.raw);
+  const identity = track?.title
+    ? rawIcyIdentity(track, [], 'metadata deadline exceeded')
+    : { found: false, state: 'Unresolved', confidence: 0, candidates: [], sources: [] };
+  Object.defineProperty(identity, IDENTIFY_TRANSIENT, { value: true });
+  return identity;
+}
+
 export function clearIdentifyCache() {
   identifyCache.clear();
   identifyInFlight.clear();
@@ -147,7 +196,7 @@ export function getIdentifyCacheSize() {
   return identifyCache.size;
 }
 
-export async function searchItunes(track, { country = 'US', timeoutMs = DEFAULT_TIMEOUT_MS } = {}) {
+async function searchItunes(track, { country = 'US', timeoutMs = DEFAULT_TIMEOUT_MS, deadlineAt = Date.now() + timeoutMs } = {}) {
   const term = [track.artist, track.title].filter(Boolean).join(' ').trim();
   if (!term) return [];
   const url = new URL(ITUNES_SEARCH_URL);
@@ -156,13 +205,21 @@ export async function searchItunes(track, { country = 'US', timeoutMs = DEFAULT_
   url.searchParams.set('limit', '8');
   url.searchParams.set('term', term);
   if (/^[A-Z]{2}$/i.test(country)) url.searchParams.set('country', country.toUpperCase());
-  const data = await fetchJson(url, timeoutMs);
+  const data = await fetchJson(url, timeoutMs, {}, deadlineAt);
+  // null is a transport failure or deadline abort, not an empty catalog answer;
+  // the distinction keeps transient failures out of the negative identify cache.
+  if (data === null) throw new Error('iTunes search unavailable');
   return Array.isArray(data?.results) ? data.results.map(normalizeItunes).filter(Boolean) : [];
 }
 
-export async function searchSpotify(track, { timeoutMs = DEFAULT_TIMEOUT_MS } = {}) {
-  const token = await getSpotifyToken(timeoutMs);
-  if (!token) return [];
+async function searchSpotify(track, { country = 'US', timeoutMs = DEFAULT_TIMEOUT_MS, deadlineAt = Date.now() + timeoutMs } = {}) {
+  const token = await getSpotifyToken(timeoutMs, deadlineAt);
+  if (!token) {
+    // No credentials means Spotify is simply unconfigured (a cacheable miss);
+    // configured credentials with no token is a transient auth/transport failure.
+    if (process.env.SPOTIFY_CLIENT_ID && process.env.SPOTIFY_CLIENT_SECRET) throw new Error('Spotify token unavailable');
+    return [];
+  }
   const queryParts = [];
   if (track.artist) queryParts.push(`artist:${quoteSpotify(track.artist)}`);
   if (track.title) queryParts.push(`track:${quoteSpotify(track.title)}`);
@@ -170,18 +227,29 @@ export async function searchSpotify(track, { timeoutMs = DEFAULT_TIMEOUT_MS } = 
   url.searchParams.set('type', 'track');
   url.searchParams.set('limit', '8');
   url.searchParams.set('q', queryParts.join(' ') || [track.artist, track.title].filter(Boolean).join(' '));
-  const data = await fetchJson(url, timeoutMs, { Authorization: `Bearer ${token}` });
+  if (/^[A-Z]{2}$/i.test(country)) url.searchParams.set('market', country.toUpperCase());
+  const data = await fetchJson(url, timeoutMs, { Authorization: `Bearer ${token}` }, deadlineAt);
+  if (data === null) throw new Error('Spotify search unavailable');
   return Array.isArray(data?.tracks?.items) ? data.tracks.items.map(normalizeSpotify).filter(Boolean) : [];
 }
 
-async function getSpotifyToken(timeoutMs) {
+async function getSpotifyToken(timeoutMs, deadlineAt) {
   const id = process.env.SPOTIFY_CLIENT_ID;
   const secret = process.env.SPOTIFY_CLIENT_SECRET;
   if (!id || !secret) return null;
   if (spotifyToken && spotifyTokenExpiresAt > Date.now() + 30_000) return spotifyToken;
+  if (!spotifyTokenPromise) {
+    spotifyTokenPromise = requestSpotifyToken(id, secret, timeoutMs, deadlineAt).finally(() => { spotifyTokenPromise = null; });
+  }
+  return spotifyTokenPromise;
+}
+
+async function requestSpotifyToken(id, secret, timeoutMs, deadlineAt) {
+  const remaining = Math.min(timeoutMs, deadlineAt - Date.now());
+  if (remaining <= 0) return null;
   const auth = Buffer.from(`${id}:${secret}`).toString('base64');
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  const timer = setTimeout(() => controller.abort(), remaining);
   try {
     const response = await fetch(TOKEN_URL, {
       method: 'POST',
@@ -349,13 +417,16 @@ function normalizeIdentifyRequest(args = {}) {
   const sanitizedProviders = [...new Set(providers
     .map(provider => String(provider || '').trim().toLowerCase())
     .filter(provider => PROVIDERS.has(provider)))];
+  const timeoutMs = clampInteger(args.timeoutMs, DEFAULT_TIMEOUT_MS, 1000, 30_000);
+  const suppliedDeadline = Number(args.deadlineAt);
   return {
     artist: sanitizeText(args.artist, 200),
     title: sanitizeText(args.title, 200),
     raw: sanitizeText(args.raw, 500),
     providers: sanitizedProviders.length ? sanitizedProviders : ['itunes', 'spotify'],
     country: /^[A-Z]{2}$/i.test(String(args.country || 'US')) ? String(args.country || 'US').toUpperCase() : 'US',
-    timeoutMs: clampInteger(args.timeoutMs, DEFAULT_TIMEOUT_MS, 1000, 30_000)
+    timeoutMs,
+    deadlineAt: Number.isFinite(suppliedDeadline) && suppliedDeadline > 0 ? suppliedDeadline : Date.now() + timeoutMs
   };
 }
 
@@ -400,9 +471,11 @@ function clampInteger(value, fallback, min, max) {
   return Math.min(max, Math.max(min, parsed));
 }
 
-async function fetchJson(url, timeoutMs, headers = {}) {
+async function fetchJson(url, timeoutMs, headers = {}, deadlineAt = Date.now() + timeoutMs) {
+  const remaining = Math.min(timeoutMs, deadlineAt - Date.now());
+  if (remaining <= 0) return null;
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  const timer = setTimeout(() => controller.abort(), remaining);
   try {
     const response = await fetch(url, { signal: controller.signal, headers: { Accept: 'application/json', ...headers } });
     if (!response.ok) return null;
@@ -412,4 +485,16 @@ async function fetchJson(url, timeoutMs, headers = {}) {
   } finally {
     clearTimeout(timer);
   }
+}
+
+function withinDeadline(promise, deadlineAt) {
+  const remaining = deadlineAt - Date.now();
+  if (remaining <= 0) return Promise.reject(new Error('metadata deadline exceeded'));
+  let timer;
+  return Promise.race([
+    Promise.resolve(promise),
+    new Promise((_, reject) => {
+      timer = setTimeout(() => reject(new Error('metadata deadline exceeded')), remaining);
+    })
+  ]).finally(() => clearTimeout(timer));
 }

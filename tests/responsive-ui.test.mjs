@@ -2,11 +2,13 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import test from 'node:test';
+import { SCENARIOS } from './browser/scenarios.mjs';
 import {
   DEFAULT_SPLIT,
   MIN_LIST_PX,
   MIN_MAP_PX,
   clampSplitPercent,
+  advanceLocalePreview,
   nextCollapse,
   parseDestination,
   parseNowPlayingHistory,
@@ -65,6 +67,54 @@ test('explicit locale and system theme preferences survive initialization', () =
   assert.equal(resolveThemePreference('invalid', true), 'dark');
 });
 
+test('locale preview transition leaves the persisted locale untouched', () => {
+  assert.deepEqual(
+    advanceLocalePreview({ persistedLocale: 'en', previewLocale: null, selectedLocale: 'en' }, { type: 'preview', locale: 'ar' }),
+    { persistedLocale: 'en', previewLocale: 'ar', selectedLocale: 'ar' }
+  );
+});
+
+test('locale preview dismissal clears the preview and resets the selection to the persisted locale', () => {
+  assert.deepEqual(
+    advanceLocalePreview({ persistedLocale: 'en', previewLocale: 'ar', selectedLocale: 'ar' }, { type: 'dismiss' }),
+    { persistedLocale: 'en', previewLocale: null, selectedLocale: 'en' }
+  );
+});
+
+test('locale preview save commits the selected locale and clears the preview', () => {
+  assert.deepEqual(
+    advanceLocalePreview({ persistedLocale: 'en', previewLocale: 'ar', selectedLocale: 'ar' }, { type: 'save' }),
+    { persistedLocale: 'ar', previewLocale: null, selectedLocale: 'ar' }
+  );
+});
+
+test('locale rendered scenarios use real modal controls and state barriers', () => {
+  const byScenarioId = new Map(SCENARIOS.map(scenario => [scenario.id, scenario]));
+  const ids = [
+    'settings-locale-preview-ar-390x844',
+    'settings-locale-preview-cancel-390x844',
+    'settings-locale-preview-save-390x844',
+    'settings-locale-preview-close-390x844',
+    'settings-locale-preview-backdrop-390x844',
+    'settings-locale-preview-escape-390x844',
+    'settings-locale-preview-reopen-390x844'
+  ];
+  for (const id of ids) {
+    const scenario = byScenarioId.get(id);
+    assert.ok(scenario, `${id} is missing`);
+    assert.ok(scenario.actions.some(action => action.type === 'waitFor'), `${id} has no deterministic barrier`);
+    assert.equal(scenario.actions.some(action => action.type === 'wait'), false, `${id} uses a timing sleep`);
+    assert.equal(scenario.actions.some(action => /stopImmediatePropagation/.test(action.code || '')), false, `${id} bypasses a runtime handler`);
+  }
+  const save = byScenarioId.get('settings-locale-preview-save-390x844');
+  assert.equal(save.actions.some(action => action.type === 'click' && action.selector === '#settings-save'), true);
+  assert.equal(save.actions.some(action => action.type === 'markNavigation'), true, 'Save has no reload checkpoint');
+  const postReload = save.actions.find(action => action.type === 'waitForNavigation');
+  assert.ok(postReload, 'Save does not wait for a cross-navigation barrier');
+  assert.match(postReload.expression, /earthRadio\.preferences\.v1/);
+  assert.match(postReload.expression, /sessionStorage/);
+});
+
 test('Now Playing history state is distinct from runtime hash writes', () => {
   assert.equal(parseNowPlayingHistory({ erNowPlaying: true }), true);
   assert.equal(parseNowPlayingHistory({ erNowPlaying: false }), false);
@@ -73,7 +123,7 @@ test('Now Playing history state is distinct from runtime hash writes', () => {
 
 test('responsive assets are referenced after the recovered runtime and staged as site files', async () => {
   const html = await readFile(path.join(root, 'site', 'index.html'), 'utf8');
-  const runtime = html.indexOf('index-B4rKOAHV.js');
+  const runtime = html.indexOf('index-690938fe.js');
   const layer = html.indexOf('responsive-ui.js');
   assert.ok(runtime >= 0 && layer > runtime);
   assert.match(html, /viewport-fit=cover/);

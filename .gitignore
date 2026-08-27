@@ -20,3 +20,7 @@ earth-radio-user-data/
 .superpowers/
 evidence/responsive-ui-*/
 evidence/summary.json
+
+# Playwright artifacts
+test-results/
+playwright-report/

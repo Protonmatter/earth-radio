@@ -4,11 +4,11 @@
 import http from 'node:http';
 import https from 'node:https';
 import { randomBytes } from 'node:crypto';
-import dns from 'node:dns/promises';
 import net from 'node:net';
 import { URL, pathToFileURL } from 'node:url';
 import { TextDecoder } from 'node:util';
-import { handleTrackIdentify } from './metadata-api.mjs';
+import { handleMetadataApi } from './metadata-api.mjs';
+import { createPinnedLookup, isRedirect, normalizeHostname, requestPublic, resolvePublicTarget } from './net-guard.mjs';
 
 const USER_AGENT = 'EarthRadio/0.24.0 desktop-proxy (+https://github.com/Protonmatter/EarthRadio)';
 const RADIO_BROWSER_BASES = [
@@ -30,6 +30,7 @@ const UTF8_METADATA_DECODER = new TextDecoder('utf-8', { fatal: true });
 const WINDOWS_1252_METADATA_DECODER = new TextDecoder('windows-1252');
 
 const directoryCache = new Map();
+const directoryInFlight = new Map();
 
 export async function createDesktopProxy({ port = 0, host = '127.0.0.1', accessToken = randomBytes(32).toString('base64url') } = {}) {
   if (!/^[A-Za-z0-9_-]{32,}$/.test(accessToken)) throw new Error('desktop proxy access token is invalid');
@@ -68,7 +69,7 @@ async function route(req, res, routePrefix) {
   if (req.method === 'OPTIONS') return res.end();
 
   const url = requested;
-  if (await handleTrackIdentify(req, res)) return;
+  if (await handleMetadataApi(req, res)) return;
 
   if (req.method !== 'GET') return sendJson(res, 405, { error: 'method not allowed' });
 
@@ -136,13 +137,22 @@ function allowedCorsOrigin(origin) {
   return '';
 }
 
-async function getStations(limit, requestedCountryCodes = FEATURED_COUNTRY_CODES, countryLimit = FEATURED_COUNTRY_LIMIT) {
-  const countryCodes = parseCountryCodes(requestedCountryCodes, FEATURED_COUNTRY_CODES);
+async function getStations(limit, countryCodes = FEATURED_COUNTRY_CODES, countryLimit = FEATURED_COUNTRY_LIMIT) {
   const maxStations = Math.min(MAX_FEDERATED_STATIONS, limit + countryCodes.length * countryLimit);
   const cacheKey = `federated:${limit}:${countryLimit}:${countryCodes.join(',')}`;
   const cached = directoryCache.get(cacheKey);
   if (cached && Date.now() - cached.savedAt < DIRECTORY_CACHE_TTL_MS) return { ...cached.payload, cached: true };
+  if (directoryInFlight.has(cacheKey)) return { ...await directoryInFlight.get(cacheKey), cached: true };
+  const promise = fetchStationsUncached(limit, countryCodes, countryLimit, maxStations, cacheKey);
+  directoryInFlight.set(cacheKey, promise);
+  try {
+    return await promise;
+  } finally {
+    directoryInFlight.delete(cacheKey);
+  }
+}
 
+async function fetchStationsUncached(limit, countryCodes, countryLimit, maxStations, cacheKey) {
   const errors = [];
   for (const base of RADIO_BROWSER_BASES) {
     try {
@@ -343,8 +353,8 @@ async function recordClick(uuid) {
 async function resolveStream(streamTarget) {
   const streamUrl = streamTarget.href;
   if (!isPlaylistUrl(streamUrl)) return { url: streamUrl, resolved: false };
-  const text = await fetchText(streamTarget, 6000, { Range: `bytes=0-${MAX_PLAYLIST_BYTES - 1}` });
-  const resolved = firstPlayableUrl(text, streamUrl);
+  const playlist = await fetchText(streamTarget, 6000, { Range: `bytes=0-${MAX_PLAYLIST_BYTES - 1}` });
+  const resolved = firstPlayableUrl(playlist.text, playlist.finalUrl);
   if (resolved) {
     const resolvedTarget = await resolvePublicTarget(resolved);
     return { url: resolvedTarget.href, resolved: true };
@@ -355,10 +365,9 @@ async function resolveStream(streamTarget) {
 async function probeStream(streamTarget) {
   const startedAt = Date.now();
   try {
-    const response = await requestLimited(streamTarget, {
+    const response = await requestPublic(streamTarget.href, {
       timeoutMs: STREAM_TIMEOUT_MS,
       maxBytes: MAX_PROBE_BYTES,
-      collectText: false,
       headers: {
         Accept: '*/*',
         Range: 'bytes=0-4095',
@@ -367,14 +376,7 @@ async function probeStream(streamTarget) {
       }
     });
 
-    if (isRedirect(response.statusCode)) {
-      const location = response.headers.location || '';
-      const redirected = new URL(location, streamTarget.href).toString();
-      await resolvePublicTarget(redirected);
-      return { ok: false, status: 'redirect', redirectedUrl: redirected, latencyMs: Date.now() - startedAt, observedAt: new Date().toISOString() };
-    }
-
-    const ok = response.statusCode >= 200 && response.statusCode < 300 || response.statusCode === 206;
+    const ok = response.statusCode >= 200 && response.statusCode < 300;
     return {
       ok,
       status: ok ? 'ok' : `http_${response.statusCode}`,
@@ -410,8 +412,11 @@ function streamNowPlayingSse(req, res, streamUrl) {
   req.on('close', () => close());
 }
 
-function subscribeIcyTitles(streamTarget, onTitle, onError) {
-  const client = streamTarget.url.protocol === 'https:' ? https : http;
+// This is intentionally a long-lived, DNS-pinned ICY subscription rather than a
+// requestPublic call: its lifetime is owned by the renderer's SSE connection. It
+// rejects redirects so a new live subscription cannot silently cross a trust boundary.
+export function subscribeIcyTitles(streamTarget, onTitle, onError, { client: clientOverride } = {}) {
+  const client = clientOverride || (streamTarget.url.protocol === 'https:' ? https : http);
   let closed = false;
   let request = null;
   let lastTitle = '';
@@ -466,7 +471,7 @@ function subscribeIcyTitles(streamTarget, onTitle, onError) {
         }
       }
     });
-    response.on('error', onError);
+    response.on('error', error => { if (!closed) onError?.(error); });
   });
 
   request.on('timeout', () => request.destroy(new Error('nowplaying timeout')));
@@ -485,7 +490,7 @@ function parseIcyTitle(metadata) {
 
 export function decodeIcyMetadata(buffer) {
   const data = Buffer.isBuffer(buffer) ? buffer : Buffer.from(buffer || '');
-  let decoded = '';
+  let decoded;
   try {
     decoded = UTF8_METADATA_DECODER.decode(data);
   } catch {
@@ -504,55 +509,15 @@ async function fetchJson(url, timeoutMs = 8000) {
 }
 
 async function fetchText(streamTarget, timeoutMs = 8000, headers = {}) {
-  const response = await requestLimited(streamTarget, {
+  const response = await requestPublic(streamTarget.href, {
     timeoutMs,
     maxBytes: MAX_PLAYLIST_BYTES,
-    collectText: true,
     headers: { Accept: '*/*', ...headers }
   });
-  if (isRedirect(response.statusCode)) throw new Error('playlist redirect blocked by resolver');
-  if (!(response.statusCode >= 200 && response.statusCode < 300) && response.statusCode !== 206) throw new Error(`HTTP ${response.statusCode}`);
-  return response.text;
+  if (!(response.statusCode >= 200 && response.statusCode < 300)) throw new Error(`HTTP ${response.statusCode}`);
+  return response;
 }
 
-async function requestLimited(streamTarget, { timeoutMs = 8000, headers = {}, maxBytes = MAX_PLAYLIST_BYTES, collectText = true } = {}) {
-  const target = typeof streamTarget === 'string' ? await resolvePublicTarget(streamTarget) : streamTarget;
-  return new Promise((resolve, reject) => {
-    const client = target.url.protocol === 'https:' ? https : http;
-    const request = client.request(target.url, {
-      method: 'GET',
-      timeout: timeoutMs,
-      lookup: createPinnedLookup(target),
-      headers: { 'User-Agent': USER_AGENT, ...headers }
-    }, response => {
-      const statusCode = Number(response.statusCode || 0);
-      const result = { statusCode, headers: response.headers, text: '' };
-      if (isRedirect(statusCode)) {
-        response.resume();
-        resolve(result);
-        return;
-      }
-
-      let received = 0;
-      const chunks = [];
-      response.on('data', chunk => {
-        received += chunk.length;
-        if (received > maxBytes) {
-          request.destroy(new Error(`response exceeded ${maxBytes} byte limit`));
-          return;
-        }
-        if (collectText) chunks.push(chunk);
-      });
-      response.on('end', () => {
-        if (collectText) result.text = Buffer.concat(chunks).toString('utf8');
-        resolve(result);
-      });
-    });
-    request.setTimeout(timeoutMs, () => request.destroy(new Error('request timeout')));
-    request.on('error', reject);
-    request.end();
-  });
-}
 
 function sendJson(res, status, body, headers = {}) {
   res.writeHead(status, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store', ...headers });
@@ -566,12 +531,9 @@ function sendRouteError(res, error) {
 }
 
 function isClientInputError(message) {
-  return /invalid url|only http\/https|missing stream host|private stream|blocked|did not resolve|localhost|origin not allowed|byte limit/i.test(String(message || ''));
+  return /invalid url|only http\/https|missing stream host|private stream|blocked|did not resolve|localhost|origin not allowed/i.test(String(message || ''));
 }
 
-function isRedirect(status) {
-  return [301, 302, 303, 307, 308].includes(Number(status));
-}
 
 function clampInt(value, fallback, min, max) {
   const parsed = Number.parseInt(String(value || ''), 10);
@@ -595,53 +557,6 @@ function firstPlayableUrl(text, baseUrl) {
   return line ? new URL(line, baseUrl).toString() : '';
 }
 
-async function assertPublicUrl(rawUrl) {
-  return (await resolvePublicTarget(rawUrl)).href;
-}
-
-async function resolvePublicTarget(rawUrl) {
-  const parsed = new URL(String(rawUrl || '').trim());
-  if (!['http:', 'https:'].includes(parsed.protocol)) throw new Error('only http/https stream URLs are allowed');
-  if (!parsed.hostname) throw new Error('missing stream host');
-
-  const hostname = normalizeHostname(parsed.hostname);
-  if (net.isIP(hostname)) {
-    if (isPrivateIp(hostname)) throw new Error('private stream IPs are blocked');
-    return { href: parsed.toString(), url: parsed, hostname, address: hostname, family: net.isIP(hostname) };
-  }
-
-  const records = await dns.lookup(hostname, { all: true, verbatim: false });
-  if (!records.length) throw new Error('stream host did not resolve');
-  if (records.some(record => isPrivateIp(record.address))) throw new Error('stream host resolves to a private address');
-  const record = records[0];
-  return { href: parsed.toString(), url: parsed, hostname, address: record.address, family: record.family };
-}
-
-function createPinnedLookup(target) {
-  return (hostname, options, callback) => {
-    const cb = typeof options === 'function' ? options : callback;
-    if (!cb) return;
-    if (normalizeHostname(hostname) === target.hostname) {
-      if (isPrivateIp(target.address)) {
-        cb(new Error('stream host resolves to a private address'));
-        return;
-      }
-      cb(null, target.address, target.family);
-      return;
-    }
-    dns.lookup(normalizeHostname(hostname), { all: true, verbatim: false })
-      .then(records => {
-        if (!records.length) throw new Error('stream host did not resolve');
-        if (records.some(record => isPrivateIp(record.address))) throw new Error('stream host resolves to a private address');
-        cb(null, records[0].address, records[0].family);
-      })
-      .catch(error => cb(error));
-  };
-}
-
-function normalizeHostname(hostname) {
-  return String(hostname || '').replace(/^\[/, '').replace(/\]$/, '').toLowerCase();
-}
 
 function isLoopbackHost(hostname) {
   const host = normalizeHostname(hostname);
@@ -655,41 +570,6 @@ function isLoopbackHost(hostname) {
 function corsHeadersFor(req) {
   const allowedOrigin = allowedCorsOrigin(req.headers.origin);
   return allowedOrigin ? { 'access-control-allow-origin': allowedOrigin, vary: 'origin' } : { vary: 'origin' };
-}
-
-function isPrivateIp(address) {
-  const embeddedIpv4 = ipv4FromMappedOrCompatibleIpv6(address);
-  if (embeddedIpv4) return isPrivateIp(embeddedIpv4);
-  const kind = net.isIP(address);
-  if (kind === 4) {
-    const [a, b] = address.split('.').map(Number);
-    if (a === 10 || a === 127 || a === 0) return true;
-    if (a === 100 && b >= 64 && b <= 127) return true;
-    if (a === 169 && b === 254) return true;
-    if (a === 172 && b >= 16 && b <= 31) return true;
-    if (a === 192 && b === 168) return true;
-    if (a >= 224) return true;
-    return false;
-  }
-  if (kind === 6) {
-    const lower = address.toLowerCase().split('%', 1)[0];
-    const firstWord = Number.parseInt(lower.split(':').find(Boolean) || '0', 16);
-    return lower === '::' || lower === '::1' || lower.startsWith('fc') || lower.startsWith('fd') ||
-      (Number.isFinite(firstWord) && (firstWord & 0xffc0) === 0xfe80) || lower.startsWith('ff');
-  }
-  return false;
-}
-
-function ipv4FromMappedOrCompatibleIpv6(address) {
-  const lower = String(address || '').toLowerCase().split('%', 1)[0];
-  if (!lower.includes(':')) return '';
-  const dotted = lower.match(/^(?:::ffff:|::)(\d{1,3}(?:\.\d{1,3}){3})$/);
-  if (dotted && net.isIP(dotted[1]) === 4) return dotted[1];
-  const hexadecimal = lower.match(/^::(?:ffff:)?([0-9a-f]{1,4}):([0-9a-f]{1,4})$/);
-  if (!hexadecimal) return '';
-  const high = Number.parseInt(hexadecimal[1], 16);
-  const low = Number.parseInt(hexadecimal[2], 16);
-  return `${high >>> 8}.${high & 0xff}.${low >>> 8}.${low & 0xff}`;
 }
 
 

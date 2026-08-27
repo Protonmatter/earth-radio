@@ -15,7 +15,9 @@ window.RADIO_CONFIG = window.RADIO_CONFIG || {
   enabledSources: ['radio-browser', 'icecast-yp'],
   // Radio Browser uses GB for the United Kingdom.
   featuredCountryCodes: ['KR', 'US', 'GB', 'NL', 'FR', 'DE', 'CA'],
-  featuredCountryLimit: 300,
+  // Bounded initial load: the directory-expansion overlay adds further countries on
+  // demand (map "Explore", country picker/filter), so boot no longer pays for them.
+  featuredCountryLimit: 150,
   streamProbeEnabled: true,
   nowPlayingEnabled: true,
   auth: {
@@ -42,7 +44,20 @@ window.RADIO_CONFIG = window.RADIO_CONFIG || {
     cacheTtlLowMs: 86400000,
     cacheTtlMissMs: 21600000,
     requestTimeoutMs: 6500,
-    maxCandidates: 8
+    maxCandidates: 8,
+    // Hosting-platform now-playing APIs (AzuraCast, Zeno.FM, Radio.co, Laut.fm,
+    // Radiojar, Icecast/Shoutcast status). Browser-direct where CORS allows;
+    // routed through the desktop proxy when one is present.
+    platformNowPlayingEnabled: true,
+    platformPollMs: 30000,
+    // Real track metadata carried as HLS timed ID3, read from the hls.js metadata text track.
+    hlsId3Enabled: true,
+    // On-demand audio fingerprinting requires the desktop proxy plus server-side
+    // ACRCloud or AudD credentials; recognition requests are metered, so the manual
+    // button is the default and automatic retries stay off.
+    fingerprintEnabled: true,
+    fingerprintAutoOnRawIcy: false,
+    fingerprintMinIntervalMs: 30000
   }
 };
 

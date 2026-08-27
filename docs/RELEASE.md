@@ -6,7 +6,7 @@ Earth Radio distinguishes three identities that must not be conflated:
 2. A CI run validates a specific Git commit on declared operating systems and retains a staged static artifact.
 3. A Cloudflare Pages deployment serves a specific commit-derived artifact at a public URL.
 
-`npm run verify` produces deterministic `RELEASE_MANIFEST.json` and `sha256sums.txt` files for the candidate tree. The files contain no wall-clock timestamp, so repeated execution against unchanged inputs produces identical output. `.build/site/asset-manifest.json` independently records the publish boundary.
+`npm run release:manifest` produces deterministic `RELEASE_MANIFEST.json` and `sha256sums.txt` files for the candidate tree, including the Supabase configuration, migrations, and RLS tests. The files contain no wall-clock timestamp, so repeated execution against unchanged inputs produces identical output. `npm run verify` performs a non-writing equivalence check and fails CI when either committed file is stale. `.build/site/asset-manifest.json` independently records the publish boundary.
 
 No public repository, tag, GitHub Release, signed desktop installer, or Cloudflare deployment is created by local verification. Those are separate external mutations and require explicit authorization and post-action verification.
 

@@ -137,7 +137,7 @@ export function buildCountryStationQuery(country, stationQuery) {
 export function matchesSelectedCountry(metadata, selectedCountry) {
   const wanted = normalizeSearchTerm(displayCountryName(selectedCountry));
   if (!wanted) return true;
-  const actual = normalizeSearchTerm(displayCountryName(String(metadata ?? '').split(/\s*[·â€¢]\s*/, 1)[0]));
+  const actual = normalizeSearchTerm(displayCountryName(String(metadata ?? '').split(/\s*[·•]\s*/, 1)[0]));
   return actual === wanted;
 }
 
@@ -379,6 +379,33 @@ export function resolveInitialLocale(state, browserLocales = []) {
   return detectBrowserLocale(browserLocales);
 }
 
+/**
+ * Keep the Settings selection, its transient preview, and its stored locale
+ * distinct. This pure transition is shared by the DOM paths so it remains
+ * verifiable when a rendered Electron harness is unavailable.
+ */
+export function advanceLocalePreview(state, action = {}) {
+  const persistedLocale = normalizeLocale(state?.persistedLocale);
+  const selectedLocale = normalizeLocale(state?.selectedLocale ?? state?.previewLocale ?? persistedLocale);
+  const previewLocale = state?.previewLocale ? normalizeLocale(state.previewLocale) : null;
+
+  if (action.type === 'preview') {
+    const next = normalizeLocale(action.locale);
+    return {
+      persistedLocale,
+      previewLocale: next === persistedLocale ? null : next,
+      selectedLocale: next
+    };
+  }
+  if (action.type === 'save') {
+    return { persistedLocale: selectedLocale, previewLocale: null, selectedLocale };
+  }
+  if (action.type === 'dismiss') {
+    return { persistedLocale, previewLocale: null, selectedLocale: persistedLocale };
+  }
+  return { persistedLocale, previewLocale, selectedLocale };
+}
+
 function readLocale(state) {
   if (state?.localeExplicit) return normalizeLocale(state.locale);
   const select = byId('setting-locale');
@@ -394,20 +421,16 @@ function readLocale(state) {
  * attributes from its own three-locale table, so they are re-asserted here and
  * defended by a narrowly scoped attribute observer.
  */
-function applyLocale(locale, persist = true) {
+function applyLocale(locale) {
   const resolved = normalizeLocale(locale);
   applyDocumentLocale(resolved);
-  document.documentElement.lang = resolved;
-  document.documentElement.dir = isRtlLocale(resolved) ? 'rtl' : 'ltr';
-  document.documentElement.dataset.fontProfile = resolved;
-  document.documentElement.style.setProperty('--er-font', FONT_PROFILES[resolved]);
   applyDeclarativeI18n(document, resolved);
   localizeRuntime(resolved);
   refreshCountryPresentation();
 
   const select = byId('setting-locale');
   if (select && [...select.options].some(option => option.value === resolved)) select.value = resolved;
-  return persist ? saveUiState({ locale: resolved, localeExplicit: true }) : loadUiState();
+  return resolved;
 }
 
 function syncThemeColor() {
@@ -421,13 +444,67 @@ export function resolveThemePreference(preference, systemDark = false) {
   return systemDark ? 'dark' : 'light';
 }
 
+// The runtime's authoritative preference store is IndexedDB (kv/prefs); the legacy
+// localStorage key only serves migrated-from profiles and the synchronous first
+// paint. Policing data-theme from the legacy key alone overwrote the user's saved
+// choice on any profile where that key is absent or stale.
+let themePreference = null;
+let themePreferenceHydration = null;
+
+function hydrateThemePreference() {
+  if (themePreferenceHydration) return themePreferenceHydration;
+  themePreferenceHydration = new Promise(resolve => {
+    if (!globalThis.indexedDB) {
+      resolve(null);
+      return;
+    }
+    let request;
+    try {
+      request = globalThis.indexedDB.open('earthRadio', 1);
+    } catch {
+      resolve(null);
+      return;
+    }
+    request.onerror = () => resolve(null);
+    request.onupgradeneeded = () => {
+      request.transaction?.abort();
+      resolve(null);
+    };
+    request.onsuccess = () => {
+      const database = request.result;
+      if (!database.objectStoreNames.contains('kv')) {
+        database.close();
+        resolve(null);
+        return;
+      }
+      const transaction = database.transaction('kv', 'readonly');
+      const get = transaction.objectStore('kv').get('prefs');
+      get.onerror = () => resolve(null);
+      get.onsuccess = () => {
+        const theme = get.result?.theme;
+        resolve(['system', 'light', 'dark'].includes(theme) ? theme : null);
+      };
+      transaction.oncomplete = () => database.close();
+      transaction.onabort = () => database.close();
+    };
+  }).then(preference => {
+    themePreferenceHydration = null;
+    if (preference) themePreference = preference;
+    return preference;
+  });
+  return themePreferenceHydration;
+}
+
 function readStoredTheme() {
-  let preference = 'system';
-  try {
-    const preferences = JSON.parse(globalThis.localStorage?.getItem('earthRadio.preferences.v1') || 'null');
-    if (['system', 'light', 'dark'].includes(preferences?.theme)) preference = preferences.theme;
-  } catch {
-    /* Invalid recovered preferences safely fall back to the system palette. */
+  let preference = themePreference;
+  if (!preference) {
+    preference = 'system';
+    try {
+      const preferences = JSON.parse(globalThis.localStorage?.getItem('earthRadio.preferences.v1') || 'null');
+      if (['system', 'light', 'dark'].includes(preferences?.theme)) preference = preferences.theme;
+    } catch {
+      /* Invalid recovered preferences safely fall back to the system palette. */
+    }
   }
   return resolveThemePreference(preference, Boolean(globalThis.matchMedia?.('(prefers-color-scheme: dark)')?.matches));
 }
@@ -436,11 +513,59 @@ function restoreStoredTheme() {
   const theme = readStoredTheme();
   document.documentElement.dataset.theme = theme;
   syncThemeColor();
+  void hydrateThemePreference().then(preference => {
+    if (!preference) return;
+    const fresh = readStoredTheme();
+    if (document.documentElement.dataset.theme !== fresh) {
+      document.documentElement.dataset.theme = fresh;
+      syncThemeColor();
+    }
+  });
+}
+
+let previewLocale = null;
+
+function effectiveLocale() {
+  return previewLocale ?? normalizeLocale(loadUiState().locale);
+}
+
+function transitionLocalePreview(type, selectedLocale) {
+  const next = advanceLocalePreview({
+    persistedLocale: loadUiState().locale,
+    previewLocale,
+    selectedLocale
+  }, { type, locale: selectedLocale });
+  previewLocale = next.previewLocale;
+  return next;
+}
+
+function previewLocaleSelection(locale) {
+  const next = transitionLocalePreview('preview', locale);
+  applyLocale(next.selectedLocale);
+  return next;
+}
+
+function dismissLocalePreview() {
+  const next = transitionLocalePreview('dismiss');
+  applyLocale(next.selectedLocale);
+  return next;
+}
+
+function saveLocalePreview(locale) {
+  const next = transitionLocalePreview('save', locale);
+  const saved = saveUiState({ locale: next.persistedLocale, localeExplicit: true });
+  previewLocale = null;
+  applyLocale(saved.locale);
+  return saved;
+}
+
+function settingsModalIsVisible(modal) {
+  return Boolean(modal && !modal.hidden && modal.style.display !== 'none' && modal.getAttribute('aria-hidden') !== 'true');
 }
 
 function guardDocumentLocale() {
   const observer = new MutationObserver(() => {
-    const wanted = normalizeLocale(loadUiState().locale);
+    const wanted = effectiveLocale();
     const dir = isRtlLocale(wanted) ? 'rtl' : 'ltr';
     if (document.documentElement.lang !== wanted) document.documentElement.lang = wanted;
     if (document.documentElement.dir !== dir) document.documentElement.dir = dir;
@@ -450,11 +575,22 @@ function guardDocumentLocale() {
     }
     const wantedTheme = readStoredTheme();
     if (document.documentElement.dataset.theme !== wantedTheme) {
-      document.documentElement.dataset.theme = wantedTheme;
+      // The runtime may have just persisted a different choice; re-read the
+      // authoritative store before enforcing rather than stomping a fresh save
+      // with a stale or legacy value.
+      themePreference = null;
+      void hydrateThemePreference().then(() => {
+        const fresh = readStoredTheme();
+        if (document.documentElement.dataset.theme !== fresh) {
+          document.documentElement.dataset.theme = fresh;
+        }
+        syncThemeColor();
+      });
+      return;
     }
     syncThemeColor();
   });
-  observer.observe(document.documentElement, { attributes: true, attributeFilter: ['lang', 'dir', 'data-theme'] });
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ['lang', 'dir', 'data-font-profile', 'data-theme'] });
   globalThis.matchMedia?.('(prefers-color-scheme: dark)')?.addEventListener?.('change', () => restoreStoredTheme());
   syncThemeColor();
 }
@@ -484,9 +620,30 @@ function bindLocaleOptions() {
   if ([...select.options].some(option => option.value === normalized)) select.value = normalized;
 
   select.addEventListener('change', () => {
-    applyLocale(select.value);
+    // Preview only; the Save button commits and closing the modal reverts.
+    previewLocaleSelection(select.value);
     applyViewport(loadUiState());
   });
+
+  const modal = byId('settings-modal');
+  if (modal) {
+    let wasVisible = settingsModalIsVisible(modal);
+    const restorePersistedLocale = () => {
+      dismissLocalePreview();
+      wasVisible = false;
+    };
+    modal.addEventListener('click', event => {
+      if (event.target instanceof Element && event.target.closest('[data-close-settings]')) restorePersistedLocale();
+    }, true);
+    new MutationObserver(() => {
+      const visible = settingsModalIsVisible(modal);
+      if (visible === wasVisible) return;
+      wasVisible = visible;
+      // Opening also clears any interrupted/stale preview before the runtime
+      // repopulates Settings; hidden/style/aria-hidden all reach this path.
+      dismissLocalePreview();
+    }).observe(modal, { attributes: true, attributeFilter: ['hidden', 'style', 'aria-hidden'] });
+  }
 }
 
 /* ------------------------------------------------------------------ *
@@ -620,7 +777,11 @@ function applyWorkspace(state, mode) {
     if (!restore) return;
     restore.hidden = !target;
     restore.setAttribute('data-er-collapse', target || 'map');
-    restore.textContent = target === 'list' ? t('desktop.restoreStations') : t('desktop.restoreMap');
+    const key = target === 'list' ? 'desktop.restoreStations' : 'desktop.restoreMap';
+    // Keep the declarative key in sync; applyDeclarativeI18n would otherwise rewrite
+    // the label back on its next pass.
+    restore.setAttribute('data-i18n', key);
+    restore.textContent = t(key);
   };
 
   if (mode === 'mobile') {
@@ -826,7 +987,7 @@ function updateCountrySummary() {
 
 function readRuntimeSearchStations() {
   if (runtimeSearchStationsPromise) return runtimeSearchStationsPromise;
-  runtimeSearchStationsPromise = new Promise(resolve => {
+  const pending = new Promise(resolve => {
     if (!globalThis.indexedDB) {
       resolve(null);
       return;
@@ -855,11 +1016,16 @@ function readRuntimeSearchStations() {
       transaction.onabort = () => database.close();
     };
   }).then(stations => {
-    runtimeSearchStations = stations;
-    runtimeSearchStationsPromise = null;
+    // Commit only while still current: an invalidation (a settled directory load)
+    // may have started a fresh read that this older one must not clobber.
+    if (runtimeSearchStationsPromise === pending) {
+      runtimeSearchStations = stations;
+      runtimeSearchStationsPromise = null;
+    }
     return stations;
   });
-  return runtimeSearchStationsPromise;
+  runtimeSearchStationsPromise = pending;
+  return pending;
 }
 
 function stationResultMatches(result) {
@@ -941,6 +1107,9 @@ function navigateVisibleSearchResults(delta) {
 
 function selectCountry(country) {
   selectedCountry = String(country || '').trim();
+  if (selectedCountry) {
+    document.dispatchEvent(new CustomEvent('earthradio:country-selected', { detail: { country: selectedCountry } }));
+  }
   const input = byId('er-country-query');
   const clear = byId('er-country-clear');
   if (input) input.value = selectedCountry;
@@ -1032,7 +1201,10 @@ function bindCountrySearch() {
       return;
     }
     engine.dispatchEvent(new KeyboardEvent('keydown', { key: event.key, bubbles: true, cancelable: true }));
-    if (event.key === 'Escape') queueMicrotask(() => presentSearch(true));
+    // Re-present only the mobile search destination; on desktop the palette must close.
+    if (event.key === 'Escape' && classifyViewport() === 'mobile' && loadUiState().destination === 'search') {
+      queueMicrotask(() => presentSearch(true));
+    }
   });
 
   country.addEventListener('focus', () => {
@@ -1106,8 +1278,10 @@ function setDestination(destination, explicit = false) {
     // Listen is the unfiltered feed: release the Saved segment toggles.
     const recent = byId('recent-toggle');
     const favorites = byId('favorites-toggle');
-    if (recent?.classList.contains('header-btn--active')) recent.click();
-    if (favorites?.classList.contains('header-btn--active')) favorites.click();
+    const isOn = element => element?.classList.contains('header-btn--active')
+      || element?.getAttribute('aria-pressed') === 'true';
+    if (isOn(recent)) recent.click();
+    if (isOn(favorites)) favorites.click();
   }
   applyViewport(next);
   setOverflowOpen(false);
@@ -1199,11 +1373,23 @@ function syncNowPlaying() {
 
 function cloneWithoutIds(source) {
   const clone = source.cloneNode(true);
+  linkClonedFingerprintAction(clone);
   if (clone instanceof Element) {
     clone.removeAttribute('id');
     for (const element of clone.querySelectorAll('[id]')) element.removeAttribute('id');
   }
   return clone;
+}
+
+// cloneNode intentionally does not copy event listeners. Mark the cloned Identify
+// button as a proxy for the canonical metadata control; the shared action router then
+// invokes the one fingerprint state machine, while runtime observation re-clones its
+// disabled/text/status state into the open Now Playing surface.
+export function linkClonedFingerprintAction(clone) {
+  const button = clone?.querySelector?.('#metadata-fingerprint-btn');
+  if (!button) return false;
+  button.setAttribute('data-click-id', 'metadata-fingerprint-btn');
+  return true;
 }
 
 function syncNowPlayingMetadata() {
@@ -1291,10 +1477,11 @@ function bindActions() {
       if (classifyViewport() === 'mobile') {
         setDestination('search', true);
       } else {
-        // Desktop keeps the runtime's command palette and its Ctrl/Cmd+K path.
-        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true, bubbles: true }));
+        // Desktop keeps the runtime's command palette and its Ctrl/Cmd+K path. One
+        // event only (both modifiers would open it twice), and focus after the
+        // runtime's own requestAnimationFrame focus of the hidden engine input.
         document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true, bubbles: true }));
-        queueMicrotask(() => byId('er-station-query')?.focus());
+        requestAnimationFrame(() => requestAnimationFrame(() => byId('er-station-query')?.focus()));
       }
       return;
     }
@@ -1356,9 +1543,7 @@ function bindActions() {
 
   byId('settings-save')?.addEventListener('click', () => {
     const select = byId('setting-locale');
-    const locale = normalizeLocale(select?.value);
-    saveUiState({ locale });
-    applyLocale(locale);
+    saveLocalePreview(select?.value);
   }, true);
 
   window.addEventListener('popstate', event => {
@@ -1380,13 +1565,20 @@ function bindActions() {
     if (dest && dest !== loadUiState().destination) setDestination(dest, false);
   });
 
+  // The persisted split percentage was clamped against the workspace width it was
+  // saved at; after a resize it must be re-clamped against the width the window has
+  // NOW — without persisting the transient viewport — or a wide saved split can pin
+  // the list or map below its documented pixel minimums in a narrowed window.
+  const applyViewportReClamped = () => {
+    const state = loadUiState();
+    applyViewport({ ...state, split: clampSplitPercent(state.split, workspaceWidth()) });
+  };
   let resizeFrame = 0;
   const onResize = () => {
     if (resizeFrame) return;
     resizeFrame = requestAnimationFrame(() => {
       resizeFrame = 0;
-      const state = saveUiState({});
-      applyViewport(state);
+      applyViewportReClamped();
     });
   };
   window.addEventListener('resize', onResize);
@@ -1394,7 +1586,7 @@ function bindActions() {
     onResize();
     // iOS reports stale metrics immediately after rotation.
     setTimeout(() => {
-      applyViewport(loadUiState());
+      applyViewportReClamped();
       invalidateMap(true);
     }, 250);
   });
@@ -1402,6 +1594,15 @@ function bindActions() {
 
   document.addEventListener('keydown', event => {
     if (event.key === 'Escape') {
+      const settings = byId('settings-modal');
+      if (settingsModalIsVisible(settings)) {
+        event.preventDefault();
+        dismissLocalePreview();
+        settings.hidden = true;
+        settings.style.display = 'none';
+        settings.setAttribute('aria-hidden', 'true');
+        return;
+      }
       if (!byId('er-overflow')?.hidden) {
         setOverflowOpen(false);
         return;
@@ -1501,7 +1702,7 @@ function observeRuntime() {
     if (frame) return;
     frame = requestAnimationFrame(() => {
       frame = 0;
-      const locale = normalizeLocale(loadUiState().locale);
+      const locale = effectiveLocale();
       applyDeclarativeI18n(document, locale);
       localizeRuntime(locale);
       if (document.documentElement.classList.contains('er-nowplaying-open')) syncNowPlaying();
@@ -1563,18 +1764,27 @@ function start() {
   });
 
   restoreStoredTheme();
-  applyLocale(state.locale, false);
+  applyLocale(state.locale);
   guardDocumentLocale();
   applyViewport(loadUiState());
   bindActions();
   bindSeparator();
   observeRuntime();
+  // A settled directory load (boot, manual refresh, or country expansion) replaces
+  // the runtime's stations.v3 record; the search filter validates tag/language
+  // matches against that snapshot, so it must be re-read or newly loaded stations
+  // stay hidden from an already-typed query until the listener edits it.
+  window.addEventListener('earthradio:stations-load-settled', () => {
+    runtimeSearchStations = null;
+    runtimeSearchStationsPromise = null;
+    void readRuntimeSearchStations().then(() => applySearchScope());
+  });
   document.documentElement.dataset.erUiReady = 'true';
 
   // The recovered runtime renders its first catalog asynchronously.
   window.addEventListener('load', () => {
     applyViewport(loadUiState());
-    localizeRuntime(normalizeLocale(loadUiState().locale));
+    localizeRuntime(effectiveLocale());
     invalidateMap(true);
   }, { once: true });
 }
