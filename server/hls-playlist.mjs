@@ -12,6 +12,17 @@ function resolveSubRange(length, explicitOffset, previous, uri) {
   return { offset, length };
 }
 
+function sameHlsMap(left, right) {
+  if (left === right) return true;
+  if (!left || !right) return false;
+  if (left.uri !== right.uri) return false;
+  const leftRange = left.range || null;
+  const rightRange = right.range || null;
+  if (!leftRange && !rightRange) return true;
+  if (!leftRange || !rightRange) return false;
+  return leftRange.offset === rightRange.offset && leftRange.length === rightRange.length;
+}
+
 export function coherentHlsTail(lines, { segmentCount = HLS_SEGMENT_COUNT } = {}) {
   let activeMap = null;
   let keyMethod = 'NONE';
@@ -62,7 +73,7 @@ export function coherentHlsTail(lines, { segmentCount = HLS_SEGMENT_COUNT } = {}
   if (!recent.length) return { segments: [], map: null, encrypted: false };
   const map = recent.at(-1).map;
   let coherentStart = recent.length - 1;
-  while (coherentStart > 0 && recent[coherentStart - 1].map === map) coherentStart -= 1;
+  while (coherentStart > 0 && sameHlsMap(recent[coherentStart - 1].map, map)) coherentStart -= 1;
   const segments = recent.slice(coherentStart);
   return {
     segments: segments.map(({ uri, range }) => ({ uri, range })),

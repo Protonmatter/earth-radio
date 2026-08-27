@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
+  accountIdFromNamespace,
   buildEnvelope,
   checksum,
   decodeEnvelope,
@@ -87,6 +88,9 @@ test('canonical namespaces come only from authoritative account ids', () => {
   assert.equal(namespaceForAccount(false), 'default');
   assert.equal(namespaceForAccount(0), 'default');
   assert.equal(namespaceForAccount('user/a@example.test'), 'account:user%2Fa%40example.test');
+  assert.equal(accountIdFromNamespace('default'), null);
+  assert.equal(accountIdFromNamespace('account:user%2Fa%40example.test'), 'user/a@example.test');
+  assert.equal(accountIdFromNamespace('account:user-a'), 'user-a');
 });
 
 test('checksum detects torn backup representations', () => {
@@ -582,4 +586,43 @@ test('the reapply record survives a failed corrective transaction and applies on
   // The reapply committed marker generation 4; the boot's own snapshot may then
   // legitimately advance it, so assert it moved past the stale pre-restore state.
   assert.ok((working.state.get('earth-radio-storage-generation-v2')?.generation ?? 0) >= 4);
+});
+
+test('signed-in restore after IDB wipe uses the surviving auth session namespace', async () => {
+  const envelope = buildEnvelope({
+    namespace: 'account:user-a',
+    generation: 4,
+    savedAt: 40,
+    data: completePayload
+  });
+  const runtime = await startRuntime({
+    local: {
+      [backupKey('account:user-a', 'current')]: JSON.stringify(envelope),
+      'earthRadio.auth.activeUser.v1': 'user-a'
+    }
+  });
+  assert.deepEqual(runtime.database.state.get('favorites'), completePayload.favorites);
+  assert.equal(runtime.database.state.get(ACTIVE_KEY), 'user-a');
+  assert.equal(runtime.database.state.get(PRIMARY_KEY).namespace, 'account:user-a');
+  assert.equal(runtime.database.state.get(PRIMARY_KEY).generation, 4);
+  assert.equal(runtime.reloads(), 1);
+});
+
+test('auth session cannot restore a different account backup after IDB wipe', async () => {
+  const foreign = buildEnvelope({
+    namespace: 'account:user-b',
+    generation: 4,
+    savedAt: 40,
+    data: completePayload
+  });
+  const runtime = await startRuntime({
+    local: {
+      [backupKey('account:user-b', 'current')]: JSON.stringify(foreign),
+      'earthRadio.auth.activeUser.v1': 'user-a'
+    }
+  });
+  assert.notDeepEqual(runtime.database.state.get('favorites'), completePayload.favorites);
+  assert.equal(runtime.database.state.get(ACTIVE_KEY), 'user-a');
+  assert.equal(runtime.database.state.get(PRIMARY_KEY).namespace, 'account:user-a');
+  assert.equal(runtime.reloads(), 0);
 });

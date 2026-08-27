@@ -40,7 +40,10 @@ export async function resolveWithCache({ cache, inFlight, key, produce, ttlFor }
   inFlight.set(key, promise);
   try {
     const payload = await promise;
-    cache.write(key, payload, ttlFor(payload));
+    const ttlMs = ttlFor(payload);
+    // Symbols such as DO_NOT_CACHE are dropped by `{...payload}` in write(); skip
+    // the store entirely when the producer asks for a zero TTL.
+    if (ttlMs > 0) cache.write(key, payload, ttlMs);
     return payload;
   } finally {
     inFlight.delete(key);

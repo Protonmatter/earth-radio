@@ -32,6 +32,11 @@ const MAX_HLS_PLAYLIST_DEPTH = 2;
 
 const fingerprintCache = createBoundedTtlCache({ maxEntries: CACHE_MAX_ENTRIES });
 const inFlight = new Map();
+const DO_NOT_CACHE = Symbol('do-not-cache');
+
+function isTerminalSamplingError(error) {
+  return error?.code === 'ERR_FETCH_ATTEMPT_LIMIT' || /deadline/i.test(String(error?.message || ''));
+}
 
 export function fingerprintProviders(env = process.env) {
   const providers = [];
@@ -64,7 +69,7 @@ export async function identifyByFingerprint({
     inFlight,
     key: cacheKey,
     produce: () => identifyUncached(cacheKey, { sampleSeconds, env, providers, deadlineAt, sampleImpl, recognizeImpl }),
-    ttlFor: payload => payload.found ? CACHE_TTL_HIT_MS : CACHE_TTL_MISS_MS
+    ttlFor: payload => payload[DO_NOT_CACHE] ? 0 : (payload.found ? CACHE_TTL_HIT_MS : CACHE_TTL_MISS_MS)
   });
   return joined ? withinDeadline(outcome, deadlineAt) : outcome;
 }
@@ -75,7 +80,9 @@ async function identifyUncached(streamUrl, { sampleSeconds, env, providers, dead
   try {
     sample = await withinDeadline(sampleImpl(streamUrl, { seconds, deadlineAt }), deadlineAt);
   } catch (error) {
-    return { available: true, found: false, reason: `stream sampling failed: ${error?.message || 'unknown error'}` };
+    const payload = { available: true, found: false, reason: `stream sampling failed: ${error?.message || 'unknown error'}` };
+    if (isTerminalSamplingError(error)) Object.defineProperty(payload, DO_NOT_CACHE, { value: true });
+    return payload;
   }
   if (!sample?.body?.length || sample.body.length < MIN_RECOGNIZE_BYTES) {
     return { available: true, found: false, reason: 'stream sample was too short to fingerprint' };

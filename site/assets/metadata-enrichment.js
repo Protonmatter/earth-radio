@@ -668,15 +668,18 @@ function renderIdentity(track, identity) {
     const artistEl = byId('nowcard-artist');
     if (titleEl && identity.title) titleEl.textContent = identity.title;
     if (artistEl) artistEl.textContent = [identity.artist, identity.album, identity.releaseYear, identity.genre].filter(Boolean).join(' | ');
-    if (identity.artworkUrl && /^https:\/\//i.test(identity.artworkUrl)) {
-      const artEl = byId('nowcard-art');
-      if (artEl) {
+    const artEl = byId('nowcard-art');
+    if (artEl) {
+      const href = nowcardArtworkHref(identity.artworkUrl);
+      if (href) {
         const img = document.createElement('img');
         img.className = 'nowcard-art-img';
         img.alt = '';
         img.loading = 'lazy';
-        img.src = identity.artworkUrl;
+        img.src = href;
         artEl.replaceChildren(img);
+      } else {
+        artEl.replaceChildren();
       }
     }
   }
@@ -774,6 +777,15 @@ export function stationIdentityAfterTransition(previous, transition = {}) {
 
 export function pollResultIsCurrent(started, current) {
   return started?.generation === current?.generation && !shouldInvalidateStationIdentity(started, current);
+}
+
+export function nowcardArtworkHref(artworkUrl) {
+  const art = String(artworkUrl || '').trim();
+  return /^https:\/\//i.test(art) ? art : '';
+}
+
+export function shouldApplyTrustedFeed(source, fingerprintBusy) {
+  return source === 'fingerprint' || !fingerprintBusy;
 }
 
 export function shouldPromoteNowcard(identity, minIdentifiedConfidence = DEFAULTS.minIdentifiedConfidence) {
@@ -1132,6 +1144,7 @@ function handleId3CueChange(track) {
 // invalidation semantics (token check, lastTrackKey/currentIdentity updates) cannot
 // diverge. State is only committed after the token survives the await.
 async function identifyAndRender(track, { sourceFeed = '', artworkUrl = '' } = {}) {
+  if (state.fingerprintBusy && sourceFeed !== 'fingerprint') return null;
   renderIdentifying(track);
   const token = Symbol('metadata-request');
   state.inFlight = token;
@@ -1161,6 +1174,7 @@ async function identifyAndRender(track, { sourceFeed = '', artworkUrl = '' } = {
 // pipeline; the catalog match still decides promotion, but the raw text no longer
 // depends on scraping the DOM for ICY fragments.
 async function applyTrustedTrack(track, source, extras = {}) {
+  if (!shouldApplyTrustedFeed(source, state.fingerprintBusy)) return;
   const key = trackKey(track);
   const previous = state.trustedTrack;
   if (previous && previous.key === key && Date.now() - previous.at < TRUSTED_TRACK_FRESH_MS) {

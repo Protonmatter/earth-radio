@@ -756,15 +756,25 @@ test('map tooltip now-playing lookups stay well below the nowplaying WAF budget'
 });
 
 test('structured station-feed identities promote onto the Now Playing card', async () => {
-  const { shouldPromoteNowcard } = await import('../site/assets/metadata-enrichment.js');
+  const { nowcardArtworkHref, shouldApplyTrustedFeed, shouldPromoteNowcard } = await import('../site/assets/metadata-enrichment.js');
   assert.equal(shouldPromoteNowcard({ found: false, confidence: 90, state: 'Raw ICY only' }), false);
   assert.equal(shouldPromoteNowcard({ found: true, confidence: 90, state: 'Identified' }), true);
   assert.equal(shouldPromoteNowcard({ found: true, confidence: 65, state: 'Station feed' }), true);
   assert.equal(shouldPromoteNowcard({ found: true, confidence: 65, state: 'Likely match' }), false);
+  assert.equal(nowcardArtworkHref('https://art.example/cover.jpg'), 'https://art.example/cover.jpg');
+  assert.equal(nowcardArtworkHref('http://insecure.example/cover.jpg'), '');
+  assert.equal(nowcardArtworkHref(''), '');
+  assert.equal(shouldApplyTrustedFeed('platform:listen.moe', true), false);
+  assert.equal(shouldApplyTrustedFeed('hls-id3', true), false);
+  assert.equal(shouldApplyTrustedFeed('fingerprint', true), true);
+  assert.equal(shouldApplyTrustedFeed('platform:listen.moe', false), true);
   const { readFile } = await import('node:fs/promises');
   const overlay = await readFile(new URL('../site/assets/metadata-enrichment.js', import.meta.url), 'utf8');
   assert.match(overlay, /identity\.found = true;/);
   assert.match(overlay, /shouldPromoteNowcard\(identity, cfg\.minIdentifiedConfidence\)/);
+  assert.match(overlay, /if \(state\.fingerprintBusy && sourceFeed !== 'fingerprint'\) return null;/);
+  assert.match(overlay, /if \(!shouldApplyTrustedFeed\(source, state\.fingerprintBusy\)\) return;/);
+  assert.match(overlay, /artEl\.replaceChildren\(\);/);
 });
 
 test('fingerprint availability probe is rechecked against the live station before sampling', async () => {

@@ -6,6 +6,7 @@ const DB_NAME = 'earthRadio';
 const DB_VERSION = 1;
 const KV_STORE = 'kv';
 const ACTIVE_NAMESPACE_KEY = 'account:active';
+const AUTH_ACTIVE_USER_KEY = 'earthRadio.auth.activeUser.v1';
 const PRIMARY_GENERATION_KEY = 'earth-radio-storage-generation-v2';
 const USER_KEYS = Object.freeze(['favorites', 'recents', 'prefs', 'badStations', 'lastPlayed']);
 const DEFAULT_RECORDS = Object.freeze({
@@ -43,6 +44,24 @@ export function namespaceForAccount(accountId) {
   return typeof accountId !== 'string' || accountId.length === 0
     ? 'default'
     : `account:${encodeURIComponent(accountId)}`;
+}
+
+export function accountIdFromNamespace(namespace) {
+  if (typeof namespace !== 'string' || namespace === 'default' || !namespace.startsWith('account:')) return null;
+  try {
+    return decodeURIComponent(namespace.slice('account:'.length)) || null;
+  } catch {
+    return null;
+  }
+}
+
+function readAuthSessionAccountId(storage) {
+  try {
+    const value = String(storage?.getItem?.(AUTH_ACTIVE_USER_KEY) || '').trim();
+    return value || null;
+  } catch {
+    return null;
+  }
 }
 
 function envelopeRepresentation({ v, namespace, generation, savedAt, payload }) {
@@ -295,8 +314,13 @@ async function restoreBackup(db, env, namespace, backup) {
     : null;
   try {
     await env.transact(db, 'readwrite', async store => {
-      const accountId = await store.get(ACTIVE_NAMESPACE_KEY);
-      if (namespaceForAccount(accountId || null) !== namespace) throw new Error('Account changed during storage restore');
+      const storedActive = await store.get(ACTIVE_NAMESPACE_KEY);
+      if (storedActive) {
+        if (namespaceForAccount(storedActive) !== namespace) throw new Error('Account changed during storage restore');
+      } else {
+        const restoredId = accountIdFromNamespace(namespace);
+        if (restoredId) await store.put(restoredId, ACTIVE_NAMESPACE_KEY);
+      }
       if (envelope && !writeBackup(env.localStorage, envelope)) throw new Error('Legacy backup migration failed');
       for (const key of USER_KEYS) await store.put(records[key], key);
       await store.put(primaryMarker(namespace, backup.generation, backup.savedAt), PRIMARY_GENERATION_KEY);
@@ -355,7 +379,12 @@ async function reapplyRestoredRecords(env, record) {
     const db = await env.openDb();
     await env.transact(db, 'readwrite', async store => {
       const accountId = await store.get(ACTIVE_NAMESPACE_KEY);
-      if (namespaceForAccount(accountId || null) !== record.namespace) return;
+      if (!accountId) {
+        const restoredId = accountIdFromNamespace(record.namespace);
+        if (restoredId) await store.put(restoredId, ACTIVE_NAMESPACE_KEY);
+      } else if (namespaceForAccount(accountId) !== record.namespace) {
+        return;
+      }
       for (const key of USER_KEYS) await store.put(record.data[key], key);
       await store.put(primaryMarker(record.namespace, record.generation, record.savedAt), PRIMARY_GENERATION_KEY);
     });
@@ -432,7 +461,8 @@ async function start(env) {
     guard.lastError = String(error?.message || error || 'startup snapshot failed');
     return;
   }
-  const namespace = namespaceForAccount(startup.accountId);
+  const accountId = startup.accountId || readAuthSessionAccountId(env.localStorage);
+  const namespace = namespaceForAccount(accountId);
   if (!markerIsValid(startup.marker, namespace)) {
     let backup = readBestV2Backup(env.localStorage, namespace);
     if (!backup && namespace === 'default') backup = readBestV1Backup(env.localStorage);
@@ -446,6 +476,18 @@ async function start(env) {
       } else {
         return;
       }
+    }
+  }
+
+  if (!startup.accountId && accountId) {
+    try {
+      await env.transact(db, 'readwrite', async store => {
+        const current = await store.get(ACTIVE_NAMESPACE_KEY);
+        if (!current) await store.put(accountId, ACTIVE_NAMESPACE_KEY);
+      });
+    } catch (error) {
+      guard.lastError = String(error?.message || error || 'account adopt failed');
+      return;
     }
   }
 
