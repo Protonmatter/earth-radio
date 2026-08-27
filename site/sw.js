@@ -1,4 +1,4 @@
-const CACHE_NAME = 'earth-radio-shell-v38-visible-nowplaying-1';
+const CACHE_NAME = 'earth-radio-shell-v39-review-p2-1';
 const SHELL_ASSETS = [
   './',
   './index.html',

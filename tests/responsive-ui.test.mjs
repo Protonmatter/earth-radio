@@ -51,7 +51,8 @@ test('Now Playing sheet copy prefers a live track over the station name', () => 
     station: '102.7 KIIS FM',
     facts: 'United States · 0 kbps · AAC',
     trackTitle: 'Stupid Song',
-    trackArtist: 'Olivia Rodrigo | Pop'
+    trackArtist: 'Olivia Rodrigo | Pop',
+    playerTrack: 'Olivia Rodrigo \u2013 Stupid Song'
   }), { title: 'Stupid Song', meta: 'Olivia Rodrigo | Pop' });
   assert.deepEqual(nowPlayingSheetCopy({
     station: 'BBC World Service',
@@ -59,6 +60,13 @@ test('Now Playing sheet copy prefers a live track over the station name', () => 
     trackTitle: '-',
     playerTrack: ''
   }), { title: 'BBC World Service', meta: 'United Kingdom · 56 kbps · MP3' });
+  assert.deepEqual(nowPlayingSheetCopy({
+    station: '102.7 KIIS FM',
+    facts: 'United States · 0 kbps · AAC',
+    trackTitle: 'LA',
+    trackArtist: 'Live radio',
+    playerTrack: ''
+  }), { title: '102.7 KIIS FM', meta: 'United States · 0 kbps · AAC' });
   assert.deepEqual(nowPlayingSheetCopy({
     station: 'LISTEN.moe',
     facts: 'Japan · 128 kbps · MP3',

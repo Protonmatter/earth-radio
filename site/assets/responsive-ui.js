@@ -1347,19 +1347,19 @@ function closeNowPlaying() {
 
 export function nowPlayingSheetCopy({ station = '', facts = '', trackTitle = '', trackArtist = '', playerTrack = '' } = {}) {
   const stationName = String(station || '').trim();
+  const liveLine = String(playerTrack || '').trim();
+  const factsLine = String(facts || '').trim();
+  // The recovered runtime can write raw ICY into #nowcard-title before the overlay
+  // decides it is trustworthy. Only the promoted player-track line is that signal.
+  const promoted = Boolean(liveLine) && liveLine !== stationName;
+  if (!promoted) return { title: stationName, meta: factsLine };
   const song = String(trackTitle || '').trim();
   const artistLine = String(trackArtist || '').trim();
-  const liveLine = String(playerTrack || '').trim();
   const usableSong = Boolean(song) && song !== '-' && song !== stationName;
-  if (usableSong) {
-    return { title: song, meta: artistLine || liveLine || facts };
-  }
-  if (liveLine && liveLine !== stationName) {
-    const parts = liveLine.split(/\s\u2013\s|\s-\s/).map(part => part.trim()).filter(Boolean);
-    if (parts.length >= 2) return { title: parts.slice(1).join(' - '), meta: parts[0] };
-    return { title: liveLine, meta: facts };
-  }
-  return { title: stationName, meta: facts };
+  if (usableSong) return { title: song, meta: artistLine || liveLine || factsLine };
+  const parts = liveLine.split(/\s\u2013\s|\s-\s/).map(part => part.trim()).filter(Boolean);
+  if (parts.length >= 2) return { title: parts.slice(1).join(' - '), meta: parts[0] };
+  return { title: liveLine, meta: factsLine };
 }
 
 function syncNowPlaying() {

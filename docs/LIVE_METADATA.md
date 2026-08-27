@@ -135,9 +135,12 @@ results (LISTEN.moe, SomaFM, parsed ICY with artist and title) skip fingerprinti
 
 iHeart / MediaBase ICY blobs are parsed into artist/title before the generic dash
 splitter. Two encoder shapes are covered: `title="…",artist="…"` and the current-song
-form `Artist - text="Title" song_spot="M" MediaBaseId="…"`. Artwork URLs inside that
-blob are not treated as station branding. Trailing station branding such as
-`Classic Vinyl on walmradio.com` is stripped so a `Title by Artist` payload survives.
+form `Artist - text="Title" song_spot="M" MediaBaseId="…"`, including artist names that
+contain commas. Artwork URLs inside that blob are not treated as station branding.
+Trailing station branding such as `Classic Vinyl on walmradio.com` is stripped so a
+`Title by Artist` payload survives. Structured Icecast `artist` plus `title` fields are
+kept when the title is a real song that happens to contain lowercase "by"
+(`Stand by Me`); a reparse is applied only when it agrees with that artist.
 
 A promoted Station feed or Identified track is written onto the Now Playing card, the
 player-bar `#player-track` line, and the mobile Now Playing sheet headline, so live

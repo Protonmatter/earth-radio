@@ -106,10 +106,10 @@
         "sha256": "e213700a1a541139a66542e9bd8e615ad5dfc735d52c59569730d9a021e86009"
       },
       "current": {
-        "bytes": 71844,
-        "sha256": "1b0ea70c4fd6611df87b7b4b602941376890c2909b46a1174e26b2cc7151d702"
+        "bytes": 72566,
+        "sha256": "6ccf4d57293633b40046cb5f755257249b13fa48ae828412a22cf6ed2e973140"
       },
-      "reason": "Layer live-metadata feeds above raw ICY: hosting-platform now-playing APIs, HLS timed ID3 text tracks, and an opt-in fingerprint identify button. Preserve the canonical selected URL and UUID through same-station MediaSource reattachment, invalidate only on correlated selection/change or explicit clear, retain the original trimmed URL after validation, and fence both cross-station and same-station out-of-order metadata polls by identity plus a monotonic poll generation. Cap speculative map-tooltip /api/nowplaying lookups at 8 per 60 seconds so marker sweeps cannot exhaust the zone WAF. Coalesce play-event polls, recheck fingerprint identity after the availability probe, and promote structured Station feed results onto the primary card. Export detectPlatformEndpoints so catalogued LISTEN.moe stream URLs can be tested against the browser WebSocket gateway. Hold background platform and HLS feeds while Identify is sampling so they cannot steal the in-flight token, and clear Now Playing art when a promoted identity has no https artwork. Auto-fingerprint the playing stream when free feeds miss, parse iHeart MediaBase ICY including the current-song text= form, resolve SomaFM songs JSON from ice*.somafm.com URLs, and mirror promoted tracks onto the player-bar live line."
+      "reason": "Layer live-metadata feeds above raw ICY: hosting-platform now-playing APIs, HLS timed ID3 text tracks, and an opt-in fingerprint identify button. Preserve the canonical selected URL and UUID through same-station MediaSource reattachment, invalidate only on correlated selection/change or explicit clear, retain the original trimmed URL after validation, and fence both cross-station and same-station out-of-order metadata polls by identity plus a monotonic poll generation. Cap speculative map-tooltip /api/nowplaying lookups at 8 per 60 seconds so marker sweeps cannot exhaust the zone WAF. Coalesce play-event polls, recheck fingerprint identity after the availability probe, and promote structured Station feed results onto the primary card. Export detectPlatformEndpoints so catalogued LISTEN.moe stream URLs can be tested against the browser WebSocket gateway. Hold background platform and HLS feeds while Identify is sampling so they cannot steal the in-flight token, and clear Now Playing art when a promoted identity has no https artwork. Auto-fingerprint the playing stream when free feeds miss, parse iHeart MediaBase ICY including the current-song text= form and comma-containing artist prefixes, resolve SomaFM songs JSON from ice*.somafm.com URLs, keep structured Icecast titles that contain lowercase by, and mirror promoted tracks onto the player-bar live line using the configured promotion threshold."
     },
     {
       "path": "site/config.js",
@@ -154,10 +154,10 @@
         "sha256": "b09e3207532fe7f47d14e9c53804d7e8caf31cad2fcb2c652b728a93871ea094"
       },
       "current": {
-        "bytes": 2968,
-        "sha256": "8578a74c600d7f3dd14e36daa31213146a9b00bd4799716f30d83aa912e3ac1b"
+        "bytes": 2959,
+        "sha256": "5302c8376a51402fa866abfb706936c04827b1c5506a5730cc3488128e4cc4a9"
       },
-      "reason": "Use network-first navigation/configuration updates, keep hashed recovered assets cache-first, reload installation requests so stale browser HTTP entries cannot seed the new service-worker cache, keep the previous worker when reload precaching fails, and precache the UI refresh stylesheet. Precache pinned-stations.js for LISTEN.moe catalog pinning. Bump the shell cache generation to v38 so clients pick up visible now-playing overlays (iHeart text= ICY, player-bar track line)."
+      "reason": "Use network-first navigation/configuration updates, keep hashed recovered assets cache-first, reload installation requests so stale browser HTTP entries cannot seed the new service-worker cache, keep the previous worker when reload precaching fails, and precache the UI refresh stylesheet. Precache pinned-stations.js for LISTEN.moe catalog pinning. Bump the shell cache generation to v39 so clients pick up review-P2 parser and promotion-gate overlays."
     }
   ]
 }

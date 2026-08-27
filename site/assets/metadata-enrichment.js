@@ -115,7 +115,7 @@ function parseTaggedIcyMetadata(rawInput) {
   if (title && artistField) return { artist: artistField, title, raw: `${artistField} - ${title}` };
   if (title) {
     const prefix = text.split(/\s[-\u2013\u2014]\s+(?:text|title)\s*=/i)[0]?.trim() || '';
-    if (prefix && prefix !== text.trim() && !/[=,]/.test(prefix) && prefix.length <= 120) {
+    if (prefix && prefix !== text.trim() && !/=/.test(prefix) && prefix.length <= 120) {
       return { artist: prefix, title, raw: `${prefix} - ${title}` };
     }
   }
@@ -131,7 +131,13 @@ function looksLikeStationBranding(value) {
 
 function titleNeedsReparse(title) {
   const text = String(title || '');
-  return looksLikeStationBranding(text) || /\sby\s/.test(text) || /\b(?:text|title)\s*=\s*"/i.test(text);
+  return looksLikeStationBranding(text) || /\b(?:text|title)\s*=\s*"/i.test(text);
+}
+
+function artistsAgree(left, right) {
+  const a = String(left || '').trim().toLowerCase();
+  const b = String(right || '').trim().toLowerCase();
+  return Boolean(a && b && (a === b || a.includes(b) || b.includes(a)));
 }
 
 export function parseNowPlaying(rawInput) {
@@ -633,10 +639,11 @@ function playerTrackLine() {
 function renderPlayerTrack(identity) {
   const line = playerTrackLine();
   if (!line) return;
+  const cfg = config();
   const song = String(identity?.title || '').trim();
   const artist = String(identity?.artist || '').trim();
   const label = [artist, song].filter(Boolean).join(' \u2013 ');
-  if (!shouldPromoteNowcard(identity) || !label) {
+  if (!shouldPromoteNowcard(identity, cfg.minIdentifiedConfidence) || !label) {
     line.hidden = true;
     line.textContent = '';
     return;
@@ -1065,9 +1072,18 @@ function platformTrack(platform, artist, title, combined, artworkUrl) {
   const cleanTitle = String(title || '').trim();
   const raw = String(combined || '').trim() || [cleanArtist, cleanTitle].filter(Boolean).join(' - ');
   const messyTitle = titleNeedsReparse(cleanTitle);
-  let track = cleanArtist && cleanTitle && !messyTitle
-    ? { artist: cleanArtist, title: cleanTitle, raw: raw || `${cleanArtist} - ${cleanTitle}` }
-    : parseNowPlaying(messyTitle ? cleanTitle : raw);
+  let track;
+  if (cleanArtist && cleanTitle && !messyTitle) {
+    const parsed = parseNowPlaying(cleanTitle);
+    track = parsed?.artist && parsed?.title && artistsAgree(parsed.artist, cleanArtist)
+      ? { artist: cleanArtist, title: parsed.title, raw: parsed.raw || raw }
+      : { artist: cleanArtist, title: cleanTitle, raw: raw || `${cleanArtist} - ${cleanTitle}` };
+  } else {
+    track = parseNowPlaying(messyTitle ? cleanTitle : raw);
+    if (track?.artist && track?.title && cleanArtist && !artistsAgree(track.artist, cleanArtist)) {
+      track = cleanTitle ? { artist: cleanArtist, title: cleanTitle, raw: raw || `${cleanArtist} - ${cleanTitle}` } : null;
+    }
+  }
   if (!track?.title) return null;
   // An artist-only payload parses into title === artist; that is not a track identity.
   if (cleanArtist && !cleanTitle && track.title === cleanArtist) return null;

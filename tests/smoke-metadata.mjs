@@ -84,6 +84,11 @@ if (iheartNow.artist !== 'Olivia Rodrigo' || iheartNow.title !== 'Stupid Song') 
   throw new Error('parseNowPlaying failed iHeart current-song text= StreamTitle');
 }
 
+const commaArtist = parseNowPlaying('Earth, Wind & Fire - text="September" song_spot="M" MediaBaseId="1"');
+if (commaArtist.artist !== 'Earth, Wind & Fire' || commaArtist.title !== 'September') {
+  throw new Error('parseNowPlaying failed MediaBase artist names that contain commas');
+}
+
 if (parseNowPlaying('_') !== null) {
   throw new Error('placeholder StreamTitle should be rejected');
 }

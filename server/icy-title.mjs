@@ -44,7 +44,7 @@ export function parseTaggedIcyMetadata(rawInput) {
   if (title && artistField) return { artist: artistField, title, raw: `${artistField} - ${title}` };
   if (title) {
     const prefix = text.split(/\s[-\u2013\u2014]\s+(?:text|title)\s*=/i)[0]?.trim() || '';
-    if (prefix && prefix !== text.trim() && !/[=,]/.test(prefix) && prefix.length <= 120) {
+    if (prefix && prefix !== text.trim() && !/=/.test(prefix) && prefix.length <= 120) {
       return { artist: prefix, title, raw: `${prefix} - ${title}` };
     }
   }
