@@ -514,6 +514,11 @@ async function boot() {
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') void runSync(); });
 
   render();
+  const callbackParams = new URL(window.location.href).searchParams;
+  if (callbackParams.get('code') || callbackParams.get('error')) {
+    modal.hidden = false;
+    if (callbackParams.get('code')) message('Finishing sign-in…');
+  }
   try {
     session = await auth.initialize();
     authInitialized = true;

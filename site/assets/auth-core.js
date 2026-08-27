@@ -1,5 +1,7 @@
 const SESSION_KEY = 'earthRadio.auth.session.v1';
 const PKCE_KEY = 'earthRadio.auth.pkce.v1';
+const LAST_FLOW_KEY = 'earthRadio.auth.pkce.last.v1';
+const COOKIE_NAME = 'er_pkce_v1';
 const FLOW_PARAM = 'er_auth_flow';
 const API_VERSION = '2024-01-01';
 const FLOW_TTL_MS = 20 * 60 * 1000;
@@ -28,10 +30,85 @@ function normalizeSession(value) {
   return { ...value, expires_at: expiresAt };
 }
 
+function parseFlowMap(raw) {
+  if (!raw) return {};
+  try {
+    const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
+  } catch { return {}; }
+}
+
+function mergeFlowMaps(...maps) {
+  const merged = {};
+  for (const map of maps) {
+    for (const [flowId, flow] of Object.entries(map || {})) {
+      if (!flow?.verifier) continue;
+      const existing = merged[flowId];
+      if (!existing || Number(flow.createdAt || 0) >= Number(existing.createdAt || 0)) {
+        merged[flowId] = flow;
+      }
+    }
+  }
+  return merged;
+}
+
+function liveFlowEntries(flows, now = Date.now()) {
+  return Object.entries(flows || {}).filter(([, flow]) => (
+    flow?.verifier && now - Number(flow.createdAt || 0) < FLOW_TTL_MS
+  ));
+}
+
+function readStore(store, key) {
+  try { return store?.getItem?.(key) ?? null; }
+  catch { return null; }
+}
+
+function writeStore(store, key, value) {
+  try {
+    if (!store) return;
+    if (value == null) store.removeItem?.(key);
+    else store.setItem?.(key, value);
+  } catch {}
+}
+
+function createDocumentCookieJar(locationRef) {
+  return {
+    read() {
+      if (typeof document === 'undefined') return null;
+      try {
+        const prefix = `${COOKIE_NAME}=`;
+        const match = String(document.cookie || '').split(/;\s*/).find(part => part.startsWith(prefix));
+        if (!match) return null;
+        return decodeURIComponent(match.slice(prefix.length));
+      } catch { return null; }
+    },
+    write(value, maxAgeSec) {
+      if (typeof document === 'undefined') return;
+      try {
+        const secure = String(locationRef?.protocol || '') === 'https:' || locationRef?.hostname === 'localhost'
+          ? '; Secure'
+          : '';
+        document.cookie = `${COOKIE_NAME}=${encodeURIComponent(value)}; Path=/; Max-Age=${maxAgeSec}; SameSite=Lax${secure}`;
+      } catch {}
+    },
+    clear() {
+      if (typeof document === 'undefined') return;
+      try {
+        const secure = String(locationRef?.protocol || '') === 'https:' || locationRef?.hostname === 'localhost'
+          ? '; Secure'
+          : '';
+        document.cookie = `${COOKIE_NAME}=; Path=/; Max-Age=0; SameSite=Lax${secure}`;
+      } catch {}
+    }
+  };
+}
+
 export function createAuthClient({
   url,
   publishableKey,
   storage = globalThis.localStorage,
+  sessionStorageImpl = globalThis.sessionStorage,
+  cookieJar,
   fetchImpl = globalThis.fetch?.bind(globalThis),
   location = globalThis.location,
   history = globalThis.history,
@@ -48,6 +125,7 @@ export function createAuthClient({
 
   const baseUrl = url.replace(/\/$/, '');
   const authUrl = `${baseUrl}/auth/v1`;
+  const cookies = cookieJar || createDocumentCookieJar(location);
   let session = readSession();
   let refreshPromise = null;
   const subscribers = new Set();
@@ -129,10 +207,42 @@ export function createAuthClient({
   }
 
   function readFlows() {
+    return mergeFlowMaps(
+      parseFlowMap(cookies.read()),
+      parseFlowMap(readStore(storage, PKCE_KEY)),
+      parseFlowMap(readStore(sessionStorageImpl, PKCE_KEY))
+    );
+  }
+
+  function persistFlows(flows, lastFlowId) {
+    const live = Object.fromEntries(liveFlowEntries(flows));
+    const payload = Object.keys(live).length ? JSON.stringify(live) : null;
+    writeStore(storage, PKCE_KEY, payload);
+    writeStore(sessionStorageImpl, PKCE_KEY, payload);
+    writeStore(sessionStorageImpl, LAST_FLOW_KEY, lastFlowId || null);
     try {
-      const parsed = JSON.parse(storage.getItem(PKCE_KEY));
-      return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
-    } catch { return {}; }
+      if (payload) cookies.write(payload, Math.ceil(FLOW_TTL_MS / 1000));
+      else cookies.clear();
+    } catch {}
+  }
+
+  function resolvePkceFlow(requestedFlowId) {
+    const live = Object.fromEntries(liveFlowEntries(readFlows()));
+    if (requestedFlowId && live[requestedFlowId]?.verifier) {
+      return { flowId: requestedFlowId, verifier: live[requestedFlowId].verifier, flows: live };
+    }
+    const lastFlowId = readStore(sessionStorageImpl, LAST_FLOW_KEY);
+    if (lastFlowId && live[lastFlowId]?.verifier) {
+      return { flowId: lastFlowId, verifier: live[lastFlowId].verifier, flows: live };
+    }
+    const ranked = liveFlowEntries(live).sort((left, right) => (
+      Number(left[1].createdAt || 0) - Number(right[1].createdAt || 0)
+    ));
+    if (ranked.length) {
+      const [flowId, flow] = ranked[ranked.length - 1];
+      return { flowId, verifier: flow.verifier, flows: live };
+    }
+    return { flowId: requestedFlowId || null, verifier: null, flows: live };
   }
 
   async function beginPkce() {
@@ -141,13 +251,11 @@ export function createAuthClient({
     cryptoImpl.getRandomValues(idBytes);
     const flowId = base64Url(idBytes);
     const now = Date.now();
-    const retained = Object.entries(readFlows())
-      .filter(([, flow]) => now - Number(flow?.createdAt || 0) < FLOW_TTL_MS)
-      .slice(-(MAX_FLOWS - 1));
-    storage.setItem(PKCE_KEY, JSON.stringify(Object.fromEntries([
+    const retained = liveFlowEntries(readFlows(), now).slice(-(MAX_FLOWS - 1));
+    persistFlows(Object.fromEntries([
       ...retained,
       [flowId, { verifier: pkce.verifier, createdAt: now }]
-    ])));
+    ]), flowId);
     return { ...pkce, flowId };
   }
 
@@ -172,10 +280,13 @@ export function createAuthClient({
     history.replaceState({}, '', `${current.pathname}${current.search}${current.hash}`);
   }
 
-  async function exchangeCode(code, flowId) {
-    const flows = readFlows();
-    const verifier = flows[flowId]?.verifier;
-    if (!flowId || !verifier) throw new Error('The sign-in verifier is missing. Please start sign-in again.');
+  async function exchangeCode(code, requestedFlowId) {
+    const { flowId, verifier, flows } = resolvePkceFlow(requestedFlowId);
+    if (!verifier) {
+      persistFlows({}, null);
+      cleanCallbackUrl();
+      throw new Error('The sign-in verifier is missing. Please start sign-in again.');
+    }
     let consumeFlow = true;
     try {
       const value = await request(`${authUrl}/token?grant_type=pkce`, {
@@ -188,8 +299,7 @@ export function createAuthClient({
     } finally {
       if (consumeFlow) {
         delete flows[flowId];
-        if (Object.keys(flows).length) storage.setItem(PKCE_KEY, JSON.stringify(flows));
-        else storage.removeItem(PKCE_KEY);
+        persistFlows(flows, null);
         cleanCallbackUrl();
       }
     }
@@ -283,7 +393,7 @@ export function createAuthClient({
         // A different tab may have installed a replacement session while revocation was in flight.
         if (session === current) {
           saveSession(null, 'SIGNED_OUT');
-          storage.removeItem(PKCE_KEY);
+          persistFlows({}, null);
           signedOut = true;
         } else if (!session) {
           // Another tab completed the same sign-out while this request was in flight.
@@ -312,4 +422,9 @@ export function createAuthClient({
   };
 }
 
-export const authStorageKeys = Object.freeze({ session: SESSION_KEY, pkce: PKCE_KEY });
+export const authStorageKeys = Object.freeze({
+  session: SESSION_KEY,
+  pkce: PKCE_KEY,
+  pkceLast: LAST_FLOW_KEY,
+  pkceCookie: COOKIE_NAME
+});

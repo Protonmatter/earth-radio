@@ -20,6 +20,15 @@ function memoryStorage() {
   };
 }
 
+function memoryCookie() {
+  let value = null;
+  return {
+    read: () => value,
+    write: next => { value = String(next); },
+    clear: () => { value = null; }
+  };
+}
+
 function jsonResponse(body, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
@@ -166,6 +175,196 @@ test('parallel OAuth starts retain independent PKCE verifiers', async () => {
   const flowIds = assigned.map(value => new URL(new URL(value).searchParams.get('redirect_to')).searchParams.get('er_auth_flow'));
   assert.equal(new Set(flowIds).size, 2);
   assert.ok(flowIds.every(flowId => flows[flowId]?.verifier));
+});
+
+test('OAuth sign-in mirrors the PKCE verifier to session storage and a cookie', async () => {
+  const storage = memoryStorage();
+  const sessionStore = memoryStorage();
+  const cookie = memoryCookie();
+  const assigned = [];
+  const client = createAuthClient({
+    url: 'https://project.supabase.co',
+    publishableKey: 'sb_publishable_test',
+    storage,
+    sessionStorageImpl: sessionStore,
+    cookieJar: cookie,
+    location: {
+      href: 'https://earth-radio.example/', origin: 'https://earth-radio.example', pathname: '/',
+      assign: url => assigned.push(url)
+    }
+  });
+
+  await client.signInWithOAuth('github');
+
+  const flowId = new URL(new URL(assigned[0]).searchParams.get('redirect_to')).searchParams.get('er_auth_flow');
+  const localFlows = JSON.parse(storage.getItem('earthRadio.auth.pkce.v1'));
+  const sessionFlows = JSON.parse(sessionStore.getItem('earthRadio.auth.pkce.v1'));
+  const cookieFlows = JSON.parse(cookie.read());
+  assert.ok(localFlows[flowId].verifier);
+  assert.equal(sessionFlows[flowId].verifier, localFlows[flowId].verifier);
+  assert.equal(cookieFlows[flowId].verifier, localFlows[flowId].verifier);
+  assert.equal(sessionStore.getItem('earthRadio.auth.pkce.last.v1'), flowId);
+});
+
+test('OAuth callback recovers the verifier when the flow id is stripped from the URL', async () => {
+  const storage = memoryStorage();
+  storage.setItem('earthRadio.auth.pkce.v1', JSON.stringify({
+    'flow-1': { verifier: 'verifier-value', createdAt: Date.now() }
+  }));
+  const requests = [];
+  const replaced = [];
+  const client = createAuthClient({
+    url: 'https://project.supabase.co',
+    publishableKey: 'sb_publishable_test',
+    storage,
+    location: {
+      href: 'https://earth-radio.example/?code=oauth-code',
+      origin: 'https://earth-radio.example', pathname: '/',
+      search: '?code=oauth-code', hash: ''
+    },
+    history: { replaceState: (_state, _title, url) => replaced.push(url) },
+    fetchImpl: async (url, init) => {
+      requests.push({ url, init });
+      return jsonResponse({
+        access_token: 'access', refresh_token: 'refresh', expires_in: 3600,
+        user: { id: 'user-1', email: 'person@example.test' }
+      });
+    }
+  });
+
+  const session = await client.initialize();
+
+  assert.equal(session.user.id, 'user-1');
+  assert.deepEqual(JSON.parse(requests[0].init.body), {
+    auth_code: 'oauth-code', code_verifier: 'verifier-value'
+  });
+  assert.equal(storage.getItem('earthRadio.auth.pkce.v1'), null);
+  assert.equal(replaced[0], '/');
+});
+
+test('OAuth callback recovers the verifier from a SameSite cookie after storage is cleared', async () => {
+  const storage = memoryStorage();
+  const sessionStore = memoryStorage();
+  const cookie = memoryCookie();
+  cookie.write(JSON.stringify({
+    'flow-1': { verifier: 'cookie-verifier', createdAt: Date.now() }
+  }));
+  const requests = [];
+  const client = createAuthClient({
+    url: 'https://project.supabase.co',
+    publishableKey: 'sb_publishable_test',
+    storage,
+    sessionStorageImpl: sessionStore,
+    cookieJar: cookie,
+    location: {
+      href: 'https://earth-radio.example/?code=oauth-code',
+      origin: 'https://earth-radio.example', pathname: '/',
+      search: '?code=oauth-code', hash: ''
+    },
+    history: { replaceState() {} },
+    fetchImpl: async (url, init) => {
+      requests.push({ url, init });
+      return jsonResponse({
+        access_token: 'access', refresh_token: 'refresh', expires_in: 3600,
+        user: { id: 'user-1' }
+      });
+    }
+  });
+
+  await client.initialize();
+
+  assert.equal(JSON.parse(requests[0].init.body).code_verifier, 'cookie-verifier');
+  assert.equal(cookie.read(), null);
+  assert.equal(storage.getItem('earthRadio.auth.pkce.v1'), null);
+});
+
+test('OAuth callback uses the tab last-flow id when several verifiers are pending', async () => {
+  const storage = memoryStorage();
+  const sessionStore = memoryStorage();
+  storage.setItem('earthRadio.auth.pkce.v1', JSON.stringify({
+    'flow-old': { verifier: 'old-verifier', createdAt: Date.now() - 1000 },
+    'flow-new': { verifier: 'new-verifier', createdAt: Date.now() }
+  }));
+  sessionStore.setItem('earthRadio.auth.pkce.last.v1', 'flow-old');
+  const requests = [];
+  const client = createAuthClient({
+    url: 'https://project.supabase.co',
+    publishableKey: 'sb_publishable_test',
+    storage,
+    sessionStorageImpl: sessionStore,
+    location: {
+      href: 'https://earth-radio.example/?code=oauth-code',
+      origin: 'https://earth-radio.example', pathname: '/',
+      search: '?code=oauth-code', hash: ''
+    },
+    history: { replaceState() {} },
+    fetchImpl: async (url, init) => {
+      requests.push({ url, init });
+      return jsonResponse({
+        access_token: 'access', refresh_token: 'refresh', expires_in: 3600,
+        user: { id: 'user-1' }
+      });
+    }
+  });
+
+  await client.initialize();
+
+  assert.equal(JSON.parse(requests[0].init.body).code_verifier, 'old-verifier');
+  const remaining = JSON.parse(storage.getItem('earthRadio.auth.pkce.v1'));
+  assert.equal(remaining['flow-new'].verifier, 'new-verifier');
+  assert.equal(remaining['flow-old'], undefined);
+});
+
+test('OAuth callback uses the newest verifier when the flow id and last-flow pointer are missing', async () => {
+  const storage = memoryStorage();
+  storage.setItem('earthRadio.auth.pkce.v1', JSON.stringify({
+    'flow-old': { verifier: 'old-verifier', createdAt: Date.now() - 5000 },
+    'flow-new': { verifier: 'new-verifier', createdAt: Date.now() }
+  }));
+  const requests = [];
+  const client = createAuthClient({
+    url: 'https://project.supabase.co',
+    publishableKey: 'sb_publishable_test',
+    storage,
+    location: {
+      href: 'https://earth-radio.example/?code=oauth-code',
+      origin: 'https://earth-radio.example', pathname: '/',
+      search: '?code=oauth-code', hash: ''
+    },
+    history: { replaceState() {} },
+    fetchImpl: async (url, init) => {
+      requests.push({ url, init });
+      return jsonResponse({
+        access_token: 'access', refresh_token: 'refresh', expires_in: 3600,
+        user: { id: 'user-1' }
+      });
+    }
+  });
+
+  await client.initialize();
+
+  assert.equal(JSON.parse(requests[0].init.body).code_verifier, 'new-verifier');
+});
+
+test('a missing verifier clears the callback URL so the page can recover', async () => {
+  const storage = memoryStorage();
+  const replaced = [];
+  const client = createAuthClient({
+    url: 'https://project.supabase.co',
+    publishableKey: 'sb_publishable_test',
+    storage,
+    location: {
+      href: 'https://earth-radio.example/?code=oauth-code&er_auth_flow=missing',
+      origin: 'https://earth-radio.example', pathname: '/',
+      search: '?code=oauth-code&er_auth_flow=missing', hash: ''
+    },
+    history: { replaceState: (_state, _title, url) => replaced.push(url) },
+    fetchImpl: async () => jsonResponse({ access_token: 'access', refresh_token: 'refresh' })
+  });
+
+  await assert.rejects(client.initialize(), /verifier is missing/);
+  assert.equal(replaced[0], '/');
+  assert.equal(storage.getItem('earthRadio.auth.pkce.v1'), null);
 });
 
 test('transient refresh failures retain and restore the offline session', async () => {

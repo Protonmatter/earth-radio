@@ -275,8 +275,8 @@
     },
     {
       "path": "site/assets/auth-core.js",
-      "bytes": 12423,
-      "sha256": "140c5773292e761b8e1771d3974e3ae5abf64ec261b2957ea686f68900cc8c61"
+      "bytes": 16165,
+      "sha256": "37ece7c3995215278f779ac0b0777d08a192c51e682b257259f8e745e44f2ae0"
     },
     {
       "path": "site/assets/auth-ui.css",
@@ -285,8 +285,8 @@
     },
     {
       "path": "site/assets/auth-ui.js",
-      "bytes": 20443,
-      "sha256": "bafb61fc17f2abbac96d0bac4ecc426b244193f553bc47bb70e0fde61e7ab1f6"
+      "bytes": 20678,
+      "sha256": "f0a132dd4c4262b15d8f59b19e9494d0cc839756b01265fdb386042efd338449"
     },
     {
       "path": "site/assets/directory-expansion.js",
@@ -420,8 +420,8 @@
     },
     {
       "path": "site/sw.js",
-      "bytes": 2959,
-      "sha256": "5302c8376a51402fa866abfb706936c04827b1c5506a5730cc3488128e4cc4a9"
+      "bytes": 2963,
+      "sha256": "671748ba1956309bb8486a9d2471113b07b896dbfaa319b3bf7b73097cfa045b"
     },
     {
       "path": "src-recovered/core/config.ts",
@@ -655,8 +655,8 @@
     },
     {
       "path": "tests/auth-sync.test.mjs",
-      "bytes": 36091,
-      "sha256": "526e0137ed995c9d704b25e3954dfd8fc17b4ec1fc0dd05fb8b22da8ff46e8e5"
+      "bytes": 43344,
+      "sha256": "a095aa75c395bc9050e49ac57e5440ff5b15bd5d28976c1da5ac9e71be22fd5e"
     },
     {
       "path": "tests/browser/fixtures/stations.mjs",
@@ -825,8 +825,8 @@
     },
     {
       "path": "tests/service-worker.test.mjs",
-      "bytes": 5331,
-      "sha256": "fb1e5595af1f2e769158ecb88b495b06967c5920a9c5ad7c3bade5bef4ffe541"
+      "bytes": 5405,
+      "sha256": "f8b0f2058a6198fd5afc2586c0589ccc3edfd12c7a13ee400ecb2b8b6d45f83d"
     },
     {
       "path": "tests/smoke-desktop.mjs",
