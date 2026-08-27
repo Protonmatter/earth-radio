@@ -10,8 +10,8 @@
     },
     {
       "path": ".github/workflows/supabase.yml",
-      "bytes": 1888,
-      "sha256": "9289566d29e4d8359afbef81fc776039349e652aad8a7e436aa461eea973e609"
+      "bytes": 1887,
+      "sha256": "0d94efaf2c806f5646caace3c6030c0cf189c9430cdc30f968cb30efc3e73a55"
     },
     {
       "path": ".node-version",
@@ -45,8 +45,8 @@
     },
     {
       "path": "docs/OPERATIONS.md",
-      "bytes": 6012,
-      "sha256": "88bbace20c8a5dc2c5791471216fdbf22c406903572530fb10d35a81d071d1c2"
+      "bytes": 6011,
+      "sha256": "c32cae6b845461acbbb133cd4005ac90b48375b5a49c76a73b95383f13ae8626"
     },
     {
       "path": "docs/PROVENANCE.md",
@@ -100,8 +100,8 @@
     },
     {
       "path": "docs/SUPABASE.md",
-      "bytes": 5155,
-      "sha256": "eb63553815a151138533c51715ea34234ae69858cf29d2f103d4a5e7103dc255"
+      "bytes": 5295,
+      "sha256": "acca5b1e079a0cb1d8514a613ece4ec1eb118c7a22ada482b8a24ab3ef182b02"
     },
     {
       "path": "docs/superpowers/plans/2026-08-21-earth-radio-public-cloudflare.md",
@@ -630,8 +630,8 @@
     },
     {
       "path": "supabase/config.toml",
-      "bytes": 1092,
-      "sha256": "9f841312b7cd5a02f844395432c60528abbc4bc2f437810fc287b12db3d2b8df"
+      "bytes": 1052,
+      "sha256": "83aedff244b9409288b7029ae0650cc433ea8644605bb9607d739f15075ea45c"
     },
     {
       "path": "supabase/migrations/20260825010000_auth_and_user_sync.sql",
@@ -655,8 +655,8 @@
     },
     {
       "path": "tests/auth-local-gotrue.test.mjs",
-      "bytes": 8297,
-      "sha256": "4884cb7d756bf1ce386419c4576b84e7367f147dd67afbe3e4de3087d2c202d6"
+      "bytes": 9204,
+      "sha256": "8d7964e77c6021d41dcc374f55f82233c31ef1bb0808b79cc970a5edea224d96"
     },
     {
       "path": "tests/auth-sync.test.mjs",

@@ -49,7 +49,7 @@ jobs:
         uses: supabase/setup-cli@aa3515eac405eac768fa4a72147c22d88a283c7b
         with:
           version: 2.115.0
-      - name: Start local Auth, API, and Inbucket
+      - name: Start local Auth, API, and Mailpit
         run: supabase start -x studio,imgproxy,logflare,vector,supavisor
       - name: Export local Auth endpoints
         run: supabase status -o env | tee "${{ runner.temp }}/supabase.env"

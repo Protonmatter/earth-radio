@@ -41,7 +41,7 @@ supabase db push
 supabase test db
 ```
 
-GitHub Actions follows the [automated testing](https://supabase.com/docs/guides/deployment/ci/testing) and [local testing overview](https://supabase.com/docs/guides/local-development/testing/overview) guides:
+GitHub Actions follows the [automated testing](https://supabase.com/docs/guides/deployment/ci/testing) and [local testing overview](https://supabase.com/docs/guides/local-development/testing/overview) guides. Local Auth emails are captured by [Mailpit](https://supabase.com/docs/guides/local-development/cli/testing-and-linting#testing-auth-emails):
 
 ```sh
 supabase db start
@@ -55,7 +55,7 @@ hosted SQL editor, run `supabase/tests/rls_policies.sql`; a clean run ends with 
 no pgTAP diagnostics. After any policy or function change, rerun the Supabase Security
 Advisor and confirm that no new errors appear.
 
-The PKCE job talks only to the local stack (GoTrue, PostgREST, Inbucket). It does not use
+The PKCE job talks only to the local stack (GoTrue, PostgREST, Mailpit). It does not use
 `SUPABASE_ACCESS_TOKEN` or the hosted project. Unique email addresses keep application-level
 tests isolated, as the testing overview requires.
 

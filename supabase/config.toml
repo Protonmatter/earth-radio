@@ -41,7 +41,3 @@ enabled = false
 
 [auth.external.azure]
 enabled = false
-
-[inbucket]
-enabled = true
-port = 54324

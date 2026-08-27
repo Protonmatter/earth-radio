@@ -37,12 +37,18 @@ async function loadLocalStack() {
     ? parseEnv(await readFile(process.env.SUPABASE_STATUS_ENV, 'utf8'))
     : {};
   const url = process.env.SUPABASE_URL || process.env.API_URL || fromFile.SUPABASE_URL || fromFile.API_URL;
+  const publishable = process.env.SUPABASE_PUBLISHABLE_KEY || process.env.PUBLISHABLE_KEY
+    || fromFile.SUPABASE_PUBLISHABLE_KEY || fromFile.PUBLISHABLE_KEY;
   const anon = process.env.SUPABASE_ANON_KEY || process.env.ANON_KEY || fromFile.SUPABASE_ANON_KEY || fromFile.ANON_KEY;
   const service = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SERVICE_ROLE_KEY
-    || fromFile.SUPABASE_SERVICE_ROLE_KEY || fromFile.SERVICE_ROLE_KEY;
-  const inbucket = process.env.SUPABASE_INBUCKET_URL || process.env.INBUCKET_URL
-    || fromFile.SUPABASE_INBUCKET_URL || fromFile.INBUCKET_URL || 'http://127.0.0.1:54324';
-  return { url, anon, service, inbucket };
+    || fromFile.SUPABASE_SERVICE_ROLE_KEY || fromFile.SERVICE_ROLE_KEY
+    || process.env.SECRET_KEY || fromFile.SECRET_KEY;
+  const mail = process.env.SUPABASE_MAILPIT_URL || process.env.MAILPIT_URL
+    || process.env.SUPABASE_INBUCKET_URL || process.env.INBUCKET_URL
+    || fromFile.SUPABASE_MAILPIT_URL || fromFile.MAILPIT_URL
+    || fromFile.SUPABASE_INBUCKET_URL || fromFile.INBUCKET_URL
+    || 'http://127.0.0.1:54324';
+  return { url, publishable, anon, service, mail, apikey: publishable || anon };
 }
 
 function localFetch(apiUrl, anonKey) {
@@ -71,32 +77,45 @@ function extractVerifyUrl(body) {
   return match ? match[0].replace(/[.,;]+$/, '') : null;
 }
 
-async function readMailbox(inbucketUrl, localPart) {
-  const response = await fetch(new URL(`/api/v1/mailbox/${encodeURIComponent(localPart)}`, inbucketUrl));
+async function readOkJson(response) {
+  const text = await response.text();
+  assert.equal(response.ok, true, text.slice(0, 500));
+  return JSON.parse(text);
+}
+
+async function listMailpitMessages(mailUrl) {
+  const response = await fetch(new URL('/api/v1/messages', mailUrl));
   if (!response.ok) return [];
   const payload = await response.json();
-  return Array.isArray(payload) ? payload : [];
+  return Array.isArray(payload?.messages) ? payload.messages : [];
 }
 
-async function readMessage(inbucketUrl, localPart, id) {
-  const response = await fetch(new URL(`/api/v1/mailbox/${encodeURIComponent(localPart)}/${encodeURIComponent(id)}`, inbucketUrl));
+async function readMailpitMessage(mailUrl, id) {
+  const response = await fetch(new URL(`/api/v1/message/${encodeURIComponent(id)}`, mailUrl));
   if (!response.ok) return '';
   const payload = await response.json();
-  return payload?.body?.text || payload?.body?.html || payload?.body || JSON.stringify(payload);
+  return [payload?.Text, payload?.HTML, JSON.stringify(payload)].filter(Boolean).join('\n');
 }
 
-async function waitForVerifyUrl(inbucketUrl, localPart, timeoutMs = 20000) {
+function messageRecipients(message) {
+  const rows = [...(message?.To || []), ...(message?.Cc || []), ...(message?.Bcc || [])];
+  return rows.map(entry => String(entry?.Address || entry?.address || '').toLowerCase());
+}
+
+async function waitForVerifyUrl(mailUrl, email, timeoutMs = 20000) {
   const started = Date.now();
+  const expected = String(email || '').toLowerCase();
   while (Date.now() - started < timeoutMs) {
-    const messages = await readMailbox(inbucketUrl, localPart);
-    for (const message of messages.slice().reverse()) {
-      const body = await readMessage(inbucketUrl, localPart, message.id);
+    const messages = await listMailpitMessages(mailUrl);
+    for (const message of messages) {
+      if (expected && !messageRecipients(message).includes(expected)) continue;
+      const body = await readMailpitMessage(mailUrl, message.ID || message.id);
       const verifyUrl = extractVerifyUrl(body);
       if (verifyUrl) return verifyUrl;
     }
     await new Promise(resolve => setTimeout(resolve, 400));
   }
-  throw new Error(`Inbucket did not receive a magic link for ${localPart}`);
+  throw new Error(`Mailpit did not receive a magic link for ${email}`);
 }
 
 async function followUntilCode(startUrl) {
@@ -123,7 +142,7 @@ test('local GoTrue completes the production PKCE email workflow without a flow i
 }, async () => {
   if (required) {
     assert.ok(stack.url, 'SUPABASE_URL is required when AUTH_INTEGRATION=1');
-    assert.ok(stack.anon, 'ANON_KEY is required when AUTH_INTEGRATION=1');
+    assert.ok(stack.apikey, 'PUBLISHABLE_KEY or ANON_KEY is required when AUTH_INTEGRATION=1');
   }
   const id = randomUUID();
   const localPart = `ci-${id}`;
@@ -131,9 +150,12 @@ test('local GoTrue completes the production PKCE email workflow without a flow i
   const storage = memoryStorage();
   const sessionStore = memoryStorage();
   let currentHref = siteUrl;
+  const publishableKey = String(stack.publishable || '').startsWith('sb_publishable_')
+    ? stack.publishable
+    : 'sb_publishable_local_ci_placeholder';
   const client = createAuthClient({
     url: hostedAuthUrl,
-    publishableKey: 'sb_publishable_local_ci_placeholder',
+    publishableKey,
     storage,
     sessionStorageImpl: sessionStore,
     location: {
@@ -143,14 +165,14 @@ test('local GoTrue completes the production PKCE email workflow without a flow i
       assign() {}
     },
     history: { replaceState(_state, _title, url) { currentHref = `https://earth-radio.pages.dev${url}`; } },
-    fetchImpl: localFetch(stack.url, stack.anon)
+    fetchImpl: localFetch(stack.url, stack.apikey)
   });
 
   await client.signInWithEmail(email, { redirectTo: siteUrl });
   const flows = JSON.parse(storage.getItem('earthRadio.auth.pkce.v1'));
   assert.equal(Object.keys(flows).length, 1);
 
-  const verifyUrl = await waitForVerifyUrl(stack.inbucket, localPart);
+  const verifyUrl = await waitForVerifyUrl(stack.mail, email);
   const callback = await followUntilCode(verifyUrl);
   assert.equal(new URL(callback.href).searchParams.get('er_auth_flow'), null);
   currentHref = callback.href;
@@ -169,7 +191,7 @@ test('local Auth issues unique-user JWTs that RLS accepts and fences', {
 }, async () => {
   if (required) {
     assert.ok(stack.url, 'SUPABASE_URL is required when AUTH_INTEGRATION=1');
-    assert.ok(stack.anon, 'ANON_KEY is required when AUTH_INTEGRATION=1');
+    assert.ok(stack.apikey, 'PUBLISHABLE_KEY or ANON_KEY is required when AUTH_INTEGRATION=1');
     assert.ok(stack.service, 'SERVICE_ROLE_KEY is required when AUTH_INTEGRATION=1');
   }
   const userId = randomUUID();
@@ -189,30 +211,30 @@ test('local Auth issues unique-user JWTs that RLS accepts and fences', {
       email_confirm: true
     })
   });
-  assert.equal(created.ok, true, await created.text());
+  await readOkJson(created);
 
   const tokenResponse = await fetch(new URL('/auth/v1/token?grant_type=password', stack.url), {
     method: 'POST',
     headers: {
-      apikey: stack.anon,
+      apikey: stack.apikey,
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({ email, password })
   });
-  assert.equal(tokenResponse.ok, true, await tokenResponse.text());
-  const token = await tokenResponse.json();
+  const token = await readOkJson(tokenResponse);
 
   const own = await fetch(new URL('/rest/v1/user_config_documents?select=document_key', stack.url), {
     headers: {
-      apikey: stack.anon,
+      apikey: stack.apikey,
       Authorization: `Bearer ${token.access_token}`
     }
   });
-  assert.equal(own.status, 200);
-  assert.deepEqual(await own.json(), []);
+  const ownBody = await own.text();
+  assert.equal(own.status, 200, ownBody);
+  assert.deepEqual(JSON.parse(ownBody), []);
 
   const anon = await fetch(new URL('/rest/v1/user_config_documents?select=document_key', stack.url), {
-    headers: { apikey: stack.anon }
+    headers: { apikey: stack.apikey }
   });
   assert.ok([401, 403].includes(anon.status), `anonymous REST should be rejected, got ${anon.status}`);
 });
