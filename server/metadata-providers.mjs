@@ -1,6 +1,8 @@
 // Earth Radio metadata providers v0.24.0
 // Server-side resolver for ICY-derived track titles. No third-party dependencies.
 
+import { looksLikeStationBranding, parseTaggedIcyMetadata } from './icy-title.mjs';
+
 const TOKEN_URL = 'https://accounts.spotify.com/api/token';
 const SPOTIFY_SEARCH_URL = 'https://api.spotify.com/v1/search';
 const ITUNES_SEARCH_URL = 'https://itunes.apple.com/search';
@@ -29,15 +31,27 @@ const identifyCache = new Map();
 const identifyInFlight = new Map();
 
 export function parseNowPlaying(streamTitle = '') {
+  const tagged = parseTaggedIcyMetadata(streamTitle);
+  if (tagged && !JUNK_TITLE.test(tagged.title) && !ADLIKE_TITLE.test(tagged.raw)) return tagged;
+
   const raw = stripRadioNoise(streamTitle);
   if (!raw || JUNK_TITLE.test(raw) || ADLIKE_TITLE.test(raw)) return null;
 
   for (const separator of [/\s[-\u2013\u2014]\s/, /\s::\s/, /\s\|\s/, /\s\/\s/]) {
     const parts = raw.split(separator).map(part => part.trim()).filter(Boolean);
     if (parts.length >= 2) {
-      const artist = parts[0];
-      const title = parts.slice(1).join(' - ');
-      if (artist && title && !JUNK_TITLE.test(title)) return { artist, title, raw };
+      const head = parts[0];
+      const rest = parts.slice(1).join(' - ');
+      if (looksLikeStationBranding(rest)) {
+        const cleanedRest = rest.replace(/\s*[-\u2013\u2014]\s+.*\bon\s+[\w.-]+\.[a-z]{2,}.*$/i, '').trim();
+        if (cleanedRest && !looksLikeStationBranding(cleanedRest) && !JUNK_TITLE.test(cleanedRest)) {
+          return { artist: head, title: cleanedRest, raw };
+        }
+        const branded = parseNowPlaying(head);
+        if (branded?.artist && branded?.title) return { ...branded, raw };
+        continue;
+      }
+      if (head && rest && !JUNK_TITLE.test(rest)) return { artist: head, title: rest, raw };
     }
   }
 
@@ -404,6 +418,7 @@ function stripRadioNoise(value) {
     .replace(/^['"]|['"];?$/g, '')
     .replace(/\s*\|\s*(live|radio).*$/i, '')
     .replace(/\s*[-\u2013\u2014]\s*(live on .*|\d{2,4}\.?\d?\s?fm|\w+ radio)$/i, '')
+    .replace(/\s*[-\u2013\u2014]\s+.*\bon\s+[\w.-]+\.[a-z]{2,}\s*$/i, '')
     .replace(/\s+/g, ' ')
     .trim();
 }

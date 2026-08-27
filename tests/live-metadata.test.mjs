@@ -6,7 +6,8 @@ import {
   clearPlatformNowPlayingCache,
   detectPlatformEndpoints,
   parsePlatformPayload,
-  resolvePlatformNowPlaying
+  resolvePlatformNowPlaying,
+  somafmStationId
 } from '../server/platform-nowplaying.mjs';
 import {
   buildAcrSignature,
@@ -38,6 +39,10 @@ test('platform detection derives endpoints from known hosting platforms', () => 
   const azuracast = detectPlatformEndpoints('https://radio.example.org/listen/my_station/radio.mp3');
   assert.equal(azuracast[0].platform, 'azuracast');
   assert.equal(azuracast[0].url, 'https://radio.example.org/api/nowplaying/my_station');
+
+  const somafm = detectPlatformEndpoints('https://ice6.somafm.com/groovesalad-128-mp3');
+  assert.equal(somafm[0].platform, 'somafm');
+  assert.equal(somafm[0].url, 'https://somafm.com/songs/groovesalad.json');
 });
 
 test('platform detection always falls back to icecast and shoutcast status on the stream origin', () => {
@@ -62,6 +67,40 @@ test('azuracast payloads resolve structured artist and title', () => {
   assert.equal(result.artist, 'IU');
   assert.equal(result.title, 'Blueming');
   assert.equal(result.artworkUrl, 'https://cdn.example.org/art.jpg');
+});
+
+test('iHeart MediaBase StreamTitle blobs yield artist and title', async () => {
+  const { parseNowPlaying } = await import('../server/metadata-providers.mjs');
+  const { parseTaggedIcyMetadata } = await import('../server/icy-title.mjs');
+  const blob = 'title="JUST DANCE",artist="Lady Gaga / Kardinal Offishall",url="song_spot="F" MediaBaseId="0"';
+  const tagged = parseTaggedIcyMetadata(blob);
+  assert.equal(tagged.artist, 'Lady Gaga / Kardinal Offishall');
+  assert.equal(tagged.title, 'JUST DANCE');
+  const parsed = parseNowPlaying(blob);
+  assert.equal(parsed.artist, 'Lady Gaga / Kardinal Offishall');
+  assert.equal(parsed.title, 'JUST DANCE');
+  const branded = parseNowPlaying('But Beautiful by Jackie Gleason - Classic Vinyl on walmradio.com');
+  assert.equal(branded.artist, 'Jackie Gleason');
+  assert.equal(branded.title, 'But Beautiful');
+  const overlay = await import('../site/assets/metadata-enrichment.js');
+  assert.deepEqual(overlay.parseNowPlaying(blob), parsed);
+  assert.equal(overlay.shouldAutoFingerprint({ found: true, state: 'Station feed' }), false);
+  assert.equal(overlay.shouldAutoFingerprint({ found: true, state: 'Identified' }), false);
+  assert.equal(overlay.shouldAutoFingerprint({ found: false, state: 'Raw ICY only' }), true);
+  assert.equal(overlay.shouldAutoFingerprint(null), true);
+});
+
+test('SomaFM song lists resolve the most recent track', () => {
+  assert.equal(somafmStationId('https://ice6.somafm.com/groovesalad-128-mp3'), 'groovesalad');
+  assert.equal(somafmStationId('https://ice4.somafm.com/gsclassic-256-mp3'), 'gsclassic');
+  const result = parsePlatformPayload({ platform: 'somafm', kind: 'json' }, JSON.stringify({
+    id: 'groovesalad',
+    songs: [{ title: 'Stars In Your Eyes', artist: 'Eskadet', albumArt: 'https://somafm.com/art.jpg' }]
+  }));
+  assert.equal(result.platform, 'somafm');
+  assert.equal(result.artist, 'Eskadet');
+  assert.equal(result.title, 'Stars In Your Eyes');
+  assert.equal(result.artworkUrl, 'https://somafm.com/art.jpg');
 });
 
 test('combined-title platforms reuse the ICY parser and reject junk', () => {
@@ -375,6 +414,10 @@ test('LISTEN.moe catalog URLs open the matching browser WebSocket gateway', () =
 
   const kpop = detectBrowserPlatformEndpoints('https://listen.moe/kpop/fallback');
   assert.equal(kpop[0].url, 'wss://listen.moe/kpop/gateway_v2');
+
+  const somafm = detectBrowserPlatformEndpoints('https://ice4.somafm.com/secretagent-128-aac');
+  assert.equal(somafm[0].platform, 'somafm');
+  assert.equal(somafm[0].url, 'https://somafm.com/songs/secretagent.json');
 });
 
 test('blob MediaSource playback resolves to the selected station URL', () => {
@@ -557,11 +600,12 @@ test('delayed auto-fingerprints stay fenced to their originating stream and trac
   const overlay = await readFile(new URL('../site/assets/metadata-enrichment.js', import.meta.url), 'utf8');
   const start = overlay.indexOf('function maybeAutoFingerprint');
   assert.ok(start >= 0, 'maybeAutoFingerprint must exist');
-  const timer = overlay.slice(start, overlay.indexOf('\n}', start));
+  const timer = overlay.slice(start, overlay.indexOf('\n}', start + 1));
   // The timer must re-derive the stream::track key when it fires and bail on any
   // mismatch, so a station change during the delay never spends metered quota.
   assert.match(timer, /state\.fingerprintAutoKey !== autoKey/);
-  assert.match(timer, /`\$\{currentStreamUrl\(\)\}::\$\{state\.lastTrackKey\}` !== autoKey/);
+  assert.match(timer, /currentStreamUrl\(\)\}::\$\{state\.lastTrackKey/);
+  assert.match(overlay, /if \(!result\) maybeAutoFingerprint\(state\.currentIdentity\)/);
 });
 
 test('desktop platform miss responses do not outlive the polling interval in HTTP caches', async () => {

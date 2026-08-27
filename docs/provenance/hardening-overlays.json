@@ -57,10 +57,10 @@
         "sha256": "648114492b64701d2a223b336d4ea9efd55fc3e8a5d9b7042d2c34d1ed3f8b93"
       },
       "current": {
-        "bytes": 21575,
-        "sha256": "883c3494e70ac8d9d7e037d06c4d6de76a587522b0c41b75bb989813c8a3dbe5"
+        "bytes": 22364,
+        "sha256": "7bd951e4892f5954396f5da61c9603f851584bf79e5031c1e40e3d77d48163f3"
       },
-      "reason": "Review-pass hardening: lowercase-only \"Title by Artist\" parsing, deduplicated Spotify token requests, market-scoped Spotify search, removal of unreachable post-promotion fallbacks, deadline-aware catalog requests, and treating a deadline abort as a transient uncached miss."
+      "reason": "Review-pass hardening: lowercase-only \"Title by Artist\" parsing, deduplicated Spotify token requests, market-scoped Spotify search, removal of unreachable post-promotion fallbacks, deadline-aware catalog requests, and treating a deadline abort as a transient uncached miss. Parse iHeart/MediaBase title= artist= StreamTitle blobs and strip trailing station-branding suffixes such as on walmradio.com."
     },
     {
       "path": "site/assets/hls.light-Dr1Fv81C.js",
@@ -106,10 +106,10 @@
         "sha256": "e213700a1a541139a66542e9bd8e615ad5dfc735d52c59569730d9a021e86009"
       },
       "current": {
-        "bytes": 68038,
-        "sha256": "8df810b69aef223f44a33e8ce0a664cb4c514aac07749a129be68d6027a99bc4"
+        "bytes": 70372,
+        "sha256": "627f09524aaef559bd7f214316b765459faba7e8a53f09379ce0df0f92e070eb"
       },
-      "reason": "Layer live-metadata feeds above raw ICY: hosting-platform now-playing APIs, HLS timed ID3 text tracks, and an opt-in fingerprint identify button. Preserve the canonical selected URL and UUID through same-station MediaSource reattachment, invalidate only on correlated selection/change or explicit clear, retain the original trimmed URL after validation, and fence both cross-station and same-station out-of-order metadata polls by identity plus a monotonic poll generation. Cap speculative map-tooltip /api/nowplaying lookups at 8 per 60 seconds so marker sweeps cannot exhaust the zone WAF. Coalesce play-event polls, recheck fingerprint identity after the availability probe, and promote structured Station feed results onto the primary card. Export detectPlatformEndpoints so catalogued LISTEN.moe stream URLs can be tested against the browser WebSocket gateway. Hold background platform and HLS feeds while Identify is sampling so they cannot steal the in-flight token, and clear Now Playing art when a promoted identity has no https artwork."
+      "reason": "Layer live-metadata feeds above raw ICY: hosting-platform now-playing APIs, HLS timed ID3 text tracks, and an opt-in fingerprint identify button. Preserve the canonical selected URL and UUID through same-station MediaSource reattachment, invalidate only on correlated selection/change or explicit clear, retain the original trimmed URL after validation, and fence both cross-station and same-station out-of-order metadata polls by identity plus a monotonic poll generation. Cap speculative map-tooltip /api/nowplaying lookups at 8 per 60 seconds so marker sweeps cannot exhaust the zone WAF. Coalesce play-event polls, recheck fingerprint identity after the availability probe, and promote structured Station feed results onto the primary card. Export detectPlatformEndpoints so catalogued LISTEN.moe stream URLs can be tested against the browser WebSocket gateway. Hold background platform and HLS feeds while Identify is sampling so they cannot steal the in-flight token, and clear Now Playing art when a promoted identity has no https artwork. Auto-fingerprint the playing stream when free feeds miss, parse iHeart MediaBase ICY, and resolve SomaFM songs JSON from ice*.somafm.com URLs."
     },
     {
       "path": "site/config.js",
@@ -118,10 +118,10 @@
         "sha256": "c83167f40ae7df3b389e35707b4abac834b10dc223ecb836d7840f90a7ef92a6"
       },
       "current": {
-        "bytes": 3060,
-        "sha256": "8406d5b3a2891f94e32084aded5140f4a40dfa97e81c600b13dcace7c0f539b6"
+        "bytes": 3080,
+        "sha256": "5c7b5f6381444d9ed72c241871b843cdcdcb64d085257d8849a7b9f47d7f10ea"
       },
-      "reason": "Keep Cloudflare Pages on an empty proxy URL and document that only Electron injects the loopback capability path. Add live-metadata runtime options (platform now-playing, HLS ID3, fingerprint) with metered fingerprinting off unless a proxy provides credentials. Keep Cloudflare Pages on an empty proxy URL, restrict deployable authentication to the exact production origin, configure the public Supabase project and enabled providers, and load the same-origin account overlay without changing the recovered bundle."
+      "reason": "Keep Cloudflare Pages on an empty proxy URL and document that only Electron injects the loopback capability path. Add live-metadata runtime options (platform now-playing, HLS ID3, fingerprint) with metered fingerprinting off unless a proxy provides credentials. Keep Cloudflare Pages on an empty proxy URL, restrict deployable authentication to the exact production origin, configure the public Supabase project and enabled providers, and load the same-origin account overlay without changing the recovered bundle. Auto-identify the playing stream when free ICY/platform feeds miss, still a no-op until Pages has recognition credentials."
     },
     {
       "path": "site/index.html",
@@ -154,10 +154,10 @@
         "sha256": "b09e3207532fe7f47d14e9c53804d7e8caf31cad2fcb2c652b728a93871ea094"
       },
       "current": {
-        "bytes": 2964,
-        "sha256": "41bb953ebecdfa93fd524ba1be57f656b7020b13cfb15edabaf0a361052d1a7f"
+        "bytes": 2969,
+        "sha256": "3c9c65d906072197b2f18c3d97f0ad4e1ffa2968681ed8050c79f0265f3ef93e"
       },
-      "reason": "Use network-first navigation/configuration updates, keep hashed recovered assets cache-first, reload installation requests so stale browser HTTP entries cannot seed the new service-worker cache, keep the previous worker when reload precaching fails, and precache the UI refresh stylesheet. Precache pinned-stations.js for LISTEN.moe catalog pinning. Bump the shell cache generation to v36 so clients pick up the review-closure metadata and storage-guard overlays."
+      "reason": "Use network-first navigation/configuration updates, keep hashed recovered assets cache-first, reload installation requests so stale browser HTTP entries cannot seed the new service-worker cache, keep the previous worker when reload precaching fails, and precache the UI refresh stylesheet. Precache pinned-stations.js for LISTEN.moe catalog pinning. Bump the shell cache generation to v37 so clients pick up now-playing coverage overlays (auto-fingerprint on miss, iHeart ICY, SomaFM)."
     }
   ]
 }

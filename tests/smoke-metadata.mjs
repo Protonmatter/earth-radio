@@ -74,6 +74,11 @@ if (titleByArtist.artist !== 'Kate Bush' || titleByArtist.title !== 'Running Up 
 const titleOnly = parseNowPlaying('Bohemian Rhapsody');
 if (titleOnly.artist !== '' || titleOnly.title !== 'Bohemian Rhapsody') throw new Error('parseNowPlaying failed title-only pattern');
 
+const iheart = parseNowPlaying('title="JUST DANCE",artist="Lady Gaga / Kardinal Offishall",url="song_spot="F"');
+if (iheart.artist !== 'Lady Gaga / Kardinal Offishall' || iheart.title !== 'JUST DANCE') {
+  throw new Error('parseNowPlaying failed iHeart MediaBase StreamTitle');
+}
+
 if (parseNowPlaying('Weather update sponsored by Example') !== null) {
   throw new Error('sponsorship metadata should be rejected as non-track content');
 }

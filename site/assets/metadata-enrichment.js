@@ -32,8 +32,8 @@ const DEFAULTS = {
   platformNowPlayingEnabled: true,
   platformPollMs: 30000,
   hlsId3Enabled: true,
-  fingerprintEnabled: true,
-  fingerprintAutoOnRawIcy: false,
+    fingerprintEnabled: true,
+    fingerprintAutoOnRawIcy: true,
   fingerprintMinIntervalMs: 30000,
   // Same-origin /api/* Pages Functions (public web deployments). Feature-detected at
   // runtime; a static-only deployment simply reports 404 and everything degrades.
@@ -99,11 +99,30 @@ function stripRadioNoise(value) {
     .replace(/^['"]|['"];?$/g, '')
     .replace(/\s*\|\s*(live|radio).*$/i, '')
     .replace(/\s*[-\u2013\u2014]\s*(live on .*|\d{2,4}\.?\d?\s?fm|\w+ radio)$/i, '')
+    .replace(/\s*[-\u2013\u2014]\s+.*\bon\s+[\w.-]+\.[a-z]{2,}\s*$/i, '')
     .replace(/\s+/g, ' ')
     .trim();
 }
 
-function parseNowPlaying(rawInput) {
+function parseTaggedIcyMetadata(rawInput) {
+  const text = String(rawInput || '');
+  if (!/\btitle\s*=\s*"/i.test(text) || !/\bartist\s*=\s*"/i.test(text)) return null;
+  const title = text.match(/\btitle\s*=\s*"([^"]*)"/i)?.[1]?.trim() || '';
+  const artist = text.match(/\bartist\s*=\s*"([^"]*)"/i)?.[1]?.trim() || '';
+  if (!title || !artist) return null;
+  return { artist, title, raw: `${artist} - ${title}` };
+}
+
+function looksLikeStationBranding(value) {
+  const text = String(value || '').trim();
+  if (!text) return false;
+  return /\bon\s+[\w.-]+\.[a-z]{2,}\b/i.test(text) || /\b[\w-]+\.(com|net|org|fm)\b/i.test(text);
+}
+
+export function parseNowPlaying(rawInput) {
+  const tagged = parseTaggedIcyMetadata(rawInput);
+  if (tagged && !JUNK_TITLE.test(tagged.title) && !ADLIKE.test(tagged.raw)) return tagged;
+
   const raw = stripRadioNoise(rawInput);
   if (!raw || JUNK_TITLE.test(raw) || ADLIKE.test(raw)) return null;
 
@@ -111,9 +130,18 @@ function parseNowPlaying(rawInput) {
   for (const sep of separators) {
     const parts = raw.split(sep).map(p => p.trim()).filter(Boolean);
     if (parts.length >= 2) {
-      const artist = parts[0];
-      const title = parts.slice(1).join(' - ');
-      if (artist && title && !JUNK_TITLE.test(title)) return { artist, title, raw };
+      const head = parts[0];
+      const rest = parts.slice(1).join(' - ');
+      if (looksLikeStationBranding(rest)) {
+        const cleanedRest = rest.replace(/\s*[-\u2013\u2014]\s+.*\bon\s+[\w.-]+\.[a-z]{2,}.*$/i, '').trim();
+        if (cleanedRest && !looksLikeStationBranding(cleanedRest) && !JUNK_TITLE.test(cleanedRest)) {
+          return { artist: head, title: cleanedRest, raw };
+        }
+        const branded = parseNowPlaying(head);
+        if (branded?.artist && branded?.title) return { ...branded, raw };
+        continue;
+      }
+      if (head && rest && !JUNK_TITLE.test(rest)) return { artist: head, title: rest, raw };
     }
   }
 
@@ -794,6 +822,13 @@ export function shouldPromoteNowcard(identity, minIdentifiedConfidence = DEFAULT
   return Number(identity.confidence) >= minIdentifiedConfidence;
 }
 
+export function shouldAutoFingerprint(identity) {
+  if (!identity) return true;
+  if (identity.sourceFeed === 'fingerprint') return false;
+  if (identity.found && (identity.state === 'Identified' || identity.state === 'Station feed')) return false;
+  return true;
+}
+
 function invalidateSelectedStationData() {
   state.trustedTrack = null;
   state.inFlight = null;
@@ -936,6 +971,13 @@ export function detectPlatformEndpoints(streamUrl) {
   const azuracastStation = pathname.match(/^\/listen\/([^/]+)\//)?.[1] || '';
   if (azuracastStation) endpoints.push({ platform: 'azuracast', kind: 'json', url: `${origin}/api/nowplaying/${encodeURIComponent(azuracastStation)}` });
 
+  const somafmSegment = (host === 'somafm.com' || host.endsWith('.somafm.com'))
+    ? pathname.replace(/^\/+/, '').split('/')[0] : '';
+  const somafmId = somafmSegment && !/\.(pls|m3u8?|xspf)$/i.test(somafmSegment)
+    ? somafmSegment.replace(/-\d+-(mp3|aacp?)$/i, '').replace(/-\d+$/, '')
+    : '';
+  if (somafmId) endpoints.push({ platform: 'somafm', kind: 'json', url: `https://somafm.com/songs/${encodeURIComponent(somafmId)}.json` });
+
   endpoints.push({ platform: 'icecast', kind: 'json', url: `${origin}/status-json.xsl`, mount: pathname });
   endpoints.push({ platform: 'shoutcast', kind: 'json', url: `${origin}/stats?json=1` });
   return endpoints;
@@ -954,6 +996,10 @@ function parsePlatformPayload(endpoint, data) {
     return platformTrack('lautfm', artist, data.title, '');
   }
   if (endpoint.platform === 'radiojar') return platformTrack('radiojar', data?.artist, data?.title, '', data?.thumb);
+  if (endpoint.platform === 'somafm') {
+    const song = Array.isArray(data?.songs) ? data.songs[0] : null;
+    return platformTrack('somafm', song?.artist, song?.title, '', song?.albumArt);
+  }
   if (endpoint.platform === 'icecast') {
     let sources = data?.icestats?.source;
     if (!sources) return null;
@@ -1093,7 +1139,10 @@ async function pollPlatformNowPlaying() {
   try {
     const result = await resolvePlatformNowPlaying(identity.streamUrl);
     const current = { ...currentStationIdentity(), generation: state.platformPollGeneration };
-    if (!result || !pollResultIsCurrent(started, current)) return;
+    if (!result || !pollResultIsCurrent(started, current)) {
+      if (!result) maybeAutoFingerprint(state.currentIdentity);
+      return;
+    }
     await applyTrustedTrack(result.track, `platform:${result.platform}`, { artworkUrl: result.artworkUrl });
   } catch { /* best effort */ }
 }
@@ -1230,8 +1279,8 @@ function setFingerprintStatus(message) {
 function maybeAutoFingerprint(identity) {
   const cfg = config();
   if (!cfg.fingerprintAutoOnRawIcy || !fingerprintConfigured()) return;
-  if (identity?.state !== 'Raw ICY only' || !isPlaying()) return;
-  const autoKey = `${currentStreamUrl()}::${state.lastTrackKey}`;
+  if (!isPlaying() || !shouldAutoFingerprint(identity)) return;
+  const autoKey = `${currentStreamUrl()}::${state.lastTrackKey || 'none'}`;
   if (state.fingerprintAutoKey === autoKey) return;
   state.fingerprintAutoKey = autoKey;
   setTimeout(() => {
@@ -1239,8 +1288,8 @@ function maybeAutoFingerprint(identity) {
     // during the delay. A stale timer must never spend metered recognition quota
     // on whatever is playing now — that stream schedules its own attempt.
     if (state.fingerprintAutoKey !== autoKey) return;
-    if (`${currentStreamUrl()}::${state.lastTrackKey}` !== autoKey) return;
-    if (state.currentIdentity?.state === 'Raw ICY only' && isPlaying()) void runFingerprint('auto');
+    if (`${currentStreamUrl()}::${state.lastTrackKey || 'none'}` !== autoKey) return;
+    if (isPlaying() && shouldAutoFingerprint(state.currentIdentity)) void runFingerprint('auto');
   }, 8000);
 }
 
