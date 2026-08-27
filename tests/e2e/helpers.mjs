@@ -28,7 +28,7 @@ export function silentWav(seconds = 30) {
 const AUDIO = silentWav();
 const ALL_STATIONS = [...FIXTURE_STATIONS, ...EXPANSION_STATIONS];
 
-export async function setupApp(page, { sameOriginNowPlaying = null, sameOriginFingerprint = null } = {}) {
+export async function setupApp(page, { sameOriginNowPlaying = null, sameOriginFingerprint = null, enableAuth = false } = {}) {
   // Chrome 151+ (the build CI's `playwright install chromium` provides) answers
   // canPlayType('application/vnd.apple.mpegurl') with 'maybe', so the runtime takes
   // its native-HLS branch and never creates the MediaSource blob: source these tests
@@ -83,6 +83,23 @@ export async function setupApp(page, { sameOriginNowPlaying = null, sameOriginFi
     // Map tiles, other directories, favicons: fail fast and deterministically.
     return route.abort();
   });
+  if (enableAuth) {
+    await page.route('**/config.js', async route => {
+      const response = await route.fetch();
+      const body = (await response.text()).replace(
+        "window.location.origin === 'https://earth-radio.pages.dev'",
+        'true'
+      );
+      await route.fulfill({
+        status: 200,
+        headers: {
+          'content-type': 'text/javascript; charset=utf-8',
+          'cache-control': 'no-store'
+        },
+        body
+      });
+    });
+  }
   await page.goto('/');
   await expect(page.locator('.station-card').first()).toBeVisible({ timeout: 20_000 });
   return { fingerprintRequests };

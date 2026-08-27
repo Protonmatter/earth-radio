@@ -1,4 +1,4 @@
-const CACHE_NAME = 'earth-radio-shell-v43-auth-unfreeze-1';
+const CACHE_NAME = 'earth-radio-shell-v44-visible-signin-1';
 const SHELL_ASSETS = [
   './',
   './index.html',

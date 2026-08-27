@@ -201,10 +201,20 @@ async function boot() {
     reloadTimer = null;
   }
 
-  const button = el('button', 'er-auth-button', 'Sign in');
+  const button = el('button', 'header-btn er-auth-button', 'Sign in');
   button.type = 'button';
+  button.id = 'er-auth-button';
   button.setAttribute('aria-haspopup', 'dialog');
-  document.querySelector('.er-header-tools')?.appendChild(button);
+  const rail = document.querySelector('.header-right');
+  if (rail) rail.insertBefore(button, rail.firstChild);
+  else document.querySelector('.er-header-tools')?.appendChild(button);
+
+  const overflow = document.getElementById('er-overflow');
+  const overflowButton = el('button', 'er-auth-overflow', 'Sign in');
+  overflowButton.type = 'button';
+  overflowButton.setAttribute('data-click-id', 'er-auth-button');
+  overflowButton.setAttribute('aria-haspopup', 'dialog');
+  overflow?.insertBefore(overflowButton, overflow.firstChild);
 
   const modal = el('div', 'er-auth-modal');
   modal.hidden = true;
@@ -395,7 +405,9 @@ async function boot() {
   }
 
   function render() {
-    button.textContent = session ? (user?.email || session.user?.email || 'Account') : 'Sign in';
+    const label = session ? (user?.email || session.user?.email || 'Account') : 'Sign in';
+    button.textContent = label;
+    overflowButton.textContent = label;
     card.replaceChildren();
 
     const header = el('div', 'er-auth-heading');
@@ -518,6 +530,7 @@ async function boot() {
   const finishingCallback = Boolean(callbackParams.get('code') || callbackParams.get('error'));
   if (finishingCallback && callbackParams.get('code')) {
     button.textContent = 'Finishing sign-in…';
+    overflowButton.textContent = 'Finishing sign-in…';
   }
   try {
     session = await auth.initialize();
