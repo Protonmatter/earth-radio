@@ -55,8 +55,8 @@
     },
     {
       "path": "docs/provenance/hardening-overlays.json",
-      "bytes": 10249,
-      "sha256": "ff2a3a2105dfd1dd5b19ff1408973014bd0a16131e2c67e24cd85a280ebcb7dc"
+      "bytes": 10248,
+      "sha256": "55c8f4370dda7c6d3b73d7df6a17cd7f4a81d8fd30c0a78d8c34e2c8d43f1c6d"
     },
     {
       "path": "docs/provenance/recovery-manifest.json",
@@ -280,13 +280,13 @@
     },
     {
       "path": "site/assets/auth-ui.css",
-      "bytes": 2800,
-      "sha256": "c56634c6973a6ad3189e209dec024c9947a2860025201011a4cdeeafac7d187c"
+      "bytes": 3778,
+      "sha256": "3904fdab8c31bbc5055ef1006f7029c2e8a192ad7f8833b08d460b8b65049571"
     },
     {
       "path": "site/assets/auth-ui.js",
-      "bytes": 20839,
-      "sha256": "83828e99aac08d2bb379a0e4de0426f23c774894c3a7d486fac55f2bdefdd693"
+      "bytes": 21472,
+      "sha256": "9e20aa5b5e04282df30defc5b2858aeb2da05f56fa89a952d14dc90af163016a"
     },
     {
       "path": "site/assets/directory-expansion.js",
@@ -330,8 +330,8 @@
     },
     {
       "path": "site/assets/responsive-ui.js",
-      "bytes": 69446,
-      "sha256": "4a5545b6a6827774776be273db4d03f4cb527eb9bb4b087a8f8f24e27c230b3a"
+      "bytes": 69562,
+      "sha256": "3ce117dbedd13597cefab3c0804a2c461e0ba14b7b1c7b3debbf574fca097b9b"
     },
     {
       "path": "site/assets/storage-guard.js",
@@ -420,8 +420,8 @@
     },
     {
       "path": "site/sw.js",
-      "bytes": 2963,
-      "sha256": "acf17f0d0c7528fc4f2af9a0f6868b8804a8be6f28c8a2f755e89b69710c1a4d"
+      "bytes": 2964,
+      "sha256": "2b0b7af5904226123e83209de5e31f45f6506829fc565603e1164283a0094582"
     },
     {
       "path": "src-recovered/core/config.ts",
@@ -660,8 +660,8 @@
     },
     {
       "path": "tests/auth-sync.test.mjs",
-      "bytes": 48094,
-      "sha256": "96354a8cdaffec6b2d3a613a22b4fd04905d7f0672ecb80860031f2900571f4d"
+      "bytes": 48675,
+      "sha256": "e3a29a85c765ac16ebb6e8f5ba3dfa8b6fdbbc3393917938cf58bb8c9dc3f105"
     },
     {
       "path": "tests/browser/fixtures/stations.mjs",
@@ -704,6 +704,11 @@
       "sha256": "e17ac191fa909ea3cbee1ee567e60348d97a077b0264f99382fa1160118d6ba2"
     },
     {
+      "path": "tests/e2e/auth-ui.spec.mjs",
+      "bytes": 2080,
+      "sha256": "3c0919c90b8500608ad924aced3bac1bd01196fc61b1ecc8f0a5daed4c1dc1f1"
+    },
+    {
       "path": "tests/e2e/fixtures/hls-media.mjs",
       "bytes": 11339,
       "sha256": "88965eb3ab090af45163c1ef7b789f66447cd73c29365b4f463d140aebe707de"
@@ -715,8 +720,8 @@
     },
     {
       "path": "tests/e2e/helpers.mjs",
-      "bytes": 5536,
-      "sha256": "68cc5c89a96072616a12d62bd5ed941e9eab74e8bdfddcb3561f916c6e39da30"
+      "bytes": 6032,
+      "sha256": "76a868e0fa86ff522017cc9d8926d67150192d663cc7e3ed5e9ab8d7418eb1ff"
     },
     {
       "path": "tests/e2e/playwright.config.mjs",
@@ -825,13 +830,13 @@
     },
     {
       "path": "tests/responsive-ui.test.mjs",
-      "bytes": 8363,
-      "sha256": "f9379db972105476fbf5b85a4a6354777412ccaeb9eb30c88e2f07dea58c1122"
+      "bytes": 8692,
+      "sha256": "ea949914700f02ca71f80a99fd9026fa5ca25b0fb8198982c5e580cbc145a696"
     },
     {
       "path": "tests/service-worker.test.mjs",
-      "bytes": 5631,
-      "sha256": "dff4d4456ee68a4af5fa35253eaefb2e3fc99cf2311865b0d57865533140155a"
+      "bytes": 5706,
+      "sha256": "9a95b20cab670b6a2c335a799cec1128728424bb20b53ef6a274cda9054e07d1"
     },
     {
       "path": "tests/smoke-desktop.mjs",

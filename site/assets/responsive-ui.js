@@ -1262,7 +1262,8 @@ function setOverflowOpen(open, invoker = null, restore = true) {
 function focusProxySurface(targetId) {
   const surface = targetId === 'settings-toggle' ? byId('settings-modal')
     : targetId === 'filters-toggle' ? byId('filter-sidebar')
-      : null;
+      : targetId === 'er-auth-button' ? document.querySelector('.er-auth-modal')
+        : null;
   if (!surface) return;
   queueMicrotask(() => surface.querySelector(FOCUSABLE)?.focus?.({ preventScroll: true }));
 }
@@ -1521,7 +1522,7 @@ function bindActions() {
       const targetId = proxy.getAttribute('data-click-id');
       clickExisting(targetId);
       if (proxy.closest('#er-overflow')) {
-        const transfersFocus = targetId === 'settings-toggle' || targetId === 'filters-toggle';
+        const transfersFocus = targetId === 'settings-toggle' || targetId === 'filters-toggle' || targetId === 'er-auth-button';
         setOverflowOpen(false, null, !transfersFocus);
         if (transfersFocus) focusProxySurface(targetId);
       }

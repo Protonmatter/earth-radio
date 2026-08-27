@@ -41,6 +41,14 @@ test('callback boot keeps the radio usable until sign-in succeeds or fails', asy
   assert.match(source, /button\.textContent = 'Finishing sign-in…'/);
   assert.match(source, /session = await auth\.initialize\(\);\s*authInitialized = true;\s*render\(\);/s);
   assert.doesNotMatch(source, /if \(callbackParams\.get\('code'\)\) message\('Finishing sign-in…'\)/);
+  assert.match(source, /rail\.insertBefore\(button, rail\.firstChild\)/);
+  assert.match(source, /overflow\?\.insertBefore\(overflowButton/);
+  assert.match(source, /button\.id = 'er-auth-button'/);
+  assert.match(source, /data-click-id', 'er-auth-button'/);
+  const css = await readFile(path.resolve(import.meta.dirname, '../site/assets/auth-ui.css'), 'utf8');
+  assert.match(css, /html\.er-root \.header-right \.er-auth-button/);
+  assert.match(css, /\.er-overflow \.er-auth-overflow/);
+  assert.match(css, /\.er-overflow \.er-auth-overflow \{[\s\S]*text-overflow:\s*ellipsis/);
 });
 
 test('OAuth sign-in uses PKCE and stores only the verifier locally', async () => {
