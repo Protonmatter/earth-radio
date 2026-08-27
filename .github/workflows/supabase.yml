@@ -1,15 +1,9 @@
-name: Supabase database
+name: Supabase
 
 on:
   pull_request:
-    paths:
-      - 'supabase/**'
-      - '.github/workflows/supabase.yml'
   push:
     branches: [main]
-    paths:
-      - 'supabase/**'
-      - '.github/workflows/supabase.yml'
   workflow_dispatch:
 
 permissions:
@@ -31,9 +25,39 @@ jobs:
         with:
           version: 2.115.0
       - name: Start local database
-        run: supabase start -x studio,imgproxy,logflare,vector,supavisor
+        run: supabase db start
       - name: Run pgTAP RLS tests
         run: supabase test db
       - name: Stop local database
+        if: always()
+        run: supabase stop --no-backup
+
+  auth-workflow:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+      - name: Set up Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Set up Supabase CLI
+        uses: supabase/setup-cli@aa3515eac405eac768fa4a72147c22d88a283c7b
+        with:
+          version: 2.115.0
+      - name: Start local Auth, API, and Inbucket
+        run: supabase start -x studio,imgproxy,logflare,vector,supavisor
+      - name: Export local Auth endpoints
+        run: supabase status -o env | tee "${{ runner.temp }}/supabase.env"
+      - name: Run PKCE and RLS auth workflow tests
+        env:
+          AUTH_INTEGRATION: '1'
+          SUPABASE_STATUS_ENV: ${{ runner.temp }}/supabase.env
+        run: node --test tests/auth-local-gotrue.test.mjs
+      - name: Stop local stack
         if: always()
         run: supabase stop --no-backup

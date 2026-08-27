@@ -264,10 +264,8 @@ export function createAuthClient({
     return current.href;
   }
 
-  function redirectForFlow(target, flowId) {
-    const redirect = new URL(target);
-    redirect.searchParams.set(FLOW_PARAM, flowId);
-    return redirect.href;
+  function redirectForFlow(target) {
+    return new URL(target).href;
   }
 
   function cleanCallbackUrl() {
@@ -327,10 +325,10 @@ export function createAuthClient({
 
     async signInWithOAuth(provider, { redirectTo = redirectTarget(), scopes, queryParams = {} } = {}) {
       if (!/^[a-z][a-z0-9_-]{0,31}$/i.test(provider)) throw new Error('Invalid identity provider.');
-      const { challenge, flowId } = await beginPkce();
+      const { challenge } = await beginPkce();
       const endpoint = new URL(`${authUrl}/authorize`);
       endpoint.searchParams.set('provider', provider);
-      endpoint.searchParams.set('redirect_to', redirectForFlow(redirectTo, flowId));
+      endpoint.searchParams.set('redirect_to', redirectForFlow(redirectTo));
       endpoint.searchParams.set('code_challenge', challenge);
       endpoint.searchParams.set('code_challenge_method', 's256');
       if (scopes) endpoint.searchParams.set('scopes', scopes);
@@ -341,9 +339,9 @@ export function createAuthClient({
     async signInWithEmail(email, { redirectTo = redirectTarget() } = {}) {
       const normalized = String(email || '').trim().toLowerCase();
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized)) throw new Error('Enter a valid email address.');
-      const { challenge, flowId } = await beginPkce();
+      const { challenge } = await beginPkce();
       const endpoint = new URL(`${authUrl}/otp`);
-      endpoint.searchParams.set('redirect_to', redirectForFlow(redirectTo, flowId));
+      endpoint.searchParams.set('redirect_to', redirectForFlow(redirectTo));
       await request(endpoint.href, {
         method: 'POST',
         body: { email: normalized, create_user: true, code_challenge: challenge, code_challenge_method: 's256' }
@@ -353,10 +351,10 @@ export function createAuthClient({
     async linkIdentity(provider, { redirectTo = redirectTarget(), scopes, queryParams = {} } = {}) {
       const current = await freshSession();
       if (!current) throw new Error('Sign in before linking another account.');
-      const { challenge, flowId } = await beginPkce();
+      const { challenge } = await beginPkce();
       const endpoint = new URL(`${authUrl}/user/identities/authorize`);
       endpoint.searchParams.set('provider', provider);
-      endpoint.searchParams.set('redirect_to', redirectForFlow(redirectTo, flowId));
+      endpoint.searchParams.set('redirect_to', redirectForFlow(redirectTo));
       endpoint.searchParams.set('code_challenge', challenge);
       endpoint.searchParams.set('code_challenge_method', 's256');
       endpoint.searchParams.set('skip_http_redirect', 'true');

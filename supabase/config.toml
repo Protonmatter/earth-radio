@@ -8,12 +8,26 @@ max_rows = 1000
 
 [auth]
 enabled = true
+enable_signup = true
+enable_anonymous_sign_ins = false
+enable_manual_linking = true
 site_url = "https://earth-radio.pages.dev"
+# Official Auth docs: production redirect URLs should be exact paths, not globstars.
+# Extra query parameters on redirect_to are not part of the default PKCE flow.
 additional_redirect_urls = [
-  "https://earth-radio.pages.dev/**",
-  "http://localhost:8788/**",
+  "https://earth-radio.pages.dev",
+  "https://earth-radio.pages.dev/",
+  "http://127.0.0.1:8788",
+  "http://127.0.0.1:8788/",
+  "http://localhost:8788",
+  "http://localhost:8788/",
   "earth-radio://auth/callback"
 ]
+
+[auth.email]
+enable_signup = true
+enable_confirmations = true
+double_confirm_changes = true
 
 [auth.external.github]
 # Hosted GitHub OAuth is enabled in the dashboard. Local CI has no provider secrets.
@@ -27,3 +41,7 @@ enabled = false
 
 [auth.external.azure]
 enabled = false
+
+[inbucket]
+enabled = true
+port = 54324

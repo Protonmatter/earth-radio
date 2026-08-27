@@ -79,6 +79,8 @@ deployment procedure lives in `docs/CLOUDFLARE_DEPLOYMENT.md`.
 
 GitHub Actions is defined in `.github/workflows/ci.yml` with read-only contents permission and immutable action commit pins. When a repository exists, inspect both Linux and Windows jobs for the exact commit. A green local run does not substitute for remote CI.
 
+`.github/workflows/supabase.yml` starts a local Supabase stack on every pull request: pgTAP RLS tests against `supabase db start`, then the production PKCE client against local GoTrue and Inbucket. That workflow is also read-only and does not use hosted project secrets.
+
 ## Rollback
 
 Cloudflare rollback is a deployment operation, not a Git history rewrite. Select the last known-good production deployment in the Pages dashboard and roll production back to it, then verify the served commit and public smoke behavior. Preserve the failed deployment and logs for diagnosis. Correct the repository with a normal forward commit; do not force-push or delete evidence.
