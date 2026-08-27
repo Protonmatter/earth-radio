@@ -32,23 +32,42 @@ function parseEnv(text) {
   return values;
 }
 
-async function loadLocalStack() {
-  const fromFile = process.env.SUPABASE_STATUS_ENV
-    ? parseEnv(await readFile(process.env.SUPABASE_STATUS_ENV, 'utf8'))
-    : {};
-  const url = process.env.SUPABASE_URL || process.env.API_URL || fromFile.SUPABASE_URL || fromFile.API_URL;
+async function loadStatusFromCli() {
+  try {
+    const { execFile } = await import('node:child_process');
+    const { promisify } = await import('node:util');
+    const run = promisify(execFile);
+    const { stdout } = await run('supabase', ['status', '-o', 'env'], { timeout: 20000 });
+    return parseEnv(stdout);
+  } catch {
+    return {};
+  }
+}
+
+function stackFrom(values) {
+  const url = process.env.SUPABASE_URL || process.env.API_URL || values.SUPABASE_URL || values.API_URL;
   const publishable = process.env.SUPABASE_PUBLISHABLE_KEY || process.env.PUBLISHABLE_KEY
-    || fromFile.SUPABASE_PUBLISHABLE_KEY || fromFile.PUBLISHABLE_KEY;
-  const anon = process.env.SUPABASE_ANON_KEY || process.env.ANON_KEY || fromFile.SUPABASE_ANON_KEY || fromFile.ANON_KEY;
+    || values.SUPABASE_PUBLISHABLE_KEY || values.PUBLISHABLE_KEY;
+  const anon = process.env.SUPABASE_ANON_KEY || process.env.ANON_KEY || values.SUPABASE_ANON_KEY || values.ANON_KEY;
   const service = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SERVICE_ROLE_KEY
-    || fromFile.SUPABASE_SERVICE_ROLE_KEY || fromFile.SERVICE_ROLE_KEY
-    || process.env.SECRET_KEY || fromFile.SECRET_KEY;
+    || values.SUPABASE_SERVICE_ROLE_KEY || values.SERVICE_ROLE_KEY
+    || process.env.SECRET_KEY || values.SECRET_KEY;
   const mail = process.env.SUPABASE_MAILPIT_URL || process.env.MAILPIT_URL
     || process.env.SUPABASE_INBUCKET_URL || process.env.INBUCKET_URL
-    || fromFile.SUPABASE_MAILPIT_URL || fromFile.MAILPIT_URL
-    || fromFile.SUPABASE_INBUCKET_URL || fromFile.INBUCKET_URL
+    || values.SUPABASE_MAILPIT_URL || values.MAILPIT_URL
+    || values.SUPABASE_INBUCKET_URL || values.INBUCKET_URL
     || 'http://127.0.0.1:54324';
   return { url, publishable, anon, service, mail, apikey: publishable || anon };
+}
+
+async function loadLocalStack() {
+  let fromFile = {};
+  if (process.env.SUPABASE_STATUS_ENV) {
+    fromFile = parseEnv(await readFile(process.env.SUPABASE_STATUS_ENV, 'utf8'));
+  }
+  let stack = stackFrom(fromFile);
+  if (required && !stack.url) stack = stackFrom({ ...fromFile, ...await loadStatusFromCli() });
+  return stack;
 }
 
 function localFetch(apiUrl, anonKey) {

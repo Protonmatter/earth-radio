@@ -5,7 +5,6 @@ const COOKIE_NAME = 'er_pkce_v1';
 const FLOW_PARAM = 'er_auth_flow';
 const API_VERSION = '2024-01-01';
 const FLOW_TTL_MS = 20 * 60 * 1000;
-const MAX_FLOWS = 8;
 
 function base64Url(bytes) {
   let binary = '';
@@ -248,24 +247,26 @@ export function createAuthClient({
     cryptoImpl.getRandomValues(idBytes);
     const flowId = base64Url(idBytes);
     const now = Date.now();
-    const retained = liveFlowEntries(readFlows(), now).slice(-(MAX_FLOWS - 1));
-    persistFlows(Object.fromEntries([
-      ...retained,
-      [flowId, { verifier: pkce.verifier, createdAt: now }]
-    ]), flowId);
+    persistFlows({
+      [flowId]: { verifier: pkce.verifier, createdAt: now }
+    }, flowId);
     return { ...pkce, flowId };
   }
 
+  function allowlistedRedirect(target) {
+    const redirect = new URL(target);
+    redirect.search = '';
+    redirect.hash = '';
+    if (!redirect.pathname) redirect.pathname = '/';
+    return redirect.href;
+  }
+
   function redirectTarget() {
-    const current = new URL(location.href);
-    for (const key of ['code', 'error', 'error_code', 'error_description', FLOW_PARAM]) {
-      current.searchParams.delete(key);
-    }
-    return current.href;
+    return allowlistedRedirect(location.href);
   }
 
   function redirectForFlow(target) {
-    return new URL(target).href;
+    return allowlistedRedirect(target);
   }
 
   function cleanCallbackUrl() {

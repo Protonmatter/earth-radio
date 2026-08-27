@@ -55,8 +55,8 @@
     },
     {
       "path": "docs/provenance/hardening-overlays.json",
-      "bytes": 10265,
-      "sha256": "72123ee7a73adefefb2752d42f4a6948e26ccdab820d5f94e0e8c40da2d9d342"
+      "bytes": 10277,
+      "sha256": "07721c3885498d597378f370f8943707fb00d918f457b01a97946ce974330c60"
     },
     {
       "path": "docs/provenance/recovery-manifest.json",
@@ -100,8 +100,8 @@
     },
     {
       "path": "docs/SUPABASE.md",
-      "bytes": 5295,
-      "sha256": "acca5b1e079a0cb1d8514a613ece4ec1eb118c7a22ada482b8a24ab3ef182b02"
+      "bytes": 5298,
+      "sha256": "00abe4f8e06a582bce20caf83d6005449151d930249dac1c02a68b32e9a86ce4"
     },
     {
       "path": "docs/superpowers/plans/2026-08-21-earth-radio-public-cloudflare.md",
@@ -275,8 +275,8 @@
     },
     {
       "path": "site/assets/auth-core.js",
-      "bytes": 15844,
-      "sha256": "e9fba56a1e897968b73d13df04fa4e216462889cbefe43c38c065ec8df22f9bc"
+      "bytes": 15766,
+      "sha256": "f78d9c8f48d2b53a9e8d0e204c001363765c1a4319124cb20193ec5bba971213"
     },
     {
       "path": "site/assets/auth-ui.css",
@@ -420,8 +420,8 @@
     },
     {
       "path": "site/sw.js",
-      "bytes": 2969,
-      "sha256": "e4b83386cde4ba9c0e3e3abbbe3faf75b32e0bad5ab4cde51d659867f0c25ffa"
+      "bytes": 2961,
+      "sha256": "da41a30476b6cae6847736f53cbfd4d187553ebee92ac7a66d590787c4b688c8"
     },
     {
       "path": "src-recovered/core/config.ts",
@@ -655,13 +655,13 @@
     },
     {
       "path": "tests/auth-local-gotrue.test.mjs",
-      "bytes": 9204,
-      "sha256": "8d7964e77c6021d41dcc374f55f82233c31ef1bb0808b79cc970a5edea224d96"
+      "bytes": 9722,
+      "sha256": "6aadacf3c86ca1fbafedaf6a545be343485bdeb366a53eb7411f11541a87d8f2"
     },
     {
       "path": "tests/auth-sync.test.mjs",
-      "bytes": 45065,
-      "sha256": "6aa5cd0ce991480ce1a92b82f7ba38278274baebc0f5223389fe65675d3d1d87"
+      "bytes": 45187,
+      "sha256": "8a4871f1b3637ea6e2ea29d5da554ffcd0abfc33bf012f91ca31687d51744e07"
     },
     {
       "path": "tests/browser/fixtures/stations.mjs",
@@ -830,8 +830,8 @@
     },
     {
       "path": "tests/service-worker.test.mjs",
-      "bytes": 5485,
-      "sha256": "d3f5d0be426c8d0880909fa0fd744f90871a7c8cb681dc7bb856d0dd33b8e95d"
+      "bytes": 5557,
+      "sha256": "8609668a59bd195526aaaa80a568f19580ef631869d1dfa25dc38447786fa2b3"
     },
     {
       "path": "tests/smoke-desktop.mjs",

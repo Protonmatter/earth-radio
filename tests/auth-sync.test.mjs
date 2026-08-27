@@ -68,7 +68,7 @@ test('OAuth sign-in uses PKCE and stores only the verifier locally', async () =>
   assert.ok(flows[flowIds[0]].verifier);
 });
 
-test('OAuth redirects preserve the current query and hash route', async () => {
+test('OAuth redirects use the exact allowlisted origin root', async () => {
   const storage = memoryStorage();
   const assigned = [];
   const client = createAuthClient({
@@ -85,9 +85,9 @@ test('OAuth redirects preserve the current query and hash route', async () => {
   await client.signInWithOAuth('github');
 
   const redirect = new URL(new URL(assigned[0]).searchParams.get('redirect_to'));
-  assert.equal(redirect.searchParams.get('domain'), 'US');
-  assert.equal(redirect.searchParams.get('er_auth_flow'), null);
-  assert.equal(redirect.hash, '#station=abc');
+  assert.equal(redirect.href, 'https://earth-radio.example/');
+  assert.equal(redirect.search, '');
+  assert.equal(redirect.hash, '');
 });
 
 test('OAuth callback exchanges the code, persists the session, and cleans the URL', async () => {
@@ -155,7 +155,7 @@ test('retryable OAuth callback failures preserve the verifier and callback URL',
   assert.deepEqual(replaced, []);
 });
 
-test('parallel OAuth starts retain independent PKCE verifiers', async () => {
+test('a later PKCE start replaces the previous pending verifier', async () => {
   const storage = memoryStorage();
   const assigned = [];
   const client = createAuthClient({
@@ -169,13 +169,16 @@ test('parallel OAuth starts retain independent PKCE verifiers', async () => {
   });
 
   await client.signInWithOAuth('github');
+  const first = Object.keys(JSON.parse(storage.getItem('earthRadio.auth.pkce.v1')));
   await client.signInWithOAuth('google');
 
   const flows = JSON.parse(storage.getItem('earthRadio.auth.pkce.v1'));
-  assert.equal(Object.keys(flows).length, 2);
-  assert.ok(Object.values(flows).every(flow => flow?.verifier));
+  const remaining = Object.keys(flows);
+  assert.equal(remaining.length, 1);
+  assert.notEqual(remaining[0], first[0]);
+  assert.ok(flows[remaining[0]].verifier);
   const redirectTargets = assigned.map(value => new URL(new URL(value).searchParams.get('redirect_to')).href);
-  assert.ok(redirectTargets.every(target => !target.includes('er_auth_flow')));
+  assert.deepEqual(redirectTargets, ['https://earth-radio.example/', 'https://earth-radio.example/']);
 });
 
 test('OAuth sign-in mirrors the PKCE verifier to session storage and a cookie', async () => {
