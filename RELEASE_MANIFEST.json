@@ -55,8 +55,8 @@
     },
     {
       "path": "docs/provenance/hardening-overlays.json",
-      "bytes": 10277,
-      "sha256": "07721c3885498d597378f370f8943707fb00d918f457b01a97946ce974330c60"
+      "bytes": 10249,
+      "sha256": "ff2a3a2105dfd1dd5b19ff1408973014bd0a16131e2c67e24cd85a280ebcb7dc"
     },
     {
       "path": "docs/provenance/recovery-manifest.json",
@@ -275,8 +275,8 @@
     },
     {
       "path": "site/assets/auth-core.js",
-      "bytes": 15766,
-      "sha256": "f78d9c8f48d2b53a9e8d0e204c001363765c1a4319124cb20193ec5bba971213"
+      "bytes": 17066,
+      "sha256": "670cf72079fc89eaf162a57506fe991e22cdb423d4b1a9946463e58e585bbff3"
     },
     {
       "path": "site/assets/auth-ui.css",
@@ -285,8 +285,8 @@
     },
     {
       "path": "site/assets/auth-ui.js",
-      "bytes": 20678,
-      "sha256": "f0a132dd4c4262b15d8f59b19e9494d0cc839756b01265fdb386042efd338449"
+      "bytes": 20839,
+      "sha256": "83828e99aac08d2bb379a0e4de0426f23c774894c3a7d486fac55f2bdefdd693"
     },
     {
       "path": "site/assets/directory-expansion.js",
@@ -420,8 +420,8 @@
     },
     {
       "path": "site/sw.js",
-      "bytes": 2961,
-      "sha256": "da41a30476b6cae6847736f53cbfd4d187553ebee92ac7a66d590787c4b688c8"
+      "bytes": 2963,
+      "sha256": "acf17f0d0c7528fc4f2af9a0f6868b8804a8be6f28c8a2f755e89b69710c1a4d"
     },
     {
       "path": "src-recovered/core/config.ts",
@@ -660,8 +660,8 @@
     },
     {
       "path": "tests/auth-sync.test.mjs",
-      "bytes": 45187,
-      "sha256": "8a4871f1b3637ea6e2ea29d5da554ffcd0abfc33bf012f91ca31687d51744e07"
+      "bytes": 48094,
+      "sha256": "96354a8cdaffec6b2d3a613a22b4fd04905d7f0672ecb80860031f2900571f4d"
     },
     {
       "path": "tests/browser/fixtures/stations.mjs",
@@ -830,8 +830,8 @@
     },
     {
       "path": "tests/service-worker.test.mjs",
-      "bytes": 5557,
-      "sha256": "8609668a59bd195526aaaa80a568f19580ef631869d1dfa25dc38447786fa2b3"
+      "bytes": 5631,
+      "sha256": "dff4d4456ee68a4af5fa35253eaefb2e3fc99cf2311865b0d57865533140155a"
     },
     {
       "path": "tests/smoke-desktop.mjs",

@@ -515,18 +515,20 @@ async function boot() {
 
   render();
   const callbackParams = new URL(window.location.href).searchParams;
-  if (callbackParams.get('code') || callbackParams.get('error')) {
-    modal.hidden = false;
-    if (callbackParams.get('code')) message('Finishing sign-in…');
+  const finishingCallback = Boolean(callbackParams.get('code') || callbackParams.get('error'));
+  if (finishingCallback && callbackParams.get('code')) {
+    button.textContent = 'Finishing sign-in…';
   }
   try {
     session = await auth.initialize();
     authInitialized = true;
+    render();
     await accountTransition;
     if (resettingSession) return;
     if (session) {
       const previousUserId = localStorage.getItem(ACTIVE_USER_KEY);
-      const nextUserId = session.user.id;
+      const nextUserId = session.user?.id;
+      if (!nextUserId) throw new Error('Sign-in did not return a user. Please try again.');
       const transition = await switchLocalAccount(previousUserId, nextUserId);
       clearMissingNamespaceSyncState(nextUserId, transition);
       localStorage.setItem(ACTIVE_USER_KEY, nextUserId);
@@ -546,6 +548,7 @@ async function boot() {
     }
   } catch (error) {
     authInitialized = true;
+    render();
     message(error.message, 'error');
     modal.hidden = false;
   }
