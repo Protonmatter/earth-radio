@@ -40,13 +40,13 @@
     },
     {
       "path": "docs/LIVE_METADATA.md",
-      "bytes": 11689,
-      "sha256": "faef6c723b6553c9c5e9319d0f91378dbffde8696bd647e6de50e3340d9b15d4"
+      "bytes": 12465,
+      "sha256": "e5683c162c1e07ab5cfd280dfcb861d73a956c00a89aa4fe170da4b4fe1723c6"
     },
     {
       "path": "docs/OPERATIONS.md",
-      "bytes": 5546,
-      "sha256": "61609e300d3c0010468112f78dce68e50dfb854e8192e4f94989ee1add43c5dd"
+      "bytes": 5740,
+      "sha256": "1a2640afa1d4b0c0a2c8bdac6abd30fad85db48d29b415fc537cdc305ff2f23b"
     },
     {
       "path": "docs/PROVENANCE.md",
@@ -55,8 +55,8 @@
     },
     {
       "path": "docs/provenance/hardening-overlays.json",
-      "bytes": 9548,
-      "sha256": "55725f26f65204ba3b786fffd37785f666858c027f975950554bba27caf3f1ac"
+      "bytes": 9963,
+      "sha256": "0dd5fac05361001780e7dd74d05b9e9e5699f0118b92524b5bd3629c53205eaf"
     },
     {
       "path": "docs/provenance/recovery-manifest.json",
@@ -230,8 +230,8 @@
     },
     {
       "path": "server/icy-title.mjs",
-      "bytes": 1930,
-      "sha256": "89293ffcedef5e970a3bee175e1f70378b969e2165d6cf2bc6d156f6f9b47e53"
+      "bytes": 2968,
+      "sha256": "f8d4175c9ac40facf559ec8beefe195aaa333ef744af031aaeb37d72a198ddd9"
     },
     {
       "path": "server/metadata-api.mjs",
@@ -240,8 +240,8 @@
     },
     {
       "path": "server/metadata-providers.mjs",
-      "bytes": 21575,
-      "sha256": "883c3494e70ac8d9d7e037d06c4d6de76a587522b0c41b75bb989813c8a3dbe5"
+      "bytes": 22364,
+      "sha256": "7bd951e4892f5954396f5da61c9603f851584bf79e5031c1e40e3d77d48163f3"
     },
     {
       "path": "server/net-guard.mjs",
@@ -250,13 +250,13 @@
     },
     {
       "path": "server/platform-detect.mjs",
-      "bytes": 7348,
-      "sha256": "8ed0f38648a63aac0e4a9be71c1f4a30bdf05d83155df328d5c7ec88b71026f7"
+      "bytes": 8584,
+      "sha256": "38c948f454696ab5ddf56fdafbb6b4416fc6b055cb981c643de487012bc3c391"
     },
     {
       "path": "server/platform-nowplaying.mjs",
-      "bytes": 6310,
-      "sha256": "5befb475d2e5a3b7b63fb8ee0354bb77c33d96486e8a64dad1415469cb66ec07"
+      "bytes": 6327,
+      "sha256": "b7c159da72ea4fdc292f889ee8ec7a030755e7ec8049e64cff27057bc0add885"
     },
     {
       "path": "server/public-ip-policy.mjs",
@@ -315,8 +315,8 @@
     },
     {
       "path": "site/assets/metadata-enrichment.js",
-      "bytes": 68038,
-      "sha256": "8df810b69aef223f44a33e8ce0a664cb4c514aac07749a129be68d6027a99bc4"
+      "bytes": 70372,
+      "sha256": "627f09524aaef559bd7f214316b765459faba7e8a53f09379ce0df0f92e070eb"
     },
     {
       "path": "site/assets/pinned-stations.js",
@@ -350,8 +350,8 @@
     },
     {
       "path": "site/config.js",
-      "bytes": 3060,
-      "sha256": "8406d5b3a2891f94e32084aded5140f4a40dfa97e81c600b13dcace7c0f539b6"
+      "bytes": 3080,
+      "sha256": "5c7b5f6381444d9ed72c241871b843cdcdcb64d085257d8849a7b9f47d7f10ea"
     },
     {
       "path": "site/favicon.svg",
@@ -420,8 +420,8 @@
     },
     {
       "path": "site/sw.js",
-      "bytes": 2964,
-      "sha256": "41bb953ebecdfa93fd524ba1be57f656b7020b13cfb15edabaf0a361052d1a7f"
+      "bytes": 2969,
+      "sha256": "3c9c65d906072197b2f18c3d97f0ad4e1ffa2968681ed8050c79f0265f3ef93e"
     },
     {
       "path": "src-recovered/core/config.ts",
@@ -770,8 +770,8 @@
     },
     {
       "path": "tests/live-metadata.test.mjs",
-      "bytes": 37982,
-      "sha256": "200ad30d2f5321ef0019bbbc476255c8e686e8dbb2d32e975f307099581485a7"
+      "bytes": 40522,
+      "sha256": "7e9d11959b036825d007a75a2ddf006c2bb78e89a16c072d11f2cf61ace5d5b0"
     },
     {
       "path": "tests/net-guard.test.mjs",
@@ -825,8 +825,8 @@
     },
     {
       "path": "tests/service-worker.test.mjs",
-      "bytes": 5261,
-      "sha256": "3be3b23df6dfa605d7d952729ccb6aedd7fed3d1b630d20cbeb3dceb85cbbb93"
+      "bytes": 5341,
+      "sha256": "9c7a9707bdeb2729021c976f05b267442d60900b30eda8d37fe8c684652d6634"
     },
     {
       "path": "tests/smoke-desktop.mjs",
@@ -835,8 +835,8 @@
     },
     {
       "path": "tests/smoke-metadata.mjs",
-      "bytes": 6008,
-      "sha256": "5da77d8967808eb8e7fefc33c62d3454744b210f2b04838f6e207a17ed1fdfd6"
+      "bytes": 6289,
+      "sha256": "f182984897659ffd85652cc3e365981d4dfcceeee9d4c8525a9a06c9599baa8d"
     },
     {
       "path": "tests/smoke-recovery-import.ps1",

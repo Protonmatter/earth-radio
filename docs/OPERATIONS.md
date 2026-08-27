@@ -68,9 +68,12 @@ deployment procedure lives in `docs/CLOUDFLARE_DEPLOYMENT.md`.
    stream resolves, (c) a request for a loopback/private URL returns HTTP 400 without
    any outbound fetch in the Function logs, and (d) rate-limited requests receive 429
    without invoking outbound fetches.
-4. **Fingerprint credentials** (optional): set `AUDD_API_TOKEN` or
-   `ACR_HOST`/`ACR_ACCESS_KEY`/`ACR_ACCESS_SECRET` as Pages project environment
-   variables. Without them the endpoint reports `available: false` and does nothing.
+4. **Fingerprint credentials** (required for universal now-playing): set
+   `AUDD_API_TOKEN` or `ACR_HOST`/`ACR_ACCESS_KEY`/`ACR_ACCESS_SECRET` as Pages
+   project environment variables. Without them `/api/track/fingerprint` reports
+   `available: false`, the Identify button stays hidden, and auto-identify on miss
+   does not run. With them, a playing station that has no structured feed is sampled
+   once after 8 seconds.
 
 ## CI inspection
 

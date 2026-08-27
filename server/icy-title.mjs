@@ -29,6 +29,26 @@ export function parseIcyTitle(metadata) {
   return match ? match[1].trim() : '';
 }
 
+// iHeart / MediaBase and similar encoders dump title="…",artist="…" into StreamTitle
+// instead of "Artist - Title". Recover the pair before the generic dash splitter
+// treats the rest of the blob as the song name.
+export function parseTaggedIcyMetadata(rawInput) {
+  const text = String(rawInput || '');
+  if (!/\btitle\s*=\s*"/i.test(text) || !/\bartist\s*=\s*"/i.test(text)) return null;
+  const title = text.match(/\btitle\s*=\s*"([^"]*)"/i)?.[1]?.trim() || '';
+  const artist = text.match(/\bartist\s*=\s*"([^"]*)"/i)?.[1]?.trim() || '';
+  if (!title || !artist) return null;
+  return { artist, title, raw: `${artist} - ${title}` };
+}
+
+// Trailing " - Classic Vinyl on walmradio.com" (and similar) is station branding,
+// not a track title. A bare "radio"/"FM" word is not enough: "Radio Ga Ga" is a song.
+export function looksLikeStationBranding(value) {
+  const text = String(value || '').trim();
+  if (!text) return false;
+  return /\bon\s+[\w.-]+\.[a-z]{2,}\b/i.test(text) || /\b[\w-]+\.(com|net|org|fm)\b/i.test(text);
+}
+
 function decodeMetadata(bytes) {
   let decoded;
   try {

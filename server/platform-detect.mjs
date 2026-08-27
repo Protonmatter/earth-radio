@@ -46,6 +46,11 @@ export function detectPlatformEndpoints(streamUrl) {
     endpoints.push({ platform: 'azuracast', kind: 'json', url: `${origin}/api/nowplaying/${encodeURIComponent(azuracastStation)}` });
   }
 
+  const somafmId = somafmStationIdFromHostPath(host, pathname);
+  if (somafmId) {
+    endpoints.push({ platform: 'somafm', kind: 'json', url: `https://somafm.com/songs/${encodeURIComponent(somafmId)}.json` });
+  }
+
   endpoints.push({ platform: 'icecast', kind: 'json', url: `${origin}/status-json.xsl`, mount: pathname });
   endpoints.push({ platform: 'shoutcast', kind: 'json', url: `${origin}/stats?json=1` });
   return endpoints;
@@ -63,6 +68,7 @@ export function parsePlatformPayload(endpoint, text) {
   if (endpoint.platform === 'radioco') return parseRadioCo(data);
   if (endpoint.platform === 'lautfm') return parseLautFm(data);
   if (endpoint.platform === 'radiojar') return parseRadiojar(data);
+  if (endpoint.platform === 'somafm') return parseSomaFm(data);
   if (endpoint.platform === 'icecast') return parseIcecast(data, endpoint.mount);
   if (endpoint.platform === 'shoutcast') return parseShoutcast(data);
   return null;
@@ -96,6 +102,37 @@ function parseRadiojar(data) {
   const artist = cleanText(data?.artist);
   if (!title && !artist) return null;
   return withParsedFallback({ platform: 'radiojar', artist, title, raw: [artist, title].filter(Boolean).join(' - ') || title, artworkUrl: httpsOnly(data?.thumb) });
+}
+
+function parseSomaFm(data) {
+  const song = Array.isArray(data?.songs) ? data.songs[0] : null;
+  const title = cleanText(song?.title);
+  const artist = cleanText(song?.artist);
+  if (!title) return null;
+  return {
+    platform: 'somafm',
+    artist,
+    title,
+    raw: [artist, title].filter(Boolean).join(' - ') || title,
+    artworkUrl: httpsOnly(song?.albumArt)
+  };
+}
+
+export function somafmStationId(streamUrl) {
+  let url;
+  try {
+    url = new URL(String(streamUrl || '').trim());
+  } catch {
+    return '';
+  }
+  return somafmStationIdFromHostPath(url.hostname.toLowerCase(), url.pathname);
+}
+
+function somafmStationIdFromHostPath(host, pathname) {
+  if (host !== 'somafm.com' && !host.endsWith('.somafm.com')) return '';
+  const segment = String(pathname || '').replace(/^\/+/, '').split('/')[0] || '';
+  if (!segment || /\.(pls|m3u8?|xspf)$/i.test(segment)) return '';
+  return segment.replace(/-\d+-(mp3|aacp?)$/i, '').replace(/-\d+$/, '');
 }
 
 function parseIcecast(data, mountPath) {

@@ -11,7 +11,7 @@ From most to least trusted:
 
 | Source | Where it runs | Cost | Notes |
 |---|---|---|---|
-| Audio fingerprint (ACRCloud/AudD) | desktop proxy or Pages Function | metered per request | On-demand; identifies the actual audio |
+| Audio fingerprint (ACRCloud/AudD) | desktop proxy or Pages Function | metered per request | Auto-runs once when free feeds miss the playing station; Identify button remains |
 | HLS timed ID3 | browser | free | Read from the hls.js hidden metadata text track |
 | Hosting-platform now-playing API | browser and/or proxy | free | Structured artist/title from the station's platform |
 | ICY `StreamTitle` | existing pipeline | free | Raw broadcast text; still confidence-gated |
@@ -30,6 +30,7 @@ station's stream URL:
 | Platform | Detection | Endpoint |
 |---|---|---|
 | LISTEN.moe | `listen.moe` stream host | `wss://listen.moe/gateway_v2` (K-pop: `/kpop/gateway_v2`); browser WebSocket only |
+| SomaFM | `*.somafm.com/<channel>-<bitrate>-<codec>` | `https://somafm.com/songs/<channel>.json` |
 | AzuraCast | `/listen/<station>/…` path | `<origin>/api/nowplaying/<station>` |
 | Zeno.FM | `stream.zeno.fm/<mount>` | `https://api.zeno.fm/mounts/metadata/subscribe/<mount>` (SSE, first event) |
 | Radio.co | `*.radio.co/s??????????/…` | `https://public.radio.co/stations/<id>/status` |
@@ -120,13 +121,21 @@ platformNowPlayingEnabled: true,
 platformPollMs: 30000,
 hlsId3Enabled: true,
 fingerprintEnabled: true,
-fingerprintAutoOnRawIcy: false,   // automatic fingerprint on "Raw ICY only"; off by default
+fingerprintAutoOnRawIcy: true,    // auto-identify the playing stream when free feeds miss
 fingerprintMinIntervalMs: 30000
 ```
 
-`fingerprintAutoOnRawIcy` stays off by default because it spends metered recognition
-requests without a user action. The manual "Identify song" button is the intended
-default interaction.
+`fingerprintAutoOnRawIcy` is on by default so a playing station that has no structured
+feed is identified from the audio after an 8-second delay. That path is still a no-op
+until Pages (or the desktop proxy) has recognition credentials: without them
+`/api/track/fingerprint` reports `available: false` and the overlay never spends a
+sample. The 30-second client interval and the zone WAF (6/min/IP) remain the budget.
+The Identify button stays available for a manual retry. Structured Station feed
+results (LISTEN.moe, SomaFM, parsed ICY with artist and title) skip fingerprinting.
+
+iHeart / MediaBase ICY blobs (`title="…",artist="…"`) are parsed into artist/title
+before the generic dash splitter. Trailing station branding such as
+`Classic Vinyl on walmradio.com` is stripped so a `Title by Artist` payload survives.
 
 ## Same-origin Pages Functions (public web)
 

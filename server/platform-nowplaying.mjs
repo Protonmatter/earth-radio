@@ -7,7 +7,7 @@
 import { requestPublic } from './net-guard.mjs';
 import { createBoundedTtlCache, resolveWithCache } from './shared-cache.mjs';
 import { detectPlatformEndpoints, parsePlatformPayload, sseFrameComplete } from './platform-detect.mjs';
-export { detectPlatformEndpoints, parsePlatformPayload } from './platform-detect.mjs';
+export { detectPlatformEndpoints, parsePlatformPayload, somafmStationId } from './platform-detect.mjs';
 
 const USER_AGENT = 'EarthRadio/0.24.0 platform-nowplaying (+https://github.com/Protonmatter/EarthRadio)';
 const DEFAULT_TIMEOUT_MS = 6000;

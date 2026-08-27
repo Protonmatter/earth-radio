@@ -52,11 +52,11 @@ window.RADIO_CONFIG = window.RADIO_CONFIG || {
     platformPollMs: 30000,
     // Real track metadata carried as HLS timed ID3, read from the hls.js metadata text track.
     hlsId3Enabled: true,
-    // On-demand audio fingerprinting requires the desktop proxy plus server-side
-    // ACRCloud or AudD credentials; recognition requests are metered, so the manual
-    // button is the default and automatic retries stay off.
+    // Audio fingerprinting identifies the playing stream when ICY/platform feeds miss.
+    // Requests are metered; the button stays hidden until /api/track/fingerprint
+    // reports available: true (AUDD_API_TOKEN or ACR_* on the Pages project).
     fingerprintEnabled: true,
-    fingerprintAutoOnRawIcy: false,
+    fingerprintAutoOnRawIcy: true,
     fingerprintMinIntervalMs: 30000
   }
 };
