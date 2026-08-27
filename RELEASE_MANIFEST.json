@@ -10,8 +10,8 @@
     },
     {
       "path": ".github/workflows/supabase.yml",
-      "bytes": 971,
-      "sha256": "3309b4215013ece8a0f5cabac1053197d669ff55d47c5c55d8ab4a1bfbf0c799"
+      "bytes": 1887,
+      "sha256": "0d94efaf2c806f5646caace3c6030c0cf189c9430cdc30f968cb30efc3e73a55"
     },
     {
       "path": ".node-version",
@@ -45,8 +45,8 @@
     },
     {
       "path": "docs/OPERATIONS.md",
-      "bytes": 5740,
-      "sha256": "1a2640afa1d4b0c0a2c8bdac6abd30fad85db48d29b415fc537cdc305ff2f23b"
+      "bytes": 6011,
+      "sha256": "c32cae6b845461acbbb133cd4005ac90b48375b5a49c76a73b95383f13ae8626"
     },
     {
       "path": "docs/PROVENANCE.md",
@@ -55,8 +55,8 @@
     },
     {
       "path": "docs/provenance/hardening-overlays.json",
-      "bytes": 10243,
-      "sha256": "63a47cabe00e10e13279ead095c1dd4f7ce44d440c2b8e6d4e4c7199134d2000"
+      "bytes": 10277,
+      "sha256": "07721c3885498d597378f370f8943707fb00d918f457b01a97946ce974330c60"
     },
     {
       "path": "docs/provenance/recovery-manifest.json",
@@ -100,8 +100,8 @@
     },
     {
       "path": "docs/SUPABASE.md",
-      "bytes": 3332,
-      "sha256": "514d5c4d336f3bff99ce073e7083b64f784ba9479d8edffb3f3e79c99f8ee736"
+      "bytes": 5298,
+      "sha256": "00abe4f8e06a582bce20caf83d6005449151d930249dac1c02a68b32e9a86ce4"
     },
     {
       "path": "docs/superpowers/plans/2026-08-21-earth-radio-public-cloudflare.md",
@@ -175,8 +175,8 @@
     },
     {
       "path": "package.json",
-      "bytes": 3318,
-      "sha256": "e854e2aca4a2b4740f8abb605cde4e482b962d178df0e7aad70db80e9e61318c"
+      "bytes": 3408,
+      "sha256": "27c2eb0524069d5fe0aade30cb5028266919e998cae3ab4a29e72bc61dc8c76c"
     },
     {
       "path": "scripts/Import-EarthRadioRecovery.ps1",
@@ -275,8 +275,8 @@
     },
     {
       "path": "site/assets/auth-core.js",
-      "bytes": 15982,
-      "sha256": "3c9f19d96da3e7de19297eaaa56029c5713137d294dceb872eae4d095c28cd39"
+      "bytes": 15766,
+      "sha256": "f78d9c8f48d2b53a9e8d0e204c001363765c1a4319124cb20193ec5bba971213"
     },
     {
       "path": "site/assets/auth-ui.css",
@@ -420,8 +420,8 @@
     },
     {
       "path": "site/sw.js",
-      "bytes": 2963,
-      "sha256": "671748ba1956309bb8486a9d2471113b07b896dbfaa319b3bf7b73097cfa045b"
+      "bytes": 2961,
+      "sha256": "da41a30476b6cae6847736f53cbfd4d187553ebee92ac7a66d590787c4b688c8"
     },
     {
       "path": "src-recovered/core/config.ts",
@@ -630,8 +630,8 @@
     },
     {
       "path": "supabase/config.toml",
-      "bytes": 598,
-      "sha256": "330f10e10ae43f4ea69d11a62013045c39b7fd4583573e64337b91d8f4461e0d"
+      "bytes": 1052,
+      "sha256": "83aedff244b9409288b7029ae0650cc433ea8644605bb9607d739f15075ea45c"
     },
     {
       "path": "supabase/migrations/20260825010000_auth_and_user_sync.sql",
@@ -654,9 +654,14 @@
       "sha256": "96327ed93b3a712696efd163f9c9ba22397d4a9c525f0d7f90e3aad0f506e888"
     },
     {
+      "path": "tests/auth-local-gotrue.test.mjs",
+      "bytes": 9722,
+      "sha256": "6aadacf3c86ca1fbafedaf6a545be343485bdeb366a53eb7411f11541a87d8f2"
+    },
+    {
       "path": "tests/auth-sync.test.mjs",
-      "bytes": 44760,
-      "sha256": "69e54db5e2334b1da73fa15e8a41b681f8af8e134c3c4e7fe7c3b948f7b7fe9d"
+      "bytes": 45187,
+      "sha256": "8a4871f1b3637ea6e2ea29d5da554ffcd0abfc33bf012f91ca31687d51744e07"
     },
     {
       "path": "tests/browser/fixtures/stations.mjs",
@@ -825,8 +830,8 @@
     },
     {
       "path": "tests/service-worker.test.mjs",
-      "bytes": 5405,
-      "sha256": "f8b0f2058a6198fd5afc2586c0589ccc3edfd12c7a13ee400ecb2b8b6d45f83d"
+      "bytes": 5557,
+      "sha256": "8609668a59bd195526aaaa80a568f19580ef631869d1dfa25dc38447786fa2b3"
     },
     {
       "path": "tests/smoke-desktop.mjs",
@@ -865,8 +870,8 @@
     },
     {
       "path": "tests/workflow.test.mjs",
-      "bytes": 2384,
-      "sha256": "736282561de8c541f73b1543161d7f57edad605c29c30f9667b8ad9318936c1b"
+      "bytes": 3260,
+      "sha256": "1e5fee9f678345cd5c75c697a781f1e877a84c918cb61fdf1bbb0c1f6fd0d165"
     },
     {
       "path": "wrangler.jsonc",

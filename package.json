@@ -22,6 +22,7 @@
     "release:manifest:check": "node scripts/release-manifest.mjs --check",
     "verify": "npm run check && npm test && npm run build:web && npm run verify:site && npm run release:manifest:check",
     "test:e2e": "playwright test --config tests/e2e/playwright.config.mjs",
+    "test:auth-local": "AUTH_INTEGRATION=1 node --test tests/auth-local-gotrue.test.mjs",
     "lint": "eslint ."
   },
   "devDependencies": {

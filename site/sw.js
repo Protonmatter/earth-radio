@@ -1,4 +1,4 @@
-const CACHE_NAME = 'earth-radio-shell-v40-pkce-callback-1';
+const CACHE_NAME = 'earth-radio-shell-v42-auth-review-1';
 const SHELL_ASSETS = [
   './',
   './index.html',

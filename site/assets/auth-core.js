@@ -5,7 +5,6 @@ const COOKIE_NAME = 'er_pkce_v1';
 const FLOW_PARAM = 'er_auth_flow';
 const API_VERSION = '2024-01-01';
 const FLOW_TTL_MS = 20 * 60 * 1000;
-const MAX_FLOWS = 8;
 
 function base64Url(bytes) {
   let binary = '';
@@ -248,26 +247,26 @@ export function createAuthClient({
     cryptoImpl.getRandomValues(idBytes);
     const flowId = base64Url(idBytes);
     const now = Date.now();
-    const retained = liveFlowEntries(readFlows(), now).slice(-(MAX_FLOWS - 1));
-    persistFlows(Object.fromEntries([
-      ...retained,
-      [flowId, { verifier: pkce.verifier, createdAt: now }]
-    ]), flowId);
+    persistFlows({
+      [flowId]: { verifier: pkce.verifier, createdAt: now }
+    }, flowId);
     return { ...pkce, flowId };
   }
 
-  function redirectTarget() {
-    const current = new URL(location.href);
-    for (const key of ['code', 'error', 'error_code', 'error_description', FLOW_PARAM]) {
-      current.searchParams.delete(key);
-    }
-    return current.href;
+  function allowlistedRedirect(target) {
+    const redirect = new URL(target);
+    redirect.search = '';
+    redirect.hash = '';
+    if (!redirect.pathname) redirect.pathname = '/';
+    return redirect.href;
   }
 
-  function redirectForFlow(target, flowId) {
-    const redirect = new URL(target);
-    redirect.searchParams.set(FLOW_PARAM, flowId);
-    return redirect.href;
+  function redirectTarget() {
+    return allowlistedRedirect(location.href);
+  }
+
+  function redirectForFlow(target) {
+    return allowlistedRedirect(target);
   }
 
   function cleanCallbackUrl() {
@@ -327,10 +326,10 @@ export function createAuthClient({
 
     async signInWithOAuth(provider, { redirectTo = redirectTarget(), scopes, queryParams = {} } = {}) {
       if (!/^[a-z][a-z0-9_-]{0,31}$/i.test(provider)) throw new Error('Invalid identity provider.');
-      const { challenge, flowId } = await beginPkce();
+      const { challenge } = await beginPkce();
       const endpoint = new URL(`${authUrl}/authorize`);
       endpoint.searchParams.set('provider', provider);
-      endpoint.searchParams.set('redirect_to', redirectForFlow(redirectTo, flowId));
+      endpoint.searchParams.set('redirect_to', redirectForFlow(redirectTo));
       endpoint.searchParams.set('code_challenge', challenge);
       endpoint.searchParams.set('code_challenge_method', 's256');
       if (scopes) endpoint.searchParams.set('scopes', scopes);
@@ -341,9 +340,9 @@ export function createAuthClient({
     async signInWithEmail(email, { redirectTo = redirectTarget() } = {}) {
       const normalized = String(email || '').trim().toLowerCase();
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized)) throw new Error('Enter a valid email address.');
-      const { challenge, flowId } = await beginPkce();
+      const { challenge } = await beginPkce();
       const endpoint = new URL(`${authUrl}/otp`);
-      endpoint.searchParams.set('redirect_to', redirectForFlow(redirectTo, flowId));
+      endpoint.searchParams.set('redirect_to', redirectForFlow(redirectTo));
       await request(endpoint.href, {
         method: 'POST',
         body: { email: normalized, create_user: true, code_challenge: challenge, code_challenge_method: 's256' }
@@ -353,10 +352,10 @@ export function createAuthClient({
     async linkIdentity(provider, { redirectTo = redirectTarget(), scopes, queryParams = {} } = {}) {
       const current = await freshSession();
       if (!current) throw new Error('Sign in before linking another account.');
-      const { challenge, flowId } = await beginPkce();
+      const { challenge } = await beginPkce();
       const endpoint = new URL(`${authUrl}/user/identities/authorize`);
       endpoint.searchParams.set('provider', provider);
-      endpoint.searchParams.set('redirect_to', redirectForFlow(redirectTo, flowId));
+      endpoint.searchParams.set('redirect_to', redirectForFlow(redirectTo));
       endpoint.searchParams.set('code_challenge', challenge);
       endpoint.searchParams.set('code_challenge_method', 's256');
       endpoint.searchParams.set('skip_http_redirect', 'true');

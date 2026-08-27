@@ -60,14 +60,15 @@ test('OAuth sign-in uses PKCE and stores only the verifier locally', async () =>
   assert.equal(url.searchParams.get('code_challenge_method'), 's256');
   assert.ok(url.searchParams.get('code_challenge'));
   const redirect = new URL(url.searchParams.get('redirect_to'));
-  const flowId = redirect.searchParams.get('er_auth_flow');
   const flows = JSON.parse(storage.getItem('earthRadio.auth.pkce.v1'));
-  assert.ok(flowId);
-  assert.ok(flows[flowId].verifier);
-  assert.equal(Object.keys(flows).length, 1);
+  const flowIds = Object.keys(flows);
+  assert.equal(redirect.origin, 'https://earth-radio.example');
+  assert.equal(redirect.searchParams.get('er_auth_flow'), null);
+  assert.equal(flowIds.length, 1);
+  assert.ok(flows[flowIds[0]].verifier);
 });
 
-test('OAuth redirects preserve the current query and hash route', async () => {
+test('OAuth redirects use the exact allowlisted origin root', async () => {
   const storage = memoryStorage();
   const assigned = [];
   const client = createAuthClient({
@@ -84,9 +85,9 @@ test('OAuth redirects preserve the current query and hash route', async () => {
   await client.signInWithOAuth('github');
 
   const redirect = new URL(new URL(assigned[0]).searchParams.get('redirect_to'));
-  assert.equal(redirect.searchParams.get('domain'), 'US');
-  assert.ok(redirect.searchParams.get('er_auth_flow'));
-  assert.equal(redirect.hash, '#station=abc');
+  assert.equal(redirect.href, 'https://earth-radio.example/');
+  assert.equal(redirect.search, '');
+  assert.equal(redirect.hash, '');
 });
 
 test('OAuth callback exchanges the code, persists the session, and cleans the URL', async () => {
@@ -154,7 +155,7 @@ test('retryable OAuth callback failures preserve the verifier and callback URL',
   assert.deepEqual(replaced, []);
 });
 
-test('parallel OAuth starts retain independent PKCE verifiers', async () => {
+test('a later PKCE start replaces the previous pending verifier', async () => {
   const storage = memoryStorage();
   const assigned = [];
   const client = createAuthClient({
@@ -168,13 +169,16 @@ test('parallel OAuth starts retain independent PKCE verifiers', async () => {
   });
 
   await client.signInWithOAuth('github');
+  const first = Object.keys(JSON.parse(storage.getItem('earthRadio.auth.pkce.v1')));
   await client.signInWithOAuth('google');
 
   const flows = JSON.parse(storage.getItem('earthRadio.auth.pkce.v1'));
-  assert.equal(Object.keys(flows).length, 2);
-  const flowIds = assigned.map(value => new URL(new URL(value).searchParams.get('redirect_to')).searchParams.get('er_auth_flow'));
-  assert.equal(new Set(flowIds).size, 2);
-  assert.ok(flowIds.every(flowId => flows[flowId]?.verifier));
+  const remaining = Object.keys(flows);
+  assert.equal(remaining.length, 1);
+  assert.notEqual(remaining[0], first[0]);
+  assert.ok(flows[remaining[0]].verifier);
+  const redirectTargets = assigned.map(value => new URL(new URL(value).searchParams.get('redirect_to')).href);
+  assert.deepEqual(redirectTargets, ['https://earth-radio.example/', 'https://earth-radio.example/']);
 });
 
 test('OAuth sign-in mirrors the PKCE verifier to session storage and a cookie', async () => {
@@ -196,14 +200,14 @@ test('OAuth sign-in mirrors the PKCE verifier to session storage and a cookie', 
 
   await client.signInWithOAuth('github');
 
-  const flowId = new URL(new URL(assigned[0]).searchParams.get('redirect_to')).searchParams.get('er_auth_flow');
+  const flowId = sessionStore.getItem('earthRadio.auth.pkce.last.v1');
   const localFlows = JSON.parse(storage.getItem('earthRadio.auth.pkce.v1'));
   const sessionFlows = JSON.parse(sessionStore.getItem('earthRadio.auth.pkce.v1'));
   const cookieFlows = JSON.parse(cookie.read());
   assert.ok(localFlows[flowId].verifier);
   assert.equal(sessionFlows[flowId].verifier, localFlows[flowId].verifier);
   assert.equal(cookieFlows[flowId].verifier, localFlows[flowId].verifier);
-  assert.equal(sessionStore.getItem('earthRadio.auth.pkce.last.v1'), flowId);
+  assert.equal(new URL(new URL(assigned[0]).searchParams.get('redirect_to')).searchParams.get('er_auth_flow'), null);
 });
 
 test('OAuth callback recovers the verifier when the flow id is stripped from the URL', async () => {
@@ -1035,4 +1039,7 @@ test('production auth excludes Cloudflare preview origins', async () => {
   assert.doesNotMatch(runtimeConfig, /localhost|127\.0\.0\.1/);
   assert.doesNotMatch(runtimeConfig, /\*\.earth-radio\.pages\.dev/);
   assert.doesNotMatch(supabaseConfig, /\*\.earth-radio\.pages\.dev/);
+  assert.doesNotMatch(supabaseConfig, /earth-radio\.pages\.dev\/\*\*/);
+  assert.match(supabaseConfig, /enable_manual_linking = true/);
+  assert.match(supabaseConfig, /enable_confirmations = true/);
 });

@@ -4,6 +4,20 @@ import path from 'node:path';
 import test from 'node:test';
 import { parseNetworkProxyRule } from '../electron/proxy-rules.mjs';
 
+test('Supabase CI runs database tests and the local PKCE auth workflow without secrets', async () => {
+  const workflow = await readFile(path.resolve(import.meta.dirname, '..', '.github', 'workflows', 'supabase.yml'), 'utf8');
+  assert.match(workflow, /permissions:\s*\n\s+contents: read/);
+  assert.doesNotMatch(workflow, /\$\{\{\s*secrets\./);
+  assert.match(workflow, /supabase db start/);
+  assert.match(workflow, /supabase test db/);
+  assert.match(workflow, /supabase start -x studio,imgproxy,logflare,vector,supavisor/);
+  assert.match(workflow, /AUTH_INTEGRATION/);
+  assert.match(workflow, /tests\/auth-local-gotrue\.test\.mjs/);
+  const uses = [...workflow.matchAll(/^\s*-?\s*uses:\s*(\S+)\s*$/gm)].map(match => match[1]);
+  assert.ok(uses.length >= 3);
+  for (const action of uses) assert.match(action, /@[a-f0-9]{40}$/, `action is not immutable: ${action}`);
+});
+
 test('CI is read-only, cross-platform, and immutably pinned', async () => {
   const workflow = await readFile(path.resolve(import.meta.dirname, '..', '.github', 'workflows', 'ci.yml'), 'utf8');
   assert.match(workflow, /permissions:\s*\n\s+contents: read/);
