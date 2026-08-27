@@ -275,8 +275,8 @@
     },
     {
       "path": "site/assets/auth-core.js",
-      "bytes": 16043,
-      "sha256": "82bcea8fbf1758d0cc35749d8fc74ff519504714da8c6e5db7b18e4c7582d332"
+      "bytes": 15982,
+      "sha256": "3c9f19d96da3e7de19297eaaa56029c5713137d294dceb872eae4d095c28cd39"
     },
     {
       "path": "site/assets/auth-ui.css",
@@ -655,8 +655,8 @@
     },
     {
       "path": "tests/auth-sync.test.mjs",
-      "bytes": 43344,
-      "sha256": "a095aa75c395bc9050e49ac57e5440ff5b15bd5d28976c1da5ac9e71be22fd5e"
+      "bytes": 44760,
+      "sha256": "69e54db5e2334b1da73fa15e8a41b681f8af8e134c3c4e7fe7c3b948f7b7fe9d"
     },
     {
       "path": "tests/browser/fixtures/stations.mjs",

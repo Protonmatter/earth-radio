@@ -315,13 +315,15 @@ test('OAuth callback uses the tab last-flow id when several verifiers are pendin
   assert.equal(remaining['flow-old'], undefined);
 });
 
-test('OAuth callback uses the newest verifier when the flow id and last-flow pointer are missing', async () => {
+test('a stripped callback does not guess among multiple pending verifiers', async () => {
   const storage = memoryStorage();
-  storage.setItem('earthRadio.auth.pkce.v1', JSON.stringify({
+  const flows = {
     'flow-old': { verifier: 'old-verifier', createdAt: Date.now() - 5000 },
     'flow-new': { verifier: 'new-verifier', createdAt: Date.now() }
-  }));
+  };
+  storage.setItem('earthRadio.auth.pkce.v1', JSON.stringify(flows));
   const requests = [];
+  const replaced = [];
   const client = createAuthClient({
     url: 'https://project.supabase.co',
     publishableKey: 'sb_publishable_test',
@@ -331,7 +333,7 @@ test('OAuth callback uses the newest verifier when the flow id and last-flow poi
       origin: 'https://earth-radio.example', pathname: '/',
       search: '?code=oauth-code', hash: ''
     },
-    history: { replaceState() {} },
+    history: { replaceState: (_state, _title, url) => replaced.push(url) },
     fetchImpl: async (url, init) => {
       requests.push({ url, init });
       return jsonResponse({
@@ -341,9 +343,42 @@ test('OAuth callback uses the newest verifier when the flow id and last-flow poi
     }
   });
 
-  await client.initialize();
+  await assert.rejects(client.initialize(), /verifier is missing/);
+  assert.equal(requests.length, 0);
+  assert.deepEqual(JSON.parse(storage.getItem('earthRadio.auth.pkce.v1')), flows);
+  assert.equal(replaced[0], '/');
+});
 
-  assert.equal(JSON.parse(requests[0].init.body).code_verifier, 'new-verifier');
+test('an identified callback does not consume a different pending verifier', async () => {
+  const storage = memoryStorage();
+  storage.setItem('earthRadio.auth.pkce.v1', JSON.stringify({
+    'flow-other': { verifier: 'other-verifier', createdAt: Date.now() }
+  }));
+  const requests = [];
+  const replaced = [];
+  const client = createAuthClient({
+    url: 'https://project.supabase.co',
+    publishableKey: 'sb_publishable_test',
+    storage,
+    location: {
+      href: 'https://earth-radio.example/?code=oauth-code&er_auth_flow=flow-stale',
+      origin: 'https://earth-radio.example', pathname: '/',
+      search: '?code=oauth-code&er_auth_flow=flow-stale', hash: ''
+    },
+    history: { replaceState: (_state, _title, url) => replaced.push(url) },
+    fetchImpl: async (url, init) => {
+      requests.push({ url, init });
+      return jsonResponse({
+        access_token: 'access', refresh_token: 'refresh', expires_in: 3600,
+        user: { id: 'user-1' }
+      });
+    }
+  });
+
+  await assert.rejects(client.initialize(), /verifier is missing/);
+  assert.equal(requests.length, 0);
+  assert.equal(JSON.parse(storage.getItem('earthRadio.auth.pkce.v1'))['flow-other'].verifier, 'other-verifier');
+  assert.equal(replaced[0], '/');
 });
 
 test('a missing verifier clears the callback URL so the page can recover', async () => {

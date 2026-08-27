@@ -224,21 +224,22 @@ export function createAuthClient({
 
   function resolvePkceFlow(requestedFlowId) {
     const live = Object.fromEntries(liveFlowEntries(readFlows()));
-    if (requestedFlowId && live[requestedFlowId]?.verifier) {
-      return { flowId: requestedFlowId, verifier: live[requestedFlowId].verifier, flows: live };
+    if (requestedFlowId) {
+      if (live[requestedFlowId]?.verifier) {
+        return { flowId: requestedFlowId, verifier: live[requestedFlowId].verifier, flows: live };
+      }
+      return { flowId: requestedFlowId, verifier: null, flows: live };
     }
     const lastFlowId = readStore(sessionStorageImpl, LAST_FLOW_KEY);
     if (lastFlowId && live[lastFlowId]?.verifier) {
       return { flowId: lastFlowId, verifier: live[lastFlowId].verifier, flows: live };
     }
-    const ranked = liveFlowEntries(live).sort((left, right) => (
-      Number(left[1].createdAt || 0) - Number(right[1].createdAt || 0)
-    ));
-    if (ranked.length) {
-      const [flowId, flow] = ranked[ranked.length - 1];
+    const remaining = liveFlowEntries(live);
+    if (remaining.length === 1) {
+      const [flowId, flow] = remaining[0];
       return { flowId, verifier: flow.verifier, flows: live };
     }
-    return { flowId: requestedFlowId || null, verifier: null, flows: live };
+    return { flowId: null, verifier: null, flows: live };
   }
 
   async function beginPkce() {
@@ -279,7 +280,6 @@ export function createAuthClient({
   async function exchangeCode(code, requestedFlowId) {
     const { flowId, verifier, flows } = resolvePkceFlow(requestedFlowId);
     if (!verifier) {
-      persistFlows({}, null);
       cleanCallbackUrl();
       throw new Error('The sign-in verifier is missing. Please start sign-in again.');
     }
