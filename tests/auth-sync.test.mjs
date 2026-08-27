@@ -36,6 +36,13 @@ function jsonResponse(body, status = 200) {
   });
 }
 
+test('callback boot keeps the radio usable until sign-in succeeds or fails', async () => {
+  const source = await readFile(path.resolve(import.meta.dirname, '../site/assets/auth-ui.js'), 'utf8');
+  assert.match(source, /button\.textContent = 'Finishing sign-in…'/);
+  assert.match(source, /session = await auth\.initialize\(\);\s*authInitialized = true;\s*render\(\);/s);
+  assert.doesNotMatch(source, /if \(callbackParams\.get\('code'\)\) message\('Finishing sign-in…'\)/);
+});
+
 test('OAuth sign-in uses PKCE and stores only the verifier locally', async () => {
   const storage = memoryStorage();
   const assigned = [];
@@ -66,6 +73,76 @@ test('OAuth sign-in uses PKCE and stores only the verifier locally', async () =>
   assert.equal(redirect.searchParams.get('er_auth_flow'), null);
   assert.equal(flowIds.length, 1);
   assert.ok(flows[flowIds[0]].verifier);
+});
+
+test('PKCE verifier is stored before the challenge digest resolves', async () => {
+  let releaseDigest;
+  const digestGate = new Promise(resolve => { releaseDigest = resolve; });
+  const storage = memoryStorage();
+  const assigned = [];
+  const client = createAuthClient({
+    url: 'https://project.supabase.co',
+    publishableKey: 'sb_publishable_test',
+    storage,
+    cryptoImpl: {
+      getRandomValues(bytes) {
+        bytes.fill(7);
+        return bytes;
+      },
+      subtle: {
+        async digest() {
+          await digestGate;
+          return new Uint8Array(32).buffer;
+        }
+      }
+    },
+    location: {
+      href: 'https://earth-radio.example/',
+      origin: 'https://earth-radio.example',
+      pathname: '/',
+      assign: url => assigned.push(url)
+    }
+  });
+
+  const pending = client.signInWithOAuth('github');
+  const flows = JSON.parse(storage.getItem('earthRadio.auth.pkce.v1'));
+  assert.equal(Object.keys(flows).length, 1);
+  assert.ok(Object.values(flows)[0].verifier);
+  assert.equal(assigned.length, 0);
+  releaseDigest();
+  await pending;
+  assert.equal(assigned.length, 1);
+});
+
+test('token responses without a user object recover the subject from the access token', async () => {
+  const encode = value => Buffer.from(JSON.stringify(value)).toString('base64url');
+  const accessToken = `${encode({ alg: 'none' })}.${encode({ sub: 'user-jwt', email: 'jwt@example.test' })}.sig`;
+  const storage = memoryStorage();
+  storage.setItem('earthRadio.auth.pkce.v1', JSON.stringify({
+    'flow-1': { verifier: 'verifier-value', createdAt: Date.now() }
+  }));
+  const replaced = [];
+  const client = createAuthClient({
+    url: 'https://project.supabase.co',
+    publishableKey: 'sb_publishable_test',
+    storage,
+    location: {
+      href: 'https://earth-radio.example/?code=oauth-code',
+      origin: 'https://earth-radio.example',
+      pathname: '/',
+      search: '?code=oauth-code',
+      hash: ''
+    },
+    history: { replaceState: (_state, _title, url) => replaced.push(url) },
+    fetchImpl: async () => jsonResponse({
+      access_token: accessToken, refresh_token: 'refresh', expires_in: 3600
+    })
+  });
+
+  const session = await client.initialize();
+  assert.equal(session.user.id, 'user-jwt');
+  assert.equal(session.user.email, 'jwt@example.test');
+  assert.equal(replaced[0], '/');
 });
 
 test('OAuth redirects use the exact allowlisted origin root', async () => {
@@ -126,6 +203,7 @@ test('OAuth callback exchanges the code, persists the session, and cleans the UR
     auth_code: 'oauth-code', code_verifier: 'verifier-value'
   });
   assert.equal(requests[0].init.headers.apikey, 'sb_publishable_test');
+  assert.equal(requests[0].init.headers.Authorization, 'Bearer sb_publishable_test');
   assert.equal(storage.getItem('earthRadio.auth.pkce.v1'), null);
   assert.ok(storage.getItem('earthRadio.auth.session.v1'));
   assert.equal(replaced[0], '/?domain=world');

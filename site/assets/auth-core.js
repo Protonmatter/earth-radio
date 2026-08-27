@@ -12,21 +12,38 @@ function base64Url(bytes) {
   return btoa(binary).replaceAll('+', '-').replaceAll('/', '_').replace(/=+$/, '');
 }
 
-async function createPkce(cryptoImpl) {
+function createVerifier(cryptoImpl) {
   if (!cryptoImpl?.getRandomValues || !cryptoImpl?.subtle) {
     throw new Error('Secure WebCrypto support is required for sign-in.');
   }
   const random = new Uint8Array(32);
   cryptoImpl.getRandomValues(random);
-  const verifier = base64Url(random);
+  return base64Url(random);
+}
+
+async function challengeFor(cryptoImpl, verifier) {
   const digest = await cryptoImpl.subtle.digest('SHA-256', new TextEncoder().encode(verifier));
-  return { verifier, challenge: base64Url(new Uint8Array(digest)) };
+  return base64Url(new Uint8Array(digest));
+}
+
+function userFromAccessToken(accessToken) {
+  try {
+    const payload = String(accessToken || '').split('.')[1];
+    if (!payload) return null;
+    const padded = payload.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat((4 - (payload.length % 4)) % 4);
+    const claims = JSON.parse(atob(padded));
+    const id = String(claims?.sub || '').trim();
+    return id ? { id, email: claims.email || claims.email_address || undefined } : null;
+  } catch {
+    return null;
+  }
 }
 
 function normalizeSession(value) {
   if (!value?.access_token || !value?.refresh_token) return null;
   const expiresAt = Number(value.expires_at) || Math.floor(Date.now() / 1000) + Number(value.expires_in || 0);
-  return { ...value, expires_at: expiresAt };
+  const user = value.user?.id ? value.user : userFromAccessToken(value.access_token);
+  return { ...value, ...(user ? { user } : {}), expires_at: expiresAt };
 }
 
 function parseFlowMap(raw) {
@@ -145,17 +162,31 @@ export function createAuthClient({
   });
 
   async function request(endpoint, { method = 'GET', body, accessToken, headers = {} } = {}) {
-    const response = await fetchImpl(endpoint, {
-      method,
-      headers: {
-        apikey: publishableKey,
-        'X-Supabase-Api-Version': API_VERSION,
-        ...(body === undefined ? {} : { 'Content-Type': 'application/json;charset=UTF-8' }),
-        ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-        ...headers
-      },
-      ...(body === undefined ? {} : { body: JSON.stringify(body) })
-    });
+    const signal = typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function'
+      ? AbortSignal.timeout(20000)
+      : undefined;
+    let response;
+    try {
+      response = await fetchImpl(endpoint, {
+        method,
+        headers: {
+          apikey: publishableKey,
+          Authorization: `Bearer ${accessToken || publishableKey}`,
+          'X-Supabase-Api-Version': API_VERSION,
+          ...(body === undefined ? {} : { 'Content-Type': 'application/json;charset=UTF-8' }),
+          ...headers
+        },
+        ...(signal ? { signal } : {}),
+        ...(body === undefined ? {} : { body: JSON.stringify(body) })
+      });
+    } catch (error) {
+      if (error?.name === 'TimeoutError' || error?.name === 'AbortError') {
+        const timeout = new Error('Sign-in timed out. Please try again.');
+        timeout.status = 408;
+        throw timeout;
+      }
+      throw error;
+    }
     const contentType = response.headers?.get?.('content-type') || '';
     const payload = contentType.includes('json') ? await response.json() : await response.text();
     if (!response.ok) {
@@ -242,15 +273,15 @@ export function createAuthClient({
   }
 
   async function beginPkce() {
-    const pkce = await createPkce(cryptoImpl);
+    const verifier = createVerifier(cryptoImpl);
     const idBytes = new Uint8Array(16);
     cryptoImpl.getRandomValues(idBytes);
     const flowId = base64Url(idBytes);
-    const now = Date.now();
     persistFlows({
-      [flowId]: { verifier: pkce.verifier, createdAt: now }
+      [flowId]: { verifier, createdAt: Date.now() }
     }, flowId);
-    return { ...pkce, flowId };
+    const challenge = await challengeFor(cryptoImpl, verifier);
+    return { verifier, challenge, flowId };
   }
 
   function allowlistedRedirect(target) {
@@ -287,7 +318,9 @@ export function createAuthClient({
       const value = await request(`${authUrl}/token?grant_type=pkce`, {
         method: 'POST', body: { auth_code: code, code_verifier: verifier }
       });
-      return saveSession(value);
+      const next = saveSession(value);
+      if (!next?.user?.id) throw new Error('Sign-in did not return a user. Please try again.');
+      return next;
     } catch (error) {
       consumeFlow = !retryableRequestError(error);
       throw error;
@@ -309,7 +342,8 @@ export function createAuthClient({
         throw new Error(message);
       }
       const code = current.searchParams.get('code');
-      if (code) return exchangeCode(code, current.searchParams.get(FLOW_PARAM));
+      const requestedFlowId = current.searchParams.get(FLOW_PARAM);
+      if (code) return exchangeCode(code, requestedFlowId);
       try { return await freshSession(); }
       catch (error) {
         if (session && !invalidSessionError(error)) return session;
