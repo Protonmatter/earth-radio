@@ -710,8 +710,8 @@
     },
     {
       "path": "tests/e2e/helpers.mjs",
-      "bytes": 5422,
-      "sha256": "fcc162393a2dd5a8c7737170e11f134bf153b237cc96ff1f9df259fb5df8b172"
+      "bytes": 5536,
+      "sha256": "68cc5c89a96072616a12d62bd5ed941e9eab74e8bdfddcb3561f916c6e39da30"
     },
     {
       "path": "tests/e2e/playwright.config.mjs",
@@ -720,8 +720,8 @@
     },
     {
       "path": "tests/e2e/reliability.spec.mjs",
-      "bytes": 17193,
-      "sha256": "a270cc6b61701dc40ce194ca66b63d7ec3d1a99b5af44d56f8c9fdf6a9bb2681"
+      "bytes": 17248,
+      "sha256": "f8c025b866c11f3a74121e6da3c1d9b68efba0a9c7864677a0895631f463e7ad"
     },
     {
       "path": "tests/e2e/serve-site.mjs",

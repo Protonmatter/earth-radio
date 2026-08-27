@@ -92,7 +92,7 @@ export function card(page, name) {
   return page.locator('.station-card', { hasText: name }).first();
 }
 
-export async function playFromList(page, name) {
+export async function revealCard(page, name) {
   const target = card(page, name);
   // The station list is virtualized: a card below the fold has no DOM node until the
   // grid scrolls near it, and scrollIntoViewIfNeeded on a nonexistent node waits
@@ -103,6 +103,11 @@ export async function playFromList(page, name) {
     return false;
   }, { timeout: 15_000, message: `station card "${name}" never materialized` }).toBe(true);
   await target.scrollIntoViewIfNeeded();
+  return target;
+}
+
+export async function playFromList(page, name) {
+  const target = await revealCard(page, name);
   await target.locator('.station-card__play').click();
   await expect(page.locator('#player-station')).toHaveText(name, { timeout: 15_000 });
 }

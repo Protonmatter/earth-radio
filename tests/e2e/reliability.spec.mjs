@@ -2,7 +2,7 @@
 // loss via the storage-guard backup) and dynamic per-country directory expansion.
 
 import { expect, test } from '@playwright/test';
-import { card, playFromList, setupApp } from './helpers.mjs';
+import { card, playFromList, revealCard, setupApp } from './helpers.mjs';
 
 test.describe('user data reliability', () => {
   test('favorites persist across a reload', async ({ page }) => {
@@ -44,7 +44,8 @@ test.describe('user data reliability', () => {
     // On the next boot the guard restores from backup (and reloads itself once).
     await page.reload();
     await expect(page.locator('.station-card').first()).toBeVisible({ timeout: 25_000 });
-    await expect(card(page, 'E2E London Jazz').locator('.station-card__favorite--active')).toBeVisible({ timeout: 15_000 });
+    const restored = await revealCard(page, 'E2E London Jazz');
+    await expect(restored.locator('.station-card__favorite--active')).toBeVisible({ timeout: 15_000 });
   });
 });
 
