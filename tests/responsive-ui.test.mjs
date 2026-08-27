@@ -168,6 +168,9 @@ test('responsive assets are referenced after the recovered runtime and staged as
 });
 
 test('overflow menu can become visible and search occupies the mobile workspace', async () => {
+  const source = await readFile(path.join(root, 'site', 'assets', 'responsive-ui.js'), 'utf8');
+  assert.match(source, /targetId === 'settings-toggle' \|\| targetId === 'filters-toggle' \|\| targetId === 'er-auth-button'/);
+  assert.match(source, /targetId === 'er-auth-button' \? document\.querySelector\('\.er-auth-modal'\)/);
   const css = await readFile(path.join(root, 'site', 'assets', 'responsive-ui.css'), 'utf8');
   assert.match(css, /\.er-overflow:not\(\[hidden\]\)\s*\{\s*display:\s*grid;/);
   assert.match(css, /html\.er-mobile \.search-modal\.er-search-destination\s*\{[\s\S]*position:\s*fixed;/);

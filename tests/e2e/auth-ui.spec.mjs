@@ -33,6 +33,9 @@ test('narrow viewports keep Sign in in the overflow sheet', async ({ page }) => 
   await overflowSignIn.click();
   await expect(page.locator('#er-overflow')).toBeHidden();
   await expect(page.locator('.er-auth-modal')).toBeVisible();
+  await expect.poll(async () => page.evaluate(() => (
+    Boolean(document.activeElement?.closest('.er-auth-modal'))
+  ))).toBe(true);
 });
 
 function assertVisibleInRail(box) {

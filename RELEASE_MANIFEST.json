@@ -280,8 +280,8 @@
     },
     {
       "path": "site/assets/auth-ui.css",
-      "bytes": 3657,
-      "sha256": "ee21ce8fb4dca4458cbf57bdca2a832dcf0b11618555bf756075dfb90e96a2b7"
+      "bytes": 3778,
+      "sha256": "3904fdab8c31bbc5055ef1006f7029c2e8a192ad7f8833b08d460b8b65049571"
     },
     {
       "path": "site/assets/auth-ui.js",
@@ -330,8 +330,8 @@
     },
     {
       "path": "site/assets/responsive-ui.js",
-      "bytes": 69446,
-      "sha256": "4a5545b6a6827774776be273db4d03f4cb527eb9bb4b087a8f8f24e27c230b3a"
+      "bytes": 69562,
+      "sha256": "3ce117dbedd13597cefab3c0804a2c461e0ba14b7b1c7b3debbf574fca097b9b"
     },
     {
       "path": "site/assets/storage-guard.js",
@@ -660,8 +660,8 @@
     },
     {
       "path": "tests/auth-sync.test.mjs",
-      "bytes": 48583,
-      "sha256": "b27e727024ebd7afcbb5bfb01b61156a8f923e4bb438d12dce007ff5586eb04b"
+      "bytes": 48675,
+      "sha256": "e3a29a85c765ac16ebb6e8f5ba3dfa8b6fdbbc3393917938cf58bb8c9dc3f105"
     },
     {
       "path": "tests/browser/fixtures/stations.mjs",
@@ -705,8 +705,8 @@
     },
     {
       "path": "tests/e2e/auth-ui.spec.mjs",
-      "bytes": 1945,
-      "sha256": "67680a5375ab8237c88af63f55452bfdda0119bb9282b76f3a726e6382c3f01e"
+      "bytes": 2080,
+      "sha256": "3c0919c90b8500608ad924aced3bac1bd01196fc61b1ecc8f0a5daed4c1dc1f1"
     },
     {
       "path": "tests/e2e/fixtures/hls-media.mjs",
@@ -830,8 +830,8 @@
     },
     {
       "path": "tests/responsive-ui.test.mjs",
-      "bytes": 8363,
-      "sha256": "f9379db972105476fbf5b85a4a6354777412ccaeb9eb30c88e2f07dea58c1122"
+      "bytes": 8692,
+      "sha256": "ea949914700f02ca71f80a99fd9026fa5ca25b0fb8198982c5e580cbc145a696"
     },
     {
       "path": "tests/service-worker.test.mjs",

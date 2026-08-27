@@ -48,6 +48,7 @@ test('callback boot keeps the radio usable until sign-in succeeds or fails', asy
   const css = await readFile(path.resolve(import.meta.dirname, '../site/assets/auth-ui.css'), 'utf8');
   assert.match(css, /html\.er-root \.header-right \.er-auth-button/);
   assert.match(css, /\.er-overflow \.er-auth-overflow/);
+  assert.match(css, /\.er-overflow \.er-auth-overflow \{[\s\S]*text-overflow:\s*ellipsis/);
 });
 
 test('OAuth sign-in uses PKCE and stores only the verifier locally', async () => {
