@@ -72,6 +72,9 @@ export async function setupApp(page, { sameOriginNowPlaying = null, sameOriginFi
       if (pathname.includes('/json/url/')) return route.fulfill({ json: { ok: true } });
       return route.fulfill({ json: [] });
     }
+    if (url.hostname === 'listen.moe' || url.hostname.endsWith('.listen.moe')) {
+      return route.fulfill({ contentType: 'audio/wav', body: AUDIO });
+    }
     if (url.hostname === 'streams.e2e.example') {
       const hls = hlsFixtureResponse(url.pathname, route.request().method());
       if (hls) return route.fulfill(hls);

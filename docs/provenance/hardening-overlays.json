@@ -106,10 +106,10 @@
         "sha256": "e213700a1a541139a66542e9bd8e615ad5dfc735d52c59569730d9a021e86009"
       },
       "current": {
-        "bytes": 67586,
-        "sha256": "3f97b6ce5ed75738bf2fdac718162fceb62c8e6cebf3b512f9974ebae21f93f3"
+        "bytes": 67593,
+        "sha256": "6972938dc6cc71b3b159f21ddeffb029cd5f64494b8f2078b7f8261f15b26bd0"
       },
-      "reason": "Layer live-metadata feeds above raw ICY: hosting-platform now-playing APIs, HLS timed ID3 text tracks, and an opt-in fingerprint identify button. Preserve the canonical selected URL and UUID through same-station MediaSource reattachment, invalidate only on correlated selection/change or explicit clear, retain the original trimmed URL after validation, and fence both cross-station and same-station out-of-order metadata polls by identity plus a monotonic poll generation. Cap speculative map-tooltip /api/nowplaying lookups at 8 per 60 seconds so marker sweeps cannot exhaust the zone WAF. Coalesce play-event polls, recheck fingerprint identity after the availability probe, and promote structured Station feed results onto the primary card."
+      "reason": "Layer live-metadata feeds above raw ICY: hosting-platform now-playing APIs, HLS timed ID3 text tracks, and an opt-in fingerprint identify button. Preserve the canonical selected URL and UUID through same-station MediaSource reattachment, invalidate only on correlated selection/change or explicit clear, retain the original trimmed URL after validation, and fence both cross-station and same-station out-of-order metadata polls by identity plus a monotonic poll generation. Cap speculative map-tooltip /api/nowplaying lookups at 8 per 60 seconds so marker sweeps cannot exhaust the zone WAF. Coalesce play-event polls, recheck fingerprint identity after the availability probe, and promote structured Station feed results onto the primary card. Export detectPlatformEndpoints so catalogued LISTEN.moe stream URLs can be tested against the browser WebSocket gateway."
     },
     {
       "path": "site/config.js",
@@ -130,10 +130,10 @@
         "sha256": "c007984ee6349eaee532c1b3e2297e7fdac81610d4fae167c7595e127cef2d42"
       },
       "current": {
-        "bytes": 22115,
-        "sha256": "289a6b3d69bd33f09ffd9f523fc267755f17772451272757f3a1b93c7042dcff"
+        "bytes": 22200,
+        "sha256": "e0ee2baec8d4eaa8273e394a808c4401aba20e8b7266b61713ea2b42e29e34ce"
       },
-      "reason": "Move frame-ancestors enforcement to the deployable response header policy, then add responsive landmarks, iOS viewport/audio attributes, mobile destinations, compact header icons, additive responsive assets, country and station search controls, complete Now Playing metadata and sleep actions, the additive UI refresh stylesheet, and header actions ordered in the rail's reading sequence so keyboard focus follows the visual order. Reference the deployed runtime through its content-addressed filename."
+      "reason": "Move frame-ancestors enforcement to the deployable response header policy, then add responsive landmarks, iOS viewport/audio attributes, mobile destinations, compact header icons, additive responsive assets, country and station search controls, complete Now Playing metadata and sleep actions, the additive UI refresh stylesheet, and header actions ordered in the rail's reading sequence so keyboard focus follows the visual order. Reference the deployed runtime through its content-addressed filename. Load the git-catalogued LISTEN.moe station overlay before the recovered bundle, and admit wss://listen.moe in the in-page connect-src policy."
     },
     {
       "path": "site/manifest.webmanifest",
@@ -154,10 +154,10 @@
         "sha256": "b09e3207532fe7f47d14e9c53804d7e8caf31cad2fcb2c652b728a93871ea094"
       },
       "current": {
-        "bytes": 2931,
-        "sha256": "cf7fd53f915acafc1926456527e7a76b1b86f774c00833e8969fdf3f9b3e818e"
+        "bytes": 2960,
+        "sha256": "5efa7dd902af207472f46f6a5bbdb2a6c478c781cf3f4e3b1e46255fb335d041"
       },
-      "reason": "Use network-first navigation/configuration updates, keep hashed recovered assets cache-first, reload installation requests so stale browser HTTP entries cannot seed the new service-worker cache, keep the previous worker when reload precaching fails, and precache the UI refresh stylesheet. Bump the shell cache generation to v34 for review-thread remediations."
+      "reason": "Use network-first navigation/configuration updates, keep hashed recovered assets cache-first, reload installation requests so stale browser HTTP entries cannot seed the new service-worker cache, keep the previous worker when reload precaching fails, and precache the UI refresh stylesheet. Precache pinned-stations.js and bump the shell cache generation to v35 for LISTEN.moe catalog pinning."
     }
   ]
 }

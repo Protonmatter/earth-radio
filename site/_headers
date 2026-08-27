@@ -20,6 +20,9 @@
 /assets/directory-expansion.js
   Cache-Control: public, max-age=300, must-revalidate
 
+/assets/pinned-stations.js
+  Cache-Control: public, max-age=300, must-revalidate
+
 /assets/metadata-enrichment.css
   Cache-Control: public, max-age=300, must-revalidate
 

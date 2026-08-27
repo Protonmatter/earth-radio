@@ -338,7 +338,11 @@ test('identifyByFingerprint reports short samples instead of spending recognitio
 
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
-import { resolveStreamUrl, shouldInvalidateStationIdentity } from '../site/assets/metadata-enrichment.js';
+import {
+  detectPlatformEndpoints as detectBrowserPlatformEndpoints,
+  resolveStreamUrl,
+  shouldInvalidateStationIdentity
+} from '../site/assets/metadata-enrichment.js';
 
 test('the long-lived ICY subscription rejects redirects instead of following them', () => {
   const request = new EventEmitter();
@@ -361,6 +365,16 @@ test('the long-lived ICY subscription rejects redirects instead of following the
   );
   assert.deepEqual(errors, ['stream redirect blocked by now-playing resolver']);
   assert.equal(responseDestroyed, 1);
+});
+
+test('LISTEN.moe catalog URLs open the matching browser WebSocket gateway', () => {
+  const jpop = detectBrowserPlatformEndpoints('https://listen.moe/fallback');
+  assert.equal(jpop[0].platform, 'listenmoe');
+  assert.equal(jpop[0].kind, 'ws');
+  assert.equal(jpop[0].url, 'wss://listen.moe/gateway_v2');
+
+  const kpop = detectBrowserPlatformEndpoints('https://listen.moe/kpop/fallback');
+  assert.equal(kpop[0].url, 'wss://listen.moe/kpop/gateway_v2');
 });
 
 test('blob MediaSource playback resolves to the selected station URL', () => {

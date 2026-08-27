@@ -1,4 +1,4 @@
-const CACHE_NAME = 'earth-radio-shell-v34-review-threads-1';
+const CACHE_NAME = 'earth-radio-shell-v35-listen-moe-1';
 const SHELL_ASSETS = [
   './',
   './index.html',
@@ -9,6 +9,7 @@ const SHELL_ASSETS = [
   './assets/index-CSoL7F-Y.css',
   './assets/storage-guard.js',
   './assets/directory-expansion.js',
+  './assets/pinned-stations.js',
   './assets/metadata-enrichment.js',
   './assets/metadata-enrichment.css',
   './assets/responsive-ui.css',

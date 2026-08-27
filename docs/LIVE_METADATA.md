@@ -29,6 +29,7 @@ station's stream URL:
 
 | Platform | Detection | Endpoint |
 |---|---|---|
+| LISTEN.moe | `listen.moe` stream host | `wss://listen.moe/gateway_v2` (K-pop: `/kpop/gateway_v2`); browser WebSocket only |
 | AzuraCast | `/listen/<station>/…` path | `<origin>/api/nowplaying/<station>` |
 | Zeno.FM | `stream.zeno.fm/<mount>` | `https://api.zeno.fm/mounts/metadata/subscribe/<mount>` (SSE, first event) |
 | Radio.co | `*.radio.co/s??????????/…` | `https://public.radio.co/stations/<id>/status` |
@@ -176,7 +177,11 @@ fingerprinting. Same-station media reattachment and reconnects preserve that can
 URL and UUID; only a correlated station change or clear invalidates them. Poll results
 carry a monotonically increasing generation so a superseded response cannot overwrite
 newer same-station metadata. Client-only feeds stay in the browser: listen.moe's realtime
-song gateway is resolved over WebSocket directly.
+song gateway is resolved over WebSocket directly. LISTEN.moe J-pop and K-pop are
+git-catalogued in `site/assets/pinned-stations.js` so they appear in the directory
+even when Radio Browser's featured-country set does not include Japan; the overlay
+merges those records into Radio Browser and desktop federated responses and into a
+warm `stations.v3` cache before the recovered bundle's first read.
 
 When a structured feed names artist and title but no catalog can confirm the track
 (common for K-pop/J-pop and regional releases), the panel shows the honest

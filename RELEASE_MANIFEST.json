@@ -20,8 +20,8 @@
     },
     {
       "path": "docs/ARCHITECTURE.md",
-      "bytes": 12026,
-      "sha256": "eddc5128ac795f3268363642730cb48b824955ca95c390fec0e1688662d17025"
+      "bytes": 12255,
+      "sha256": "a664778beeef02a20b2fd970d7fda30b71eca964c0ca8fab99357402ba6245b2"
     },
     {
       "path": "docs/BUILD_STATE.md",
@@ -40,8 +40,8 @@
     },
     {
       "path": "docs/LIVE_METADATA.md",
-      "bytes": 11216,
-      "sha256": "a72c7274fc7fb114dc10ec90509af51749b968670e265988c55b7fff6e03b960"
+      "bytes": 11689,
+      "sha256": "faef6c723b6553c9c5e9319d0f91378dbffde8696bd647e6de50e3340d9b15d4"
     },
     {
       "path": "docs/OPERATIONS.md",
@@ -55,8 +55,8 @@
     },
     {
       "path": "docs/provenance/hardening-overlays.json",
-      "bytes": 9001,
-      "sha256": "42338bcfeb5c93898ea0a9376d854c817555aad917230370dba13a600889d213"
+      "bytes": 9296,
+      "sha256": "fc580a59a69638f92b628f0347d5c5285b3af2282e921c0a01eaa2d205a1d547"
     },
     {
       "path": "docs/provenance/recovery-manifest.json",
@@ -175,8 +175,8 @@
     },
     {
       "path": "package.json",
-      "bytes": 3240,
-      "sha256": "cc50c0099331897a58c0d740c93875494498ae819894fa6b7a5371f3d5ab75b9"
+      "bytes": 3318,
+      "sha256": "e854e2aca4a2b4740f8abb605cde4e482b962d178df0e7aad70db80e9e61318c"
     },
     {
       "path": "scripts/Import-EarthRadioRecovery.ps1",
@@ -270,8 +270,8 @@
     },
     {
       "path": "site/_headers",
-      "bytes": 1513,
-      "sha256": "f99b01064871711bd173807a0d7ace1b335effc93c462775882b49c9cc76f1be"
+      "bytes": 1595,
+      "sha256": "afdae7d331a4902918cd917308d549e8b85170c12f0bebf474e852c036d8aa9e"
     },
     {
       "path": "site/assets/auth-core.js",
@@ -315,8 +315,13 @@
     },
     {
       "path": "site/assets/metadata-enrichment.js",
-      "bytes": 67586,
-      "sha256": "3f97b6ce5ed75738bf2fdac718162fceb62c8e6cebf3b512f9974ebae21f93f3"
+      "bytes": 67593,
+      "sha256": "6972938dc6cc71b3b159f21ddeffb029cd5f64494b8f2078b7f8261f15b26bd0"
+    },
+    {
+      "path": "site/assets/pinned-stations.js",
+      "bytes": 5630,
+      "sha256": "3d2a9b316a1c0c0de20293783ee0797aca279d6318b68d4452e58d2dae5e6e8a"
     },
     {
       "path": "site/assets/responsive-ui.css",
@@ -405,8 +410,8 @@
     },
     {
       "path": "site/index.html",
-      "bytes": 22115,
-      "sha256": "289a6b3d69bd33f09ffd9f523fc267755f17772451272757f3a1b93c7042dcff"
+      "bytes": 22200,
+      "sha256": "e0ee2baec8d4eaa8273e394a808c4401aba20e8b7266b61713ea2b42e29e34ce"
     },
     {
       "path": "site/manifest.webmanifest",
@@ -415,8 +420,8 @@
     },
     {
       "path": "site/sw.js",
-      "bytes": 2931,
-      "sha256": "cf7fd53f915acafc1926456527e7a76b1b86f774c00833e8969fdf3f9b3e818e"
+      "bytes": 2960,
+      "sha256": "5efa7dd902af207472f46f6a5bbdb2a6c478c781cf3f4e3b1e46255fb335d041"
     },
     {
       "path": "src-recovered/core/config.ts",
@@ -690,8 +695,8 @@
     },
     {
       "path": "tests/e2e/app.spec.mjs",
-      "bytes": 5848,
-      "sha256": "10ef3ae3bfe126736486f167255bba49dc582f906e18ab02b359f64ea500692e"
+      "bytes": 6200,
+      "sha256": "e17ac191fa909ea3cbee1ee567e60348d97a077b0264f99382fa1160118d6ba2"
     },
     {
       "path": "tests/e2e/fixtures/hls-media.mjs",
@@ -705,8 +710,8 @@
     },
     {
       "path": "tests/e2e/helpers.mjs",
-      "bytes": 5264,
-      "sha256": "af2c464bb50b066a57be3caa6dd32c933a0f1c3f2e420c56d18d50d93b42cb8a"
+      "bytes": 5422,
+      "sha256": "fcc162393a2dd5a8c7737170e11f134bf153b237cc96ff1f9df259fb5df8b172"
     },
     {
       "path": "tests/e2e/playwright.config.mjs",
@@ -765,8 +770,8 @@
     },
     {
       "path": "tests/live-metadata.test.mjs",
-      "bytes": 36648,
-      "sha256": "d37d862088af6959b89ae11e072242f7a10fd75ee25c74cca857cf8e257c9cf9"
+      "bytes": 37172,
+      "sha256": "d0050fc3d6b772d8dc9378820c1545898a397330e033be7c2d2272de5ad729a1"
     },
     {
       "path": "tests/net-guard.test.mjs",
@@ -782,6 +787,11 @@
       "path": "tests/pages-functions.test.mjs",
       "bytes": 63022,
       "sha256": "dc5e4343778c5eae49f770da70c2feabb50619a225c57d1cc8ce171d0a599271"
+    },
+    {
+      "path": "tests/pinned-stations.test.mjs",
+      "bytes": 3895,
+      "sha256": "174ac3acf13fe3ad9dcef945013d98c9150d477cf3c3f82956b08251b629de1f"
     },
     {
       "path": "tests/player-navigation.test.mjs",
@@ -815,8 +825,8 @@
     },
     {
       "path": "tests/service-worker.test.mjs",
-      "bytes": 4885,
-      "sha256": "ffb766636372c35e820cf17ab72653412e2e714f415db4b73f5d8b94b2f609e2"
+      "bytes": 5186,
+      "sha256": "56fb9868206330da228e6281997881cc1b082c0ac61484cb11219013732264e9"
     },
     {
       "path": "tests/smoke-desktop.mjs",
@@ -825,8 +835,8 @@
     },
     {
       "path": "tests/smoke-metadata.mjs",
-      "bytes": 5746,
-      "sha256": "9c71183ea7fc0af9cb1cc4daefc83c5a3f157d9fa2dffb579bfcdf0067e7c9c5"
+      "bytes": 6008,
+      "sha256": "5da77d8967808eb8e7fefc33c62d3454744b210f2b04838f6e207a17ed1fdfd6"
     },
     {
       "path": "tests/smoke-recovery-import.ps1",

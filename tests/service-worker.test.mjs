@@ -47,7 +47,7 @@ test('service worker refreshes navigations and config while caching only immutab
 test('service worker precaches the auth, responsive, and i18n shell under a new cache version', async () => {
   const worker = await readFile(path.join(root, 'site', 'sw.js'), 'utf8');
   assert.match(worker, /new Request\(asset, \{ cache: 'reload' \}\)/);
-  assert.match(worker, /earth-radio-shell-v34-review-threads-1/);
+  assert.match(worker, /earth-radio-shell-v35-listen-moe-1/);
   assert.doesNotMatch(worker, /earth-radio-shell-v33-tooltip-waf-1\b/);
   assert.doesNotMatch(worker, /earth-radio-shell-v32-runtime-hash-2\b/);
   assert.doesNotMatch(worker, /earth-radio-shell-v31-runtime-hash-1\b/);
@@ -56,6 +56,7 @@ test('service worker precaches the auth, responsive, and i18n shell under a new 
   assert.doesNotMatch(worker, /earth-radio-shell-v28-live-metadata-auth-1\b/);
   assert.doesNotMatch(worker, /earth-radio-shell-v27-live-metadata-1\b/);
   assert.doesNotMatch(worker, /earth-radio-shell-v27-supabase-auth-1\b/);
+  assert.match(worker, /pinned-stations\.js/);
   assert.match(worker, /responsive-ui\.js/);
   assert.match(worker, /ui-refresh\.css/);
   assert.match(worker, /i18n\/zh-Hant\.js/);
@@ -75,13 +76,16 @@ test('service worker keeps the previous worker when reload precaching fails', as
 });
 
 test('enforced connect-src policies admit the Listen.moe realtime gateway', async () => {
-  // The metadata overlay's only Listen.moe feed is wss://listen.moe/…/gateway_v2;
-  // both enforced response policies must admit it or the socket is blocked before it
-  // opens (the in-page meta policy's ws: alone cannot help — policies intersect).
+  // The metadata overlay's only Listen.moe feed is wss://listen.moe/…/gateway_v2.
+  // Meta, _headers, and Electron all apply; the intersection must still allow that
+  // host. CSP3 treats connect-src ws: as ws: wss:, but the host token is what the
+  // header/Electron policies actually name, so every policy lists it explicitly.
+  const html = await readFile(path.join(root, 'site', 'index.html'), 'utf8');
   const headers = await readFile(path.join(root, 'site', '_headers'), 'utf8');
   const electronMain = await readFile(path.join(root, 'electron', 'main.mjs'), 'utf8');
-  for (const policy of [headers, electronMain]) {
-    const connect = policy.match(/connect-src ([^;]+);/)?.[1] || '';
+  const meta = html.match(/http-equiv="Content-Security-Policy" content="([^"]+)"/i)?.[1] || '';
+  for (const policy of [meta, headers, electronMain]) {
+    const connect = policy.match(/connect-src ([^;]+)/)?.[1] || '';
     assert.match(connect, /wss:\/\/listen\.moe/);
   }
 });

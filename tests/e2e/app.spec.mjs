@@ -14,6 +14,14 @@ test.describe('directory and playback selection', () => {
     }
   });
 
+  test('LISTEN.moe is present without expanding Japan', async ({ page }) => {
+    await setupApp(page);
+    await expect(card(page, 'LISTEN.moe')).toBeVisible();
+    await expect(card(page, 'LISTEN.moe Kpop')).toBeVisible();
+    await playFromList(page, 'LISTEN.moe');
+    await expect(page.locator('#player-station')).toHaveText('LISTEN.moe');
+  });
+
   test('selecting the same station twice is idempotent', async ({ page }) => {
     await setupApp(page);
     await playFromList(page, 'E2E Seoul Pop');

@@ -895,7 +895,7 @@ async function metadataApiBase() {
 
 // Mirrors server/platform-nowplaying.mjs detection for browser-direct mode; endpoints
 // that do not send CORS headers simply fail the fetch and fall through.
-function detectPlatformEndpoints(streamUrl) {
+export function detectPlatformEndpoints(streamUrl) {
   let url;
   try { url = new URL(streamUrl); } catch { return []; }
   if (!/^https?:$/.test(url.protocol)) return [];

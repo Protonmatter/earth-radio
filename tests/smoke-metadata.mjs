@@ -14,6 +14,7 @@ const required = [
   'site/index.html',
   'site/config.js',
   'site/assets/metadata-enrichment.js',
+  'site/assets/pinned-stations.js',
   'site/assets/metadata-enrichment.css',
   'server/metadata-providers.mjs',
   'server/metadata-api.mjs',
@@ -35,6 +36,8 @@ for (const file of required) {
 
 const index = fs.readFileSync(path.join(root, 'site/index.html'), 'utf8');
 if (!index.includes('metadata-enrichment.js')) throw new Error('index.html does not load metadata-enrichment.js');
+if (!index.includes('pinned-stations.js')) throw new Error('index.html does not load pinned-stations.js');
+if (!index.includes('wss://listen.moe')) throw new Error('index.html meta CSP does not admit the Listen.moe gateway');
 if (!index.includes('metadata-enrichment.css')) throw new Error('index.html does not load metadata-enrichment.css');
 
 const config = fs.readFileSync(path.join(root, 'site/config.js'), 'utf8');
