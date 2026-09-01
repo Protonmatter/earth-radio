@@ -227,6 +227,8 @@ test('GitHub asks for the private email scope and Google is a first-class provid
   assert.match(source, /queryParams:\s*definition\.queryParams/);
   assert.match(source, /listExternalProviders\(\)/);
   assert.match(source, /liveProviders\[provider\] === true/);
+  assert.doesNotMatch(source, /liveProviders == null \|\|/);
+  assert.match(source, /liveProviders != null && liveProviders\[provider\] === true/);
   assert.match(config, /google:\s*true/);
 });
 
@@ -968,6 +970,22 @@ test('authenticated boot verifies IndexedDB and keeps sync running after transie
   assert.match(bootTail, /switchLocalAccount\(previousUserId, nextUserId\)/);
   assert.match(bootTail, /clearMissingNamespaceSyncState\(nextUserId, transition\)/);
   assert.match(bootTail, /try \{ await refreshUser\(\); \}[\s\S]*if \(session && !resettingSession\) startSync\(\)/);
+});
+
+test('boot applies hosted providers only after account isolation and never admits them while unknown', async () => {
+  const root = path.resolve(import.meta.dirname, '..');
+  const source = await readFile(path.join(root, 'site', 'assets', 'auth-ui.js'), 'utf8');
+  const enabled = source.slice(source.indexOf('function enabledProviders'), source.indexOf('function syncStateKey'));
+  assert.doesNotMatch(enabled, /liveProviders == null \|\|/);
+  assert.match(enabled, /liveProviders != null && liveProviders\[provider\] === true/);
+  const bootTail = source.slice(source.indexOf('session = await auth.initialize()'));
+  const accountTransitionIdx = bootTail.indexOf('await accountTransition');
+  const switchIdx = bootTail.indexOf('await switchLocalAccount(previousUserId, nextUserId)');
+  const liveIdx = bootTail.indexOf('liveProviders = await hostedProviders');
+  assert.ok(accountTransitionIdx >= 0);
+  assert.ok(switchIdx > accountTransitionIdx);
+  assert.ok(liveIdx > switchIdx);
+  assert.doesNotMatch(bootTail.slice(0, switchIdx), /await hostedProviders/);
 });
 
 test('downloads during the reload cooldown schedule a later reload', async () => {

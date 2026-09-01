@@ -68,9 +68,11 @@ test.describe('directory and playback selection', () => {
     await setupApp(page);
     await page.setViewportSize({ width: 390, height: 844 });
     await expect(page.locator('html')).toHaveClass(/er-mobile/);
-    await page.locator('.er-mobile-nav [data-er-dest="saved"]').click();
+    const savedTab = page.locator('.er-mobile-nav [data-er-dest="saved"]');
+    await expect(savedTab).toBeVisible();
+    await savedTab.click();
     await expect(page.locator('html')).toHaveAttribute('data-er-dest', 'saved');
-    await expect(page.locator('[data-er-saved="favorites"]')).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.locator('button[data-er-saved="favorites"]')).toHaveAttribute('aria-pressed', 'true');
     await expect(page.locator('#grid-title')).toHaveText(/favorites/i);
   });
 

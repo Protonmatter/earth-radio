@@ -130,10 +130,10 @@
         "sha256": "c007984ee6349eaee532c1b3e2297e7fdac81610d4fae167c7595e127cef2d42"
       },
       "current": {
-        "bytes": 22200,
-        "sha256": "e0ee2baec8d4eaa8273e394a808c4401aba20e8b7266b61713ea2b42e29e34ce"
+        "bytes": 23392,
+        "sha256": "63a9df49eb452d799efe2edbf9fa81ef16de90bd447bdacfa9da4fbe86c0affa"
       },
-      "reason": "Move frame-ancestors enforcement to the deployable response header policy, then add responsive landmarks, iOS viewport/audio attributes, mobile destinations, compact header icons, additive responsive assets, country and station search controls, complete Now Playing metadata and sleep actions, the additive UI refresh stylesheet, and header actions ordered in the rail's reading sequence so keyboard focus follows the visual order. Reference the deployed runtime through its content-addressed filename. Load the git-catalogued LISTEN.moe station overlay before the recovered bundle, and admit wss://listen.moe in the in-page connect-src policy."
+      "reason": "Move frame-ancestors enforcement to the deployable response header policy, then add responsive landmarks, iOS viewport/audio attributes, mobile destinations, compact header icons, additive responsive assets, country and station search controls, complete Now Playing metadata and sleep actions, the additive UI refresh stylesheet, and header actions ordered in the rail's reading sequence so keyboard focus follows the visual order. Reference the deployed runtime through its content-addressed filename. Load the git-catalogued LISTEN.moe station overlay before the recovered bundle, and admit wss://listen.moe in the in-page connect-src policy. Atlas lock: Night/Paper You panel, four phone tabs (Atlas/Browse/Kept/You), place-first search, and atlas-lock.css/js."
     },
     {
       "path": "site/manifest.webmanifest",
@@ -154,10 +154,10 @@
         "sha256": "b09e3207532fe7f47d14e9c53804d7e8caf31cad2fcb2c652b728a93871ea094"
       },
       "current": {
-        "bytes": 3009,
-        "sha256": "3c0373462dfe4f01d61cc4ee7946e6429ba1839847bc303b947d370df315912a"
+        "bytes": 3104,
+        "sha256": "ba5d3ffcba9178308dff9ab71bfc0d066719d318ad717d10e36abe9ca1029328"
       },
-      "reason": "Use network-first navigation/configuration updates, keep hashed recovered assets cache-first, reload overlay installation requests so stale browser HTTP entries cannot seed the new service-worker cache, force-cache the hashed runtime bundles, keep the previous worker when reload precaching fails, and precache the UI refresh stylesheet. Precache pinned-stations.js for LISTEN.moe catalog pinning. Bump the shell cache generation to v45 so clients pick up Google sign-in, auth overlay cache headers, and the Saved/Search/toast presentation fixes."
+      "reason": "Use network-first navigation/configuration updates, keep hashed recovered assets cache-first, reload overlay installation requests so stale browser HTTP entries cannot seed the new service-worker cache, force-cache the hashed runtime bundles, keep the previous worker when reload precaching fails, and precache the UI refresh stylesheet. Precache pinned-stations.js for LISTEN.moe catalog pinning. Precache atlas-lock.css/js and bump the shell cache generation to v46 so clients pick up Night/Paper, glass-on-log, and the four-tab phone chrome."
     }
   ]
 }

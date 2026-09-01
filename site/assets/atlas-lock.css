@@ -1,0 +1,329 @@
+/*
+ * Earth Radio atlas lock.
+ *
+ * Night and Paper only. Frost belongs on the frequency log (#grid-panel),
+ * never on the header, tuner, or phone tabs. Station cards stay inside the
+ * recovered 168px virtual-row stride; this sheet restyles that box as a
+ * typeset log (NAME / place / codec / bitrate) and does not resize it.
+ * CSP forbids remote fonts, so type stays on platform stacks.
+ */
+
+html.er-root[data-er-palette="night"],
+html.er-root[data-er-palette="night"][data-theme="dark"] {
+  color-scheme: dark;
+  --er2-bg: #12110e;
+  --er2-surface: #1a1814;
+  --er2-raised: #221f1a;
+  --er2-selected: #2a241c;
+  --er2-line: #2e2a24;
+  --er2-line-strong: #3d372e;
+  --er2-ink: #f3eee6;
+  --er2-muted: #a39b8c;
+  --er2-faint: #8a8276;
+  --er2-action: #d4a574;
+  --er2-action-hover: #e0b88a;
+  --er2-action-ink: #1a140e;
+  --er2-action-soft: rgba(212, 165, 116, 0.14);
+  --er2-action-edge: rgba(212, 165, 116, 0.38);
+  --er2-shadow: 0 14px 34px rgba(0, 0, 0, 0.55);
+  --er2-shadow-lg: 0 26px 60px rgba(0, 0, 0, 0.62);
+  --er-paper: #12110e;
+  --er-paper-2: #1a1814;
+  --er-ink: #f3eee6;
+  --er-muted: #a39b8c;
+  --er-coral: #d4a574;
+  --er-coral-ink: #1a140e;
+  --er-chrome-ink: #f3eee6;
+  --er-stroke: #3d372e;
+  --er-map: #191612;
+  --bg: #12110e;
+  --surface: #1a1814;
+  --surface-2: #2a241c;
+  --surface-3: #2e2a24;
+  --border: #2e2a24;
+  --border-strong: #3d372e;
+  --text: #f3eee6;
+  --text-muted: #a39b8c;
+  --text-faint: #8a8276;
+  --accent: #d4a574;
+  --accent-hover: #e0b88a;
+  --accent-soft: rgba(212, 165, 116, 0.14);
+  --accent-contrast: #1a140e;
+  --ring: 0 0 0 3px rgba(212, 165, 116, 0.4);
+}
+
+html.er-root[data-er-palette="paper"],
+html.er-root[data-er-palette="paper"][data-theme="light"] {
+  color-scheme: light;
+  --er2-bg: #f4efe4;
+  --er2-surface: #fffdf8;
+  --er2-raised: #fffdf8;
+  --er2-selected: #ebe4d4;
+  --er2-line: #e0d6c6;
+  --er2-line-strong: #c9bba6;
+  --er2-ink: #1c1914;
+  --er2-muted: #5c564c;
+  --er2-faint: #6e675c;
+  --er2-action: #8a4b28;
+  --er2-action-hover: #733d20;
+  --er2-action-ink: #fffdf8;
+  --er2-action-soft: rgba(138, 75, 40, 0.10);
+  --er2-action-edge: rgba(138, 75, 40, 0.36);
+  --er2-shadow: 0 14px 34px rgba(60, 45, 35, 0.12);
+  --er2-shadow-lg: 0 24px 56px rgba(60, 45, 35, 0.18);
+  --er-paper: #f4efe4;
+  --er-paper-2: #ebe4d4;
+  --er-ink: #1c1914;
+  --er-muted: #5c564c;
+  --er-coral: #8a4b28;
+  --er-coral-ink: #fffdf8;
+  --er-chrome-ink: #1c1914;
+  --er-stroke: #c9bba6;
+  --er-map: #e7e0d2;
+  --bg: #f4efe4;
+  --surface: #fffdf8;
+  --surface-2: #ebe4d4;
+  --surface-3: #e0d6c6;
+  --border: #e0d6c6;
+  --border-strong: #c9bba6;
+  --text: #1c1914;
+  --text-muted: #5c564c;
+  --text-faint: #6e675c;
+  --accent: #8a4b28;
+  --accent-hover: #733d20;
+  --accent-soft: rgba(138, 75, 40, 0.10);
+  --accent-contrast: #fffdf8;
+  --ring: 0 0 0 3px rgba(138, 75, 40, 0.34);
+}
+
+html.er-root[data-er-palette="night"] body,
+html.er-root[data-er-palette="paper"] body {
+  background: var(--er2-bg);
+  color: var(--er2-ink);
+}
+
+html.er-root #setting-theme,
+html.er-root .settings-field:has(#setting-theme) {
+  display: none;
+}
+
+html.er-desktop .header .er-tablet-only {
+  display: none;
+}
+
+html.er-root #er-nowplaying-art,
+html.er-root #nowcard-art {
+  display: none;
+}
+
+html.er-root .station-grid .station-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 40px;
+  grid-template-rows: minmax(0, 1fr);
+  gap: 6px 10px;
+  padding: 14px 14px 12px;
+  border-radius: 0;
+  border-color: transparent;
+  border-bottom: 1px solid var(--er2-line);
+  background: transparent;
+  box-shadow: none;
+}
+
+html.er-root .station-grid .station-card:hover,
+html.er-root .station-grid .station-card--active {
+  background: var(--er2-action-soft);
+  border-color: transparent;
+  border-bottom-color: var(--er2-line);
+}
+
+html.er-root .station-card__media,
+html.er-root .station-card__pills,
+html.er-root .station-card__tags,
+html.er-root .station-card__flag {
+  display: none;
+}
+
+html.er-root .station-card__body {
+  grid-area: 1 / 1 / 2 / 2;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  row-gap: 4px;
+}
+
+html.er-root .station-card__name {
+  font-size: 15px;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--er2-ink);
+}
+
+html.er-root[data-font-profile="ko"] .station-card__name,
+html.er-root[data-font-profile="zh-Hans"] .station-card__name,
+html.er-root[data-font-profile="zh-Hant"] .station-card__name,
+html.er-root[data-font-profile="ar"] .station-card__name {
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+html.er-root .station-card--active .station-card__name {
+  color: var(--er2-ink);
+}
+
+html.er-root .station-card__meta {
+  font-family: var(--er2-mono);
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--er2-muted);
+}
+
+html.er-root .station-card__play,
+html.er-root .station-card__favorite {
+  grid-area: 1 / 2 / 2 / 3;
+}
+
+html.er-root .station-card__favorite {
+  top: 10px;
+}
+
+html.er-root .station-card__play {
+  top: auto;
+  bottom: 10px;
+}
+
+html.er-glass-log.er-root #grid-panel {
+  background: color-mix(in srgb, var(--er2-surface) 58%, transparent);
+  backdrop-filter: blur(18px) saturate(1.12);
+  -webkit-backdrop-filter: blur(18px) saturate(1.12);
+}
+
+html.er-glass-log.er-root #grid-panel .station-grid .station-card {
+  background: color-mix(in srgb, var(--er2-surface) 42%, transparent);
+}
+
+html.er-glass-log.er-root .header,
+html.er-glass-log.er-root .player-bar,
+html.er-glass-log.er-root .er-mobile-nav,
+html.er-glass-log.er-root #er-you,
+html.er-glass-log.er-root #map-panel {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+#er-you {
+  display: none;
+  flex-direction: column;
+  gap: 22px;
+  min-height: 0;
+  overflow: auto;
+  padding: 20px 20px 28px;
+  background: var(--er2-bg);
+  color: var(--er2-ink);
+}
+
+#er-you:not([hidden]) {
+  display: flex;
+  position: fixed;
+  z-index: 50;
+  inset-inline: 0;
+  top: calc(var(--er-header) + var(--er-safe-top));
+  bottom: calc(var(--er-player) + var(--er-nav) + var(--er-safe-bottom));
+}
+
+html.er-desktop #er-you:not([hidden]) {
+  top: 0;
+  bottom: var(--er-player);
+  inset-inline-start: var(--er2-rail);
+  inset-inline-end: 0;
+  z-index: 40;
+}
+
+html.er-tablet #er-you:not([hidden]) {
+  top: calc(var(--er-header) + var(--er-safe-top));
+  bottom: var(--er-player);
+}
+
+#er-you h2 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 650;
+}
+
+.er-you-block {
+  display: grid;
+  gap: 10px;
+}
+
+.er-you-label {
+  margin: 0;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--er2-muted);
+}
+
+.er-you-palettes {
+  display: flex;
+  gap: 10px;
+}
+
+.er-you-palettes button {
+  min-height: 44px;
+  min-width: 96px;
+  padding: 0 16px;
+  border: 1px solid var(--er2-line-strong);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--er2-ink);
+  font: inherit;
+}
+
+.er-you-palettes button[aria-pressed="true"] {
+  background: var(--er2-ink);
+  color: var(--er2-bg);
+  border-color: var(--er2-ink);
+}
+
+.er-you-glass {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  min-height: 44px;
+}
+
+.er-you-glass input {
+  margin-top: 4px;
+  width: 18px;
+  height: 18px;
+}
+
+.er-you-glass span {
+  display: grid;
+  gap: 4px;
+}
+
+.er-you-glass strong {
+  font-weight: 650;
+}
+
+.er-you-glass em {
+  font-style: normal;
+  color: var(--er2-muted);
+  font-size: 13px;
+}
+
+.er-you-account {
+  min-height: 44px;
+  align-self: start;
+  padding: 0 18px;
+  border: 1px solid var(--er2-line-strong);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--er2-ink);
+  font: inherit;
+}
+
+html.er-mobile .search-modal .er-country-picker {
+  order: -1;
+}

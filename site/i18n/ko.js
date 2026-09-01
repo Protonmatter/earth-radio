@@ -13,10 +13,11 @@ export default {
   'status.skipping': '방송국을 사용할 수 없음 — {name} 시도 중…',
   'status.imported': '사용자 데이터를 가져왔습니다',
 
-  'nav.listen': '듣기',
+  'nav.listen': '둘러보기',
   'nav.search': '검색',
-  'nav.map': '지도',
-  'nav.saved': '저장됨',
+  'nav.map': '아틀라스',
+  'nav.saved': '보관',
+  'nav.you': '나',
   'nav.label': '주요 목적지',
 
   'header.search': '방송국 검색',
@@ -31,10 +32,11 @@ export default {
   'header.theme': '테마 전환',
   'header.settings': '설정',
 
-  'dest.listen': '듣기',
+  'dest.listen': '둘러보기',
   'dest.search': '검색',
-  'dest.map': '지도',
-  'dest.saved': '저장됨',
+  'dest.map': '아틀라스',
+  'dest.saved': '보관',
+  'dest.you': '나',
 
   'listen.intro': '세계 곳곳에서 들으세요.',
   'listen.continueEyebrow': '이어 듣기',
@@ -66,9 +68,9 @@ export default {
   'saved.emptyRecent': '아직 최근 재생한 방송국이 없습니다.',
   'saved.backToListen': '방송국 둘러보기',
 
-  'search.placeholder': '방송국, 국가, 태그 검색…',
+  'search.placeholder': '국가, 도시 또는 방송국',
   'search.stationLabel': '방송국',
-  'search.stationPlaceholder': '방송국 또는 태그 검색…',
+  'search.stationPlaceholder': '국가, 도시 또는 방송국',
   'search.countryLabel': '국가',
   'search.countryPlaceholder': '모든 국가',
   'search.allCountries': '모든 국가',
@@ -198,6 +200,14 @@ export default {
   'settings.cancel': '취소',
   'settings.save': '저장',
   'settings.close': '설정 닫기',
+
+  'you.title': '나',
+  'you.palette': '팔레트',
+  'you.night': '밤',
+  'you.paper': '종이',
+  'you.glass': '목록에만 유리',
+  'you.glassHelp': '서리 효과는 방송국 목록에만 적용되고 튜너에는 적용되지 않습니다.',
+  'you.account': '계정',
 
   'pwa.updateAvailable': '더 새로운 Earth Radio 셸이 있습니다. 새로고침하여 업데이트하세요.',
   'pwa.offlineShell': '오프라인입니다. 저장된 셸은 사용할 수 있지만 실시간 목록과 오디오는 안 될 수 있습니다.',

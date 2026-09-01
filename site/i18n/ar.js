@@ -13,10 +13,11 @@ export default {
   'status.skipping': 'المحطة غير متاحة — جارٍ تجربة {name}…',
   'status.imported': 'تم استيراد بيانات المستخدم',
 
-  'nav.listen': 'استماع',
+  'nav.listen': 'تصفح',
   'nav.search': 'بحث',
-  'nav.map': 'خريطة',
+  'nav.map': 'أطلس',
   'nav.saved': 'محفوظ',
+  'nav.you': 'أنت',
   'nav.label': 'الوجهات الرئيسية',
 
   'header.search': 'البحث عن محطات',
@@ -31,10 +32,11 @@ export default {
   'header.theme': 'تبديل السمة',
   'header.settings': 'الإعدادات',
 
-  'dest.listen': 'استماع',
+  'dest.listen': 'تصفح',
   'dest.search': 'بحث',
-  'dest.map': 'خريطة',
+  'dest.map': 'أطلس',
   'dest.saved': 'محفوظ',
+  'dest.you': 'أنت',
 
   'listen.intro': 'استمع حول العالم.',
   'listen.continueEyebrow': 'متابعة',
@@ -66,9 +68,9 @@ export default {
   'saved.emptyRecent': 'لا توجد محطات مُشغّلة مؤخرًا بعد.',
   'saved.backToListen': 'تصفح المحطات',
 
-  'search.placeholder': 'ابحث عن محطات أو دول أو وسوم…',
+  'search.placeholder': 'بلد أو مدينة أو محطة',
   'search.stationLabel': 'المحطة',
-  'search.stationPlaceholder': 'ابحث عن محطات أو وسوم…',
+  'search.stationPlaceholder': 'بلد أو مدينة أو محطة',
   'search.countryLabel': 'الدولة',
   'search.countryPlaceholder': 'كل الدول',
   'search.allCountries': 'كل الدول',
@@ -198,6 +200,14 @@ export default {
   'settings.cancel': 'إلغاء',
   'settings.save': 'حفظ',
   'settings.close': 'إغلاق الإعدادات',
+
+  'you.title': 'أنت',
+  'you.palette': 'لوحة الألوان',
+  'you.night': 'ليل',
+  'you.paper': 'ورق',
+  'you.glass': 'زجاج على السجل',
+  'you.glassHelp': 'الصقيع للقائمة فقط، وليس للموالف.',
+  'you.account': 'الحساب',
 
   'pwa.updateAvailable': 'يتوفر غلاف أحدث لـ Earth Radio. أعد التحميل للتحديث.',
   'pwa.offlineShell': 'أنت غير متصل. الغلاف المحفوظ متاح؛ قد لا يتوفر الدليل والصوت المباشر.',

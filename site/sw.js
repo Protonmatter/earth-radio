@@ -1,4 +1,4 @@
-const CACHE_NAME = 'earth-radio-shell-v45-review-auth-1';
+const CACHE_NAME = 'earth-radio-shell-v46-atlas-lock-1';
 const SHELL_ASSETS = [
   './',
   './index.html',
@@ -15,6 +15,8 @@ const SHELL_ASSETS = [
   './assets/responsive-ui.css',
   './assets/responsive-ui.js',
   './assets/ui-refresh.css',
+  './assets/atlas-lock.css',
+  './assets/atlas-lock.js',
   './assets/auth-core.js',
   './assets/sync-core.js',
   './assets/auth-ui.js',
@@ -87,7 +89,7 @@ self.addEventListener('fetch', event => {
   const url = new URL(request.url);
 
   if (url.origin !== self.location.origin) return;
-  if (request.mode === 'navigate' || url.pathname.endsWith('/config.js') || url.pathname.includes('/i18n/') || url.pathname.includes('responsive-ui')) {
+  if (request.mode === 'navigate' || url.pathname.endsWith('/config.js') || url.pathname.includes('/i18n/') || url.pathname.includes('responsive-ui') || url.pathname.includes('atlas-lock')) {
     event.respondWith(networkFirst(request));
   } else if (url.pathname.includes('/assets/') && isImmutableAsset(url.pathname)) {
     event.respondWith(cacheFirst(request));

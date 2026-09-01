@@ -13,10 +13,11 @@ export default {
   'status.skipping': 'Station unavailable — trying {name}…',
   'status.imported': 'Imported user data',
 
-  'nav.listen': 'Listen',
+  'nav.listen': 'Browse',
   'nav.search': 'Search',
-  'nav.map': 'Map',
-  'nav.saved': 'Saved',
+  'nav.map': 'Atlas',
+  'nav.saved': 'Kept',
+  'nav.you': 'You',
   'nav.label': 'Primary destinations',
 
   'header.search': 'Search stations',
@@ -31,10 +32,11 @@ export default {
   'header.theme': 'Toggle theme',
   'header.settings': 'Settings',
 
-  'dest.listen': 'Listen',
+  'dest.listen': 'Browse',
   'dest.search': 'Search',
-  'dest.map': 'Map',
-  'dest.saved': 'Saved',
+  'dest.map': 'Atlas',
+  'dest.saved': 'Kept',
+  'dest.you': 'You',
 
   'listen.intro': 'Listen around the world.',
   'listen.continueEyebrow': 'Continue',
@@ -66,9 +68,9 @@ export default {
   'saved.emptyRecent': 'No recently played stations yet.',
   'saved.backToListen': 'Browse stations',
 
-  'search.placeholder': 'Search stations, countries, tags…',
+  'search.placeholder': 'Country, city, or station',
   'search.stationLabel': 'Station',
-  'search.stationPlaceholder': 'Search stations, tags…',
+  'search.stationPlaceholder': 'Country, city, or station',
   'search.countryLabel': 'Country',
   'search.countryPlaceholder': 'All countries',
   'search.allCountries': 'All countries',
@@ -198,6 +200,14 @@ export default {
   'settings.cancel': 'Cancel',
   'settings.save': 'Save',
   'settings.close': 'Close settings',
+
+  'you.title': 'You',
+  'you.palette': 'Palette',
+  'you.night': 'Night',
+  'you.paper': 'Paper',
+  'you.glass': 'Glass on the log',
+  'you.glassHelp': 'Frost only the station list, not the tuner.',
+  'you.account': 'Account',
 
   'pwa.updateAvailable': 'A newer Earth Radio shell is available. Reload to update.',
   'pwa.offlineShell': 'You are offline. The saved shell is available; live catalog and audio may not be.',

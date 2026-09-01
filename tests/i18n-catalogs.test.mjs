@@ -58,9 +58,9 @@ test('safe interpolation strips markup and keeps unknown placeholders', () => {
 });
 
 test('translations distinguish CJK locales and fall back to English', () => {
-  assert.equal(t('nav.listen', undefined, 'ko'), '듣기');
-  assert.equal(t('nav.listen', undefined, 'zh-Hans'), '收听');
-  assert.equal(t('nav.listen', undefined, 'zh-Hant'), '收聽');
+  assert.equal(t('nav.listen', undefined, 'ko'), '둘러보기');
+  assert.equal(t('nav.listen', undefined, 'zh-Hans'), '浏览');
+  assert.equal(t('nav.listen', undefined, 'zh-Hant'), '瀏覽');
   assert.notEqual(t('nav.listen', undefined, 'zh-Hans'), t('nav.listen', undefined, 'zh-Hant'));
   assert.equal(t('missing.key', undefined, 'ko'), 'missing.key');
   assert.match(t('grid.count', { count: 12 }, 'en'), /12/);

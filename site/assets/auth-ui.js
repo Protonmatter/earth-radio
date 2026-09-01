@@ -101,7 +101,7 @@ function el(tag, className, text) {
 function enabledProviders(config, liveProviders) {
   return Object.entries(config.providers || {})
     .filter(([provider, enabled]) => enabled && PROVIDERS[provider])
-    .filter(([provider]) => liveProviders == null || liveProviders[provider] === true)
+    .filter(([provider]) => liveProviders != null && liveProviders[provider] === true)
     .map(([provider]) => provider);
 }
 
@@ -542,8 +542,6 @@ async function boot() {
     session = await auth.initialize();
     authInitialized = true;
     render();
-    liveProviders = await hostedProviders;
-    render();
     await accountTransition;
     if (resettingSession) return;
     if (session) {
@@ -567,6 +565,8 @@ async function boot() {
       }
       if (session && !resettingSession) startSync();
     }
+    liveProviders = await hostedProviders;
+    render();
   } catch (error) {
     authInitialized = true;
     render();

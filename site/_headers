@@ -39,6 +39,12 @@
 /assets/ui-refresh.css
   Cache-Control: public, max-age=300, must-revalidate
 
+/assets/atlas-lock.css
+  Cache-Control: public, max-age=300, must-revalidate
+
+/assets/atlas-lock.js
+  Cache-Control: public, max-age=300, must-revalidate
+
 /assets/auth-core.js
   Cache-Control: public, max-age=300, must-revalidate
 

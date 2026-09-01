@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#25243D" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; base-uri 'self'; form-action 'none'; frame-ancestors 'none'" />
+  <title>Earth Radio privacy policy</title>
+  <link rel="icon" type="image/png" href="./icon-192.png" />
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #141326;
+      --ink: #f4f1ea;
+      --muted: #b7b3c9;
+      --line: #3a3854;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font: 16px/1.55 Georgia, "Times New Roman", serif;
+      background: var(--bg);
+      color: var(--ink);
+    }
+    main {
+      max-width: 42rem;
+      margin: 0 auto;
+      padding: 2.5rem 1.25rem 4rem;
+    }
+    h1 {
+      font-size: 1.75rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      margin: 0 0 0.35rem;
+    }
+    .meta {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin: 0 0 2rem;
+    }
+    h2 {
+      font-size: 1.1rem;
+      margin: 1.75rem 0 0.5rem;
+    }
+    p, li { color: var(--ink); }
+    ul { padding-left: 1.2rem; }
+    a { color: #d7c7a1; }
+    hr {
+      border: 0;
+      border-top: 1px solid var(--line);
+      margin: 2rem 0;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <p><a href="./">Earth Radio</a></p>
+    <h1>Privacy policy</h1>
+    <p class="meta">Earth Radio is operated by Protonmatter. Last updated 1 September 2026.</p>
+
+    <h2>What this app is</h2>
+    <p>Earth Radio is a public internet-radio browser. You can search and play stations without an account. An optional account lets you keep favorites, recents, and preferences across browsers.</p>
+
+    <h2>Sign-in</h2>
+    <p>Sign-in is provided by Supabase Auth. You may use Google, GitHub, or an email magic link. When you choose Google or GitHub, that provider sends us the account email, and may send a display name and avatar. We do not receive your Google or GitHub password.</p>
+
+    <h2>What we store</h2>
+    <ul>
+      <li>Account identity: provider user id, email, and optional name or avatar URL.</li>
+      <li>Your saved favorites, recently played stations, and preference document, keyed to your user id in our Supabase project.</li>
+      <li>Session tokens in the browser (local storage and cookies) so you stay signed in on this device.</li>
+    </ul>
+    <p>Anonymous use stores favorites and preferences only in this browser. We do not sell personal data or use it for advertising.</p>
+
+    <h2>Playback and metadata</h2>
+    <p>Audio streams are requested from the station or its CDN, not from Protonmatter. Optional now-playing and fingerprint helpers may send a short stream sample or public metadata to identification services so the player can show the current track. Those requests are not tied to your sign-in email.</p>
+
+    <h2>Cookies and similar storage</h2>
+    <p>We use first-party storage for the auth session, local favorites, and player preferences. We do not set third-party advertising cookies.</p>
+
+    <h2>Retention and deletion</h2>
+    <p>Account data remains until you delete it. Sign out from the account dialog to end the session on this device. To delete the hosted account and synced documents, email the contact below from the same address you used to sign in.</p>
+
+    <h2>Contact</h2>
+    <p>Questions about this policy: <a href="mailto:mgkang1991@gmail.com">mgkang1991@gmail.com</a>.</p>
+    <hr />
+    <p class="meta">Public site: <a href="https://earth-radio.pages.dev/">https://earth-radio.pages.dev/</a></p>
+  </main>
+</body>
+</html>

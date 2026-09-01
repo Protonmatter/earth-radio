@@ -25,6 +25,7 @@ test('destination parsing honors approved fragments and ignores runtime query ha
   assert.equal(parseDestination('#search'), 'search');
   assert.equal(parseDestination('#map'), 'map');
   assert.equal(parseDestination('#saved'), 'saved');
+  assert.equal(parseDestination('#you'), 'you');
   assert.equal(parseDestination('#unknown'), 'listen');
   assert.equal(parseDestination('#station=abc&view=favorites'), null);
   assert.equal(parseDestination('#view=recent'), null);
@@ -178,5 +179,20 @@ test('overflow menu can become visible and search occupies the mobile workspace'
   assert.match(css, /html\.er-root \.player-info\s*\{[\s\S]*appearance:\s*none;/);
   assert.match(css, /html\.er-root #toast-container\s*\{[\s\S]*top:\s*calc\(var\(--er-header\)/);
   assert.match(css, /\.er-nowplaying-art\s*\{[\s\S]*flex-shrink:\s*0;/);
-  assert.match(source, /if \(state\.destination === 'saved'\) applySavedSegment\(state\.savedSegment\)/);
+  // Header favorites/recent listeners exist only after the recovered runtime
+  // finishes loadStations(). Clicking those toggles during overlay start()
+  // selects Saved chrome without applying the filter.
+  const startSource = source.slice(source.lastIndexOf('function start()'));
+  const setDestSource = source.slice(
+    source.indexOf('function setDestination'),
+    source.indexOf('function applySavedSegment')
+  );
+  assert.match(source, /querySelectorAll\('button\[data-er-saved\]'\)/);
+  assert.match(source, /['"]earthradio:stations-load-settled['"]/);
+  assert.match(
+    startSource,
+    /whenStationsLoadSettled\(\(\) => \{[\s\S]*if \(state\.destination === 'saved'\) applySavedSegment\(state\.savedSegment\)/
+  );
+  assert.match(setDestSource, /whenStationsLoadSettled/);
+  assert.match(setDestSource, /applySavedSegment/);
 });

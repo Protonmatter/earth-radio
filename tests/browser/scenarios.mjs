@@ -81,7 +81,7 @@ export const SCENARIOS = [
     safeArea: IPHONE_SAFE_AREA,
     seed: SEEDED,
     actions: [
-      { type: 'click', selector: '[data-er-dest="search"]' },
+      { type: 'click', selector: '[data-er-open-search]' },
       { type: 'wait', ms: 150 },
       { type: 'ime', selector: '#er-station-query', text: '서울' },
       { type: 'wait', ms: 150 }
@@ -96,7 +96,7 @@ export const SCENARIOS = [
     safeArea: IPHONE_SAFE_AREA,
     seed: SEEDED,
     actions: [
-      { type: 'click', selector: '[data-er-dest="search"]' },
+      { type: 'click', selector: '[data-er-open-search]' },
       { type: 'focus', selector: '#er-country-query' },
       {
         type: 'script',
@@ -119,7 +119,7 @@ export const SCENARIOS = [
     safeArea: IPHONE_SAFE_AREA,
     seed: SEEDED,
     actions: [
-      { type: 'click', selector: '[data-er-dest="search"]' },
+      { type: 'click', selector: '[data-er-open-search]' },
       {
         type: 'script',
         code: `(() => {
@@ -148,7 +148,7 @@ export const SCENARIOS = [
     safeArea: IPHONE_SAFE_AREA,
     seed: SEEDED,
     actions: [
-      { type: 'click', selector: '[data-er-dest="search"]' },
+      { type: 'click', selector: '[data-er-open-search]' },
       { type: 'focus', selector: '#er-country-query' },
       {
         type: 'script',
@@ -193,7 +193,7 @@ export const SCENARIOS = [
     safeArea: IPHONE_SAFE_AREA,
     seed: SEEDED,
     actions: [
-      { type: 'click', selector: '[data-er-dest="search"]' },
+      { type: 'click', selector: '[data-er-open-search]' },
       {
         type: 'script',
         code: `(() => {
