@@ -118,10 +118,10 @@
         "sha256": "c83167f40ae7df3b389e35707b4abac834b10dc223ecb836d7840f90a7ef92a6"
       },
       "current": {
-        "bytes": 3080,
-        "sha256": "5c7b5f6381444d9ed72c241871b843cdcdcb64d085257d8849a7b9f47d7f10ea"
+        "bytes": 3079,
+        "sha256": "bb938c3d351e8381265e563bddcf76b9b66d543d59d0b20895eb484752a0f0b4"
       },
-      "reason": "Keep Cloudflare Pages on an empty proxy URL and document that only Electron injects the loopback capability path. Add live-metadata runtime options (platform now-playing, HLS ID3, fingerprint) with metered fingerprinting off unless a proxy provides credentials. Keep Cloudflare Pages on an empty proxy URL, restrict deployable authentication to the exact production origin, configure the public Supabase project and enabled providers, and load the same-origin account overlay without changing the recovered bundle. Auto-identify the playing stream when free ICY/platform feeds miss, still a no-op until Pages has recognition credentials."
+      "reason": "Keep Cloudflare Pages on an empty proxy URL and document that only Electron injects the loopback capability path. Add live-metadata runtime options (platform now-playing, HLS ID3, fingerprint) with metered fingerprinting off unless a proxy provides credentials. Restrict deployable authentication to the exact production origin, configure the public Supabase project, enable GitHub and Google in the client, and load the same-origin account overlay without changing the recovered bundle."
     },
     {
       "path": "site/index.html",
@@ -154,10 +154,10 @@
         "sha256": "b09e3207532fe7f47d14e9c53804d7e8caf31cad2fcb2c652b728a93871ea094"
       },
       "current": {
-        "bytes": 2964,
-        "sha256": "2b0b7af5904226123e83209de5e31f45f6506829fc565603e1164283a0094582"
+        "bytes": 3009,
+        "sha256": "3c0373462dfe4f01d61cc4ee7946e6429ba1839847bc303b947d370df315912a"
       },
-      "reason": "Use network-first navigation/configuration updates, keep hashed recovered assets cache-first, reload installation requests so stale browser HTTP entries cannot seed the new service-worker cache, keep the previous worker when reload precaching fails, and precache the UI refresh stylesheet. Precache pinned-stations.js for LISTEN.moe catalog pinning. Bump the shell cache generation to v44 so clients pick up the visible Sign in control."
+      "reason": "Use network-first navigation/configuration updates, keep hashed recovered assets cache-first, reload overlay installation requests so stale browser HTTP entries cannot seed the new service-worker cache, force-cache the hashed runtime bundles, keep the previous worker when reload precaching fails, and precache the UI refresh stylesheet. Precache pinned-stations.js for LISTEN.moe catalog pinning. Bump the shell cache generation to v45 so clients pick up Google sign-in, auth overlay cache headers, and the Saved/Search/toast presentation fixes."
     }
   ]
 }

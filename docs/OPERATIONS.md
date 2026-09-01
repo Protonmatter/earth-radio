@@ -13,7 +13,7 @@ git diff --check
 
 The static deployment artifact is `.build/site`; do not deploy `site/` or the repository root without staging and validation.
 
-Cache policy is part of the deployment boundary. Only filenames carrying an eight-character content hash may receive `max-age=31536000, immutable`. Maintained overlays such as `responsive-ui.css`, `responsive-ui.js`, `ui-refresh.css`, and `metadata-enrichment.*` must remain short-lived and revalidating. When those shell assets change, bump the service-worker cache generation; installation uses `cache: 'reload'` to prevent an existing browser HTTP cache from contaminating the new service-worker cache. A failed reload leaves the previous worker and cache in place. `npm run verify:site` rejects any deployed non-fingerprinted file that inherits an immutable rule.
+Cache policy is part of the deployment boundary. Only filenames carrying an eight-character content hash may receive `max-age=31536000, immutable`. Maintained overlays such as `responsive-ui.css`, `responsive-ui.js`, `ui-refresh.css`, `auth-core.js`, `auth-ui.js`, `auth-ui.css`, `sync-core.js`, and `metadata-enrichment.*` must remain short-lived and revalidating. When those shell assets change, bump the service-worker cache generation; installation uses `cache: 'reload'` for overlays to prevent an existing browser HTTP cache from contaminating the new service-worker cache, and `force-cache` for the content-hashed runtime bundles. A failed reload leaves the previous worker and cache in place. `npm run verify:site` rejects any deployed non-fingerprinted file that inherits an immutable rule.
 
 ## Local smoke
 

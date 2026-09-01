@@ -22,8 +22,8 @@ const DEFAULT_LOCAL_DATA = Object.freeze({
 });
 
 const PROVIDERS = Object.freeze({
-  github: { label: 'GitHub' },
-  google: { label: 'Google' },
+  github: { label: 'GitHub', scopes: 'user:email' },
+  google: { label: 'Google', queryParams: { prompt: 'select_account' } },
   apple: { label: 'Apple' },
   azure: { label: 'Microsoft', scopes: 'email' }
 });
@@ -98,9 +98,10 @@ function el(tag, className, text) {
   return node;
 }
 
-function enabledProviders(config) {
+function enabledProviders(config, liveProviders) {
   return Object.entries(config.providers || {})
     .filter(([provider, enabled]) => enabled && PROVIDERS[provider])
+    .filter(([provider]) => liveProviders == null || liveProviders[provider] === true)
     .map(([provider]) => provider);
 }
 
@@ -195,6 +196,7 @@ async function boot() {
   let accountTransition = Promise.resolve();
   let authInitialized = false;
   let reloadTimer = null;
+  let liveProviders = null;
 
   function cancelReload() {
     if (reloadTimer) clearTimeout(reloadTimer);
@@ -396,7 +398,10 @@ async function boot() {
     providerButton.addEventListener('click', async () => {
       message(`${action === 'link' ? 'Opening' : 'Continuing to'} ${definition.label}…`);
       try {
-        const options = definition.scopes ? { scopes: definition.scopes } : {};
+        const options = {
+          ...(definition.scopes ? { scopes: definition.scopes } : {}),
+          ...(definition.queryParams ? { queryParams: definition.queryParams } : {})
+        };
         if (action === 'link') await auth.linkIdentity(provider, options);
         else await auth.signInWithOAuth(provider, options);
       } catch (error) { message(error.message, 'error'); }
@@ -423,7 +428,7 @@ async function boot() {
     if (!session) {
       card.appendChild(el('p', 'er-auth-copy', 'Sync favorites, recent stations, and preferences privately across devices.'));
       const providerList = el('div', 'er-auth-providers');
-      for (const provider of enabledProviders(config)) providerList.appendChild(providerButton(provider, 'signin'));
+      for (const provider of enabledProviders(config, liveProviders)) providerList.appendChild(providerButton(provider, 'signin'));
       card.appendChild(providerList);
 
       const divider = el('p', 'er-auth-divider', 'or use email');
@@ -454,7 +459,7 @@ async function boot() {
       card.appendChild(el('p', 'er-auth-sync', syncStatus));
       const identities = new Set((user?.identities || session.user?.identities || []).map(identity => identity.provider));
       const identityList = el('div', 'er-auth-identities');
-      for (const provider of enabledProviders(config)) {
+      for (const provider of enabledProviders(config, liveProviders)) {
         if (identities.has(provider)) {
           identityList.appendChild(el('span', 'er-auth-linked', `${PROVIDERS[provider].label} linked`));
         } else {
@@ -533,8 +538,11 @@ async function boot() {
     overflowButton.textContent = 'Finishing sign-in…';
   }
   try {
+    const hostedProviders = auth.listExternalProviders();
     session = await auth.initialize();
     authInitialized = true;
+    render();
+    liveProviders = await hostedProviders;
     render();
     await accountTransition;
     if (resettingSession) return;

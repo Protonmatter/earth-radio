@@ -1794,6 +1794,7 @@ function start() {
   restoreStoredTheme();
   applyLocale(state.locale);
   guardDocumentLocale();
+  if (state.destination === 'saved') applySavedSegment(state.savedSegment);
   applyViewport(loadUiState());
   bindActions();
   bindSeparator();

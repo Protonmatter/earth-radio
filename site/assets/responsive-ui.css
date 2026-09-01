@@ -755,6 +755,7 @@ html.er-mobile .search-modal.er-search-destination {
   inset: calc(var(--er-header) + var(--er-safe-top)) 0 calc(var(--er-player) + var(--er-nav) + var(--er-safe-bottom));
   z-index: 25;
   display: flex;
+  padding: 0;
   background: var(--er-paper);
 }
 
@@ -771,6 +772,24 @@ html.er-mobile .search-modal.er-search-destination .search-container {
   box-shadow: none;
   background: transparent;
   border-radius: 0;
+}
+
+/* Recovered toasts sit at top-right with z-index 10000, covering Sign in,
+ * Now Playing dismiss, and the tablet Map control. Park them under the
+ * measured header (or above the mobile player) and below overlay sheets. */
+html.er-root #toast-container {
+  top: calc(var(--er-header) + var(--er-safe-top) + 8px);
+  right: calc(12px + var(--er-safe-end));
+  left: auto;
+  bottom: auto;
+  z-index: 450;
+  max-width: min(360px, calc(100vw - 24px));
+}
+
+html.er-mobile #toast-container,
+html.er-tablet #toast-container {
+  top: auto;
+  bottom: calc(var(--er-player) + var(--er-nav) + var(--er-safe-bottom) + 8px);
 }
 
 /* The recovered runtime retains the actual search engine input. The additive
@@ -1142,6 +1161,8 @@ html.er-desktop .er-nowplaying {
 .er-nowplaying-art {
   width: min(72vw, 320px);
   aspect-ratio: 1;
+  flex-shrink: 0;
+  min-height: 160px;
   margin: 0 auto;
   border-radius: 16px;
   background: var(--er-map);

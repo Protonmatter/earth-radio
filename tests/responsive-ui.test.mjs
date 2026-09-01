@@ -174,5 +174,9 @@ test('overflow menu can become visible and search occupies the mobile workspace'
   const css = await readFile(path.join(root, 'site', 'assets', 'responsive-ui.css'), 'utf8');
   assert.match(css, /\.er-overflow:not\(\[hidden\]\)\s*\{\s*display:\s*grid;/);
   assert.match(css, /html\.er-mobile \.search-modal\.er-search-destination\s*\{[\s\S]*position:\s*fixed;/);
+  assert.match(css, /html\.er-mobile \.search-modal\.er-search-destination\s*\{[\s\S]*padding:\s*0;/);
   assert.match(css, /html\.er-root \.player-info\s*\{[\s\S]*appearance:\s*none;/);
+  assert.match(css, /html\.er-root #toast-container\s*\{[\s\S]*top:\s*calc\(var\(--er-header\)/);
+  assert.match(css, /\.er-nowplaying-art\s*\{[\s\S]*flex-shrink:\s*0;/);
+  assert.match(source, /if \(state\.destination === 'saved'\) applySavedSegment\(state\.savedSegment\)/);
 });

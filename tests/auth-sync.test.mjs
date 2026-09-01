@@ -175,6 +175,61 @@ test('OAuth redirects use the exact allowlisted origin root', async () => {
   assert.equal(redirect.hash, '');
 });
 
+test('OAuth redirect_to cannot leave the page origin', async () => {
+  const storage = memoryStorage();
+  const assigned = [];
+  const client = createAuthClient({
+    url: 'https://project.supabase.co',
+    publishableKey: 'sb_publishable_test',
+    storage,
+    location: {
+      href: 'https://earth-radio.example/',
+      origin: 'https://earth-radio.example',
+      pathname: '/',
+      assign: url => assigned.push(url)
+    }
+  });
+
+  await client.signInWithOAuth('github', { redirectTo: 'https://evil.example/phish' });
+
+  const redirect = new URL(new URL(assigned[0]).searchParams.get('redirect_to'));
+  assert.equal(redirect.href, 'https://earth-radio.example/');
+});
+
+test('hosted provider settings report which OAuth providers GoTrue actually enables', async () => {
+  const storage = memoryStorage();
+  const client = createAuthClient({
+    url: 'https://project.supabase.co',
+    publishableKey: 'sb_publishable_test',
+    storage,
+    location: {
+      href: 'https://earth-radio.example/',
+      origin: 'https://earth-radio.example',
+      pathname: '/'
+    },
+    fetchImpl: async url => {
+      assert.match(String(url), /\/auth\/v1\/settings$/);
+      return jsonResponse({ external: { github: true, google: false, apple: false } });
+    }
+  });
+
+  const hosted = await client.listExternalProviders();
+  assert.equal(hosted.github, true);
+  assert.equal(hosted.google, false);
+});
+
+test('GitHub asks for the private email scope and Google is a first-class provider', async () => {
+  const root = path.resolve(import.meta.dirname, '..');
+  const source = await readFile(path.join(root, 'site', 'assets', 'auth-ui.js'), 'utf8');
+  const config = await readFile(path.join(root, 'site', 'config.js'), 'utf8');
+  assert.match(source, /github:\s*\{\s*label:\s*'GitHub',\s*scopes:\s*'user:email'/);
+  assert.match(source, /google:\s*\{\s*label:\s*'Google'/);
+  assert.match(source, /queryParams:\s*definition\.queryParams/);
+  assert.match(source, /listExternalProviders\(\)/);
+  assert.match(source, /liveProviders\[provider\] === true/);
+  assert.match(config, /google:\s*true/);
+});
+
 test('OAuth callback exchanges the code, persists the session, and cleans the URL', async () => {
   const storage = memoryStorage();
   storage.setItem('earthRadio.auth.pkce.v1', JSON.stringify({

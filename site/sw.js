@@ -1,4 +1,4 @@
-const CACHE_NAME = 'earth-radio-shell-v44-visible-signin-1';
+const CACHE_NAME = 'earth-radio-shell-v45-review-auth-1';
 const SHELL_ASSETS = [
   './',
   './index.html',
@@ -29,7 +29,9 @@ const SHELL_ASSETS = [
 ];
 
 self.addEventListener('install', event => {
-  const shellRequests = SHELL_ASSETS.map(asset => new Request(asset, { cache: 'reload' }));
+  const shellRequests = SHELL_ASSETS.map(asset => new Request(asset, {
+    cache: isImmutableAsset(asset) ? 'force-cache' : 'reload'
+  }));
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => cache.addAll(shellRequests))
