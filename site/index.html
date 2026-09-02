@@ -155,7 +155,10 @@
         <em data-i18n="you.glassHelp">Frost only the station list, not the tuner.</em>
       </span>
     </label>
-    <button type="button" class="er-you-account" data-click-id="er-auth-button" data-i18n="you.account">Account</button>
+    <!-- Proxy for the account dialog. `auth-ui.js` unhides it once it has actually created
+         `#er-auth-button`; on the desktop build, local development, and any origin where
+         `config.js` disables authentication there is nothing to click, so it stays hidden. -->
+    <button type="button" class="er-you-account" data-click-id="er-auth-button" data-i18n="you.account" hidden>Account</button>
   </section>
 
   <footer class="player-bar" id="player-bar" data-i18n="player.label" data-i18n-attr="aria-label" aria-label="Audio player">
@@ -236,7 +239,7 @@
         <div id="er-country-options" class="er-country-options" role="listbox" data-i18n="search.countryLabel" data-i18n-attr="aria-label" aria-label="Country" hidden></div>
       </div>
       <label class="sr-only" for="er-station-query" data-i18n="search.stationLabel">Station</label>
-      <input type="search" class="search-input er-station-query" id="er-station-query" placeholder="Country, city, or station" data-i18n-placeholder="search.stationPlaceholder" autocomplete="off" spellcheck="false" aria-controls="search-results" />
+      <input type="search" class="search-input er-station-query" id="er-station-query" placeholder="Country or station" data-i18n-placeholder="search.stationPlaceholder" autocomplete="off" spellcheck="false" aria-controls="search-results" />
       <input type="text" class="er-search-engine" id="search-input" tabindex="-1" autocomplete="off" spellcheck="false" aria-hidden="true" />
       <p id="er-country-summary" class="er-country-summary" aria-live="polite"></p>
       <div class="search-results" id="search-results" role="listbox" aria-label="Station search results"></div>

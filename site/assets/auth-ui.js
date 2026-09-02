@@ -210,6 +210,9 @@ async function boot() {
   const rail = document.querySelector('.header-right');
   if (rail) rail.insertBefore(button, rail.firstChild);
   else document.querySelector('.er-header-tools')?.appendChild(button);
+  // Static proxies for this button ship hidden so they never dead-click on a build
+  // where `boot()` returned above with authentication disabled.
+  for (const proxy of document.querySelectorAll('[data-click-id="er-auth-button"][hidden]')) proxy.hidden = false;
 
   const overflow = document.getElementById('er-overflow');
   const overflowButton = el('button', 'er-auth-overflow', 'Sign in');
@@ -413,7 +416,21 @@ async function boot() {
     const label = session ? (user?.email || session.user?.email || 'Account') : 'Sign in';
     button.textContent = label;
     overflowButton.textContent = label;
+    // Provider discovery resolves long after the dialog can be opened, and its
+    // render() must not eat an address the user is midway through typing. Carry
+    // the email field's value, focus, and selection across the rebuild.
+    // Only while the dialog is on screen: opening it fresh should still start blank.
+    const previousEmail = modal.hidden ? null : card.querySelector('input[type="email"]');
+    const carriedEmail = previousEmail
+      ? {
+        value: previousEmail.value,
+        focused: document.activeElement === previousEmail,
+        selectionStart: previousEmail.selectionStart,
+        selectionEnd: previousEmail.selectionEnd
+      }
+      : null;
     card.replaceChildren();
+    let restoreFocus = null;
 
     const header = el('div', 'er-auth-heading');
     const title = el('h2', '', session ? 'Your Earth Radio account' : 'Sign in to Earth Radio');
@@ -453,6 +470,16 @@ async function boot() {
         } catch (error) { message(error.message, 'error'); }
         finally { submit.disabled = false; }
       });
+      if (carriedEmail) {
+        input.value = carriedEmail.value;
+        if (carriedEmail.focused) {
+          restoreFocus = () => {
+            input.focus();
+            try { input.setSelectionRange(carriedEmail.selectionStart, carriedEmail.selectionEnd); }
+            catch { /* setSelectionRange is not supported on every email input. */ }
+          };
+        }
+      }
       card.appendChild(form);
     } else {
       card.appendChild(el('p', 'er-auth-copy', user?.email || session.user?.email || 'Signed in'));
@@ -518,6 +545,7 @@ async function boot() {
     status.dataset.authMessage = '';
     status.setAttribute('role', 'status');
     card.appendChild(status);
+    restoreFocus?.();
   }
 
   button.addEventListener('click', () => {

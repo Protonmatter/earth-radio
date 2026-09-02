@@ -24,7 +24,7 @@ test('phone destinations are Atlas, Browse, Kept, and You', async () => {
 
 test('search copy and markup put places first', async () => {
   const html = await readFile(path.join(root, 'site', 'index.html'), 'utf8');
-  assert.equal(t('search.stationPlaceholder', undefined, 'en'), 'Country, city, or station');
+  assert.equal(t('search.stationPlaceholder', undefined, 'en'), 'Country or station');
   assert.equal(t('nav.map', undefined, 'en'), 'Atlas');
   assert.equal(t('nav.listen', undefined, 'en'), 'Browse');
   assert.equal(t('nav.saved', undefined, 'en'), 'Kept');

@@ -70,7 +70,7 @@ export default {
 
   'search.placeholder': 'Country, city, or station',
   'search.stationLabel': 'Station',
-  'search.stationPlaceholder': 'Country, city, or station',
+  'search.stationPlaceholder': 'Country or station',
   'search.countryLabel': 'Country',
   'search.countryPlaceholder': 'All countries',
   'search.allCountries': 'All countries',

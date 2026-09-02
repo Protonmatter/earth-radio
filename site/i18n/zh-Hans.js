@@ -70,7 +70,7 @@ export default {
 
   'search.placeholder': '国家、城市或电台',
   'search.stationLabel': '电台',
-  'search.stationPlaceholder': '国家、城市或电台',
+  'search.stationPlaceholder': '国家或电台',
   'search.countryLabel': '国家或地区',
   'search.countryPlaceholder': '所有国家和地区',
   'search.allCountries': '所有国家和地区',

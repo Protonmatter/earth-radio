@@ -70,7 +70,7 @@ export default {
 
   'search.placeholder': '국가, 도시 또는 방송국',
   'search.stationLabel': '방송국',
-  'search.stationPlaceholder': '국가, 도시 또는 방송국',
+  'search.stationPlaceholder': '국가 또는 방송국',
   'search.countryLabel': '국가',
   'search.countryPlaceholder': '모든 국가',
   'search.allCountries': '모든 국가',

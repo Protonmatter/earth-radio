@@ -70,7 +70,7 @@ export default {
 
   'search.placeholder': 'País, ciudad o emisora',
   'search.stationLabel': 'Emisora',
-  'search.stationPlaceholder': 'País, ciudad o emisora',
+  'search.stationPlaceholder': 'País o emisora',
   'search.countryLabel': 'País',
   'search.countryPlaceholder': 'Todos los países',
   'search.allCountries': 'Todos los países',

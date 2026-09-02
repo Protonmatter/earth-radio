@@ -70,7 +70,7 @@ export default {
 
   'search.placeholder': 'بلد أو مدينة أو محطة',
   'search.stationLabel': 'المحطة',
-  'search.stationPlaceholder': 'بلد أو مدينة أو محطة',
+  'search.stationPlaceholder': 'بلد أو محطة',
   'search.countryLabel': 'الدولة',
   'search.countryPlaceholder': 'كل الدول',
   'search.allCountries': 'كل الدول',

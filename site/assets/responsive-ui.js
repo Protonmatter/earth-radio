@@ -1257,6 +1257,11 @@ function releaseSavedRuntimeToggles() {
 function setDestination(destination, explicit = false) {
   const next = saveUiState({ destination });
   whenStationsLoadSettled(() => {
+    // A waiter queued before the stations settled must not resurrect its own
+    // destination once the user has navigated on: `applySavedSegment()` persists
+    // `destination: 'saved'`, so a stale Saved waiter would drag Atlas/Browse/You
+    // back to Saved. Only the waiter whose destination is still current may act.
+    if (loadUiState().destination !== destination) return;
     if (destination === 'saved') applySavedSegment(next.savedSegment);
     if (destination === 'listen') releaseSavedRuntimeToggles();
     applyViewport(loadUiState());
