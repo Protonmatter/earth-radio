@@ -80,6 +80,15 @@ export async function setupApp(page, { sameOriginNowPlaying = null, sameOriginFi
       if (hls) return route.fulfill(hls);
       return route.fulfill({ contentType: 'audio/wav', body: AUDIO });
     }
+    // Hosted GoTrue. The provider controls are painted only from what
+    // /auth/v1/settings reports, so without this the catch-all below would abort the
+    // request, leave `liveProviders` null, and the dialog would offer email only.
+    if (enableAuth && url.hostname.endsWith('.supabase.co')) {
+      if (url.pathname === '/auth/v1/settings') {
+        return route.fulfill({ json: { external: { github: true, google: true } } });
+      }
+      return route.fulfill({ status: 400, json: { error: 'unsupported_in_e2e' } });
+    }
     // Map tiles, other directories, favicons: fail fast and deterministically.
     return route.abort();
   });
