@@ -440,6 +440,21 @@ function syncThemeColor() {
   if (meta) meta.content = document.documentElement.dataset.theme === 'dark' ? '#12110e' : '#f4efe4';
 }
 
+/*
+ * Keep the inline `color-scheme` on the locked palette.
+ *
+ * The recovered runtime writes `documentElement.style.colorScheme` next to its own theme
+ * and resolves a `system` preference against the OS, so it can land opposite the Night/Paper
+ * pair. That inline value outranks the stylesheet for native controls and scrollbars, and
+ * nothing else here reconciles it. Written only on a difference so the observer that watches
+ * `style` cannot loop on our own write.
+ */
+function syncColorScheme(theme) {
+  if (document.documentElement.style.colorScheme !== theme) {
+    document.documentElement.style.colorScheme = theme;
+  }
+}
+
 export function resolveThemePreference(preference, systemDark = false) {
   if (preference === 'dark') return 'dark';
   if (preference === 'light') return 'light';
@@ -458,6 +473,7 @@ function restoreStoredTheme() {
   document.documentElement.dataset.theme = theme;
   document.documentElement.dataset.erPalette = state.palette;
   document.documentElement.classList.toggle('er-glass-log', state.glassLog === true);
+  syncColorScheme(theme);
   syncThemeColor();
 }
 
@@ -512,6 +528,7 @@ function guardDocumentLocale() {
       document.documentElement.style.setProperty('--er-font', FONT_PROFILES[wanted]);
     }
     const wantedTheme = readStoredTheme();
+    syncColorScheme(wantedTheme);
     if (document.documentElement.dataset.theme !== wantedTheme) {
       document.documentElement.dataset.theme = wantedTheme;
       document.documentElement.dataset.erPalette = loadUiState().palette;
@@ -520,7 +537,7 @@ function guardDocumentLocale() {
     }
     syncThemeColor();
   });
-  observer.observe(document.documentElement, { attributes: true, attributeFilter: ['lang', 'dir', 'data-font-profile', 'data-theme'] });
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ['lang', 'dir', 'data-font-profile', 'data-theme', 'style'] });
   globalThis.matchMedia?.('(prefers-color-scheme: dark)')?.addEventListener?.('change', () => restoreStoredTheme());
   syncThemeColor();
 }
@@ -1477,7 +1494,13 @@ function bindActions() {
       event.preventDefault();
       const segment = saved.getAttribute('data-er-saved');
       saveUiState({ destination: 'saved', savedSegment: segment });
-      whenStationsLoadSettled(() => applySavedSegment(segment));
+      // Same guard as the other stations-settled waiters: applySavedSegment() persists
+      // destination 'saved', so a segment picked before the load settled must not pull a
+      // later Atlas/Browse/You navigation back to Kept.
+      whenStationsLoadSettled(() => {
+        if (loadUiState().destination !== 'saved') return;
+        applySavedSegment(segment);
+      });
       applyViewport(loadUiState());
       return;
     }

@@ -9,7 +9,11 @@ export function applyAtlasChrome(state = loadUiState()) {
   const root = document.documentElement;
   const palette = state.palette === 'paper' ? 'paper' : 'night';
   root.dataset.erPalette = palette;
-  root.dataset.theme = palette === 'paper' ? 'light' : 'dark';
+  const theme = palette === 'paper' ? 'light' : 'dark';
+  root.dataset.theme = theme;
+  // The runtime also writes an inline color-scheme from its own preference; that value
+  // outranks the stylesheet for native controls, so the palette has to claim it too.
+  if (root.style.colorScheme !== theme) root.style.colorScheme = theme;
   root.classList.toggle('er-glass-log', state.glassLog === true);
   const meta = document.querySelector('meta[name="theme-color"]');
   if (meta) meta.content = palette === 'paper' ? '#f4efe4' : '#12110e';

@@ -240,6 +240,10 @@ async function boot() {
   // initialization error has been shown, and rebuilding the card must not silently
   // drop the reason the dialog opened. `close()` clears it so a reopened dialog is blank.
   let lastMessage = null;
+  // A magic-link request in flight. beginPkce() replaces the whole flow store, so a second
+  // submit discards the first verifier and the first email link then fails to exchange.
+  // The disabled submit button has to survive a render for that to stay impossible.
+  let emailSubmitPending = false;
 
   function message(text, kind = '') {
     lastMessage = text ? { text, kind } : null;
@@ -467,15 +471,23 @@ async function boot() {
       input.setAttribute('aria-label', 'Email address');
       const submit = el('button', 'er-auth-primary', 'Email me a sign-in link');
       submit.type = 'submit';
+      submit.disabled = emailSubmitPending;
       form.append(input, submit);
       form.addEventListener('submit', async event => {
         event.preventDefault();
+        emailSubmitPending = true;
         submit.disabled = true;
         try {
           await auth.signInWithEmail(input.value);
           message('Check your email for a secure sign-in link.', 'success');
         } catch (error) { message(error.message, 'error'); }
-        finally { submit.disabled = false; }
+        finally {
+          emailSubmitPending = false;
+          // Provider discovery may have rebuilt the card while the request was in flight,
+          // which leaves `submit` detached; re-enable whichever button is mounted now.
+          const mounted = card.querySelector('.er-auth-email button[type="submit"]');
+          if (mounted) mounted.disabled = false;
+        }
       });
       if (carriedEmail) {
         input.value = carriedEmail.value;

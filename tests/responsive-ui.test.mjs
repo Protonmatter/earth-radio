@@ -210,6 +210,14 @@ test('stations-settled waiters stand down once the destination has moved on', as
       < setDestination.indexOf("if (destination === 'saved') applySavedSegment("),
     'the guard must precede applySavedSegment()'
   );
+  // The Favorites/Recent segment buttons queue their own waiter.
+  const segmentWaiter = source.slice(source.indexOf("target.closest('button[data-er-saved]')"), source.indexOf("[data-er-open-search]"));
+  assert.match(segmentWaiter, /if \(loadUiState\(\)\.destination !== 'saved'\) return;/);
+  assert.ok(
+    segmentWaiter.indexOf("if (loadUiState().destination !== 'saved') return;")
+      < segmentWaiter.indexOf('applySavedSegment(segment)'),
+    'the segment waiter needs the same guard'
+  );
   const startupWaiter = source.slice(source.indexOf('  restoreStoredTheme();'), source.indexOf('  bindActions();'));
   assert.match(startupWaiter, /if \(loadUiState\(\)\.destination !== state\.destination\) return;/);
   assert.ok(
@@ -217,4 +225,26 @@ test('stations-settled waiters stand down once the destination has moved on', as
       < startupWaiter.indexOf("if (state.destination === 'saved') applySavedSegment("),
     'the startup waiter needs the same guard'
   );
+});
+
+test('the locked palette owns the inline color-scheme, not the runtime preference', async () => {
+  const root = path.resolve(import.meta.dirname, '..');
+  const source = await readFile(path.join(root, 'site', 'assets', 'responsive-ui.js'), 'utf8');
+  const lock = await readFile(path.join(root, 'site', 'assets', 'atlas-lock.js'), 'utf8');
+  // The runtime writes an inline color-scheme resolved against the OS, which outranks the
+  // stylesheet for native controls; every path that settles data-theme must settle it too.
+  assert.match(source, /function syncColorScheme\(theme\)/);
+  assert.match(source, /if \(document\.documentElement\.style\.colorScheme !== theme\)/);
+  const restore = source.slice(source.indexOf('function restoreStoredTheme()'), source.indexOf('let previewLocale'));
+  assert.match(restore, /syncColorScheme\(theme\)/);
+  const observer = source.slice(source.indexOf('const observer = new MutationObserver'), source.indexOf('observer.observe('));
+  assert.match(observer, /syncColorScheme\(wantedTheme\)/);
+  assert.ok(
+    observer.indexOf('syncColorScheme(wantedTheme)') < observer.indexOf("dataset.theme !== wantedTheme"),
+    'color-scheme must be reconciled on both observer branches'
+  );
+  // A late runtime write lands on style, so the observer has to watch it; the write guard
+  // above is what keeps that from looping.
+  assert.match(source, /attributeFilter: \['lang', 'dir', 'data-font-profile', 'data-theme', 'style'\]/);
+  assert.match(lock, /if \(root\.style\.colorScheme !== theme\) root\.style\.colorScheme = theme;/);
 });

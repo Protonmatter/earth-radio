@@ -280,8 +280,8 @@
     },
     {
       "path": "site/assets/atlas-lock.js",
-      "bytes": 4766,
-      "sha256": "a7a31fd9388c856dac4fff2c58754bade3f9e361f7b9cc088d3f5844cd3a7ffd"
+      "bytes": 5035,
+      "sha256": "01f8d54b41c4c7b400dd747b949bec0dbe3c615c91551a6bc548c3a6d2690e0e"
     },
     {
       "path": "site/assets/auth-core.js",
@@ -295,8 +295,8 @@
     },
     {
       "path": "site/assets/auth-ui.js",
-      "bytes": 24174,
-      "sha256": "03343655f2e436f22c4c215cf091747dff0317ca2b82d831b95c7723437f1a7b"
+      "bytes": 24888,
+      "sha256": "cb4fac6befc159e757267212bec0a3970a1101ec12d754fb0b87285e92a7e788"
     },
     {
       "path": "site/assets/directory-expansion.js",
@@ -340,8 +340,8 @@
     },
     {
       "path": "site/assets/responsive-ui.js",
-      "bytes": 69450,
-      "sha256": "ef3dd37f42120626811495ed6e824d1c252ebf93a02ac7911397452f9740fbb6"
+      "bytes": 70468,
+      "sha256": "a384f5ccff4d8f4c85176f69380f7dcd2b98396471c27738a436494826136014"
     },
     {
       "path": "site/assets/storage-guard.js",
@@ -430,8 +430,8 @@
     },
     {
       "path": "site/privacy.html",
-      "bytes": 3744,
-      "sha256": "de92dd3cba7b657c07cb169871298a798033f4d527c503ceead1c732cddfa17e"
+      "bytes": 4052,
+      "sha256": "c17c8e49365dd9e933ea59bc496f706946589e2c07348ce82f92b352b386fb6c"
     },
     {
       "path": "site/sw.js",
@@ -680,8 +680,8 @@
     },
     {
       "path": "tests/auth-sync.test.mjs",
-      "bytes": 54186,
-      "sha256": "5d609dadf9d5678166cb2e81f9692c7ec29ba37e059f5a952291bffe72af3989"
+      "bytes": 55523,
+      "sha256": "03703fd6026c16810883f6652df30b1a64d0e7a280aa163563d5ad6a7bb8f7e7"
     },
     {
       "path": "tests/browser/fixtures/stations.mjs",
@@ -715,8 +715,8 @@
     },
     {
       "path": "tests/documentation.test.mjs",
-      "bytes": 4654,
-      "sha256": "9ecedef932c275b96e128bff33385f0e9a0b6995d869c27fbd8d0a3ee6818304"
+      "bytes": 5622,
+      "sha256": "788162b2d749d760f8de02b457f094437a471e8de769ac593bca5dfd8c0f91db"
     },
     {
       "path": "tests/e2e/app.spec.mjs",
@@ -740,8 +740,8 @@
     },
     {
       "path": "tests/e2e/helpers.mjs",
-      "bytes": 6032,
-      "sha256": "76a868e0fa86ff522017cc9d8926d67150192d663cc7e3ed5e9ab8d7418eb1ff"
+      "bytes": 6569,
+      "sha256": "26f249f92b7e7eca255fa6f48c9abd0dcc946091c989fba3167a53c565948ff5"
     },
     {
       "path": "tests/e2e/playwright.config.mjs",
@@ -850,8 +850,8 @@
     },
     {
       "path": "tests/responsive-ui.test.mjs",
-      "bytes": 11276,
-      "sha256": "cbb416ce94dc5a931b4c56dabb68c916b932cdf6e0611b5d37c3ba8086a90697"
+      "bytes": 13343,
+      "sha256": "43e867fb0db85ad970e38131c08db1c241c3c0d5c33288315e29910d7da604a2"
     },
     {
       "path": "tests/service-worker.test.mjs",

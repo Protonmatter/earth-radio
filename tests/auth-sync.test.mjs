@@ -1230,3 +1230,20 @@ test('production auth excludes Cloudflare preview origins', async () => {
   assert.match(supabaseConfig, /enable_manual_linking = true/);
   assert.match(supabaseConfig, /enable_confirmations = true/);
 });
+
+test('a magic-link request in flight keeps its submit disabled across a render', async () => {
+  const root = path.resolve(import.meta.dirname, '..');
+  const source = await readFile(path.join(root, 'site', 'assets', 'auth-ui.js'), 'utf8');
+  // beginPkce() replaces the whole flow store, so a second submit discards the first
+  // verifier and the first email link can no longer be exchanged.
+  const core = await readFile(path.join(root, 'site', 'assets', 'auth-core.js'), 'utf8');
+  const begin = core.slice(core.indexOf('async function beginPkce()'), core.indexOf('function allowlistedRedirect'));
+  assert.ok(begin.includes('persistFlows({'), 'beginPkce still replaces the stored flows');
+  assert.ok(source.includes('let emailSubmitPending = false;'));
+  assert.ok(source.includes('submit.disabled = emailSubmitPending;'), 'a rebuilt form must inherit the pending state');
+  const submitHandler = source.slice(source.indexOf("form.addEventListener('submit'"), source.indexOf('card.appendChild(form);'));
+  assert.ok(submitHandler.includes('emailSubmitPending = true;'));
+  assert.ok(submitHandler.includes('emailSubmitPending = false;'));
+  // `submit` may be detached by then, so the mounted button is the one to re-enable.
+  assert.ok(submitHandler.includes("card.querySelector('.er-auth-email button[type=\"submit\"]')"));
+});
