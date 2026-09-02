@@ -1781,6 +1781,10 @@ function start() {
   // setupHeaderEvents() runs only after hydrateStorage(); clicks before
   // earthradio:stations-load-settled select Saved chrome without filtering.
   whenStationsLoadSettled(() => {
+    // Same rule as the waiters setDestination() queues: a navigation made before the
+    // stations settled outranks the destination this boot restored, and letting a stale
+    // Saved waiter through would re-persist Saved and make the newer waiter stand down.
+    if (loadUiState().destination !== state.destination) return;
     if (state.destination === 'saved') applySavedSegment(state.savedSegment);
     applyViewport(loadUiState());
   });

@@ -280,8 +280,8 @@
     },
     {
       "path": "site/assets/atlas-lock.js",
-      "bytes": 3748,
-      "sha256": "63199b99fab319814b261e13065f50a270edbe96246087f40a9b28bc0687346f"
+      "bytes": 4766,
+      "sha256": "a7a31fd9388c856dac4fff2c58754bade3f9e361f7b9cc088d3f5844cd3a7ffd"
     },
     {
       "path": "site/assets/auth-core.js",
@@ -295,8 +295,8 @@
     },
     {
       "path": "site/assets/auth-ui.js",
-      "bytes": 23301,
-      "sha256": "d258d04ea55dd6a8e1a6afecb6c52d2c8f9e264347ec816ad41e4ed2e02fde51"
+      "bytes": 24174,
+      "sha256": "03343655f2e436f22c4c215cf091747dff0317ca2b82d831b95c7723437f1a7b"
     },
     {
       "path": "site/assets/directory-expansion.js",
@@ -340,8 +340,8 @@
     },
     {
       "path": "site/assets/responsive-ui.js",
-      "bytes": 69121,
-      "sha256": "4af0956d9b562aea5205c3a02167f70f7238286c5553127a8e712beb11b615bf"
+      "bytes": 69450,
+      "sha256": "ef3dd37f42120626811495ed6e824d1c252ebf93a02ac7911397452f9740fbb6"
     },
     {
       "path": "site/assets/storage-guard.js",
@@ -670,8 +670,8 @@
     },
     {
       "path": "tests/atlas-lock.test.mjs",
-      "bytes": 3704,
-      "sha256": "c0bb773a7660b7ba9b95c50d8433e74c2a54b7ddbb24b5f5b203ff61c3880b0a"
+      "bytes": 5195,
+      "sha256": "18db0000a1acc476d80d9a972a2980b8d0e517f90a9af257cb70e490a89b6acc"
     },
     {
       "path": "tests/auth-local-gotrue.test.mjs",
@@ -680,8 +680,8 @@
     },
     {
       "path": "tests/auth-sync.test.mjs",
-      "bytes": 51989,
-      "sha256": "2ec8391eeedfeca04b032e0b24e186b0db3d718e23c834cc005ca7a0f655cfb4"
+      "bytes": 54186,
+      "sha256": "5d609dadf9d5678166cb2e81f9692c7ec29ba37e059f5a952291bffe72af3989"
     },
     {
       "path": "tests/browser/fixtures/stations.mjs",
@@ -850,8 +850,8 @@
     },
     {
       "path": "tests/responsive-ui.test.mjs",
-      "bytes": 9855,
-      "sha256": "da782eb27ced9459a2350e8d25cb4a7ed5d798b642e75caa3092a404b9d101da"
+      "bytes": 11276,
+      "sha256": "cbb416ce94dc5a931b4c56dabb68c916b932cdf6e0611b5d37c3ba8086a90697"
     },
     {
       "path": "tests/service-worker.test.mjs",

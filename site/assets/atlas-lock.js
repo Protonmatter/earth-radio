@@ -21,36 +21,46 @@ export function applyAtlasChrome(state = loadUiState()) {
   return state;
 }
 
-// True only while `selectPalette()` is driving the recovered runtime's own theme
-// button. The `#theme-toggle` listener below flips the palette for *user* presses;
-// it must stay out of the way when the palette is already known.
+// True only while we are driving the runtime's theme button ourselves. The
+// `#theme-toggle` listener below flips the palette for *user* presses; it must stay
+// out of the way when the palette we are moving to is already known.
 let drivingRuntimeTheme = false;
 
 /*
- * Move to `palette` and take the Leaflet basemap along.
+ * Press the runtime's own theme button and report the theme it landed on.
  *
- * The recovered runtime builds its CARTO tile layer once at map creation and
- * rebuilds it in exactly one place: its `#theme-toggle` handler, which reads
- * `documentElement.dataset.theme` synchronously right after flipping it. Writing
- * the attribute here would leave a dark basemap under Paper chrome, so the palette
- * chips press that button instead. The runtime toggles its own stored preference,
- * which can drift from ours, so press again when the first press lands on the wrong
- * theme; the second press runs before any microtask and re-reads the corrected
- * attribute, leaving both the tiles and the runtime preference on `palette`.
+ * The recovered runtime builds its CARTO tile layer once at map creation and rebuilds
+ * it in exactly one place: its `#theme-toggle` handler, which reads
+ * `documentElement.dataset.theme` synchronously right after flipping it. Pressing that
+ * button is therefore the only additive way to move the basemap. Reading the attribute
+ * straight back is safe because nothing has yielded since: the rebuild happened inside
+ * the dispatch, and responsive-ui's MutationObserver revert is still queued.
  */
+function pressRuntimeToggle() {
+  const runtimeToggle = document.getElementById('theme-toggle');
+  if (!runtimeToggle) return null;
+  drivingRuntimeTheme = true;
+  try { runtimeToggle.click(); } finally { drivingRuntimeTheme = false; }
+  return document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
+}
+
+/*
+ * Bring the basemap to `palette`, given the theme the runtime last built tiles for.
+ *
+ * The runtime flips its own stored preference, which is resolved against the OS
+ * `prefers-color-scheme` and can therefore disagree with our palette. One more press
+ * settles it: with only two themes, flipping away from the wrong one lands on the
+ * right one, leaving the tiles and the runtime preference both on `palette`.
+ */
+function alignRuntimeTiles(palette, landed) {
+  if (landed === null) return;
+  if (landed === (palette === 'paper' ? 'light' : 'dark')) return;
+  pressRuntimeToggle();
+}
+
 function selectPalette(palette) {
   const state = saveUiState({ palette });
-  const wantedTheme = palette === 'paper' ? 'light' : 'dark';
-  const runtimeToggle = document.getElementById('theme-toggle');
-  if (runtimeToggle) {
-    drivingRuntimeTheme = true;
-    try {
-      runtimeToggle.click();
-      if (document.documentElement.dataset.theme !== wantedTheme) runtimeToggle.click();
-    } finally {
-      drivingRuntimeTheme = false;
-    }
-  }
+  alignRuntimeTiles(palette, pressRuntimeToggle());
   return applyAtlasChrome(state);
 }
 
@@ -75,6 +85,13 @@ function bindAtlasLock() {
     if (drivingRuntimeTheme) return;
     queueMicrotask(() => {
       const next = loadUiState().palette === 'paper' ? 'night' : 'paper';
+      // This listener is bound from DOMContentLoaded; the runtime binds its own only
+      // after awaiting storage hydration, so by now it has flipped `data-theme` and
+      // rebuilt its tiles, and this microtask was queued ahead of the MutationObserver
+      // that reverts the attribute. The value read here is the theme the runtime chose
+      // from its own preference, which the palette flip above does not consult.
+      const landed = document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
+      alignRuntimeTiles(next, landed);
       applyAtlasChrome(saveUiState({ palette: next }));
     });
   });

@@ -196,3 +196,25 @@ test('overflow menu can become visible and search occupies the mobile workspace'
   assert.match(setDestSource, /whenStationsLoadSettled/);
   assert.match(setDestSource, /applySavedSegment/);
 });
+
+test('stations-settled waiters stand down once the destination has moved on', async () => {
+  const root = path.resolve(import.meta.dirname, '..');
+  const source = await readFile(path.join(root, 'site', 'assets', 'responsive-ui.js'), 'utf8');
+  // applySavedSegment() persists destination: 'saved', so any waiter queued before the
+  // station load settled must re-check the current destination or it will drag a later
+  // navigation back to Saved and make the newer waiter stand down instead.
+  const setDestination = source.slice(source.indexOf('function setDestination('), source.indexOf('function applySavedSegment('));
+  assert.match(setDestination, /if \(loadUiState\(\)\.destination !== destination\) return;/);
+  assert.ok(
+    setDestination.indexOf('if (loadUiState().destination !== destination) return;')
+      < setDestination.indexOf("if (destination === 'saved') applySavedSegment("),
+    'the guard must precede applySavedSegment()'
+  );
+  const startupWaiter = source.slice(source.indexOf('  restoreStoredTheme();'), source.indexOf('  bindActions();'));
+  assert.match(startupWaiter, /if \(loadUiState\(\)\.destination !== state\.destination\) return;/);
+  assert.ok(
+    startupWaiter.indexOf('if (loadUiState().destination !== state.destination) return;')
+      < startupWaiter.indexOf("if (state.destination === 'saved') applySavedSegment("),
+    'the startup waiter needs the same guard'
+  );
+});

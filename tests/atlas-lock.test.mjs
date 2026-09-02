@@ -68,3 +68,23 @@ test('glass frosts only the log, and Night/Paper replace system theme', async ()
     );
   }
 });
+
+test('both palette paths hand the runtime a theme that matches the basemap', async () => {
+  const lock = await readFile(path.join(root, 'site', 'assets', 'atlas-lock.js'), 'utf8');
+  // The recovered runtime rebuilds its CARTO tile layer only inside its own
+  // #theme-toggle handler, so neither path may settle a palette by writing data-theme.
+  assert.match(lock, /function pressRuntimeToggle\(\)/);
+  assert.match(lock, /runtimeToggle\.click\(\)/);
+  assert.match(lock, /function alignRuntimeTiles\(palette, landed\)/);
+  // Chip path: press, then reconcile whatever theme the runtime landed on.
+  const select = lock.slice(lock.indexOf('function selectPalette'), lock.indexOf('function bindAtlasLock'));
+  assert.match(select, /alignRuntimeTiles\(palette, pressRuntimeToggle\(\)\)/);
+  // Legacy header toggle: the runtime has already chosen tiles from its own stored
+  // preference, which the palette flip does not consult, so that theme is reconciled too.
+  const legacy = lock.slice(lock.indexOf("getElementById('theme-toggle')?.addEventListener"));
+  assert.match(legacy, /const landed = document\.documentElement\.dataset\.theme === 'dark' \? 'dark' : 'light'/);
+  assert.match(legacy, /alignRuntimeTiles\(next, landed\)/);
+  assert.ok(legacy.indexOf('alignRuntimeTiles(next, landed)') < legacy.indexOf('applyAtlasChrome(saveUiState({ palette: next }))'));
+  // Our own presses must not re-enter the palette flip.
+  assert.match(lock, /if \(drivingRuntimeTheme\) return;/);
+});

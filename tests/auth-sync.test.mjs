@@ -11,6 +11,8 @@ import {
   shouldResetBrowserAccount, shouldResetLocalAccount, stableStringify
 } from '../site/assets/sync-core.js';
 
+const NEWLINE = String.fromCharCode(10);
+
 function memoryStorage() {
   const values = new Map();
   return {
@@ -978,14 +980,40 @@ test('boot applies hosted providers only after account isolation and never admit
   const enabled = source.slice(source.indexOf('function enabledProviders'), source.indexOf('function syncStateKey'));
   assert.doesNotMatch(enabled, /liveProviders == null \|\|/);
   assert.match(enabled, /liveProviders != null && liveProviders\[provider\] === true/);
-  const bootTail = source.slice(source.indexOf('session = await auth.initialize()'));
+  // Discovery is started before the initialization block so it is already in flight,
+  // but nothing awaits it until the account namespace has been switched.
+  const boot = source.slice(source.indexOf('async function boot()'));
+  const discoveryIdx = boot.indexOf('const providerDiscovery = auth.listExternalProviders()');
+  assert.ok(discoveryIdx >= 0, 'provider discovery promise is missing');
+  assert.ok(boot.slice(discoveryIdx).includes(NEWLINE + '  try {'), 'discovery must start before the try block');
+  const bootTail = boot.slice(boot.indexOf('session = await auth.initialize()'));
   const accountTransitionIdx = bootTail.indexOf('await accountTransition');
   const switchIdx = bootTail.indexOf('await switchLocalAccount(previousUserId, nextUserId)');
-  const liveIdx = bootTail.indexOf('liveProviders = await hostedProviders');
+  const liveIdx = bootTail.indexOf('await providerDiscovery');
   assert.ok(accountTransitionIdx >= 0);
   assert.ok(switchIdx > accountTransitionIdx);
   assert.ok(liveIdx > switchIdx);
-  assert.doesNotMatch(bootTail.slice(0, switchIdx), /await hostedProviders/);
+  assert.doesNotMatch(bootTail.slice(0, switchIdx), /await providerDiscovery|await auth\.listExternalProviders/);
+});
+
+test('provider discovery is applied even when authentication initialization fails', async () => {
+  const root = path.resolve(import.meta.dirname, '..');
+  const source = await readFile(path.join(root, 'site', 'assets', 'auth-ui.js'), 'utf8');
+  const boot = source.slice(source.indexOf('async function boot()'));
+  // The assignment lives in the discovery continuation rather than the success path, so an
+  // `error` callback or a failed PKCE exchange still paints the buttons needed to retry.
+  const start = boot.indexOf('const providerDiscovery = auth.listExternalProviders()');
+  const continuation = boot.slice(start, boot.indexOf(NEWLINE + '  try {', start));
+  assert.ok(continuation.includes('liveProviders = providers;'), 'discovery must assign liveProviders itself');
+  assert.ok(continuation.includes('if (authInitialized) render();'), 'a landed discovery must repaint the card');
+  const catchBody = boot.slice(boot.indexOf('} catch (error) {'));
+  assert.ok(catchBody.includes("message(error.message, 'error')"));
+  // That repaint must not swallow the reason the dialog opened.
+  const messageBody = source.slice(source.indexOf('function message(text'), source.indexOf('async function resetSignedOutSession'));
+  assert.ok(messageBody.includes('lastMessage = text ? { text, kind } : null;'));
+  assert.ok(source.includes('if (lastMessage) {'), 'render() must restore the status line');
+  const closeBody = source.slice(source.indexOf('function close() {'), source.indexOf('function message(text'));
+  assert.ok(closeBody.includes('lastMessage = null;'), 'closing the dialog must clear the status line');
 });
 
 test('downloads during the reload cooldown schedule a later reload', async () => {

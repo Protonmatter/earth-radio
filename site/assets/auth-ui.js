@@ -231,11 +231,18 @@ async function boot() {
   document.body.appendChild(modal);
 
   function close() {
+    lastMessage = null;
     modal.hidden = true;
     button.focus();
   }
 
+  // The status line outlives a render: provider discovery can resolve after an
+  // initialization error has been shown, and rebuilding the card must not silently
+  // drop the reason the dialog opened. `close()` clears it so a reopened dialog is blank.
+  let lastMessage = null;
+
   function message(text, kind = '') {
+    lastMessage = text ? { text, kind } : null;
     const target = card.querySelector('[data-auth-message]');
     if (!target) return;
     target.textContent = text;
@@ -545,6 +552,10 @@ async function boot() {
     status.dataset.authMessage = '';
     status.setAttribute('role', 'status');
     card.appendChild(status);
+    if (lastMessage) {
+      status.textContent = lastMessage.text;
+      status.dataset.kind = lastMessage.kind;
+    }
     restoreFocus?.();
   }
 
@@ -565,8 +576,15 @@ async function boot() {
     button.textContent = 'Finishing sign-in…';
     overflowButton.textContent = 'Finishing sign-in…';
   }
+  // `listExternalProviders()` resolves to null rather than rejecting, and its result
+  // has to land whether or not initialization succeeded: a failed PKCE exchange or an
+  // `error` callback opens this dialog, and that is exactly where the GitHub/Google
+  // buttons are needed to restart OAuth without a page reload.
+  const providerDiscovery = auth.listExternalProviders().then(providers => {
+    liveProviders = providers;
+    if (authInitialized) render();
+  });
   try {
-    const hostedProviders = auth.listExternalProviders();
     session = await auth.initialize();
     authInitialized = true;
     render();
@@ -593,7 +611,7 @@ async function boot() {
       }
       if (session && !resettingSession) startSync();
     }
-    liveProviders = await hostedProviders;
+    await providerDiscovery;
     render();
   } catch (error) {
     authInitialized = true;
