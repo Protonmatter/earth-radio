@@ -275,8 +275,8 @@
     },
     {
       "path": "site/assets/atlas-lock.css",
-      "bytes": 7911,
-      "sha256": "0689c3e5ae73f4d957567a82e723f4ca4cdbd0a4cc6f945d512c9205a579a915"
+      "bytes": 7582,
+      "sha256": "c828ba5c14adcec75e79904c71f859d157e77be8eb6965ea22df727b0b47825d"
     },
     {
       "path": "site/assets/atlas-lock.js",
@@ -430,8 +430,8 @@
     },
     {
       "path": "site/privacy.html",
-      "bytes": 3834,
-      "sha256": "6de5ebf5bacf350744c4e0af4e89396dca2821bdbd892fe2c1aa3ebba17e1fcd"
+      "bytes": 3744,
+      "sha256": "de92dd3cba7b657c07cb169871298a798033f4d527c503ceead1c732cddfa17e"
     },
     {
       "path": "site/sw.js",
