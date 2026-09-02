@@ -45,8 +45,8 @@
     },
     {
       "path": "docs/OPERATIONS.md",
-      "bytes": 6143,
-      "sha256": "29dd1991e48e57a7d95b925ba170da0a12056cc1d4c7ec4e7d45bad969df5c73"
+      "bytes": 6327,
+      "sha256": "248427583ac6a76bbc40880620fd82d409763ac8989dadd747673ebfc259ae05"
     },
     {
       "path": "docs/PROVENANCE.md",
@@ -280,8 +280,8 @@
     },
     {
       "path": "site/assets/atlas-lock.js",
-      "bytes": 5035,
-      "sha256": "01f8d54b41c4c7b400dd747b949bec0dbe3c615c91551a6bc548c3a6d2690e0e"
+      "bytes": 5488,
+      "sha256": "1b0f2d316c814683ec43e979fcbcf067e658a9a4babf071df9a384af7b347cd6"
     },
     {
       "path": "site/assets/auth-core.js",
@@ -670,8 +670,8 @@
     },
     {
       "path": "tests/atlas-lock.test.mjs",
-      "bytes": 5195,
-      "sha256": "18db0000a1acc476d80d9a972a2980b8d0e517f90a9af257cb70e490a89b6acc"
+      "bytes": 6703,
+      "sha256": "614a9e1207f5ea280218c246649c590d7484fb219968382a951e1ba435c9ae50"
     },
     {
       "path": "tests/auth-local-gotrue.test.mjs",

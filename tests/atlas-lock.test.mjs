@@ -76,6 +76,12 @@ test('both palette paths hand the runtime a theme that matches the basemap', asy
   assert.match(lock, /function pressRuntimeToggle\(\)/);
   assert.match(lock, /runtimeToggle\.click\(\)/);
   assert.match(lock, /function alignRuntimeTiles\(palette, landed\)/);
+  // Press until the runtime reports the palette rather than assuming a press count: the
+  // shipped bundle settles in one, src-recovered/core/theme.ts cycles three preferences
+  // and needs up to three, with a middle press that resolves to the same theme.
+  const align = lock.slice(lock.indexOf('function alignRuntimeTiles'), lock.indexOf('function selectPalette'));
+  assert.match(align, /for \(let press = 0; press < 3 && current !== wantedTheme; press \+= 1\)/);
+  assert.ok(!align.includes('next === current'), 'an unchanged press is still progress under the cycle');
   // Chip path: press, then reconcile whatever theme the runtime landed on.
   const select = lock.slice(lock.indexOf('function selectPalette'), lock.indexOf('function bindAtlasLock'));
   assert.match(select, /alignRuntimeTiles\(palette, pressRuntimeToggle\(\)\)/);
@@ -87,4 +93,18 @@ test('both palette paths hand the runtime a theme that matches the basemap', asy
   assert.ok(legacy.indexOf('alignRuntimeTiles(next, landed)') < legacy.indexOf('applyAtlasChrome(saveUiState({ palette: next }))'));
   // Our own presses must not re-enter the palette flip.
   assert.match(lock, /if \(drivingRuntimeTheme\) return;/);
+});
+
+test('the operations smoke checklist names the destinations the app actually has', async () => {
+  const operations = await readFile(path.join(root, 'docs', 'OPERATIONS.md'), 'utf8');
+  const html = await readFile(path.join(root, 'site', 'index.html'), 'utf8');
+  const nav = html.match(/<nav class="er-mobile-nav"[\s\S]*?<\/nav>/)[0];
+  const smoke = operations.slice(operations.indexOf('## Local smoke'), operations.indexOf('## Deploy'));
+  for (const label of ['Atlas', 'Browse', 'Kept', 'You']) {
+    assert.ok(nav.includes(label), `the mobile nav no longer offers ${label}`);
+    assert.ok(smoke.includes(label), `the smoke checklist omits the ${label} destination`);
+  }
+  // Search is a header action now, so the checklist must not send an operator hunting a tab.
+  assert.doesNotMatch(smoke, /Listen\/Search\/Map\/Saved/);
+  assert.ok(smoke.includes('palette'), 'the checklist must exercise the You palette controls');
 });

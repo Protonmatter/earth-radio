@@ -51,15 +51,23 @@ function pressRuntimeToggle() {
 /*
  * Bring the basemap to `palette`, given the theme the runtime last built tiles for.
  *
- * The runtime flips its own stored preference, which is resolved against the OS
- * `prefers-color-scheme` and can therefore disagree with our palette. One more press
- * settles it: with only two themes, flipping away from the wrong one lands on the
- * right one, leaving the tiles and the runtime preference both on `palette`.
+ * The runtime resolves its own stored preference against the OS `prefers-color-scheme`,
+ * so it can disagree with our palette. Press until it reports the palette rather than
+ * assuming a press count: the shipped bundle flips between the two resolved themes and
+ * settles in one, while `src-recovered/core/theme.ts` cycles system -> light -> dark and
+ * can take three, with a middle press that resolves to the same theme. That is why this
+ * must not treat an unchanged result as failure. Bounded so neither can spin; if the
+ * runtime never reaches the palette the chrome is still correct and only the tiles lag.
  */
 function alignRuntimeTiles(palette, landed) {
   if (landed === null) return;
-  if (landed === (palette === 'paper' ? 'light' : 'dark')) return;
-  pressRuntimeToggle();
+  const wantedTheme = palette === 'paper' ? 'light' : 'dark';
+  let current = landed;
+  for (let press = 0; press < 3 && current !== wantedTheme; press += 1) {
+    const next = pressRuntimeToggle();
+    if (next === null) return;
+    current = next;
+  }
 }
 
 function selectPalette(palette) {
