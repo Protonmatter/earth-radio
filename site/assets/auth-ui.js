@@ -22,8 +22,8 @@ const DEFAULT_LOCAL_DATA = Object.freeze({
 });
 
 const PROVIDERS = Object.freeze({
-  github: { label: 'GitHub' },
-  google: { label: 'Google' },
+  github: { label: 'GitHub', scopes: 'user:email' },
+  google: { label: 'Google', queryParams: { prompt: 'select_account' } },
   apple: { label: 'Apple' },
   azure: { label: 'Microsoft', scopes: 'email' }
 });
@@ -98,9 +98,10 @@ function el(tag, className, text) {
   return node;
 }
 
-function enabledProviders(config) {
+function enabledProviders(config, liveProviders) {
   return Object.entries(config.providers || {})
     .filter(([provider, enabled]) => enabled && PROVIDERS[provider])
+    .filter(([provider]) => liveProviders != null && liveProviders[provider] === true)
     .map(([provider]) => provider);
 }
 
@@ -195,6 +196,7 @@ async function boot() {
   let accountTransition = Promise.resolve();
   let authInitialized = false;
   let reloadTimer = null;
+  let liveProviders = null;
 
   function cancelReload() {
     if (reloadTimer) clearTimeout(reloadTimer);
@@ -208,6 +210,9 @@ async function boot() {
   const rail = document.querySelector('.header-right');
   if (rail) rail.insertBefore(button, rail.firstChild);
   else document.querySelector('.er-header-tools')?.appendChild(button);
+  // Static proxies for this button ship hidden so they never dead-click on a build
+  // where `boot()` returned above with authentication disabled.
+  for (const proxy of document.querySelectorAll('[data-click-id="er-auth-button"][hidden]')) proxy.hidden = false;
 
   const overflow = document.getElementById('er-overflow');
   const overflowButton = el('button', 'er-auth-overflow', 'Sign in');
@@ -226,11 +231,22 @@ async function boot() {
   document.body.appendChild(modal);
 
   function close() {
+    lastMessage = null;
     modal.hidden = true;
     button.focus();
   }
 
+  // The status line outlives a render: provider discovery can resolve after an
+  // initialization error has been shown, and rebuilding the card must not silently
+  // drop the reason the dialog opened. `close()` clears it so a reopened dialog is blank.
+  let lastMessage = null;
+  // A magic-link request in flight. beginPkce() replaces the whole flow store, so a second
+  // submit discards the first verifier and the first email link then fails to exchange.
+  // The disabled submit button has to survive a render for that to stay impossible.
+  let emailSubmitPending = false;
+
   function message(text, kind = '') {
+    lastMessage = text ? { text, kind } : null;
     const target = card.querySelector('[data-auth-message]');
     if (!target) return;
     target.textContent = text;
@@ -396,7 +412,10 @@ async function boot() {
     providerButton.addEventListener('click', async () => {
       message(`${action === 'link' ? 'Opening' : 'Continuing to'} ${definition.label}…`);
       try {
-        const options = definition.scopes ? { scopes: definition.scopes } : {};
+        const options = {
+          ...(definition.scopes ? { scopes: definition.scopes } : {}),
+          ...(definition.queryParams ? { queryParams: definition.queryParams } : {})
+        };
         if (action === 'link') await auth.linkIdentity(provider, options);
         else await auth.signInWithOAuth(provider, options);
       } catch (error) { message(error.message, 'error'); }
@@ -408,7 +427,21 @@ async function boot() {
     const label = session ? (user?.email || session.user?.email || 'Account') : 'Sign in';
     button.textContent = label;
     overflowButton.textContent = label;
+    // Provider discovery resolves long after the dialog can be opened, and its
+    // render() must not eat an address the user is midway through typing. Carry
+    // the email field's value, focus, and selection across the rebuild.
+    // Only while the dialog is on screen: opening it fresh should still start blank.
+    const previousEmail = modal.hidden ? null : card.querySelector('input[type="email"]');
+    const carriedEmail = previousEmail
+      ? {
+        value: previousEmail.value,
+        focused: document.activeElement === previousEmail,
+        selectionStart: previousEmail.selectionStart,
+        selectionEnd: previousEmail.selectionEnd
+      }
+      : null;
     card.replaceChildren();
+    let restoreFocus = null;
 
     const header = el('div', 'er-auth-heading');
     const title = el('h2', '', session ? 'Your Earth Radio account' : 'Sign in to Earth Radio');
@@ -423,7 +456,7 @@ async function boot() {
     if (!session) {
       card.appendChild(el('p', 'er-auth-copy', 'Sync favorites, recent stations, and preferences privately across devices.'));
       const providerList = el('div', 'er-auth-providers');
-      for (const provider of enabledProviders(config)) providerList.appendChild(providerButton(provider, 'signin'));
+      for (const provider of enabledProviders(config, liveProviders)) providerList.appendChild(providerButton(provider, 'signin'));
       card.appendChild(providerList);
 
       const divider = el('p', 'er-auth-divider', 'or use email');
@@ -438,23 +471,41 @@ async function boot() {
       input.setAttribute('aria-label', 'Email address');
       const submit = el('button', 'er-auth-primary', 'Email me a sign-in link');
       submit.type = 'submit';
+      submit.disabled = emailSubmitPending;
       form.append(input, submit);
       form.addEventListener('submit', async event => {
         event.preventDefault();
+        emailSubmitPending = true;
         submit.disabled = true;
         try {
           await auth.signInWithEmail(input.value);
           message('Check your email for a secure sign-in link.', 'success');
         } catch (error) { message(error.message, 'error'); }
-        finally { submit.disabled = false; }
+        finally {
+          emailSubmitPending = false;
+          // Provider discovery may have rebuilt the card while the request was in flight,
+          // which leaves `submit` detached; re-enable whichever button is mounted now.
+          const mounted = card.querySelector('.er-auth-email button[type="submit"]');
+          if (mounted) mounted.disabled = false;
+        }
       });
+      if (carriedEmail) {
+        input.value = carriedEmail.value;
+        if (carriedEmail.focused) {
+          restoreFocus = () => {
+            input.focus();
+            try { input.setSelectionRange(carriedEmail.selectionStart, carriedEmail.selectionEnd); }
+            catch { /* setSelectionRange is not supported on every email input. */ }
+          };
+        }
+      }
       card.appendChild(form);
     } else {
       card.appendChild(el('p', 'er-auth-copy', user?.email || session.user?.email || 'Signed in'));
       card.appendChild(el('p', 'er-auth-sync', syncStatus));
       const identities = new Set((user?.identities || session.user?.identities || []).map(identity => identity.provider));
       const identityList = el('div', 'er-auth-identities');
-      for (const provider of enabledProviders(config)) {
+      for (const provider of enabledProviders(config, liveProviders)) {
         if (identities.has(provider)) {
           identityList.appendChild(el('span', 'er-auth-linked', `${PROVIDERS[provider].label} linked`));
         } else {
@@ -513,6 +564,11 @@ async function boot() {
     status.dataset.authMessage = '';
     status.setAttribute('role', 'status');
     card.appendChild(status);
+    if (lastMessage) {
+      status.textContent = lastMessage.text;
+      status.dataset.kind = lastMessage.kind;
+    }
+    restoreFocus?.();
   }
 
   button.addEventListener('click', () => {
@@ -532,6 +588,14 @@ async function boot() {
     button.textContent = 'Finishing sign-in…';
     overflowButton.textContent = 'Finishing sign-in…';
   }
+  // `listExternalProviders()` resolves to null rather than rejecting, and its result
+  // has to land whether or not initialization succeeded: a failed PKCE exchange or an
+  // `error` callback opens this dialog, and that is exactly where the GitHub/Google
+  // buttons are needed to restart OAuth without a page reload.
+  const providerDiscovery = auth.listExternalProviders().then(providers => {
+    liveProviders = providers;
+    if (authInitialized) render();
+  });
   try {
     session = await auth.initialize();
     authInitialized = true;
@@ -559,6 +623,8 @@ async function boot() {
       }
       if (session && !resettingSession) startSync();
     }
+    await providerDiscovery;
+    render();
   } catch (error) {
     authInitialized = true;
     render();

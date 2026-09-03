@@ -11,6 +11,8 @@ import {
   shouldResetBrowserAccount, shouldResetLocalAccount, stableStringify
 } from '../site/assets/sync-core.js';
 
+const NEWLINE = String.fromCharCode(10);
+
 function memoryStorage() {
   const values = new Map();
   return {
@@ -173,6 +175,63 @@ test('OAuth redirects use the exact allowlisted origin root', async () => {
   assert.equal(redirect.href, 'https://earth-radio.example/');
   assert.equal(redirect.search, '');
   assert.equal(redirect.hash, '');
+});
+
+test('OAuth redirect_to cannot leave the page origin', async () => {
+  const storage = memoryStorage();
+  const assigned = [];
+  const client = createAuthClient({
+    url: 'https://project.supabase.co',
+    publishableKey: 'sb_publishable_test',
+    storage,
+    location: {
+      href: 'https://earth-radio.example/',
+      origin: 'https://earth-radio.example',
+      pathname: '/',
+      assign: url => assigned.push(url)
+    }
+  });
+
+  await client.signInWithOAuth('github', { redirectTo: 'https://evil.example/phish' });
+
+  const redirect = new URL(new URL(assigned[0]).searchParams.get('redirect_to'));
+  assert.equal(redirect.href, 'https://earth-radio.example/');
+});
+
+test('hosted provider settings report which OAuth providers GoTrue actually enables', async () => {
+  const storage = memoryStorage();
+  const client = createAuthClient({
+    url: 'https://project.supabase.co',
+    publishableKey: 'sb_publishable_test',
+    storage,
+    location: {
+      href: 'https://earth-radio.example/',
+      origin: 'https://earth-radio.example',
+      pathname: '/'
+    },
+    fetchImpl: async url => {
+      assert.match(String(url), /\/auth\/v1\/settings$/);
+      return jsonResponse({ external: { github: true, google: false, apple: false } });
+    }
+  });
+
+  const hosted = await client.listExternalProviders();
+  assert.equal(hosted.github, true);
+  assert.equal(hosted.google, false);
+});
+
+test('GitHub asks for the private email scope and Google is a first-class provider', async () => {
+  const root = path.resolve(import.meta.dirname, '..');
+  const source = await readFile(path.join(root, 'site', 'assets', 'auth-ui.js'), 'utf8');
+  const config = await readFile(path.join(root, 'site', 'config.js'), 'utf8');
+  assert.match(source, /github:\s*\{\s*label:\s*'GitHub',\s*scopes:\s*'user:email'/);
+  assert.match(source, /google:\s*\{\s*label:\s*'Google'/);
+  assert.match(source, /queryParams:\s*definition\.queryParams/);
+  assert.match(source, /listExternalProviders\(\)/);
+  assert.match(source, /liveProviders\[provider\] === true/);
+  assert.doesNotMatch(source, /liveProviders == null \|\|/);
+  assert.match(source, /liveProviders != null && liveProviders\[provider\] === true/);
+  assert.match(config, /google:\s*true/);
 });
 
 test('OAuth callback exchanges the code, persists the session, and cleans the URL', async () => {
@@ -915,6 +974,48 @@ test('authenticated boot verifies IndexedDB and keeps sync running after transie
   assert.match(bootTail, /try \{ await refreshUser\(\); \}[\s\S]*if \(session && !resettingSession\) startSync\(\)/);
 });
 
+test('boot applies hosted providers only after account isolation and never admits them while unknown', async () => {
+  const root = path.resolve(import.meta.dirname, '..');
+  const source = await readFile(path.join(root, 'site', 'assets', 'auth-ui.js'), 'utf8');
+  const enabled = source.slice(source.indexOf('function enabledProviders'), source.indexOf('function syncStateKey'));
+  assert.doesNotMatch(enabled, /liveProviders == null \|\|/);
+  assert.match(enabled, /liveProviders != null && liveProviders\[provider\] === true/);
+  // Discovery is started before the initialization block so it is already in flight,
+  // but nothing awaits it until the account namespace has been switched.
+  const boot = source.slice(source.indexOf('async function boot()'));
+  const discoveryIdx = boot.indexOf('const providerDiscovery = auth.listExternalProviders()');
+  assert.ok(discoveryIdx >= 0, 'provider discovery promise is missing');
+  assert.ok(boot.slice(discoveryIdx).includes(NEWLINE + '  try {'), 'discovery must start before the try block');
+  const bootTail = boot.slice(boot.indexOf('session = await auth.initialize()'));
+  const accountTransitionIdx = bootTail.indexOf('await accountTransition');
+  const switchIdx = bootTail.indexOf('await switchLocalAccount(previousUserId, nextUserId)');
+  const liveIdx = bootTail.indexOf('await providerDiscovery');
+  assert.ok(accountTransitionIdx >= 0);
+  assert.ok(switchIdx > accountTransitionIdx);
+  assert.ok(liveIdx > switchIdx);
+  assert.doesNotMatch(bootTail.slice(0, switchIdx), /await providerDiscovery|await auth\.listExternalProviders/);
+});
+
+test('provider discovery is applied even when authentication initialization fails', async () => {
+  const root = path.resolve(import.meta.dirname, '..');
+  const source = await readFile(path.join(root, 'site', 'assets', 'auth-ui.js'), 'utf8');
+  const boot = source.slice(source.indexOf('async function boot()'));
+  // The assignment lives in the discovery continuation rather than the success path, so an
+  // `error` callback or a failed PKCE exchange still paints the buttons needed to retry.
+  const start = boot.indexOf('const providerDiscovery = auth.listExternalProviders()');
+  const continuation = boot.slice(start, boot.indexOf(NEWLINE + '  try {', start));
+  assert.ok(continuation.includes('liveProviders = providers;'), 'discovery must assign liveProviders itself');
+  assert.ok(continuation.includes('if (authInitialized) render();'), 'a landed discovery must repaint the card');
+  const catchBody = boot.slice(boot.indexOf('} catch (error) {'));
+  assert.ok(catchBody.includes("message(error.message, 'error')"));
+  // That repaint must not swallow the reason the dialog opened.
+  const messageBody = source.slice(source.indexOf('function message(text'), source.indexOf('async function resetSignedOutSession'));
+  assert.ok(messageBody.includes('lastMessage = text ? { text, kind } : null;'));
+  assert.ok(source.includes('if (lastMessage) {'), 'render() must restore the status line');
+  const closeBody = source.slice(source.indexOf('function close() {'), source.indexOf('function message(text'));
+  assert.ok(closeBody.includes('lastMessage = null;'), 'closing the dialog must clear the status line');
+});
+
 test('downloads during the reload cooldown schedule a later reload', async () => {
   const root = path.resolve(import.meta.dirname, '..');
   const source = await readFile(path.join(root, 'site', 'assets', 'auth-ui.js'), 'utf8');
@@ -1128,4 +1229,21 @@ test('production auth excludes Cloudflare preview origins', async () => {
   assert.doesNotMatch(supabaseConfig, /earth-radio\.pages\.dev\/\*\*/);
   assert.match(supabaseConfig, /enable_manual_linking = true/);
   assert.match(supabaseConfig, /enable_confirmations = true/);
+});
+
+test('a magic-link request in flight keeps its submit disabled across a render', async () => {
+  const root = path.resolve(import.meta.dirname, '..');
+  const source = await readFile(path.join(root, 'site', 'assets', 'auth-ui.js'), 'utf8');
+  // beginPkce() replaces the whole flow store, so a second submit discards the first
+  // verifier and the first email link can no longer be exchanged.
+  const core = await readFile(path.join(root, 'site', 'assets', 'auth-core.js'), 'utf8');
+  const begin = core.slice(core.indexOf('async function beginPkce()'), core.indexOf('function allowlistedRedirect'));
+  assert.ok(begin.includes('persistFlows({'), 'beginPkce still replaces the stored flows');
+  assert.ok(source.includes('let emailSubmitPending = false;'));
+  assert.ok(source.includes('submit.disabled = emailSubmitPending;'), 'a rebuilt form must inherit the pending state');
+  const submitHandler = source.slice(source.indexOf("form.addEventListener('submit'"), source.indexOf('card.appendChild(form);'));
+  assert.ok(submitHandler.includes('emailSubmitPending = true;'));
+  assert.ok(submitHandler.includes('emailSubmitPending = false;'));
+  // `submit` may be detached by then, so the mounted button is the one to re-enable.
+  assert.ok(submitHandler.includes("card.querySelector('.er-auth-email button[type=\"submit\"]')"));
 });

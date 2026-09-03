@@ -65,11 +65,23 @@ All providers use this callback URL:
 
 `https://ueomkorngpgvthqioqns.supabase.co/auth/v1/callback`
 
-GitHub is registered and enabled. Google, Apple, and Microsoft remain disabled in both
-Supabase and `site/config.js` until their provider-side credentials are registered. Provider
-secrets belong only in the Supabase dashboard. Enable each provider in `site/config.js` only
-after a complete sign-in and account-linking smoke test. Local `config.toml` keeps every
-external provider disabled so CI never needs those secrets.
+GitHub is registered and enabled. The browser requests the `user:email` scope so private
+GitHub emails still populate the account dialog.
+
+Google is registered and enabled as well: `/auth/v1/settings` reports `google: true`, which
+the hosted project returns only once the provider page holds a client ID and secret. The
+account overlay reads that endpoint and paints a Continue with Google button only when the
+hosted provider is actually on, so enabling it in `site/config.js` alone is not enough. The
+client behind it is a Google Cloud OAuth Web application with authorized JavaScript origin
+`https://earth-radio.pages.dev` and the callback URL above as its redirect URI; keep those
+two values in step with the deployment if either ever moves. Note that a Google app left in
+Testing admits only its listed test users, which is a publishing-status setting on the Google
+Cloud consent screen rather than anything Supabase or this repository controls.
+
+Apple and Microsoft remain disabled until
+their provider-side credentials are registered. Provider secrets belong only in the
+Supabase dashboard. Local `config.toml` keeps every external provider disabled so CI never
+needs those secrets.
 
 Manual identity linking is enabled. A signed-in user can link another enabled provider from
 the account dialog. Do not automatically link identities based solely on an unverified email.

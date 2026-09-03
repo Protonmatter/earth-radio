@@ -17,6 +17,7 @@ test('desktop Sign in sits at the top of the left rail', async ({ page }) => {
   await signIn.click();
   await expect(page.locator('.er-auth-modal')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Continue with GitHub' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Continue with Google' })).toBeVisible();
 });
 
 test('narrow viewports keep Sign in in the overflow sheet', async ({ page }) => {

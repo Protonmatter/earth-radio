@@ -13,10 +13,11 @@ export default {
   'status.skipping': 'Emisora no disponible — intentando {name}…',
   'status.imported': 'Datos de usuario importados',
 
-  'nav.listen': 'Escuchar',
+  'nav.listen': 'Explorar',
   'nav.search': 'Buscar',
-  'nav.map': 'Mapa',
-  'nav.saved': 'Guardado',
+  'nav.map': 'Atlas',
+  'nav.saved': 'Guardadas',
+  'nav.you': 'Tú',
   'nav.label': 'Destinos principales',
 
   'header.search': 'Buscar emisoras',
@@ -31,10 +32,11 @@ export default {
   'header.theme': 'Cambiar tema',
   'header.settings': 'Ajustes',
 
-  'dest.listen': 'Escuchar',
+  'dest.listen': 'Explorar',
   'dest.search': 'Buscar',
-  'dest.map': 'Mapa',
-  'dest.saved': 'Guardado',
+  'dest.map': 'Atlas',
+  'dest.saved': 'Guardadas',
+  'dest.you': 'Tú',
 
   'listen.intro': 'Escucha alrededor del mundo.',
   'listen.continueEyebrow': 'Continuar',
@@ -66,9 +68,9 @@ export default {
   'saved.emptyRecent': 'Aún no hay emisoras reproducidas recientemente.',
   'saved.backToListen': 'Explorar emisoras',
 
-  'search.placeholder': 'Busca emisoras, países, etiquetas…',
+  'search.placeholder': 'País, ciudad o emisora',
   'search.stationLabel': 'Emisora',
-  'search.stationPlaceholder': 'Buscar emisoras y etiquetas…',
+  'search.stationPlaceholder': 'País o emisora',
   'search.countryLabel': 'País',
   'search.countryPlaceholder': 'Todos los países',
   'search.allCountries': 'Todos los países',
@@ -198,6 +200,14 @@ export default {
   'settings.cancel': 'Cancelar',
   'settings.save': 'Guardar',
   'settings.close': 'Cerrar ajustes',
+
+  'you.title': 'Tú',
+  'you.palette': 'Paleta',
+  'you.night': 'Noche',
+  'you.paper': 'Papel',
+  'you.glass': 'Cristal en el registro',
+  'you.glassHelp': 'El hielo solo cubre la lista, no el sintonizador.',
+  'you.account': 'Cuenta',
 
   'pwa.updateAvailable': 'Hay una versión más reciente de Earth Radio. Recarga para actualizar.',
   'pwa.offlineShell': 'Estás sin conexión. El envoltorio guardado está disponible; el catálogo y el audio en vivo pueden no estarlo.',

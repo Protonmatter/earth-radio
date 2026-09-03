@@ -64,6 +64,18 @@ test.describe('directory and playback selection', () => {
     await expect(favorite).toHaveAttribute('aria-pressed', initial ?? 'false');
   });
 
+  test('Saved destination applies the recovered favorites filter', async ({ page }) => {
+    await setupApp(page);
+    await page.setViewportSize({ width: 390, height: 844 });
+    await expect(page.locator('html')).toHaveClass(/er-mobile/);
+    const savedTab = page.locator('.er-mobile-nav [data-er-dest="saved"]');
+    await expect(savedTab).toBeVisible();
+    await savedTab.click();
+    await expect(page.locator('html')).toHaveAttribute('data-er-dest', 'saved');
+    await expect(page.locator('button[data-er-saved="favorites"]')).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.locator('#grid-title')).toHaveText(/favorites/i);
+  });
+
   test('play/pause toggled repeatedly stays consistent', async ({ page }) => {
     await setupApp(page);
     await playFromList(page, 'E2E Berlin Techno');

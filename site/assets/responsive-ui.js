@@ -31,7 +31,7 @@ export const MIN_LIST_PX = 340;
 export const MIN_MAP_PX = 360;
 export const MOBILE_MAX = 767;
 export const TABLET_MAX = 1099;
-export const DESTINATIONS = Object.freeze(['listen', 'search', 'map', 'saved']);
+export const DESTINATIONS = Object.freeze(['listen', 'search', 'map', 'saved', 'you']);
 
 /** Column gap used by the recovered virtual list (`gap: 12`). */
 export const GRID_GAP_PX = 12;
@@ -192,7 +192,9 @@ export function sanitizeUiState(raw, viewportWidth = 1440) {
     collapsed: src.collapsed === 'map' || src.collapsed === 'list' ? src.collapsed : null,
     split: clampSplitPercent(src.split, Number(src.viewportWidth) || viewportWidth),
     locale: normalizeLocale(src.locale),
-    localeExplicit
+    localeExplicit,
+    glassLog: src.glassLog === true,
+    palette: src.palette === 'paper' ? 'paper' : 'night'
   };
 }
 
@@ -435,7 +437,22 @@ function applyLocale(locale) {
 
 function syncThemeColor() {
   const meta = document.querySelector('meta[name="theme-color"]');
-  if (meta) meta.content = document.documentElement.dataset.theme === 'dark' ? '#171626' : '#25243D';
+  if (meta) meta.content = document.documentElement.dataset.theme === 'dark' ? '#12110e' : '#f4efe4';
+}
+
+/*
+ * Keep the inline `color-scheme` on the locked palette.
+ *
+ * The recovered runtime writes `documentElement.style.colorScheme` next to its own theme
+ * and resolves a `system` preference against the OS, so it can land opposite the Night/Paper
+ * pair. That inline value outranks the stylesheet for native controls and scrollbars, and
+ * nothing else here reconciles it. Written only on a difference so the observer that watches
+ * `style` cannot loop on our own write.
+ */
+function syncColorScheme(theme) {
+  if (document.documentElement.style.colorScheme !== theme) {
+    document.documentElement.style.colorScheme = theme;
+  }
 }
 
 export function resolveThemePreference(preference, systemDark = false) {
@@ -444,83 +461,20 @@ export function resolveThemePreference(preference, systemDark = false) {
   return systemDark ? 'dark' : 'light';
 }
 
-// The runtime's authoritative preference store is IndexedDB (kv/prefs); the legacy
-// localStorage key only serves migrated-from profiles and the synchronous first
-// paint. Policing data-theme from the legacy key alone overwrote the user's saved
-// choice on any profile where that key is absent or stale.
-let themePreference = null;
-let themePreferenceHydration = null;
-
-function hydrateThemePreference() {
-  if (themePreferenceHydration) return themePreferenceHydration;
-  themePreferenceHydration = new Promise(resolve => {
-    if (!globalThis.indexedDB) {
-      resolve(null);
-      return;
-    }
-    let request;
-    try {
-      request = globalThis.indexedDB.open('earthRadio', 1);
-    } catch {
-      resolve(null);
-      return;
-    }
-    request.onerror = () => resolve(null);
-    request.onupgradeneeded = () => {
-      request.transaction?.abort();
-      resolve(null);
-    };
-    request.onsuccess = () => {
-      const database = request.result;
-      if (!database.objectStoreNames.contains('kv')) {
-        database.close();
-        resolve(null);
-        return;
-      }
-      const transaction = database.transaction('kv', 'readonly');
-      const get = transaction.objectStore('kv').get('prefs');
-      get.onerror = () => resolve(null);
-      get.onsuccess = () => {
-        const theme = get.result?.theme;
-        resolve(['system', 'light', 'dark'].includes(theme) ? theme : null);
-      };
-      transaction.oncomplete = () => database.close();
-      transaction.onabort = () => database.close();
-    };
-  }).then(preference => {
-    themePreferenceHydration = null;
-    if (preference) themePreference = preference;
-    return preference;
-  });
-  return themePreferenceHydration;
-}
-
 function readStoredTheme() {
-  let preference = themePreference;
-  if (!preference) {
-    preference = 'system';
-    try {
-      const preferences = JSON.parse(globalThis.localStorage?.getItem('earthRadio.preferences.v1') || 'null');
-      if (['system', 'light', 'dark'].includes(preferences?.theme)) preference = preferences.theme;
-    } catch {
-      /* Invalid recovered preferences safely fall back to the system palette. */
-    }
-  }
-  return resolveThemePreference(preference, Boolean(globalThis.matchMedia?.('(prefers-color-scheme: dark)')?.matches));
+  // Night / Paper on You is the locked pair. IndexedDB still stores the recovered
+  // system/light/dark preference, but it must not reopen a third palette.
+  return loadUiState().palette === 'paper' ? 'light' : 'dark';
 }
 
 function restoreStoredTheme() {
+  const state = loadUiState();
   const theme = readStoredTheme();
   document.documentElement.dataset.theme = theme;
+  document.documentElement.dataset.erPalette = state.palette;
+  document.documentElement.classList.toggle('er-glass-log', state.glassLog === true);
+  syncColorScheme(theme);
   syncThemeColor();
-  void hydrateThemePreference().then(preference => {
-    if (!preference) return;
-    const fresh = readStoredTheme();
-    if (document.documentElement.dataset.theme !== fresh) {
-      document.documentElement.dataset.theme = fresh;
-      syncThemeColor();
-    }
-  });
 }
 
 let previewLocale = null;
@@ -574,23 +528,16 @@ function guardDocumentLocale() {
       document.documentElement.style.setProperty('--er-font', FONT_PROFILES[wanted]);
     }
     const wantedTheme = readStoredTheme();
+    syncColorScheme(wantedTheme);
     if (document.documentElement.dataset.theme !== wantedTheme) {
-      // The runtime may have just persisted a different choice; re-read the
-      // authoritative store before enforcing rather than stomping a fresh save
-      // with a stale or legacy value.
-      themePreference = null;
-      void hydrateThemePreference().then(() => {
-        const fresh = readStoredTheme();
-        if (document.documentElement.dataset.theme !== fresh) {
-          document.documentElement.dataset.theme = fresh;
-        }
-        syncThemeColor();
-      });
+      document.documentElement.dataset.theme = wantedTheme;
+      document.documentElement.dataset.erPalette = loadUiState().palette;
+      syncThemeColor();
       return;
     }
     syncThemeColor();
   });
-  observer.observe(document.documentElement, { attributes: true, attributeFilter: ['lang', 'dir', 'data-font-profile', 'data-theme'] });
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ['lang', 'dir', 'data-font-profile', 'data-theme', 'style'] });
   globalThis.matchMedia?.('(prefers-color-scheme: dark)')?.addEventListener?.('change', () => restoreStoredTheme());
   syncThemeColor();
 }
@@ -748,7 +695,7 @@ function applyViewport(state) {
     }
     button.classList.toggle('is-active', active);
   }
-  for (const button of document.querySelectorAll('[data-er-saved]')) {
+  for (const button of document.querySelectorAll('button[data-er-saved]')) {
     button.setAttribute('aria-pressed', String(button.getAttribute('data-er-saved') === state.savedSegment));
   }
 
@@ -771,6 +718,7 @@ function applyWorkspace(state, mode) {
   const map = byId('map-panel');
   const separator = byId('er-separator');
   const restore = byId('er-restore-panel');
+  const you = byId('er-you');
   if (!list || !map) return;
 
   const showRestore = target => {
@@ -784,13 +732,28 @@ function applyWorkspace(state, mode) {
     restore.textContent = t(key);
   };
 
+  const hideSeparator = () => {
+    if (!separator) return;
+    separator.hidden = true;
+    separator.setAttribute('aria-hidden', 'true');
+  };
+
+  if (state.destination === 'you') {
+    list.hidden = true;
+    map.hidden = true;
+    if (you) you.hidden = false;
+    hideSeparator();
+    showRestore(null);
+    presentSearch(false);
+    return;
+  }
+
+  if (you) you.hidden = true;
+
   if (mode === 'mobile') {
     list.hidden = state.destination === 'map' || state.destination === 'search';
     map.hidden = state.destination !== 'map';
-    if (separator) {
-      separator.hidden = true;
-      separator.setAttribute('aria-hidden', 'true');
-    }
+    hideSeparator();
     showRestore(null);
     presentSearch(state.destination === 'search');
     return;
@@ -1272,18 +1235,54 @@ function focusProxySurface(targetId) {
  * Destinations
  * ------------------------------------------------------------------ */
 
+const STATIONS_LOAD_SETTLED = 'earthradio:stations-load-settled';
+let stationsLoadSettled = false;
+const stationsLoadSettledWaiters = [];
+
+function markStationsLoadSettled() {
+  if (stationsLoadSettled) return;
+  stationsLoadSettled = true;
+  while (stationsLoadSettledWaiters.length) stationsLoadSettledWaiters.shift()();
+}
+
+function whenStationsLoadSettled(task) {
+  if (stationsLoadSettled) {
+    task();
+    return;
+  }
+  stationsLoadSettledWaiters.push(task);
+}
+
+if (typeof window !== 'undefined') {
+  window.addEventListener(STATIONS_LOAD_SETTLED, markStationsLoadSettled);
+}
+
+function runtimeToggleIsOn(element) {
+  return Boolean(
+    element?.classList.contains('header-btn--active')
+    || element?.getAttribute('aria-pressed') === 'true'
+  );
+}
+
+function releaseSavedRuntimeToggles() {
+  const recent = byId('recent-toggle');
+  const favorites = byId('favorites-toggle');
+  if (runtimeToggleIsOn(recent)) recent.click();
+  if (runtimeToggleIsOn(favorites)) favorites.click();
+}
+
 function setDestination(destination, explicit = false) {
   const next = saveUiState({ destination });
-  if (destination === 'saved') applySavedSegment(next.savedSegment);
-  if (destination === 'listen') {
-    // Listen is the unfiltered feed: release the Saved segment toggles.
-    const recent = byId('recent-toggle');
-    const favorites = byId('favorites-toggle');
-    const isOn = element => element?.classList.contains('header-btn--active')
-      || element?.getAttribute('aria-pressed') === 'true';
-    if (isOn(recent)) recent.click();
-    if (isOn(favorites)) favorites.click();
-  }
+  whenStationsLoadSettled(() => {
+    // A waiter queued before the stations settled must not resurrect its own
+    // destination once the user has navigated on: `applySavedSegment()` persists
+    // `destination: 'saved'`, so a stale Saved waiter would drag Atlas/Browse/You
+    // back to Saved. Only the waiter whose destination is still current may act.
+    if (loadUiState().destination !== destination) return;
+    if (destination === 'saved') applySavedSegment(next.savedSegment);
+    if (destination === 'listen') releaseSavedRuntimeToggles();
+    applyViewport(loadUiState());
+  });
   applyViewport(next);
   setOverflowOpen(false);
   if (destination === 'search' && explicit) presentSearch(true, true);
@@ -1301,16 +1300,14 @@ function applySavedSegment(segment) {
   const wanted = segment === 'recent' ? 'recent' : 'favorites';
   const recent = byId('recent-toggle');
   const favorites = byId('favorites-toggle');
-  const isOn = element => element?.classList.contains('header-btn--active')
-    || element?.getAttribute('aria-pressed') === 'true';
   if (wanted === 'recent') {
-    if (isOn(favorites)) favorites?.click();
-    if (!isOn(recent)) recent?.click();
+    if (runtimeToggleIsOn(favorites)) favorites?.click();
+    if (!runtimeToggleIsOn(recent)) recent?.click();
   } else {
-    if (isOn(recent)) recent?.click();
-    if (!isOn(favorites)) favorites?.click();
+    if (runtimeToggleIsOn(recent)) recent?.click();
+    if (!runtimeToggleIsOn(favorites)) favorites?.click();
   }
-  saveUiState({ savedSegment: wanted, destination: 'saved' });
+  applyViewport(saveUiState({ savedSegment: wanted, destination: 'saved' }));
 }
 
 /* ------------------------------------------------------------------ *
@@ -1476,6 +1473,10 @@ function bindActions() {
     if (dest) {
       event.preventDefault();
       const destination = dest.getAttribute('data-er-dest');
+      if (destination === 'you' && loadUiState().destination === 'you' && classifyViewport() !== 'mobile') {
+        setDestination('listen', true);
+        return;
+      }
       if (document.documentElement.classList.contains('er-nowplaying-open')) {
         if (parseNowPlayingHistory(history.state)) {
           pendingNowPlayingDestination = destination;
@@ -1493,7 +1494,13 @@ function bindActions() {
       event.preventDefault();
       const segment = saved.getAttribute('data-er-saved');
       saveUiState({ destination: 'saved', savedSegment: segment });
-      applySavedSegment(segment);
+      // Same guard as the other stations-settled waiters: applySavedSegment() persists
+      // destination 'saved', so a segment picked before the load settled must not pull a
+      // later Atlas/Browse/You navigation back to Kept.
+      whenStationsLoadSettled(() => {
+        if (loadUiState().destination !== 'saved') return;
+        applySavedSegment(segment);
+      });
       applyViewport(loadUiState());
       return;
     }
@@ -1794,6 +1801,16 @@ function start() {
   restoreStoredTheme();
   applyLocale(state.locale);
   guardDocumentLocale();
+  // setupHeaderEvents() runs only after hydrateStorage(); clicks before
+  // earthradio:stations-load-settled select Saved chrome without filtering.
+  whenStationsLoadSettled(() => {
+    // Same rule as the waiters setDestination() queues: a navigation made before the
+    // stations settled outranks the destination this boot restored, and letting a stale
+    // Saved waiter through would re-persist Saved and make the newer waiter stand down.
+    if (loadUiState().destination !== state.destination) return;
+    if (state.destination === 'saved') applySavedSegment(state.savedSegment);
+    applyViewport(loadUiState());
+  });
   applyViewport(loadUiState());
   bindActions();
   bindSeparator();
@@ -1803,6 +1820,7 @@ function start() {
   // matches against that snapshot, so it must be re-read or newly loaded stations
   // stay hidden from an already-typed query until the listener edits it.
   window.addEventListener('earthradio:stations-load-settled', () => {
+    markStationsLoadSettled();
     runtimeSearchStations = null;
     runtimeSearchStationsPromise = null;
     void readRuntimeSearchStations().then(() => applySearchScope());

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="theme-color" content="#25243D" />
+  <meta name="theme-color" content="#12110e" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="mobile-web-app-capable" content="yes" />
@@ -23,7 +23,9 @@
   <link rel="stylesheet" crossorigin href="./assets/index-CSoL7F-Y.css">
   <link rel="stylesheet" href="./assets/responsive-ui.css" />
   <script type="module" src="./assets/responsive-ui.js"></script>
+  <script type="module" src="./assets/atlas-lock.js"></script>
   <link rel="stylesheet" href="./assets/ui-refresh.css" />
+  <link rel="stylesheet" href="./assets/atlas-lock.css" />
 </head>
 <body>
   <a class="er-skip" href="#grid-panel" data-i18n="app.skip">Skip to station list</a>
@@ -35,8 +37,8 @@
       <span class="status-line" id="status-line">Initializing...</span>
     </div>
     <div class="er-header-tools">
-      <button class="er-icon-btn er-tablet-only" type="button" data-er-dest="listen" data-i18n="nav.listen">Listen</button>
-      <button class="er-icon-btn er-tablet-only" type="button" data-er-dest="map" data-i18n="nav.map">Map</button>
+      <button class="er-icon-btn er-tablet-only" type="button" data-er-dest="listen" data-i18n="nav.listen">Browse</button>
+      <button class="er-icon-btn er-tablet-only" type="button" data-er-dest="map" data-i18n="nav.map">Atlas</button>
       <button class="er-icon-btn" type="button" data-er-open-search data-i18n="header.search" data-i18n-attr="aria-label" aria-label="Search stations"><span class="er-icon er-icon-search" aria-hidden="true"></span></button>
       <button class="er-icon-btn" id="er-overflow-toggle" type="button" data-er-overflow data-i18n="header.overflow" data-i18n-attr="aria-label" aria-label="More actions" aria-controls="er-overflow" aria-expanded="false"><span class="er-icon er-icon-more" aria-hidden="true"></span></button>
       <button id="er-restore-panel" class="er-collapse" type="button" hidden data-er-collapse="map" data-i18n="desktop.restoreMap">Show map</button>
@@ -55,6 +57,7 @@
       <input id="import-data-input" type="file" accept="application/json,.json" hidden aria-hidden="true" />
       <button class="header-btn header-btn--icon" id="theme-toggle" type="button" data-i18n="header.theme" data-i18n-attr="aria-label" aria-label="Toggle theme"></button>
       <button class="header-btn header-btn--icon" id="settings-toggle" type="button" data-i18n="header.settings" data-i18n-attr="aria-label" aria-label="Settings"></button>
+      <button class="header-btn" type="button" data-er-dest="you" data-i18n="nav.you">You</button>
       <span class="kbd-hint" aria-hidden="true"><kbd>&#8984;</kbd><kbd>K</kbd></span>
     </div>
   </header>
@@ -69,6 +72,7 @@
     <button type="button" data-click-id="import-data" data-i18n="header.import">Import</button>
     <button type="button" data-click-id="export-data" data-i18n="header.export">Export</button>
     <button type="button" data-click-id="settings-toggle" data-i18n="header.settings">Settings</button>
+    <button type="button" data-er-dest="you" data-i18n="nav.you">You</button>
   </div>
 
   <main class="main" data-i18n="a11y.workspace" data-i18n-attr="aria-label" aria-label="Station workspace">
@@ -135,6 +139,28 @@
     </section>
   </main>
 
+  <section id="er-you" class="er-you" hidden>
+    <h2 data-i18n="you.title">You</h2>
+    <div class="er-you-block">
+      <p class="er-you-label" data-i18n="you.palette">Palette</p>
+      <div class="er-you-palettes" role="group" data-i18n="you.palette" data-i18n-attr="aria-label">
+        <button type="button" data-er-palette="night" data-i18n="you.night">Night</button>
+        <button type="button" data-er-palette="paper" data-i18n="you.paper">Paper</button>
+      </div>
+    </div>
+    <label class="er-you-glass">
+      <input type="checkbox" id="er-glass-log" />
+      <span>
+        <strong data-i18n="you.glass">Glass on the log</strong>
+        <em data-i18n="you.glassHelp">Frost only the station list, not the tuner.</em>
+      </span>
+    </label>
+    <!-- Proxy for the account dialog. `auth-ui.js` unhides it once it has actually created
+         `#er-auth-button`; on the desktop build, local development, and any origin where
+         `config.js` disables authentication there is nothing to click, so it stays hidden. -->
+    <button type="button" class="er-you-account" data-click-id="er-auth-button" data-i18n="you.account" hidden>Account</button>
+  </section>
+
   <footer class="player-bar" id="player-bar" data-i18n="player.label" data-i18n-attr="aria-label" aria-label="Audio player">
     <span class="player-eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
     <button class="player-info" id="er-open-nowplaying" type="button" data-i18n="player.openNowPlaying" data-i18n-attr="aria-label">
@@ -165,10 +191,10 @@
   </footer>
 
   <nav class="er-mobile-nav" data-i18n="nav.label" data-i18n-attr="aria-label" aria-label="Primary destinations">
-    <button type="button" data-er-dest="listen" data-i18n="nav.listen">Listen</button>
-    <button type="button" data-er-dest="search" data-i18n="nav.search">Search</button>
-    <button type="button" data-er-dest="map" data-i18n="nav.map">Map</button>
-    <button type="button" data-er-dest="saved" data-i18n="nav.saved">Saved</button>
+    <button type="button" data-er-dest="map" data-i18n="nav.map">Atlas</button>
+    <button type="button" data-er-dest="listen" data-i18n="nav.listen">Browse</button>
+    <button type="button" data-er-dest="saved" data-i18n="nav.saved">Kept</button>
+    <button type="button" data-er-dest="you" data-i18n="nav.you">You</button>
   </nav>
 
   <section id="er-nowplaying" class="er-nowplaying" hidden>
@@ -204,9 +230,6 @@
     <div class="search-backdrop"></div>
     <div class="search-container">
       <h2 class="sr-only" id="search-title" data-i18n="search.title">Search stations</h2>
-      <label class="sr-only" for="er-station-query" data-i18n="search.stationLabel">Station</label>
-      <input type="search" class="search-input er-station-query" id="er-station-query" placeholder="Search stations, tags…" data-i18n-placeholder="search.stationPlaceholder" autocomplete="off" spellcheck="false" aria-controls="search-results" />
-      <input type="text" class="er-search-engine" id="search-input" tabindex="-1" autocomplete="off" spellcheck="false" aria-hidden="true" />
       <div class="er-country-picker">
         <label class="er-country-label" for="er-country-query" data-i18n="search.countryLabel">Country</label>
         <div class="er-country-control">
@@ -215,6 +238,9 @@
         </div>
         <div id="er-country-options" class="er-country-options" role="listbox" data-i18n="search.countryLabel" data-i18n-attr="aria-label" aria-label="Country" hidden></div>
       </div>
+      <label class="sr-only" for="er-station-query" data-i18n="search.stationLabel">Station</label>
+      <input type="search" class="search-input er-station-query" id="er-station-query" placeholder="Country or station" data-i18n-placeholder="search.stationPlaceholder" autocomplete="off" spellcheck="false" aria-controls="search-results" />
+      <input type="text" class="er-search-engine" id="search-input" tabindex="-1" autocomplete="off" spellcheck="false" aria-hidden="true" />
       <p id="er-country-summary" class="er-country-summary" aria-live="polite"></p>
       <div class="search-results" id="search-results" role="listbox" aria-label="Station search results"></div>
       <div class="search-footer">

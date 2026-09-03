@@ -27,7 +27,7 @@ window.RADIO_CONFIG = window.RADIO_CONFIG || {
     publishableKey: 'sb_publishable_5oaWYxR0LVs4UHplfnaP6g_ArQQSBa0',
     providers: {
       github: true,
-      google: false,
+      google: true,
       apple: false,
       azure: false
     },

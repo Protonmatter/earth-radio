@@ -285,11 +285,14 @@ export function createAuthClient({
   }
 
   function allowlistedRedirect(target) {
-    const redirect = new URL(target);
-    redirect.search = '';
-    redirect.hash = '';
-    if (!redirect.pathname) redirect.pathname = '/';
-    return redirect.href;
+    const originRoot = `${location.origin}/`;
+    try {
+      const redirect = new URL(target, location.origin);
+      if (redirect.origin !== location.origin) return originRoot;
+    } catch {
+      return originRoot;
+    }
+    return originRoot;
   }
 
   function redirectTarget() {
@@ -352,6 +355,16 @@ export function createAuthClient({
     },
 
     async getSession() { return freshSession(); },
+
+    async listExternalProviders() {
+      try {
+        const settings = await request(`${authUrl}/settings`);
+        if (!settings?.external || typeof settings.external !== 'object') return null;
+        return settings.external;
+      } catch {
+        return null;
+      }
+    },
 
     onAuthStateChange(callback) {
       subscribers.add(callback);

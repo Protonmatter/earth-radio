@@ -13,10 +13,11 @@ export default {
   'status.skipping': '電臺無法使用 — 正在嘗試 {name}…',
   'status.imported': '已匯入使用者資料',
 
-  'nav.listen': '收聽',
+  'nav.listen': '瀏覽',
   'nav.search': '搜尋',
-  'nav.map': '地圖',
-  'nav.saved': '已儲存',
+  'nav.map': '圖集',
+  'nav.saved': '收藏',
+  'nav.you': '我的',
   'nav.label': '主要目的地',
 
   'header.search': '搜尋電臺',
@@ -31,10 +32,11 @@ export default {
   'header.theme': '切換主題',
   'header.settings': '設定',
 
-  'dest.listen': '收聽',
+  'dest.listen': '瀏覽',
   'dest.search': '搜尋',
-  'dest.map': '地圖',
-  'dest.saved': '已儲存',
+  'dest.map': '圖集',
+  'dest.saved': '收藏',
+  'dest.you': '我的',
 
   'listen.intro': '收聽世界各地。',
   'listen.continueEyebrow': '繼續',
@@ -66,9 +68,9 @@ export default {
   'saved.emptyRecent': '尚未有最近播放的電臺。',
   'saved.backToListen': '瀏覽電臺',
 
-  'search.placeholder': '搜尋電臺、國家、標籤…',
+  'search.placeholder': '國家、城市或電臺',
   'search.stationLabel': '電臺',
-  'search.stationPlaceholder': '搜尋電臺或標籤…',
+  'search.stationPlaceholder': '國家或電臺',
   'search.countryLabel': '國家或地區',
   'search.countryPlaceholder': '所有國家和地區',
   'search.allCountries': '所有國家和地區',
@@ -198,6 +200,14 @@ export default {
   'settings.cancel': '取消',
   'settings.save': '儲存',
   'settings.close': '關閉設定',
+
+  'you.title': '我的',
+  'you.palette': '配色',
+  'you.night': '夜',
+  'you.paper': '紙',
+  'you.glass': '僅列表起霧',
+  'you.glassHelp': '磨砂只加在電臺列表上，不影響調諧器。',
+  'you.account': '帳戶',
 
   'pwa.updateAvailable': '有更新的 Earth Radio 外殼。請重新載入以更新。',
   'pwa.offlineShell': '你處於離線狀態。已儲存的外殼可用；即時目錄與音訊可能無法使用。',

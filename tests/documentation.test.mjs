@@ -94,3 +94,16 @@ test('provenance separates immutable intake hashes from hardened overlays', asyn
     assert.equal(recorded.current.sha256, diskSha, `${relative} overlay current hash is stale`);
   }
 });
+
+test('the privacy policy enumerates every record kept for a signed-out visitor', async () => {
+  const root = path.resolve(import.meta.dirname, '..');
+  const privacy = await readFile(path.join(root, 'site', 'privacy.html'), 'utf8');
+  const guard = await readFile(path.join(root, 'site', 'assets', 'storage-guard.js'), 'utf8');
+  // The default namespace holds listening history, not just favorites and preferences.
+  assert.match(guard, /const USER_KEYS = Object\.freeze\(\['favorites', 'recents', 'prefs', 'badStations', 'lastPlayed'\]\)/);
+  const anonymous = privacy.slice(privacy.indexOf('Anonymous use'), privacy.indexOf('</p>', privacy.indexOf('Anonymous use')));
+  for (const disclosure of ['favorites', 'recently played', 'last station', 'unreachable', 'preferences']) {
+    assert.ok(anonymous.includes(disclosure), `the anonymous-storage disclosure omits ${disclosure}`);
+  }
+  assert.doesNotMatch(anonymous, /stores favorites and preferences only/);
+});

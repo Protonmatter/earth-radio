@@ -1,0 +1,110 @@
+import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+import path from 'node:path';
+import test from 'node:test';
+import { DESTINATIONS, parseDestination, sanitizeUiState } from '../site/assets/responsive-ui.js';
+import { t } from '../site/i18n/index.js';
+
+const root = path.resolve(import.meta.dirname, '..');
+
+test('phone destinations are Atlas, Browse, Kept, and You', async () => {
+  const html = await readFile(path.join(root, 'site', 'index.html'), 'utf8');
+  const nav = html.match(/<nav class="er-mobile-nav"[\s\S]*?<\/nav>/);
+  assert.ok(nav, 'missing mobile nav');
+  const dests = [...nav[0].matchAll(/data-er-dest="([^"]+)"/g)].map(match => match[1]);
+  assert.deepEqual(dests, ['map', 'listen', 'saved', 'you']);
+  assert.equal(nav[0].includes('data-er-dest="search"'), false);
+  assert.match(html, /id="er-you"/);
+  assert.match(html, /atlas-lock\.css/);
+  assert.match(html, /atlas-lock\.js/);
+  assert.match(html, /class="header-right"[\s\S]*data-er-dest="you"[\s\S]*kbd-hint/);
+  assert.ok(html.indexOf('id="er-you"') < html.indexOf('id="player-bar"'));
+  assert.ok(html.indexOf('</main>') < html.indexOf('id="er-you"'));
+});
+
+test('search copy and markup put places first', async () => {
+  const html = await readFile(path.join(root, 'site', 'index.html'), 'utf8');
+  assert.equal(t('search.stationPlaceholder', undefined, 'en'), 'Country or station');
+  assert.equal(t('nav.map', undefined, 'en'), 'Atlas');
+  assert.equal(t('nav.listen', undefined, 'en'), 'Browse');
+  assert.equal(t('nav.saved', undefined, 'en'), 'Kept');
+  assert.equal(t('nav.you', undefined, 'en'), 'You');
+  const country = html.indexOf('id="er-country-query"');
+  const station = html.indexOf('id="er-station-query"');
+  assert.ok(country > 0 && station > country);
+});
+
+test('You is a first-class destination and glass/palette persist', () => {
+  assert.ok(DESTINATIONS.includes('you'));
+  assert.equal(parseDestination('#you'), 'you');
+  assert.equal(sanitizeUiState({ destination: 'you' }).destination, 'you');
+  assert.equal(sanitizeUiState({ glassLog: true }).glassLog, true);
+  assert.equal(sanitizeUiState({ glassLog: false }).glassLog, false);
+  assert.equal(sanitizeUiState({ palette: 'paper' }).palette, 'paper');
+  assert.equal(sanitizeUiState({ palette: 'night' }).palette, 'night');
+  assert.equal(sanitizeUiState({ palette: 'system' }).palette, 'night');
+});
+
+test('glass frosts only the log, and Night/Paper replace system theme', async () => {
+  const css = await readFile(path.join(root, 'site', 'assets', 'atlas-lock.css'), 'utf8');
+  const js = await readFile(path.join(root, 'site', 'assets', 'responsive-ui.js'), 'utf8');
+  const lock = await readFile(path.join(root, 'site', 'assets', 'atlas-lock.js'), 'utf8');
+  const scenarios = await readFile(path.join(root, 'tests', 'browser', 'scenarios.mjs'), 'utf8');
+  const headers = await readFile(path.join(root, 'site', '_headers'), 'utf8');
+  assert.match(css, /html\.er-glass-log\.er-root #grid-panel/);
+  assert.match(css, /backdrop-filter: none/);
+  assert.match(css, /data-er-palette="night"/);
+  assert.match(css, /data-er-palette="paper"/);
+  assert.match(js, /loadUiState\(\)\.palette === 'paper' \? 'light' : 'dark'/);
+  assert.match(js, /destination === 'you' && loadUiState\(\)\.destination === 'you'/);
+  assert.match(lock, /saveUiState\(\{ palette/);
+  assert.match(lock, /glassLog/);
+  assert.doesNotMatch(scenarios, /data-er-dest="search"/);
+  assert.match(scenarios, /data-er-open-search/);
+  for (const asset of ['atlas-lock.css', 'atlas-lock.js']) {
+    assert.match(
+      headers,
+      new RegExp(`/assets/${asset}\\n\\s+Cache-Control: public, max-age=300, must-revalidate`)
+    );
+  }
+});
+
+test('both palette paths hand the runtime a theme that matches the basemap', async () => {
+  const lock = await readFile(path.join(root, 'site', 'assets', 'atlas-lock.js'), 'utf8');
+  // The recovered runtime rebuilds its CARTO tile layer only inside its own
+  // #theme-toggle handler, so neither path may settle a palette by writing data-theme.
+  assert.match(lock, /function pressRuntimeToggle\(\)/);
+  assert.match(lock, /runtimeToggle\.click\(\)/);
+  assert.match(lock, /function alignRuntimeTiles\(palette, landed\)/);
+  // Press until the runtime reports the palette rather than assuming a press count: the
+  // shipped bundle settles in one, src-recovered/core/theme.ts cycles three preferences
+  // and needs up to three, with a middle press that resolves to the same theme.
+  const align = lock.slice(lock.indexOf('function alignRuntimeTiles'), lock.indexOf('function selectPalette'));
+  assert.match(align, /for \(let press = 0; press < 3 && current !== wantedTheme; press \+= 1\)/);
+  assert.ok(!align.includes('next === current'), 'an unchanged press is still progress under the cycle');
+  // Chip path: press, then reconcile whatever theme the runtime landed on.
+  const select = lock.slice(lock.indexOf('function selectPalette'), lock.indexOf('function bindAtlasLock'));
+  assert.match(select, /alignRuntimeTiles\(palette, pressRuntimeToggle\(\)\)/);
+  // Legacy header toggle: the runtime has already chosen tiles from its own stored
+  // preference, which the palette flip does not consult, so that theme is reconciled too.
+  const legacy = lock.slice(lock.indexOf("getElementById('theme-toggle')?.addEventListener"));
+  assert.match(legacy, /const landed = document\.documentElement\.dataset\.theme === 'dark' \? 'dark' : 'light'/);
+  assert.match(legacy, /alignRuntimeTiles\(next, landed\)/);
+  assert.ok(legacy.indexOf('alignRuntimeTiles(next, landed)') < legacy.indexOf('applyAtlasChrome(saveUiState({ palette: next }))'));
+  // Our own presses must not re-enter the palette flip.
+  assert.match(lock, /if \(drivingRuntimeTheme\) return;/);
+});
+
+test('the operations smoke checklist names the destinations the app actually has', async () => {
+  const operations = await readFile(path.join(root, 'docs', 'OPERATIONS.md'), 'utf8');
+  const html = await readFile(path.join(root, 'site', 'index.html'), 'utf8');
+  const nav = html.match(/<nav class="er-mobile-nav"[\s\S]*?<\/nav>/)[0];
+  const smoke = operations.slice(operations.indexOf('## Local smoke'), operations.indexOf('## Deploy'));
+  for (const label of ['Atlas', 'Browse', 'Kept', 'You']) {
+    assert.ok(nav.includes(label), `the mobile nav no longer offers ${label}`);
+    assert.ok(smoke.includes(label), `the smoke checklist omits the ${label} destination`);
+  }
+  // Search is a header action now, so the checklist must not send an operator hunting a tab.
+  assert.doesNotMatch(smoke, /Listen\/Search\/Map\/Saved/);
+  assert.ok(smoke.includes('palette'), 'the checklist must exercise the You palette controls');
+});

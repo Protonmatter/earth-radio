@@ -44,10 +44,23 @@ test('service worker refreshes navigations and config while caching only immutab
   assert.doesNotMatch(worker, /cached \|\| fetch\(request\)/);
 });
 
+test('deployed pages send HSTS and revalidate the auth overlays', async () => {
+  const headers = await readFile(path.join(root, 'site', '_headers'), 'utf8');
+  assert.match(headers, /Strict-Transport-Security: max-age=31536000; includeSubDomains; preload/);
+  for (const asset of ['auth-core.js', 'sync-core.js', 'auth-ui.js', 'auth-ui.css']) {
+    assert.match(
+      headers,
+      new RegExp(`/assets/${asset}\\n\\s+Cache-Control: public, max-age=300, must-revalidate`)
+    );
+  }
+});
+
 test('service worker precaches the auth, responsive, and i18n shell under a new cache version', async () => {
   const worker = await readFile(path.join(root, 'site', 'sw.js'), 'utf8');
-  assert.match(worker, /new Request\(asset, \{ cache: 'reload' \}\)/);
-  assert.match(worker, /earth-radio-shell-v44-visible-signin-1/);
+  assert.match(worker, /cache: isImmutableAsset\(asset\) \? 'force-cache' : 'reload'/);
+  assert.match(worker, /earth-radio-shell-v46-atlas-lock-1/);
+  assert.doesNotMatch(worker, /earth-radio-shell-v45-review-auth-1\b/);
+  assert.doesNotMatch(worker, /earth-radio-shell-v44-visible-signin-1\b/);
   assert.doesNotMatch(worker, /earth-radio-shell-v43-auth-unfreeze-1\b/);
   assert.doesNotMatch(worker, /earth-radio-shell-v42-auth-review-1\b/);
   assert.doesNotMatch(worker, /earth-radio-shell-v41-auth-exact-redirect-1\b/);
@@ -66,6 +79,8 @@ test('service worker precaches the auth, responsive, and i18n shell under a new 
   assert.match(worker, /pinned-stations\.js/);
   assert.match(worker, /responsive-ui\.js/);
   assert.match(worker, /ui-refresh\.css/);
+  assert.match(worker, /atlas-lock\.css/);
+  assert.match(worker, /atlas-lock\.js/);
   assert.match(worker, /i18n\/zh-Hant\.js/);
   assert.match(worker, /i18n\/zh-Hans\.js/);
   assert.match(worker, /\.\/index\.html/);

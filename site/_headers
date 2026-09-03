@@ -3,6 +3,7 @@
   X-Frame-Options: DENY
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
+  Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
   Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; media-src https: http: blob:; connect-src 'self' https: http: wss://listen.moe; font-src 'self'; worker-src 'self' blob:; manifest-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
 
 /assets/hls.light-Dr1Fv81C.js
@@ -36,6 +37,24 @@
   Cache-Control: public, max-age=300, must-revalidate
 
 /assets/ui-refresh.css
+  Cache-Control: public, max-age=300, must-revalidate
+
+/assets/atlas-lock.css
+  Cache-Control: public, max-age=300, must-revalidate
+
+/assets/atlas-lock.js
+  Cache-Control: public, max-age=300, must-revalidate
+
+/assets/auth-core.js
+  Cache-Control: public, max-age=300, must-revalidate
+
+/assets/sync-core.js
+  Cache-Control: public, max-age=300, must-revalidate
+
+/assets/auth-ui.js
+  Cache-Control: public, max-age=300, must-revalidate
+
+/assets/auth-ui.css
   Cache-Control: public, max-age=300, must-revalidate
 
 /i18n/*

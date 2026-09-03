@@ -25,6 +25,7 @@ test('destination parsing honors approved fragments and ignores runtime query ha
   assert.equal(parseDestination('#search'), 'search');
   assert.equal(parseDestination('#map'), 'map');
   assert.equal(parseDestination('#saved'), 'saved');
+  assert.equal(parseDestination('#you'), 'you');
   assert.equal(parseDestination('#unknown'), 'listen');
   assert.equal(parseDestination('#station=abc&view=favorites'), null);
   assert.equal(parseDestination('#view=recent'), null);
@@ -174,5 +175,76 @@ test('overflow menu can become visible and search occupies the mobile workspace'
   const css = await readFile(path.join(root, 'site', 'assets', 'responsive-ui.css'), 'utf8');
   assert.match(css, /\.er-overflow:not\(\[hidden\]\)\s*\{\s*display:\s*grid;/);
   assert.match(css, /html\.er-mobile \.search-modal\.er-search-destination\s*\{[\s\S]*position:\s*fixed;/);
+  assert.match(css, /html\.er-mobile \.search-modal\.er-search-destination\s*\{[\s\S]*padding:\s*0;/);
   assert.match(css, /html\.er-root \.player-info\s*\{[\s\S]*appearance:\s*none;/);
+  assert.match(css, /html\.er-root #toast-container\s*\{[\s\S]*top:\s*calc\(var\(--er-header\)/);
+  assert.match(css, /\.er-nowplaying-art\s*\{[\s\S]*flex-shrink:\s*0;/);
+  // Header favorites/recent listeners exist only after the recovered runtime
+  // finishes loadStations(). Clicking those toggles during overlay start()
+  // selects Saved chrome without applying the filter.
+  const startSource = source.slice(source.lastIndexOf('function start()'));
+  const setDestSource = source.slice(
+    source.indexOf('function setDestination'),
+    source.indexOf('function applySavedSegment')
+  );
+  assert.match(source, /querySelectorAll\('button\[data-er-saved\]'\)/);
+  assert.match(source, /['"]earthradio:stations-load-settled['"]/);
+  assert.match(
+    startSource,
+    /whenStationsLoadSettled\(\(\) => \{[\s\S]*if \(state\.destination === 'saved'\) applySavedSegment\(state\.savedSegment\)/
+  );
+  assert.match(setDestSource, /whenStationsLoadSettled/);
+  assert.match(setDestSource, /applySavedSegment/);
+});
+
+test('stations-settled waiters stand down once the destination has moved on', async () => {
+  const root = path.resolve(import.meta.dirname, '..');
+  const source = await readFile(path.join(root, 'site', 'assets', 'responsive-ui.js'), 'utf8');
+  // applySavedSegment() persists destination: 'saved', so any waiter queued before the
+  // station load settled must re-check the current destination or it will drag a later
+  // navigation back to Saved and make the newer waiter stand down instead.
+  const setDestination = source.slice(source.indexOf('function setDestination('), source.indexOf('function applySavedSegment('));
+  assert.match(setDestination, /if \(loadUiState\(\)\.destination !== destination\) return;/);
+  assert.ok(
+    setDestination.indexOf('if (loadUiState().destination !== destination) return;')
+      < setDestination.indexOf("if (destination === 'saved') applySavedSegment("),
+    'the guard must precede applySavedSegment()'
+  );
+  // The Favorites/Recent segment buttons queue their own waiter.
+  const segmentWaiter = source.slice(source.indexOf("target.closest('button[data-er-saved]')"), source.indexOf("[data-er-open-search]"));
+  assert.match(segmentWaiter, /if \(loadUiState\(\)\.destination !== 'saved'\) return;/);
+  assert.ok(
+    segmentWaiter.indexOf("if (loadUiState().destination !== 'saved') return;")
+      < segmentWaiter.indexOf('applySavedSegment(segment)'),
+    'the segment waiter needs the same guard'
+  );
+  const startupWaiter = source.slice(source.indexOf('  restoreStoredTheme();'), source.indexOf('  bindActions();'));
+  assert.match(startupWaiter, /if \(loadUiState\(\)\.destination !== state\.destination\) return;/);
+  assert.ok(
+    startupWaiter.indexOf('if (loadUiState().destination !== state.destination) return;')
+      < startupWaiter.indexOf("if (state.destination === 'saved') applySavedSegment("),
+    'the startup waiter needs the same guard'
+  );
+});
+
+test('the locked palette owns the inline color-scheme, not the runtime preference', async () => {
+  const root = path.resolve(import.meta.dirname, '..');
+  const source = await readFile(path.join(root, 'site', 'assets', 'responsive-ui.js'), 'utf8');
+  const lock = await readFile(path.join(root, 'site', 'assets', 'atlas-lock.js'), 'utf8');
+  // The runtime writes an inline color-scheme resolved against the OS, which outranks the
+  // stylesheet for native controls; every path that settles data-theme must settle it too.
+  assert.match(source, /function syncColorScheme\(theme\)/);
+  assert.match(source, /if \(document\.documentElement\.style\.colorScheme !== theme\)/);
+  const restore = source.slice(source.indexOf('function restoreStoredTheme()'), source.indexOf('let previewLocale'));
+  assert.match(restore, /syncColorScheme\(theme\)/);
+  const observer = source.slice(source.indexOf('const observer = new MutationObserver'), source.indexOf('observer.observe('));
+  assert.match(observer, /syncColorScheme\(wantedTheme\)/);
+  assert.ok(
+    observer.indexOf('syncColorScheme(wantedTheme)') < observer.indexOf("dataset.theme !== wantedTheme"),
+    'color-scheme must be reconciled on both observer branches'
+  );
+  // A late runtime write lands on style, so the observer has to watch it; the write guard
+  // above is what keeps that from looping.
+  assert.match(source, /attributeFilter: \['lang', 'dir', 'data-font-profile', 'data-theme', 'style'\]/);
+  assert.match(lock, /if \(root\.style\.colorScheme !== theme\) root\.style\.colorScheme = theme;/);
 });
