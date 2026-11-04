@@ -115,6 +115,7 @@ app.on('web-contents-created', (_event, contents) => {
 
 if (primaryInstance) app.whenReady().then(async () => {
   try {
+    if (!['win32', 'darwin'].includes(process.platform)) throw new Error('Native accounts are not enabled on this platform.');
     const vault = await createAuthVault({ directory: path.join(app.getPath('userData'), 'auth-v1'), safeStorage });
     authManager = createDesktopAuthManager({ config: AUTH_DEPLOYMENT, vault, openExternal: url => shell.openExternal(url) });
     authManager.subscribe(payload => {

@@ -5,6 +5,9 @@ default system browser. Email uses a verified magic link. Favorites, recent stat
 and preferences use the existing per-user Supabase configuration documents and RLS.
 Listening does not require an account.
 
+Native account support is enabled for Windows and macOS. Linux retains local-only
+behavior; its credential-provider combinations are outside this qualification.
+
 ## Current qualification boundary (2026-11-04)
 
 The hosted project allows public signups, manual identity linking and confirmed email.

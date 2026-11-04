@@ -1,6 +1,22 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+import vm from 'node:vm';
 import { handleAuthIpc, installAuthNavigationPolicy } from '../electron/auth-ipc-policy.mjs';
+
+test('preload enables native account capabilities only on the qualified Windows and macOS targets', async () => {
+  const source = await readFile(new URL('../electron/preload.cjs', import.meta.url), 'utf8');
+  for (const [platform, expected] of [['win32', true], ['darwin', true], ['linux', false]]) {
+    let exposed;
+    vm.runInNewContext(source, { process: { platform, argv: [] }, require: () => ({
+      contextBridge: { exposeInMainWorld: (_name, value) => { exposed = value; } },
+      ipcRenderer: { invoke() {}, on() {}, removeListener() {} }
+    }) });
+    assert.equal(typeof exposed.auth?.invoke === 'function', expected);
+    assert.equal(exposed.isDesktop, true);
+    assert.equal(typeof exposed.getLocalProxy, 'function');
+  }
+});
 
 test('auth IPC accepts only the owned top-level trusted document, with bounded explicit operations', async () => {
   const frame = { url: 'file:///trusted/site/index.html#station=one' };

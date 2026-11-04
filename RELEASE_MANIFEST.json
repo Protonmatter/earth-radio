@@ -30,8 +30,8 @@
     },
     {
       "path": "docs/AUTHENTICATION.md",
-      "bytes": 8210,
-      "sha256": "97741e0402c5a467d00088e268c99adec91c4afe52196fe3feeb30ca1963999a"
+      "bytes": 8372,
+      "sha256": "d0f8c5477aaf4f54da576d5f972e59634dca9d71f89390feffe5211d447238d6"
     },
     {
       "path": "docs/branding/earth-radio-icon-master.png",
@@ -96,7 +96,7 @@
     {
       "path": "docs/provenance/hardening-overlays.json",
       "bytes": 12118,
-      "sha256": "c2ab1ecb7178e6e4f15b77687de78e8b1a3ddcff02164b272119037c1acbcc04"
+      "sha256": "5ed775023528f655f6c54a04a606f5162c4f8bd7697c5c70d4bf02e89edd96ef"
     },
     {
       "path": "docs/provenance/recovery-manifest.json",
@@ -230,13 +230,13 @@
     },
     {
       "path": "electron/main.mjs",
-      "bytes": 6449,
-      "sha256": "1d3a6755f18b8ea1b386d6d4a7b52d37b32544bb5fb43bb1e8b88169dc3061a4"
+      "bytes": 6576,
+      "sha256": "945c03ca0a61eb89519e80ed94d744d90345e2c3eba9ade49d60e3fea77d91fb"
     },
     {
       "path": "electron/preload.cjs",
-      "bytes": 1130,
-      "sha256": "7952f06e017771d7eae62a91e45bafa173df5629a92fbbdb770b4c847865c106"
+      "bytes": 1186,
+      "sha256": "edf144882e80e5be31fdf3268d6e3a4f56259364c94cbb2309bf895a052973f6"
     },
     {
       "path": "electron/proxy-rules.mjs",
@@ -915,8 +915,8 @@
     },
     {
       "path": "tests/desktop-auth-ipc.test.mjs",
-      "bytes": 2566,
-      "sha256": "5cf22c5698df13374326049ff875bca7888ca3ff391ac0e0110ef2fa3d60c142"
+      "bytes": 3384,
+      "sha256": "c9b7fe3c7e59d2634794cbad187abf2f11a5321f1b4cfc622a43cb96bff8bfbe"
     },
     {
       "path": "tests/desktop-auth-lifecycle.test.mjs",
