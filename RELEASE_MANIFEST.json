@@ -260,8 +260,8 @@
     },
     {
       "path": "scripts/macos-release.mjs",
-      "bytes": 9130,
-      "sha256": "3ba3b43aa77734b3a71a3c5203fd5c1e75a0f3bc6dca80a1a6661b43c83dd825"
+      "bytes": 9383,
+      "sha256": "f78d636264b04cf16497397bb57f35e06f408b21046eeea125887746a3c7e91b"
     },
     {
       "path": "scripts/qualify-edge-runtime.mjs",
@@ -970,8 +970,8 @@
     },
     {
       "path": "tests/macos-release.test.mjs",
-      "bytes": 3863,
-      "sha256": "639a16551617c4c211151425e03abc6b161c58fd3fe5f43d283f065c9d2600a6"
+      "bytes": 4505,
+      "sha256": "7690972f271fed9bbb467537f39213c161a54d41ec2ebc5d8437895340d947f8"
     },
     {
       "path": "tests/net-guard.test.mjs",

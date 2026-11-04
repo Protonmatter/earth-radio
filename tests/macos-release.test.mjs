@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { readFile } from 'node:fs/promises';
 import { spawn } from 'node:child_process';
-import { buildMacRelease, releaseIdentity, stopReleaseChild } from '../scripts/macos-release.mjs';
+import { buildMacRelease, releaseIdentity, startupSmoke, stopReleaseChild } from '../scripts/macos-release.mjs';
 
 const input = { tag: 'v0.25.1', sha: 'a'.repeat(40), version: '0.25.1', arch: 'arm64' };
 test('macOS release identity separates architectures and labels unnotarized artifacts', () => {
@@ -54,4 +54,10 @@ test('release shutdown stays bounded when a helper retains pipes after parent te
     child.stdout.destroy(); child.stderr.destroy();
     await Promise.race([closed, new Promise(resolve => setTimeout(resolve, 1000))]);
   }
+});
+test('native startup rejects a main-process exit before inherited pipes close', { timeout: 10000, skip: process.platform === 'win32' }, async () => {
+  const code = `const {spawn}=require('node:child_process');
+    const helper=spawn(process.execPath,['-e','setTimeout(()=>{},4000)'],{stdio:['ignore',1,2]});
+    helper.once('spawn',()=>{ console.log('Earth Radio desktop proxy listening on http://127.0.0.1:12345'); setTimeout(()=>process.exit(1),50); });`;
+  await assert.rejects(startupSmoke(process.execPath, ['-e', code, '--']), /Packaged app (?:did not reach bounded proxy startup|exited immediately after startup)/);
 });

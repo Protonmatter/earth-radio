@@ -39,11 +39,14 @@ export async function stopReleaseChild(child, closed, { termMs = 5000, killMs = 
   if (!await finishedWithin(killMs)) throw new Error('Packaged-app cleanup deadline exceeded; isolated profile retained');
 }
 
-async function startupSmoke(binary) {
+export async function startupSmoke(binary, extraArguments = []) {
   const profile = await mkdtemp(path.join(tmpdir(), 'earth-radio-release-'));
-  const child = spawn(binary, [`--user-data-dir=${profile}`], { stdio: ['ignore', 'pipe', 'pipe'] });
+  const child = spawn(binary, [...extraArguments, `--user-data-dir=${profile}`], { stdio: ['ignore', 'pipe', 'pipe'] });
   let output = '', ready = false, exited = false;
   const closed = new Promise(resolve => child.once('close', () => { exited = true; resolve(); }));
+  // A helper can retain inherited pipes after the main process exits. Liveness
+  // follows exit; close is reserved for confirming cleanup of owned streams.
+  child.once('exit', () => { exited = true; });
   child.stdout.on('data', chunk => { output = (output + chunk).slice(-4096); ready ||= /desktop proxy listening on http:\/\/127\.0\.0\.1:\d+/.test(output); });
   // Keep errors for the bounded assertion, never record profile/capability contents.
   let failure = '';
