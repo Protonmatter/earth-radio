@@ -75,6 +75,26 @@ behavior. The precise physical device/OS and screen-lock audio result remain
 unreported. Signing stays local-only by user choice. No paid recognition provider,
 plan upgrade, schema change or unrelated authentication setting is introduced.
 
+## Public installer publication
+
+The user authorized a GitHub Release for `v0.25.1`, Windows ARM64 setup/portable
+uploads, macOS installers and iPhone/iPad web-app instructions. The release tag is
+pinned to application commit `a42187c5e667f5687e57494bac996c8d096ff068`; later
+packaging tools/docs do not retag or alter that application source.
+The user explicitly selected clearly labeled unnotarized macOS builds because no
+Apple Developer ID/notarization credentials are configured. The read-only native
+macOS workflow builds arm64 and x64 separately from that exact application commit,
+checks source/tag identity, disk-image integrity, code signatures, packaged source,
+native architecture and bounded startup. Its candidates are uploaded to Actions;
+the authorized release publisher verifies and uploads assets separately.
+
+The [installation guide](INSTALLATION.md) is also attached to the release. A single
+SHA256SUMS.txt covers all uploaded installers and that guide. Windows publisher
+trust remains local-only; macOS ad-hoc signatures do not provide Apple identity or
+Gatekeeper/notarization approval. Native runner startup is not a full physical-Mac
+or audio-device qualification. See the release page and packaging workflow runs
+for final asset identities and observations.
+
 ## Rollback
 
 Follow [CLOUDFLARE_DEPLOYMENT.md](CLOUDFLARE_DEPLOYMENT.md). Preserve guarded

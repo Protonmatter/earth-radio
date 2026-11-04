@@ -6,6 +6,8 @@ Release **0.25.1** adds inline station discovery, genre/language/bitrate facets,
 
 Live production site: **https://earth-radio.pages.dev/**. Public repository: **https://github.com/Protonmatter/earth-radio**.
 
+See the [installation guide](docs/INSTALLATION.md) for Windows ARM64, macOS Apple Silicon/Intel, and Safari Home Screen installation on iPhone/iPad. Desktop downloads and checksums are published on the [v0.25.1 release page](https://github.com/Protonmatter/earth-radio/releases/tag/v0.25.1). Windows uses the accepted local signer; macOS builds are explicitly labeled unnotarized.
+
 This repository was reconstructed from the installed Earth Radio 0.24.0 application and two user-supplied archives. It is not a byte-for-byte reproduction of the original development repository. The newest runnable installed assets were selected where they differed from older archived source; those decisions are recorded in [docs/PROVENANCE.md](docs/PROVENANCE.md).
 
 ## Local validation
