@@ -1,5 +1,21 @@
 # Build state
 
+## 0.25.1 safe-area correction and Git delivery
+
+The user subsequently authorized committing/pushing the release, passing CI and
+merging into main. [PR #17](https://github.com/Protonmatter/earth-radio/pull/17)
+delivers the release through that workflow. Its Windows check exposed a real
+header measurement latch: a 47px inset was subtracted from a transient 56px total
+height, preserving only 9px of content depth and clipping the controls. The new
+guard restores the 56px design floor; a deterministic red/green rendered scenario
+proves recovery and containment. Runtime/package 0.25.1 and worker v52 carry the fix.
+
+See [RELEASE-0.25.1.md](RELEASE-0.25.1.md) for the correction, source/artifact
+identity and CI/deployment requirements. The current exact GitHub checks and
+merge-triggered Cloudflare deployment identify the final delivered revision.
+The 0.25.0 publication and qualification below are historical evidence. Public
+desktop trust remains deferred under the accepted local-signing decision.
+
 ## Production 0.25.0 — 2026-11-03
 
 The user authorized production publication and accepted local desktop signing.

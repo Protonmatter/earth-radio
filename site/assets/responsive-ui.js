@@ -31,6 +31,9 @@ export const MIN_LIST_PX = 340;
 export const MIN_MAP_PX = 360;
 export const MOBILE_MAX = 767;
 export const TABLET_MAX = 1099;
+// Match responsive-ui.css's base strip depth. A transient layout must not
+// subtract its safe inset into a smaller value and latch the header there.
+const MIN_HEADER_HEIGHT = 56;
 export const DESTINATIONS = Object.freeze(['listen', 'search', 'map', 'saved', 'you']);
 
 /** Column gap used by the recovered virtual list (`gap: 12`). */
@@ -638,7 +641,8 @@ function syncChromeMetrics() {
   for (const [name, element, insetName] of measurements) {
     if (!element || element.hidden) continue;
     const inset = parseFloat(rootStyle.getPropertyValue(insetName)) || 0;
-    const height = Math.round(element.getBoundingClientRect().height - inset);
+    const height = Math.max(name === '--er-header' ? MIN_HEADER_HEIGHT : 0,
+      Math.round(element.getBoundingClientRect().height - inset));
     if (!height) continue;
     // A presentation layer may restyle a chrome element into a full-height
     // rail (fixed, pinned top and bottom). Its height is then the viewport,

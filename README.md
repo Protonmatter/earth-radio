@@ -2,7 +2,7 @@
 
 Explore live radio stations around the world in a recovered, auditable web and Electron application.
 
-Release **0.25.0** adds inline station discovery, genre/language/bitrate facets, explainable search and reliability ranking, diversified world exploration, similar-station selection, and a bundled vector listening atlas. Use **Refine selection** for advanced controls, **Details** to inspect why a station ranks, and **Search this area** to load a bounded world directory and discover within a map rectangle. See [Discovery](docs/DISCOVERY.md) and [Map data](docs/MAP_DATA.md) for algorithms, integration, provenance, and limitations. Production publication, verification and remaining qualification boundaries are recorded in the [0.25.0 release record](docs/RELEASE-0.25.0.md).
+Release **0.25.1** adds inline station discovery, genre/language/bitrate facets, explainable search and reliability ranking, diversified world exploration, similar-station selection, and a bundled vector listening atlas. Use **Refine selection** for advanced controls, **Details** to inspect why a station ranks, and **Search this area** to load a bounded world directory and discover within a map rectangle. See [Discovery](docs/DISCOVERY.md) and [Map data](docs/MAP_DATA.md) for algorithms, integration, provenance, and limitations. Production publication, verification and remaining qualification boundaries are recorded in the [0.25.1 release record](docs/RELEASE-0.25.1.md).
 
 Live production site: **https://earth-radio.pages.dev/**. Public repository: **https://github.com/Protonmatter/earth-radio**.
 
@@ -37,7 +37,7 @@ npm run pack:desktop
 npm run dist:desktop
 ```
 
-Packaging output is ignored under `release/`. Windows targets produce distinct `EarthRadio-Setup-*` and `EarthRadio-Portable-*` executables. A process-local packaging hook pins a legacy-compatible BCJ archive filter for the bundled NSIS decoder; both targets use 7z so their shared package cache has one format. The qualified 0.25.0 ARM64 artifacts use local self-signed Authenticode signatures and DigiCert timestamps. Public Windows trust remains deferred by the user's decision; a normal build does not automatically select this machine's certificate. See the [0.25.0 release record](docs/RELEASE-0.25.0.md) for hashes, installer/upgrade evidence and qualification boundaries.
+Packaging output is ignored under `release/`. Windows targets produce distinct `EarthRadio-Setup-*` and `EarthRadio-Portable-*` executables. A process-local packaging hook pins a legacy-compatible BCJ archive filter for the bundled NSIS decoder; both targets use 7z so their shared package cache has one format. The qualified 0.25.1 ARM64 artifacts use local self-signed Authenticode signatures and DigiCert timestamps. Public Windows trust remains deferred by the user's decision; a normal build does not automatically select this machine's certificate. See the [0.25.1 release record](docs/RELEASE-0.25.1.md) for hashes, installer/upgrade evidence and qualification boundaries.
 
 The new globe/radio icon was generated with ChatGPT. Its master, exact prompt, hash and deterministic derivatives are recorded in [icon provenance](docs/branding/ICON.md).
 

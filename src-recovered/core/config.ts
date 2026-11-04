@@ -1,4 +1,4 @@
-export const APP_VERSION = '0.25.0';
+export const APP_VERSION = '0.25.1';
 
 export interface RuntimeConfig {
   appName: string;

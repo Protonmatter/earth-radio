@@ -35,9 +35,13 @@ test('responsive UI rendered matrix preserves layout, actions, and locale contra
     assert.ok(result.probe.bodyOverflow <= 0, `${result.id}: horizontal body overflow`);
   }
 
-  for (const id of ['mobile-listen-390x844', 'mobile-listen-430x932', 'mobile-standalone-390x844']) {
+  for (const id of ['mobile-listen-390x844', 'mobile-listen-430x932', 'mobile-standalone-390x844', 'mobile-safe-area-recovery-430x932']) {
     const { probe } = byId(payload.results, id);
     assert.ok(probe.header.rect.height >= 90, `${id}: top safe area consumes header content ${JSON.stringify({ header: probe.header.rect, safeArea: probe.safeAreaVariables, metrics: probe.chromeMetrics, classes: probe.documentElementClass })}`);
+    for (const item of probe.headerContent.filter(item => item.visible)) {
+      assert.ok(item.rect.top >= 47, `${id}: header control enters the top safe area`);
+      assert.ok(item.rect.bottom <= probe.header.rect.bottom, `${id}: header control is clipped`);
+    }
     assert.equal(overlapArea(probe.player.rect, probe.nav.rect), 0, `${id}: player overlaps navigation`);
     assert.equal(probe.navButtons.length, 4, `${id}: destination count`);
     for (const button of probe.navButtons) {

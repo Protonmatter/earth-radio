@@ -398,6 +398,16 @@ export const SCENARIOS = [
     seed: SEEDED
   },
   {
+    id: 'mobile-safe-area-recovery-430x932',
+    title: 'Phone header recovers from a transient inset-subtracted depth',
+    width: 430,
+    height: 932,
+    destination: 'listen',
+    safeArea: IPHONE_SAFE_AREA,
+    seed: SEEDED,
+    actions: [{ type: 'script', code: `document.documentElement.style.setProperty('--er-header', '9px')` }]
+  },
+  {
     id: 'mobile-landscape-844x390',
     title: 'iPhone landscape — Listen',
     width: 844,
