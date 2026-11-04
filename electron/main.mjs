@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, shell, session, safeStorage } from 'electron';
+import { app, BrowserWindow, ipcMain, shell, session, safeStorage, dialog } from 'electron';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { createDesktopProxy } from '../server/desktop-proxy.mjs';
@@ -7,6 +7,7 @@ import { AUTH_DEPLOYMENT } from '../site/assets/auth-deployment.js';
 import { createAuthVault } from './auth-vault.mjs';
 import { createDesktopAuthManager } from './auth-manager.mjs';
 import { handleAuthIpc, isTrustedAuthSender } from './auth-ipc-policy.mjs';
+import { claimDesktopInstance, createQuitGate } from './auth-lifecycle.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const appRoot = path.resolve(__dirname, '..');
@@ -16,6 +17,12 @@ let networkProxyRules = '';
 let authManager = null;
 let authUnavailable = false;
 const documentUrl = pathToFileURL(path.join(appRoot, 'site', 'index.html')).href;
+const primaryInstance = claimDesktopInstance(app, () => {
+  if (!mainWindow || mainWindow.isDestroyed()) return;
+  if (mainWindow.isMinimized()) mainWindow.restore();
+  mainWindow.show();
+  mainWindow.focus();
+});
 
 function resolveAsset(...parts) {
   return path.join(appRoot, ...parts);
@@ -103,7 +110,7 @@ app.on('web-contents-created', (_event, contents) => {
   contents.on('will-attach-webview', event => event.preventDefault());
 });
 
-app.whenReady().then(async () => {
+if (primaryInstance) app.whenReady().then(async () => {
   try {
     const vault = await createAuthVault({ directory: path.join(app.getPath('userData'), 'auth-v1'), safeStorage });
     authManager = createDesktopAuthManager({ config: AUTH_DEPLOYMENT, vault, openExternal: url => shell.openExternal(url) });
@@ -135,7 +142,16 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
 });
 
-app.on('before-quit', async () => {
-  try { await authManager?.close(); } catch { /* best effort, ciphertext is atomic */ }
-  try { await desktopProxy?.close?.(); } catch { /* best effort */ }
-});
+if (primaryInstance) app.on('before-quit', createQuitGate({
+  async finish() {
+    await authManager?.close();
+    desktopProxy?.server.closeAllConnections();
+    await desktopProxy?.close?.();
+  },
+  quit: () => app.quit(),
+  onFailure: () => {
+    void dialog.showMessageBox({ type: 'error', title: 'Earth Radio could not finish signing out',
+      message: 'Secure account storage did not finish. Unlock your OS keychain and try Quit again. Restart Earth Radio before using account features.',
+      buttons: ['Keep app open'], defaultId: 0 });
+  }
+}));

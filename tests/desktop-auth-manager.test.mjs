@@ -154,3 +154,46 @@ test('native sync preserves the existing large-favorites contract and enforces p
     p_document_key: key, p_value: large, p_expected_revision: 0, p_delete: false
   } }), /invalid/i);
 });
+
+for (const stage of ['refresh', 'identity-response']) test(`superseded identity linking cannot resume after deferred ${stage}`, async t => {
+  const store = storage();
+  store.setItem(authStorageKeys.session, JSON.stringify({ ...session, ...(stage === 'refresh' ? { expires_at: 1 } : {}) }));
+  let release, began;
+  const started = new Promise(resolve => { began = resolve; });
+  const opened = [];
+  let identityRequests = 0;
+  const manager = createDesktopAuthManager({ config, vault: { storage: store, flush: async () => {} },
+    openExternal: async url => { opened.push(url); }, fetchImpl: async (value, init) => {
+      const url = new URL(value);
+      if (url.searchParams.get('grant_type') === 'refresh_token') return new Promise(resolve => {
+        release = () => resolve(json(session)); began();
+      });
+      if (url.pathname.endsWith('/user/identities/authorize')) {
+        identityRequests++;
+        if (stage === 'identity-response') return new Promise(resolve => {
+          release = () => resolve(json({ url: 'https://accounts.google.com/o/oauth2/v2/auth?client_id=example' })); began();
+        });
+        return json({ url: 'https://accounts.google.com/o/oauth2/v2/auth?client_id=example' });
+      }
+      if (url.searchParams.get('grant_type') === 'pkce') {
+        const body = JSON.parse(init.body);
+        assert.equal(createHash('sha256').update(body.code_verifier).digest('base64url'), new URL(opened[0]).searchParams.get('code_challenge'));
+        return json(session);
+      }
+      assert.fail('Unexpected deferred-link endpoint');
+    } });
+  t.after(() => manager.close());
+  const old = manager.execute('link', { provider: 'google' });
+  const oldResult = assert.rejects(old);
+  await started;
+  await manager.execute('signIn', { provider: 'github' });
+  const verifier = store.getItem(authStorageKeys.pkce);
+  release();
+  await oldResult;
+  assert.equal(opened.length, 1);
+  assert.equal(store.getItem(authStorageKeys.pkce), verifier);
+  if (stage === 'refresh') assert.equal(identityRequests, 0);
+  const callback = new URL(opened[0]).searchParams.get('redirect_to');
+  assert.equal((await fetch(`${callback}?code=current-code`)).status, 200);
+  assert.equal((await manager.execute('session')).user.id, 'user-a');
+});

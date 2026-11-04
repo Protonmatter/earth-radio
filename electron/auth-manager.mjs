@@ -120,6 +120,7 @@ export function createDesktopAuthManager({ config, vault, openExternal, fetchImp
         if (operation === 'link') await client.linkIdentity(input.provider, options);
         else await client.signInWithOAuth(input.provider, options);
       }
+      if (closed || attempt !== generation || flow !== next) throw new PublicAuthError('Sign-in canceled.', 'CANCELED');
       return { pending: true };
     } catch (error) { if (flow === next) await cancel(); throw error; }
   }

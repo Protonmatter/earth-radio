@@ -9,8 +9,8 @@
         "sha256": "942d2d61015289e649cf74ff509a95fd2ca20090fc40cb9fd3e5f21d89c29dcc"
       },
       "current": {
-        "bytes": 5570,
-        "sha256": "4d8c2f9805b6fdc06fc5c69b6c9c5d1656509b093d315e3c44da38e065d1764a"
+        "bytes": 6250,
+        "sha256": "ae6b8b0b5929922300c26db68a7144b770023cd9f605c4d5f9ecca465865c8a6"
       },
       "reason": "Load the selected site, use the generated desktop icon, validate complete network-proxy rules, and assert opaque Origin only for the owned trusted file renderer on its per-launch capability API. Native account integration and shared public deployment configuration (2026-11-04)."
     },

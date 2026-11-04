@@ -96,7 +96,7 @@
     {
       "path": "docs/provenance/hardening-overlays.json",
       "bytes": 12007,
-      "sha256": "f2e601eb8a179558f4a630a546a0af32675d1673fe752355acd9382cb81db3c2"
+      "sha256": "f2be07ee1b905e6e2c26dadd526fd7a5e1dc4496e0d5cab51fa1452c73dcfaf3"
     },
     {
       "path": "docs/provenance/recovery-manifest.json",
@@ -214,19 +214,24 @@
       "sha256": "16a16d352d02b6f4965899501cb55498ea3b8a492447f9462f4485b89e010d28"
     },
     {
+      "path": "electron/auth-lifecycle.mjs",
+      "bytes": 1147,
+      "sha256": "479ee8425ae094782de4b4c90ad9035783bf8e665b565932496b68b16dd45aee"
+    },
+    {
       "path": "electron/auth-manager.mjs",
-      "bytes": 9741,
-      "sha256": "82d9d4ca789a1e6af0cd76fb3314feb58e2b7b2d2b8f8080902c8b23c5680e5c"
+      "bytes": 9862,
+      "sha256": "081878b00ccacce6909e454b250d4e45424992a8a4b01b332161640d66085ab9"
     },
     {
       "path": "electron/auth-vault.mjs",
-      "bytes": 2792,
-      "sha256": "8dc7c1b308f4981365efdff1beb925d82edbfe8b9580899b058f4487dfb83e7d"
+      "bytes": 2967,
+      "sha256": "0fe9932c303c221537aa73b631157c0ece12dc6c306a130658411b09d1d92d04"
     },
     {
       "path": "electron/main.mjs",
-      "bytes": 5570,
-      "sha256": "4d8c2f9805b6fdc06fc5c69b6c9c5d1656509b093d315e3c44da38e065d1764a"
+      "bytes": 6250,
+      "sha256": "ae6b8b0b5929922300c26db68a7144b770023cd9f605c4d5f9ecca465865c8a6"
     },
     {
       "path": "electron/preload.cjs",
@@ -275,8 +280,8 @@
     },
     {
       "path": "package.json",
-      "bytes": 3862,
-      "sha256": "805330a3db27e69adad754f497c8958fa0ca49a1c84f66dedba069e4fa4adc3f"
+      "bytes": 3951,
+      "sha256": "cdd0b35143d83cb5bbf0a2b22d0bda6f622d4b845b676198a5e8189a72c694a1"
     },
     {
       "path": "scripts/desktop-package-compat.mjs",
@@ -410,8 +415,8 @@
     },
     {
       "path": "site/assets/auth-core.js",
-      "bytes": 18127,
-      "sha256": "74c7bffdc7113d19161a77ddb92ff650e8d94e6e0164cd15c4698558332549dc"
+      "bytes": 18456,
+      "sha256": "aba6f9ad3009773b643ab924f533c17a1a7f273d02266940c48e4aeb3b7c6d4d"
     },
     {
       "path": "site/assets/auth-deployment.js",
@@ -914,14 +919,19 @@
       "sha256": "fa358778a8ded5cd557acb8fceb0eab77fac2e6275a990f2334c0bcdd5e1bec4"
     },
     {
+      "path": "tests/desktop-auth-lifecycle.test.mjs",
+      "bytes": 1374,
+      "sha256": "28946cf3e684383b30ea9ff2ac103795e59a75a9d869c8a4c7f8fe9526526b8c"
+    },
+    {
       "path": "tests/desktop-auth-manager.test.mjs",
-      "bytes": 8970,
-      "sha256": "6e0cddb6993005381970fd1a80cae4bc6c937395970a5875c477172ac82c5f61"
+      "bytes": 11235,
+      "sha256": "3d63f62989c63ee12dc374a7516c06139e0ea43d47dec5944972c6765f8d451f"
     },
     {
       "path": "tests/desktop-auth-vault.test.mjs",
-      "bytes": 3815,
-      "sha256": "87f8a1a744ac0b378eec27a07243a3a7a98cd343e8fe121254cb22aab5bebe7b"
+      "bytes": 4479,
+      "sha256": "a1c3e511a45fb4b80a3e6a4ef566cf2562ef19cb8752630e69af8970370c4d14"
     },
     {
       "path": "tests/directory-expansion.test.mjs",
@@ -1007,6 +1017,11 @@
       "path": "tests/fingerprint-runtime.test.mjs",
       "bytes": 3149,
       "sha256": "4c03f4b482ae5a12a106a08c0f7f0b216103a8aa0e3facc6c85c559aaf78190e"
+    },
+    {
+      "path": "tests/fixtures/desktop-auth-lifecycle.mjs",
+      "bytes": 2406,
+      "sha256": "0ec559f3b95624fe6705a6eaed799af0aac62f831c79cd3bbfd82417cca42cd0"
     },
     {
       "path": "tests/fixtures/inventory/a.txt",
@@ -1099,9 +1114,14 @@
       "sha256": "26e374fb75e172b2d33cbd7eb220bb4ed35400df4eac52ce89c0bf15ab532ec9"
     },
     {
+      "path": "tests/smoke-desktop-auth-lifecycle.mjs",
+      "bytes": 3194,
+      "sha256": "99f716f3e3980b4a0aab010fb0aaa1ffc93983c771215cc96d6760bbb4da262b"
+    },
+    {
       "path": "tests/smoke-desktop-auth.mjs",
-      "bytes": 8109,
-      "sha256": "56885086d073533b96caef3049c895273ca4a709c69c3f09ba3802d9eca0def4"
+      "bytes": 8177,
+      "sha256": "610858b776232ff231c9f2251336c3d3a15eca32ef26357b885c1056bb85c748"
     },
     {
       "path": "tests/smoke-desktop-renderer.mjs",

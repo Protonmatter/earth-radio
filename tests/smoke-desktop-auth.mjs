@@ -2,7 +2,7 @@
 // loopback PKCE and OS encryption. Provider HTTP responses are synthetic here;
 // real GoTrue/RLS and live external providers are separate qualification gates.
 import assert from 'node:assert/strict';
-import { mkdtemp, writeFile, readFile, rm } from 'node:fs/promises';
+import { mkdir, mkdtemp, writeFile, readFile, rm } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -12,6 +12,7 @@ import { createDesktopAuthManager } from '../electron/auth-manager.mjs';
 import { handleAuthIpc, isTrustedAuthSender } from '../electron/auth-ipc-policy.mjs';
 
 const root = path.resolve(import.meta.dirname, '..');
+await mkdir(path.join(root, '.build'), { recursive: true });
 const directory = await mkdtemp(path.join(root, '.build', 'native-auth-'));
 app.setPath('userData', path.join(directory, 'profile'));
 app.disableHardwareAcceleration();

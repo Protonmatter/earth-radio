@@ -285,7 +285,7 @@ export function createAuthClient({
     }, flowId);
     const challenge = await challengeFor(cryptoImpl, verifier);
     if (generation !== signInGeneration) throw new Error('Sign-in canceled. Please start again.');
-    return { verifier, challenge, flowId };
+    return { verifier, challenge, flowId, generation };
   }
 
   function allowlistedRedirect(target) {
@@ -410,9 +410,11 @@ export function createAuthClient({
     },
 
     async linkIdentity(provider, { redirectTo = redirectTarget(), scopes, queryParams = {} } = {}) {
+      const requestedGeneration = signInGeneration;
       const current = await freshSession();
+      if (requestedGeneration !== signInGeneration) throw new Error('Sign-in canceled. Please start again.');
       if (!current) throw new Error('Sign in before linking another account.');
-      const { challenge } = await beginPkce();
+      const { challenge, generation } = await beginPkce();
       const endpoint = new URL(`${authUrl}/user/identities/authorize`);
       endpoint.searchParams.set('provider', provider);
       endpoint.searchParams.set('redirect_to', redirectForFlow(redirectTo));
@@ -422,6 +424,7 @@ export function createAuthClient({
       if (scopes) endpoint.searchParams.set('scopes', scopes);
       for (const [key, value] of Object.entries(queryParams)) endpoint.searchParams.set(key, String(value));
       const result = await request(endpoint.href, { accessToken: current.access_token });
+      if (generation !== signInGeneration || session !== current) throw new Error('Sign-in canceled or account changed. Please start again.');
       if (!result?.url) throw new Error('The identity provider did not return a link URL.');
       await location.assign(result.url);
     },

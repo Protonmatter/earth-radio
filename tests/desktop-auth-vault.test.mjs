@@ -69,3 +69,16 @@ test('vault flush reports failed encryption and never leaves plaintext or a temp
   vault.storage.removeItem(authStorageKeys.session);
   await vault.flush();
 });
+
+test('vault can retry the latest secure update after the keychain is unlocked', async t => {
+  const safeStorage = encryption();
+  const encrypt = safeStorage.encryptStringAsync;
+  safeStorage.encryptStringAsync = async () => { throw new Error('locked'); };
+  const { vault, directory } = await fixture(t, safeStorage);
+  vault.storage.setItem(authStorageKeys.session, 'recoverable-session');
+  await assert.rejects(vault.flush());
+  safeStorage.encryptStringAsync = encrypt;
+  await vault.flush();
+  const restored = await createAuthVault({ directory, safeStorage });
+  assert.equal(restored.storage.getItem(authStorageKeys.session), 'recoverable-session');
+});

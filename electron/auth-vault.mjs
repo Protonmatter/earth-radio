@@ -13,6 +13,7 @@ export async function createAuthVault({ directory, safeStorage }) {
   const filename = path.join(directory, 'session.enc');
   const memory = new Map();
   let queue = Promise.resolve();
+  let failed = false, latestValue = null;
   let rotate = false;
   try {
     if ((await stat(filename)).size > MAX_BYTES) throw new Error('Oversized credential file.');
@@ -38,7 +39,8 @@ export async function createAuthVault({ directory, safeStorage }) {
     } finally { await rm(temporary, { force: true }); }
   }
   function enqueue(value) {
-    queue = queue.catch(() => {}).then(() => persist(value));
+    latestValue = value;
+    queue = queue.catch(() => {}).then(() => persist(value)).then(() => { failed = false; }, error => { failed = true; throw error; });
     queue.catch(() => {});
   }
   const storage = {
@@ -54,5 +56,5 @@ export async function createAuthVault({ directory, safeStorage }) {
     }
   };
   if (rotate) { enqueue(memory.get(authStorageKeys.session)); await queue; }
-  return { storage, flush: async () => { await queue; } };
+  return { storage, flush: async () => { if (failed) enqueue(latestValue); await queue; } };
 }
