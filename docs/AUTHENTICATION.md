@@ -112,6 +112,13 @@ disposable local users, verify email PKCE plus config sync, and do not send publ
 Local Windows has no Docker/Supabase CLI, so that integration must be qualified in CI.
 No live access/refresh tokens, auth codes, verifiers or mail links belong in evidence.
 
+On macOS, native CI also builds a clearly named `EarthRadio-Candidate-...-unnotarized.dmg`
+from its exact checked-out SHA. It verifies the DMG, ad-hoc signature, architecture,
+version, packaged source hashes and bounded startup, and uploads checksums/receipts as
+CI artifacts. Candidate mode does not assert that a stable release tag exists. The
+separate stable-release workflow retains its exact remote tag/source check. These
+candidate artifacts do not replace the published v0.25.1 installers.
+
 Rollback uses the prior application/web release without deleting user tables. To stop
 native callbacks, remove only the native loopback redirect entry in hosted Supabase.
 The required entry is `http://127.0.0.1:*/earth-radio-auth/callback/*`; preserve the

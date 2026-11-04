@@ -5,8 +5,8 @@
   "files": [
     {
       "path": ".github/workflows/ci.yml",
-      "bytes": 3308,
-      "sha256": "decfaae13db8ab54b556de476e3b4f5acd8e44a893187873bddd39f8a476916b"
+      "bytes": 4256,
+      "sha256": "2cc88819900468a5667f9b7f00ece5d35f00043cedd8720983ff902b06239e68"
     },
     {
       "path": ".github/workflows/macos-release.yml",
@@ -30,8 +30,8 @@
     },
     {
       "path": "docs/AUTHENTICATION.md",
-      "bytes": 7712,
-      "sha256": "1574b20f6b530e24eb576decd76e1ef0ae285042c70376362196d9546c26e5b5"
+      "bytes": 8210,
+      "sha256": "97741e0402c5a467d00088e268c99adec91c4afe52196fe3feeb30ca1963999a"
     },
     {
       "path": "docs/branding/earth-radio-icon-master.png",
@@ -300,8 +300,8 @@
     },
     {
       "path": "scripts/macos-release.mjs",
-      "bytes": 9383,
-      "sha256": "f78d636264b04cf16497397bb57f35e06f408b21046eeea125887746a3c7e91b"
+      "bytes": 9841,
+      "sha256": "71a5086df052668ef111cb45af13cb2d2ab9e1896de33f7ed1dc640410f4afa1"
     },
     {
       "path": "scripts/qualify-edge-runtime.mjs",
@@ -1055,8 +1055,8 @@
     },
     {
       "path": "tests/macos-release.test.mjs",
-      "bytes": 4505,
-      "sha256": "7690972f271fed9bbb467537f39213c161a54d41ec2ebc5d8437895340d947f8"
+      "bytes": 5033,
+      "sha256": "9c8a3e09e9915b640da00074e68cd826497e0776ff32568b5e260a6384fdd6f7"
     },
     {
       "path": "tests/net-guard.test.mjs",

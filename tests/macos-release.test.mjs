@@ -2,9 +2,17 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { readFile } from 'node:fs/promises';
 import { spawn } from 'node:child_process';
-import { buildMacRelease, releaseIdentity, startupSmoke, stopReleaseChild } from '../scripts/macos-release.mjs';
+import { buildMacRelease, candidateIdentity, releaseIdentity, startupSmoke, stopReleaseChild } from '../scripts/macos-release.mjs';
 
 const input = { tag: 'v0.25.1', sha: 'a'.repeat(40), version: '0.25.1', arch: 'arm64' };
+test('macOS candidates require immutable source and cannot claim a stable release tag', () => {
+  const identity = candidateIdentity({ ...input, version: '0.26.0' });
+  assert.equal(identity.artifactName, 'EarthRadio-Candidate-0.26.0-aaaaaaaaaaaa-macOS-arm64-unnotarized.dmg');
+  assert.equal(identity.tag, undefined);
+  assert.equal(identity.candidate, true);
+  assert.throws(() => candidateIdentity({ ...input, sha: 'main' }));
+  assert.throws(() => candidateIdentity({ ...input, arch: 'universal' }));
+});
 test('macOS release identity separates architectures and labels unnotarized artifacts', () => {
   assert.equal(releaseIdentity(input).artifactName, 'EarthRadio-0.25.1-macOS-arm64-unnotarized.dmg');
   assert.equal(releaseIdentity({ ...input, arch: 'x64' }).artifactName, 'EarthRadio-0.25.1-macOS-x64-unnotarized.dmg');
