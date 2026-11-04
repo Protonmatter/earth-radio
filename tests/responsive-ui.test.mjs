@@ -141,7 +141,8 @@ test('locale rendered scenarios use real modal controls and state barriers', () 
   assert.equal(save.actions.some(action => action.type === 'markNavigation'), true, 'Save has no reload checkpoint');
   const postReload = save.actions.find(action => action.type === 'waitForNavigation');
   assert.ok(postReload, 'Save does not wait for a cross-navigation barrier');
-  assert.match(postReload.expression, /earthRadio\.preferences\.v1/);
+  assert.match(postReload.expression, /indexedDB\.open\('earthRadio'\)/);
+  assert.match(postReload.expression, /objectStore\('kv'\)\.get\('prefs'\)/);
   assert.match(postReload.expression, /sessionStorage/);
 });
 
@@ -153,7 +154,7 @@ test('Now Playing history state is distinct from runtime hash writes', () => {
 
 test('responsive assets are referenced after the recovered runtime and staged as site files', async () => {
   const html = await readFile(path.join(root, 'site', 'index.html'), 'utf8');
-  const runtime = html.indexOf('index-690938fe.js');
+  const runtime = html.indexOf('index-ff42f3f1.js');
   const layer = html.indexOf('responsive-ui.js');
   assert.ok(runtime >= 0 && layer > runtime);
   assert.match(html, /viewport-fit=cover/);

@@ -4,20 +4,20 @@
 
 import { expect, test } from '@playwright/test';
 import { FIXTURE_STATIONS } from './fixtures/stations.mjs';
-import { card, playFromList, setupApp } from './helpers.mjs';
+import { card, playFromList, revealCard, setupApp } from './helpers.mjs';
 
 test.describe('directory and playback selection', () => {
   test('station list renders the fixture directory', async ({ page }) => {
     await setupApp(page);
     for (const station of FIXTURE_STATIONS.slice(0, 3)) {
-      await expect(card(page, station.name)).toBeVisible();
+      await expect(await revealCard(page, station.name)).toBeVisible();
     }
   });
 
   test('LISTEN.moe is present without expanding Japan', async ({ page }) => {
     await setupApp(page);
-    await expect(card(page, 'LISTEN.moe')).toBeVisible();
-    await expect(card(page, 'LISTEN.moe Kpop')).toBeVisible();
+    await expect(await revealCard(page, 'LISTEN.moe')).toBeVisible();
+    await expect(await revealCard(page, 'LISTEN.moe Kpop')).toBeVisible();
     await playFromList(page, 'LISTEN.moe');
     await expect(page.locator('#player-station')).toHaveText('LISTEN.moe');
   });

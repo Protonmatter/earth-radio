@@ -54,6 +54,42 @@ function isFingerprintedAsset(relative) {
   return /-[A-Za-z0-9_-]{8}\.[^.]+$/.test(path.basename(relative));
 }
 
+// Numeric longitudes such as 127.283 resemble shorthand loopback addresses to
+// the general text scanner. Parse this one data-only module without executing
+// it; validate every allowed field/ring/point before removing only coordinates
+// from the local-reference scan. Extra code, properties, URLs, and bad geometry
+// cannot use the data path as an exception to the deployment boundary.
+function atlasTextForScan(source) {
+  const match = source.match(/^(\/\/[^\r\n]*\r?\n)export const WORLD_LAND = ([\s\S]*);\s*$/);
+  if (!match) throw new Error('Expected a data-only atlas module');
+  const world = JSON.parse(match[2]);
+  const keys = (value, expected) => value && typeof value === 'object' && !Array.isArray(value) &&
+    Object.keys(value).sort().join(',') === expected.slice().sort().join(',');
+  if (!keys(world, ['type', 'features']) || world.type !== 'FeatureCollection' ||
+    !Array.isArray(world.features) || !world.features.length || world.features.length > 500) throw new Error('Invalid collection');
+  let points = 0;
+  for (const feature of world.features) {
+    if (!keys(feature, ['type', 'properties', 'geometry']) || feature.type !== 'Feature' || !keys(feature.properties, []) ||
+      !keys(feature.geometry, ['type', 'coordinates'])) throw new Error('Invalid land feature');
+    const geometry = feature.geometry;
+    const polygons = geometry.type === 'Polygon' ? [geometry.coordinates] : geometry.type === 'MultiPolygon' ? geometry.coordinates : null;
+    if (!Array.isArray(polygons) || !polygons.length) throw new Error('Invalid polygon collection');
+    for (const polygon of polygons) {
+      if (!Array.isArray(polygon) || !polygon.length) throw new Error('Invalid polygon');
+      for (const ring of polygon) {
+        if (!Array.isArray(ring) || ring.length < 4) throw new Error('Invalid ring');
+        for (const point of ring) {
+          if (++points > 250000 || !Array.isArray(point) || point.length !== 2 || !point.every(Number.isFinite) ||
+            Math.abs(point[0]) > 180 || Math.abs(point[1]) > 90) throw new Error('Invalid coordinate');
+        }
+        if (ring[0][0] !== ring.at(-1)[0] || ring[0][1] !== ring.at(-1)[1]) throw new Error('Open polygon ring');
+      }
+    }
+    geometry.coordinates = [];
+  }
+  return match[1] + JSON.stringify(world);
+}
+
 export async function validateSite(rootInput) {
   const root = path.resolve(rootInput);
   const files = await collectFiles(root);
@@ -106,7 +142,12 @@ export async function validateSite(rootInput) {
   for (const relative of files) {
     if (!textExtensions.has(path.extname(relative))) continue;
     const content = await readFile(path.join(root, ...relative.split('/')), 'utf8');
-    if (forbidden.test(content)) {
+    let textForScan = content;
+    if (relative === 'assets/world-land.js') {
+      try { textForScan = atlasTextForScan(content); }
+      catch (error) { errors.push(`Invalid atlas data in ${relative}: ${error.message}`); }
+    }
+    if (forbidden.test(textForScan)) {
       errors.push(`Forbidden local reference in ${relative}`);
     }
     if (/[/#@]\s*sourceMappingURL\s*=/i.test(content)) {

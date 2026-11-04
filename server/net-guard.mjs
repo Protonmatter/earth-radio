@@ -38,19 +38,24 @@ export function createPinnedLookup(target) {
   return (hostname, options, callback) => {
     const cb = typeof options === 'function' ? options : callback;
     if (!cb) return;
+    // Node's family-autoselection path asks custom lookups for all:true and
+    // consumes an array. Keep one approved address pinned in both contracts.
+    const deliver = record => options?.all === true
+      ? cb(null, [{ address: record.address, family: record.family }])
+      : cb(null, record.address, record.family);
     if (normalizeHostname(hostname) === target.hostname) {
       if (isPrivateIp(target.address)) {
         cb(new Error('stream host resolves to a private address'));
         return;
       }
-      cb(null, target.address, target.family);
+      deliver(target);
       return;
     }
     dns.lookup(normalizeHostname(hostname), { all: true, verbatim: false })
       .then(records => {
         if (!records.length) throw new Error('stream host did not resolve');
         if (records.some(record => isPrivateIp(record.address))) throw new Error('stream host resolves to a private address');
-        cb(null, records[0].address, records[0].family);
+        deliver(records[0]);
       })
       .catch(error => cb(error));
   };
@@ -88,10 +93,12 @@ export async function requestLimited(streamTarget, { timeoutMs = DEFAULT_TIMEOUT
       if (response) {
         if (onData) response.off('data', onData);
         if (onEnd) response.off('end', onEnd);
-        if (onResponseError) response.off('error', onResponseError);
       }
       request?.setTimeout(0);
-      request?.off('error', onRequestError);
+      // Retain the idempotent error handlers for each emitter's lifetime. Node
+      // may emit a late parser/socket error after end/destroy; removing them at
+      // promise settlement makes that a main-process uncaught exception. Errors
+      // before settlement still reject normally. No global listener is added.
       if (onAbort) signal?.removeEventListener('abort', onAbort);
       fn(value);
     };

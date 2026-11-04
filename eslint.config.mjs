@@ -60,7 +60,7 @@ export default [
   },
   {
     // Cloudflare Pages Functions: Workers runtime (Web APIs, no Node globals).
-    files: ['functions/**/*.js'],
+    files: ['functions/**/*.js', 'workers/**/*.js', 'workers/**/*.mjs'],
     languageOptions: { ecmaVersion: 2024, sourceType: 'module', globals: { ...globals.serviceworker, ...globals.worker } }
   }
 ];

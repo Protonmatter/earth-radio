@@ -16,7 +16,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { app, BrowserWindow, screen, session } from 'electron';
 import { fixtureStations } from './fixtures/stations.mjs';
-import { SCENARIOS } from './scenarios.mjs';
+import { SCENARIOS, READ_RUNTIME_PREFERENCES } from './scenarios.mjs';
 import { retryKnownCaptureError } from './harness.mjs';
 
 const harnessDirectory = path.dirname(fileURLToPath(import.meta.url));
@@ -101,7 +101,7 @@ function installHttpsFixtures() {
   });
 }
 
-const PROBE = `(() => {
+const PROBE = `(async () => {
   const rectOf = element => {
     if (!element) return null;
     const box = element.getBoundingClientRect();
@@ -169,8 +169,15 @@ const PROBE = `(() => {
     bodyFontFamily: style.fontFamily,
     rowHeightVariable: rootStyle.getPropertyValue('--er-row-h').trim(),
     safeAreaVariables: {
+      top: rootStyle.getPropertyValue('--er-safe-top').trim(),
+      bottom: rootStyle.getPropertyValue('--er-safe-bottom').trim(),
       start: rootStyle.getPropertyValue('--er-safe-start').trim(),
       end: rootStyle.getPropertyValue('--er-safe-end').trim()
+    },
+    chromeMetrics: {
+      header: rootStyle.getPropertyValue('--er-header').trim(),
+      headerMinHeight: getComputedStyle(document.querySelector('header.header')).minHeight,
+      headerPaddingTop: getComputedStyle(document.querySelector('header.header')).paddingTop
     },
     horizontalOverflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
     bodyOverflow: document.body.scrollWidth - document.body.clientWidth,
@@ -223,7 +230,7 @@ const PROBE = `(() => {
       primary: getComputedStyle(document.querySelector('#btn-play')).backgroundColor,
       primaryVariable: getComputedStyle(document.querySelector('#btn-play')).getPropertyValue('--er-coral').trim(),
       primaryInline: document.querySelector('#btn-play').getAttribute('style') || '',
-      map: getComputedStyle(document.querySelector('#map-panel')).backgroundColor
+      map: getComputedStyle(document.querySelector('#map')).backgroundColor
     },
     savedSegmentButtons: queryAll('[data-er-saved]'),
     collections: queryAll('#collections .collection-chip'),
@@ -265,9 +272,7 @@ const PROBE = `(() => {
     storedUiState: (() => {
       try { return JSON.parse(localStorage.getItem('earthRadio.ui.v1') || 'null'); } catch { return null; }
     })(),
-    storedRuntimePreferences: (() => {
-      try { return JSON.parse(localStorage.getItem('earthRadio.preferences.v1') || 'null'); } catch { return null; }
-    })()
+    storedRuntimePreferences: await ${READ_RUNTIME_PREFERENCES}
   };
 })()`;
 
@@ -349,7 +354,8 @@ function seedScript(scenario) {
     savedSegment: scenario.savedSegment || 'favorites',
     collapsed: null,
     split: 42,
-    locale: scenario.locale || 'en'
+    locale: scenario.locale || 'en',
+    palette: scenario.theme === 'dark' ? 'night' : 'paper'
   };
   return `(() => {
     localStorage.clear();
@@ -441,7 +447,12 @@ async function runAction(window_, action, tracker) {
       node.scrollIntoView({ block: 'center', inline: 'nearest' });
       const rect = node.getBoundingClientRect();
       if (rect.width <= 0 || rect.height <= 0) return null;
-      window.__erTrustedPointer = { expectedTarget: node.className, point: null, received: null };
+      window.__erTrustedPointer = { expectedTarget: node.className, point: null, received: null, events: [] };
+      for (const name of ['pointerdown', 'mousedown', 'mouseup', 'click']) {
+        window.addEventListener(name, event => window.__erTrustedPointer.events.push({
+          type: event.type, trusted: event.isTrusted, target: event.target instanceof Element ? event.target.className : ''
+        }), { capture: true, once: true });
+      }
       document.addEventListener('click', event => {
         window.__erTrustedPointer.received = {
           isTrusted: event.isTrusted,
@@ -454,11 +465,16 @@ async function runAction(window_, action, tracker) {
     })()`, true);
     if (point) {
       await contents.executeJavaScript(`window.__erTrustedPointer.point = ${JSON.stringify(point)}`, true);
-      window_.focus();
-      contents.focus();
-      contents.sendInputEvent({ type: 'mouseMove', x: point.x, y: point.y });
-      contents.sendInputEvent({ type: 'mouseDown', x: point.x, y: point.y, button: 'left', clickCount: 1 });
-      contents.sendInputEvent({ type: 'mouseUp', x: point.x, y: point.y, button: 'left', clickCount: 1 });
+      // Native window focus is asynchronous on Windows and may be denied when the
+      // engineer uses another application. Dispatch trusted Chromium pointer input
+      // through the owned renderer, without relying on foreground eligibility.
+      contents.debugger.attach('1.3');
+      try {
+        await contents.debugger.sendCommand('Emulation.setFocusEmulationEnabled', { enabled: true });
+        await contents.debugger.sendCommand('Input.dispatchMouseEvent', { type: 'mouseMoved', x: point.x, y: point.y });
+        await contents.debugger.sendCommand('Input.dispatchMouseEvent', { type: 'mousePressed', x: point.x, y: point.y, button: 'left', clickCount: 1 });
+        await contents.debugger.sendCommand('Input.dispatchMouseEvent', { type: 'mouseReleased', x: point.x, y: point.y, button: 'left', clickCount: 1 });
+      } finally { contents.debugger.detach(); }
     }
     await new Promise(resolve => setTimeout(resolve, 200));
     return contents.executeJavaScript(ACTION_PROBE, true);

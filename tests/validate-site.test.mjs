@@ -33,6 +33,35 @@ test('validateSite accepts a complete direct-mode site', async () => {
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
+const landData = coordinates => `// Public-domain atlas data\nexport const WORLD_LAND = ${JSON.stringify({ type: 'FeatureCollection', features: [
+  { type: 'Feature', properties: {}, geometry: { type: 'Polygon', coordinates } }
+] })};\n`;
+
+test('validated numeric land coordinates are not interpreted as loopback references', async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), 'earth-radio-land-site-'));
+  try {
+    await createSite(root);
+    await writeFile(path.join(root, 'assets/world-land.js'), landData([[[127.283, -73.462], [128, -73], [128, -72], [127.283, -73.462]]]));
+    assert.equal((await validateSite(root)).ok, true);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+for (const [name, module] of [
+  ['executable suffix', landData([[[0, 1], [1, 1], [1, 2], [0, 1]]]) + "fetch('http://127.0.0.1/');"],
+  ['URL as a coordinate', landData([[['http://127.0.0.1/', 1], [1, 1], [1, 2], [0, 1]]])],
+  ['open polygon ring', landData([[[0, 1], [1, 1], [1, 2], [0, 2]]])],
+  ['out-of-range longitude', landData([[[181, 1], [1, 1], [1, 2], [181, 1]]])]
+]) {
+  test(`land data cannot bypass validation with ${name}`, async () => {
+    const root = await mkdtemp(path.join(os.tmpdir(), 'earth-radio-bad-land-site-'));
+    try {
+      await createSite(root);
+      await writeFile(path.join(root, 'assets/world-land.js'), module);
+      await assert.rejects(() => validateSite(root), /invalid atlas data/i);
+    } finally { await rm(root, { recursive: true, force: true }); }
+  });
+}
+
 test('validateSite rejects a localhost production proxy', async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), 'earth-radio-local-site-'));
   try {

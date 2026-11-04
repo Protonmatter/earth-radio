@@ -12,7 +12,7 @@ import { fileURLToPath } from 'node:url';
 const harnessDirectory = path.dirname(fileURLToPath(import.meta.url));
 const repositoryRoot = path.resolve(harnessDirectory, '..', '..');
 
-const EVIDENCE_DIRECTORY = path.join(repositoryRoot, 'evidence', 'responsive-ui');
+const EVIDENCE_DIRECTORY = path.join(repositoryRoot, '.build', 'evidence', 'responsive-ui');
 
 function electronBinary() {
   const suffix = process.platform === 'win32' ? '.cmd' : '';

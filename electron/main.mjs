@@ -1,8 +1,8 @@
 import { app, BrowserWindow, ipcMain, shell, session } from 'electron';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { createDesktopProxy } from '../server/desktop-proxy.mjs';
-import { parseNetworkProxyRule } from './proxy-rules.mjs';
+import { installDesktopProxyOrigin, parseNetworkProxyRule } from './proxy-rules.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const appRoot = path.resolve(__dirname, '..');
@@ -21,6 +21,7 @@ async function createMainWindow(proxyBaseUrl) {
     minWidth: 1080,
     minHeight: 720,
     title: 'Earth Radio',
+    icon: resolveAsset('site', 'branding', process.platform === 'win32' ? 'earth-radio-v2.ico' : 'earth-radio-512-v2.png'),
     backgroundColor: '#0a1020',
     show: false,
     webPreferences: {
@@ -49,6 +50,10 @@ async function createMainWindow(proxyBaseUrl) {
   mainWindow.webContents.on('will-redirect', event => {
     event.preventDefault();
   });
+
+  const expectedDocumentUrl = pathToFileURL(resolveAsset('site', 'index.html')).href;
+  installDesktopProxyOrigin(mainWindow.webContents.session, { proxyBaseUrl,
+    webContents: mainWindow.webContents, expectedDocumentUrl });
 
   mainWindow.webContents.session.webRequest.onHeadersReceived((details, callback) => {
     callback({

@@ -3,7 +3,7 @@ import { readFile, readdir, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const includeRoots = ['.github', 'site', 'electron', 'server', 'docs', 'tests', 'src-recovered', 'scripts', 'functions', 'supabase'];
+const includeRoots = ['.github', 'site', 'electron', 'server', 'docs', 'tests', 'src-recovered', 'scripts', 'functions', 'workers', 'supabase'];
 const includeFiles = ['.node-version', 'eslint.config.mjs', 'package.json', 'package-lock.json', 'electron-builder.yml', 'wrangler.jsonc'];
 
 async function collectFiles(root) {
@@ -19,6 +19,7 @@ async function collectFiles(root) {
     }
     entries.sort((a, b) => a.name.localeCompare(b.name, 'en'));
     for (const entry of entries) {
+      if (entry.isDirectory() && ['.build', '.wrangler', 'node_modules'].includes(entry.name)) continue;
       const relative = path.posix.join(relativeDirectory.replaceAll('\\', '/'), entry.name);
       if (entry.isDirectory()) await walk(relative);
       else if (entry.isFile()) files.push(relative);

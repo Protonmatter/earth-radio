@@ -12,5 +12,13 @@
   "name": "earth-radio",
   "pages_build_output_dir": ".build/site",
   "compatibility_date": "2026-08-25",
-  "compatibility_flags": ["global_fetch_strictly_public"]
+  "compatibility_flags": ["global_fetch_strictly_public"],
+  "vars": { "METADATA_LIMIT_SCOPE": "preview" },
+  "durable_objects": {
+    "bindings": [{ "name": "METADATA_LIMITS", "class_name": "MetadataRateLimit", "script_name": "earth-radio-metadata-limits" }]
+  },
+  "env": {
+    "production": { "vars": { "METADATA_LIMIT_SCOPE": "production" }, "durable_objects": { "bindings": [{ "name": "METADATA_LIMITS", "class_name": "MetadataRateLimit", "script_name": "earth-radio-metadata-limits" }] } },
+    "preview": { "vars": { "METADATA_LIMIT_SCOPE": "preview" }, "durable_objects": { "bindings": [{ "name": "METADATA_LIMITS", "class_name": "MetadataRateLimit", "script_name": "earth-radio-metadata-limits" }] } }
+  }
 }

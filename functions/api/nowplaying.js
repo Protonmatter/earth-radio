@@ -3,13 +3,13 @@
 // without this the static deployment has no live now-playing feed at all. All outbound
 // traffic goes through the shared guarded boundary (functions/_shared/guarded-fetch.js):
 // manual, revalidated redirects with a hop cap, byte caps, and one absolute wall-clock
-// deadline per request. Zone-level WAF rate limits (docs/OPERATIONS.md) sit in front;
-// the in-function limiter here is defense in depth.
+// deadline per request. Pages middleware applies the private persisted quota
+// before this handler (including probes/cache hits); see docs/OPERATIONS.md.
 //
 // GET /api/nowplaying                -> availability probe
 // GET /api/nowplaying?url=<stream>   -> { found, source, artist, title, raw, ... }
 
-import { createRateLimiter, fetchPublic, readBodyCapped, rejectFetchUrl } from '../_shared/guarded-fetch.js';
+import { fetchPublic, readBodyCapped, rejectFetchUrl } from '../_shared/guarded-fetch.js';
 import { detectPlatformEndpoints, parsePlatformPayload, sseFrameComplete } from '../../server/platform-detect.mjs';
 import { parseNowPlaying } from '../../server/metadata-providers.mjs';
 import { extractIcyTitle, icyReadBudget } from '../../server/icy-title.mjs';
@@ -29,7 +29,6 @@ const DO_NOT_CACHE = Symbol('do-not-cache');
 
 export const rejectStreamUrl = rejectFetchUrl;
 
-const allowRequest = createRateLimiter({ windowMs: 60_000, max: 30 });
 
 export async function onRequestGet({ request }) {
   const url = new URL(request.url);
@@ -47,13 +46,6 @@ export async function onRequestGet({ request }) {
   if (cache) {
     const cached = await cache.match(cacheKey);
     if (cached) return cached;
-  }
-
-  if (!allowRequest(request)) {
-    return new Response(JSON.stringify({ error: 'rate limit exceeded' }), {
-      status: 429,
-      headers: { 'content-type': 'application/json; charset=utf-8', 'retry-after': '60', 'cache-control': 'no-store' }
-    });
   }
 
   const deadlineAt = Date.now() + TOTAL_BUDGET_MS;

@@ -1,0 +1,194 @@
+// Maintained, pure discovery algorithms. Scores are engineering heuristics, not
+// calibrated probabilities of stream uptime. No network, storage, or browser globals.
+const SORTS = new Set(['best', 'reliable', 'explore', 'bitrate', 'name', 'similar']);
+const COOLDOWN_MS = 15 * 60 * 1000;
+const clamp = (value, max = 100) => Math.min(max, Math.max(0, Number.isFinite(Number(value)) ? Number(value) : 0));
+export const fold = value => String(value ?? '').normalize('NFKD').replace(/\p{M}/gu, '').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+const parts = value => [...new Set(String(value ?? '').split(/[,;]+/).map(fold).filter(Boolean))];
+const tags = station => parts((Array.isArray(station.tagList) ? station.tagList : String(station.tags ?? '').split(',')).join(','));
+const compare = (a, b) => a < b ? -1 : a > b ? 1 : 0;
+const stable = (a, b) => compare(fold(a.name), fold(b.name)) || compare(String(a.stationuuid), String(b.stationuuid));
+
+export function sanitizePreferences(value) {
+  const input = value && typeof value === 'object' ? value : {};
+  return {
+    query: String(input.query ?? '').slice(0, 160), sort: SORTS.has(input.sort) ? input.sort : 'best',
+    genre: String(input.genre ?? '').slice(0, 64), language: String(input.language ?? '').slice(0, 64),
+    minBitrate: clamp(input.minBitrate, 1536), secureOnly: input.secureOnly === true, avoidFailures: input.avoidFailures === true
+  };
+}
+
+export function streamIdentity(station) {
+  try {
+    const url = new URL(station?.url_resolved || station?.url || '');
+    if (!['https:', 'http:'].includes(url.protocol) || url.username || url.password) return null;
+    url.hash = '';
+    return url.href;
+  } catch { return null; }
+}
+
+export function coordinates(station) {
+  const raw = [station?.geo_lat, station?.geo_long];
+  if (raw.some(v => v == null || typeof v === 'boolean' || String(v).trim() === '')) return null;
+  const [lat, lng] = raw.map(Number);
+  if (!Number.isFinite(lat) || !Number.isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180 || (lat === 0 && lng === 0)) return null;
+  return [lat, lng];
+}
+
+export function distanceKm(a, b) {
+  const rad = n => n * Math.PI / 180;
+  const dLat = rad(b[0] - a[0]), dLng = rad(b[1] - a[1]);
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(rad(a[0])) * Math.cos(rad(b[0])) * Math.sin(dLng / 2) ** 2;
+  return 6371.0088 * 2 * Math.asin(Math.sqrt(Math.min(1, Math.max(0, h))));
+}
+
+export function inBounds(station, bounds) {
+  const point = coordinates(station);
+  if (!point || !bounds) return false;
+  const { south, north, west, east } = bounds;
+  if (![south, north, west, east].every(Number.isFinite) || south > north || point[0] < south || point[0] > north) return false;
+  if (Math.abs(east - west) >= 360) return true;
+  const wrap = n => ((n + 180) % 360 + 360) % 360 - 180;
+  const left = wrap(west), right = wrap(east), lng = wrap(point[1]);
+  return left <= right ? lng >= left && lng <= right : lng >= left || lng <= right;
+}
+
+function overlap(a, b) {
+  const left = new Set(a), right = new Set(b);
+  const shared = [...left].filter(tag => right.has(tag)).length;
+  return shared / (new Set([...left, ...right]).size || 1);
+}
+
+function failureState(station, options) {
+  const failure = options.badStations?.get?.(station.stationuuid);
+  const date = Date.parse(failure?.lastFailureAt ?? '');
+  const now = Number.isFinite(options.now) ? options.now : Date.now();
+  const age = now - date;
+  const active = clamp(failure?.failures) > 0 && Number.isFinite(date) && age >= 0 && age < COOLDOWN_MS;
+  const health = options.health?.get?.(station.stationuuid);
+  const successes = clamp(health?.successes, 1000), failures = clamp(health?.failures, 1000);
+  // Beta(2,1) prior; small samples never imply certainty. Counts are per tab only.
+  return { active, estimate: (successes + 2) / (successes + failures + 3), observed: successes + failures > 0 };
+}
+
+// Bounded edit distance. Long and short query terms never enter fuzzy matching.
+function closeWord(a, b) {
+  if (a.length < 5 || a.length > 32 || b.length > 36 || Math.abs(a.length - b.length) > 1) return false;
+  let row = Array.from({ length: b.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i++) {
+    const next = [i];
+    for (let j = 1; j <= b.length; j++) next[j] = Math.min(next[j - 1] + 1, row[j] + 1, row[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    if (Math.min(...next) > 1) return false;
+    row = next;
+  }
+  return row[b.length] <= 1;
+}
+
+function documentFor(station) {
+  const fields = [fold(station.name), fold(`${station.country ?? ''} ${station.countrycode ?? ''}`), tags(station).join(' '), fold(station.language)];
+  return { fields, length: fields.join(' ').split(' ').length };
+}
+
+function termFrequency(doc, term) {
+  const weights = [6, 3, 4, 2];
+  return doc.fields.reduce((sum, field, index) => {
+    if (field.split(' ').some(word => word.startsWith(term) || (term.length >= 3 && word.includes(term)))) return sum + weights[index];
+    return sum + (field.split(' ').slice(0, 40).some(word => closeWord(term, word)) ? weights[index] * 0.4 : 0);
+  }, 0);
+}
+
+/** Field-weighted BM25 + explicit quality/health signals. Every query term must match. */
+export function rankStations(stations, options = {}) {
+  const prefs = sanitizePreferences(options);
+  const terms = [...new Set(fold(prefs.query).split(' ').filter(Boolean))].slice(0, 8);
+  const genre = fold(prefs.genre), language = fold(prefs.language);
+  const rows = [];
+  const targetTags = options.current ? tags(options.current) : [];
+  for (const station of Array.isArray(stations) ? stations : []) {
+    if (!station || typeof station.stationuuid !== 'string' || !station.stationuuid || !streamIdentity(station)) continue;
+    const endpoint = streamIdentity(station), failure = failureState(station, options), stationTags = tags(station);
+    if ((prefs.secureOnly && !endpoint.startsWith('https:')) || (prefs.avoidFailures && failure.active) ||
+      (prefs.minBitrate && clamp(station.bitrate, 1536) < prefs.minBitrate) ||
+      (genre && !stationTags.includes(genre)) || (language && !parts(station.language).includes(language)) ||
+      (options.bounds && !inBounds(station, options.bounds))) continue;
+    const doc = documentFor(station);
+    const tf = terms.map(term => termFrequency(doc, term));
+    const similarity = options.current ? overlap(targetTags, stationTags) : 0;
+    if (prefs.sort === 'similar' && options.current && (station.stationuuid === options.current.stationuuid ||
+      endpoint === streamIdentity(options.current) || (targetTags.length > 0 && similarity === 0))) continue;
+    rows.push({ station, doc, tf, failure, similarity, endpoint });
+  }
+  const avgLength = rows.reduce((sum, row) => sum + row.doc.length, 0) / (rows.length || 1);
+  const idf = terms.map((_, index) => Math.log(1 + (rows.length - rows.filter(row => row.tf[index] > 0).length + 0.5) / (rows.filter(row => row.tf[index] > 0).length + 0.5)));
+  const entries = rows.filter(row => row.tf.every(value => value > 0)).map(({ station, doc, tf, failure, similarity, endpoint }) => {
+    const quality = clamp(station.quality?.score), reasons = [];
+    let score = quality * 0.55 + failure.estimate * 18;
+    if (quality >= 70) reasons.push(`Directory quality ${Math.round(quality)}/100`);
+    if (endpoint.startsWith('https:')) { score += 8; reasons.push('HTTPS stream'); }
+    if (station.lastcheckok === true || station.lastcheckok === 1) { score += 5; reasons.push('Last directory check passed'); }
+    if (failure.active) { score -= 65; reasons.push('Playback failed recently on this device'); }
+    if (failure.observed) reasons.push('Includes playback outcomes from this tab');
+    if (terms.length) {
+      score += tf.reduce((sum, freq, i) => sum + 18 * idf[i] * freq * 2.2 / (freq + 1.2 * (0.25 + 0.75 * doc.length / avgLength)), 0);
+      if (doc.fields[0] === fold(prefs.query)) score += 35;
+      else if (doc.fields[0].includes(fold(prefs.query))) score += 18;
+      reasons.unshift('Matches all search terms');
+    }
+    if (prefs.sort === 'reliable') score += failure.estimate * 20 + quality * 0.2;
+    if (prefs.sort === 'similar') { score += similarity * 65; reasons.unshift(`${Math.round(similarity * 100)}% genre overlap`); }
+    if (prefs.sort === 'bitrate') reasons.unshift(`${Math.round(clamp(station.bitrate, 1536))} kbps declared bitrate`);
+    if (!reasons.length) reasons.push('Limited directory metadata');
+    return { station, score: Math.round(score * 100) / 100, reasons };
+  });
+  entries.sort((a, b) => {
+    if (prefs.sort === 'name') return stable(a.station, b.station);
+    if (prefs.sort === 'bitrate') return clamp(b.station.bitrate, 1536) - clamp(a.station.bitrate, 1536) || b.score - a.score || stable(a.station, b.station);
+    return b.score - a.score || stable(a.station, b.station);
+  });
+  if (prefs.sort !== 'explore' || entries.length < 2) return entries;
+  // Greedy maximal marginal relevance on at most 120 candidates; the remainder
+  // retain their stable base order. Avoid quadratic work over the full catalog.
+  const pool = entries.slice(0, 120).map(entry => ({ entry, genres: tags(entry.station), redundancy: 0 })), selected = [];
+  while (pool.length) {
+    let best = 0, bestValue = -Infinity;
+    for (let i = 0; i < pool.length; i++) {
+      const value = pool[i].entry.score / 100 - pool[i].redundancy;
+      if (value > bestValue) { bestValue = value; best = i; }
+    }
+    const [chosen] = pool.splice(best, 1);
+    for (const item of pool) {
+      item.redundancy = Math.max(item.redundancy, overlap(item.genres, chosen.genres) * 0.25 +
+        (item.entry.station.countrycode && item.entry.station.countrycode === chosen.entry.station.countrycode ? 0.18 : 0));
+    }
+    selected.push({ ...chosen.entry, reasons: [...chosen.entry.reasons, 'Balanced for genre and country variety'] });
+  }
+  return [...selected, ...entries.slice(120)];
+}
+
+export function rankSimilar(target, stations, limit = 12, options = {}) {
+  if (!target) return [];
+  const endpoints = new Set([streamIdentity(target)]);
+  return rankStations(stations, { ...options, sort: 'similar', current: target, avoidFailures: true }).filter(entry => {
+    const url = streamIdentity(entry.station);
+    if (endpoints.has(url)) return false;
+    endpoints.add(url);
+    return true;
+  }).slice(0, clamp(limit, 100)).map(entry => entry.station);
+}
+
+export function pickStation(stations, options = {}, random = Math.random) {
+  const endpoints = new Set([streamIdentity(options.current)]);
+  const entries = rankStations(stations, { ...options, sort: 'explore', avoidFailures: true }).filter(entry => {
+    const url = streamIdentity(entry.station);
+    if (entry.station.stationuuid === options.current?.stationuuid || endpoints.has(url)) return false;
+    endpoints.add(url); return true;
+  }).slice(0, 80);
+  if (!entries.length) return null;
+  const counts = new Map();
+  for (const { station } of entries) counts.set(station.countrycode, (counts.get(station.countrycode) ?? 0) + 1);
+  const weights = entries.map(entry => Math.max(1, entry.score) / Math.sqrt(counts.get(entry.station.countrycode)));
+  const value = Number(random());
+  let threshold = Math.min(0.999999999, Math.max(0, Number.isFinite(value) ? value : 0)) * weights.reduce((a, b) => a + b, 0);
+  for (let i = 0; i < entries.length; i++) { threshold -= weights[i]; if (threshold < 0) return entries[i].station; }
+  return entries.at(-1).station;
+}

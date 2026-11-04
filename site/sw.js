@@ -1,11 +1,15 @@
-const CACHE_NAME = 'earth-radio-shell-v46-atlas-lock-1';
+const CACHE_NAME = 'earth-radio-shell-v52-safe-area-0-25-1';
 const SHELL_ASSETS = [
   './',
   './index.html',
   './config.js',
   './manifest.webmanifest',
+  './branding/earth-radio-32-v2.png',
+  './branding/earth-radio-180-v2.png',
+  './branding/earth-radio-192-v2.png',
+  './branding/earth-radio-512-v2.png',
   './assets/hls.light-Dr1Fv81C.js',
-  './assets/index-690938fe.js',
+  './assets/index-ff42f3f1.js',
   './assets/index-CSoL7F-Y.css',
   './assets/storage-guard.js',
   './assets/directory-expansion.js',
@@ -17,6 +21,12 @@ const SHELL_ASSETS = [
   './assets/ui-refresh.css',
   './assets/atlas-lock.css',
   './assets/atlas-lock.js',
+  './assets/discovery-core.js',
+  './assets/map-directory.js',
+  './assets/discovery-ui.js',
+  './assets/discovery.css',
+  './assets/vector-atlas.js',
+  './assets/world-land.js',
   './assets/auth-core.js',
   './assets/sync-core.js',
   './assets/auth-ui.js',
@@ -80,7 +90,7 @@ async function cacheFirst(request) {
 }
 
 function isImmutableAsset(pathname) {
-  return /index-690938fe|index-CSoL7F-Y|hls\.light-Dr1Fv81C/.test(pathname);
+  return /index-ff42f3f1|index-CSoL7F-Y|hls\.light-Dr1Fv81C/.test(pathname);
 }
 
 self.addEventListener('fetch', event => {
@@ -89,7 +99,7 @@ self.addEventListener('fetch', event => {
   const url = new URL(request.url);
 
   if (url.origin !== self.location.origin) return;
-  if (request.mode === 'navigate' || url.pathname.endsWith('/config.js') || url.pathname.includes('/i18n/') || url.pathname.includes('responsive-ui') || url.pathname.includes('atlas-lock')) {
+  if (request.mode === 'navigate' || url.pathname.endsWith('/config.js') || url.pathname.endsWith('/manifest.webmanifest') || url.pathname.includes('/branding/') || url.pathname.includes('/i18n/') || url.pathname.includes('responsive-ui') || url.pathname.includes('atlas-lock')) {
     event.respondWith(networkFirst(request));
   } else if (url.pathname.includes('/assets/') && isImmutableAsset(url.pathname)) {
     event.respondWith(cacheFirst(request));
