@@ -61,6 +61,8 @@ jobs:
       - name: Install locked application dependencies
         working-directory: application
         run: npm ci
+      - name: Verify packaging policies and shutdown paths
+        run: node --test tests/macos-release.test.mjs
       - name: Verify release source
         working-directory: application
         run: npm run verify

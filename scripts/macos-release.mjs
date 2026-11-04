@@ -27,6 +27,18 @@ async function sourceFiles(root, relative = '') {
   return files.sort();
 }
 
+export async function stopReleaseChild(child, closed, { termMs = 5000, killMs = 2000 } = {}) {
+  if (![termMs, killMs].every(value => Number.isInteger(value) && value >= 0 && value <= 30000)) throw new Error('Invalid shutdown deadline');
+  const finishedWithin = milliseconds => new Promise(resolve => {
+    const timer = setTimeout(() => resolve(false), milliseconds);
+    closed.then(() => { clearTimeout(timer); resolve(true); });
+  });
+  child.kill('SIGTERM');
+  if (await finishedWithin(termMs)) return;
+  child.kill('SIGKILL');
+  if (!await finishedWithin(killMs)) throw new Error('Packaged-app cleanup deadline exceeded; isolated profile retained');
+}
+
 async function startupSmoke(binary) {
   const profile = await mkdtemp(path.join(tmpdir(), 'earth-radio-release-'));
   const child = spawn(binary, [`--user-data-dir=${profile}`], { stdio: ['ignore', 'pipe', 'pipe'] });
@@ -48,11 +60,7 @@ async function startupSmoke(binary) {
     assert.equal(exited, false, 'Packaged app exited immediately after startup');
     return { proxyStarted: true, remainedRunning: true, isolatedProfile: true, audioPlaybackTested: false };
   } finally {
-    if (!exited) child.kill('SIGTERM');
-    let timer;
-    await Promise.race([closed, new Promise(resolve => { timer = setTimeout(resolve, 5000); })]);
-    clearTimeout(timer);
-    if (!exited) { child.kill('SIGKILL'); await closed; }
+    await stopReleaseChild(child, closed);
     await rm(profile, { recursive: true, force: true });
   }
 }

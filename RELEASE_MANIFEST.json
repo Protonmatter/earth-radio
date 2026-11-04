@@ -10,8 +10,8 @@
     },
     {
       "path": ".github/workflows/macos-release.yml",
-      "bytes": 2756,
-      "sha256": "135f8b9bfe3974f68ac31a7f14ec3d8de88d4ba14f38881c8ec963637758f354"
+      "bytes": 2869,
+      "sha256": "9b80b0354ac128bfc38b53c3af1ee43397de9e12037fc21a7f00e04208544875"
     },
     {
       "path": ".github/workflows/supabase.yml",
@@ -260,8 +260,8 @@
     },
     {
       "path": "scripts/macos-release.mjs",
-      "bytes": 8663,
-      "sha256": "d221a7ca979950eba8fc7834a4e68e596058d97cc3e6b7b6924d8aeb28078da6"
+      "bytes": 9130,
+      "sha256": "3ba3b43aa77734b3a71a3c5203fd5c1e75a0f3bc6dca80a1a6661b43c83dd825"
     },
     {
       "path": "scripts/qualify-edge-runtime.mjs",
@@ -970,8 +970,8 @@
     },
     {
       "path": "tests/macos-release.test.mjs",
-      "bytes": 1805,
-      "sha256": "db0b4af3412cc3815b33d1dd9fc618ba87e930b2d552f5952262c7a96b989306"
+      "bytes": 3863,
+      "sha256": "639a16551617c4c211151425e03abc6b161c58fd3fe5f43d283f065c9d2600a6"
     },
     {
       "path": "tests/net-guard.test.mjs",
