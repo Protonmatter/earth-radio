@@ -140,6 +140,8 @@ app.whenReady().then(async () => {
     assert.fail('The real native account dialog did not open.');
   }
   await until("document.getElementById('er-auth-button')?.textContent === 'Sign in'");
+  assert.equal(await window.webContents.executeJavaScript('document.documentElement.dataset.appVersion'),
+    JSON.parse(await readFile(path.join(root, 'package.json'), 'utf8')).version, 'The visible runtime version must match the desktop package.');
   await openAccount();
   await until("Array.from(document.querySelectorAll('.er-auth-provider')).some(button=>button.textContent==='Continue with Google')");
   authorize = null;

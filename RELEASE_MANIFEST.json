@@ -45,8 +45,8 @@
     },
     {
       "path": "docs/BUILD_STATE.md",
-      "bytes": 15821,
-      "sha256": "2f392db8c9da9ae2d14507744d4ac1636a085063183c94624d777f7ed616c446"
+      "bytes": 17900,
+      "sha256": "16be592a106a21a0c3f483d497f66def2595f31216b985710cdba6a3967d7f28"
     },
     {
       "path": "docs/CLOUDFLARE_DEPLOYMENT.md",
@@ -70,8 +70,8 @@
     },
     {
       "path": "docs/INSTALLATION.md",
-      "bytes": 5733,
-      "sha256": "a2ff6a7f3c0a5e49002fc4c22bf02b463139f831a4b52e6e74131b5ce3c68bfc"
+      "bytes": 6138,
+      "sha256": "108af793b5209e11ae7f3bfbba0a308dc12a5e32291a5b9ad38232600d4c7ea6"
     },
     {
       "path": "docs/LIVE_METADATA.md",
@@ -95,8 +95,8 @@
     },
     {
       "path": "docs/provenance/hardening-overlays.json",
-      "bytes": 12007,
-      "sha256": "18f6b648d618b91ebd9d840fedfc864bf22f9617040a14e65131f8234a1293ac"
+      "bytes": 12118,
+      "sha256": "242ba7609183cc484df58a7fe583d39de823a703ec5859db1d6a0b637089ca17"
     },
     {
       "path": "docs/provenance/recovery-manifest.json",
@@ -175,8 +175,8 @@
     },
     {
       "path": "docs/superpowers/plans/2026-11-04-public-desktop-auth.md",
-      "bytes": 5636,
-      "sha256": "d319e270856ceb60502dd240f93f52e9825393af04c9cd7b23abd2f083fb30fb"
+      "bytes": 6006,
+      "sha256": "7d1cede9d4b0f1ccae4d24832617aa0117bed9537e7adfd44af87166b7c6e5c0"
     },
     {
       "path": "docs/superpowers/specs/2026-08-21-earth-radio-public-cloudflare-design.md",
@@ -401,7 +401,7 @@
     {
       "path": "site/_headers",
       "bytes": 2585,
-      "sha256": "863fb7dcfd089973c9dbc14787ec768bfbb656db3ee4e910357c0d5b15ba9b24"
+      "sha256": "82d8e58c254b0045610bc5f34da719169eb7d904db240941e7b5fefa04f45d81"
     },
     {
       "path": "site/assets/atlas-lock.css",
@@ -464,14 +464,14 @@
       "sha256": "6560373fba977682d3acc4290af72029fb722879a2edce30504f8a93caec069c"
     },
     {
+      "path": "site/assets/index-8fd01303.js",
+      "bytes": 275527,
+      "sha256": "8fd0130321f9936d0edd8e36fef3df52c586f11304ebb9f8c6872e653e72c7cc"
+    },
+    {
       "path": "site/assets/index-CSoL7F-Y.css",
       "bytes": 43016,
       "sha256": "60f44cedcfa837816c145a1b34cdf1b25c64b5530f84b0867016e6097bb27001"
-    },
-    {
-      "path": "site/assets/index-ff42f3f1.js",
-      "bytes": 275527,
-      "sha256": "ff42f3f14a9320aa21b7871348699d7e41cfdf8f84a2db6594eaa7f0b65980aa"
     },
     {
       "path": "site/assets/map-directory.js",
@@ -616,7 +616,7 @@
     {
       "path": "site/index.html",
       "bytes": 27322,
-      "sha256": "31c650099d020de275f95190f5f9e263a8cd51c28ca5e0819210090cf3999cbc"
+      "sha256": "e0463fa79da2d60d87b2b5be5a6e707f0f7153301a822b209fed99b3d063dd12"
     },
     {
       "path": "site/manifest.webmanifest",
@@ -631,7 +631,7 @@
     {
       "path": "site/sw.js",
       "bytes": 3597,
-      "sha256": "ec1b96356a1aa4e477cff08f2199970ddd43bcc37fd594532bb24caf999d355f"
+      "sha256": "a4f50e1d3ef972200c51b6e25b81863b4421250778fb157b983c4f50a1054899"
     },
     {
       "path": "src-recovered/core/config.ts",
@@ -1051,7 +1051,7 @@
     {
       "path": "tests/live-metadata.test.mjs",
       "bytes": 42353,
-      "sha256": "8b63e7c7e6220af07abe6bf29bb190e5779409e840a443888fd3bee598e43770"
+      "sha256": "f90636c6ef8156be96019f7463538645865acdb6f35f636ed036f6e410153a8e"
     },
     {
       "path": "tests/macos-release.test.mjs",
@@ -1106,12 +1106,12 @@
     {
       "path": "tests/responsive-ui.test.mjs",
       "bytes": 13425,
-      "sha256": "9d4f16c5d372c16bb12406e9859618284f6b959b0cb638f8f9a9fa61358f77c1"
+      "sha256": "51314b39ae09e5881e09b78320173f87bc21f8ac8df49cce8414671cb1f0b7ec"
     },
     {
       "path": "tests/service-worker.test.mjs",
       "bytes": 7968,
-      "sha256": "26e374fb75e172b2d33cbd7eb220bb4ed35400df4eac52ce89c0bf15ab532ec9"
+      "sha256": "5d1ae958dcc56f869e4dd2fb68c808224711da3148d717e06d4ce1782e7df13b"
     },
     {
       "path": "tests/smoke-desktop-auth-lifecycle.mjs",
@@ -1120,8 +1120,8 @@
     },
     {
       "path": "tests/smoke-desktop-auth.mjs",
-      "bytes": 13588,
-      "sha256": "10353c01fa78f8eab5b99fa3486a4dcdfbdbb4c1339ab9a59f509494d260e52d"
+      "bytes": 13839,
+      "sha256": "cc325632c8f5e056b258333d1e2b5d6650f97dcb28c6c853f26c5a010c981ff1"
     },
     {
       "path": "tests/smoke-desktop-renderer.mjs",
@@ -1136,7 +1136,7 @@
     {
       "path": "tests/smoke-metadata.mjs",
       "bytes": 7009,
-      "sha256": "b6bb7cd9ec4e80f7171915912807494488d1d54be9bcbac60a352cfac95334b3"
+      "sha256": "806c1691bb20df587a4cb1b1a5351f46cfb68068c1e2f62684df471533ba4b4b"
     },
     {
       "path": "tests/smoke-recovery-import.ps1",

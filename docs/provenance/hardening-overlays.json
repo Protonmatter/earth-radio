@@ -75,7 +75,7 @@
       "reason": "Remove a reference to an excluded source map from the vendored HLS runtime."
     },
     {
-      "path": "site/assets/index-ff42f3f1.js",
+      "path": "site/assets/index-8fd01303.js",
       "intakePath": "site/assets/index-B4rKOAHV.js",
       "intake": {
         "bytes": 273352,
@@ -83,9 +83,9 @@
       },
       "current": {
         "bytes": 275527,
-        "sha256": "ff42f3f14a9320aa21b7871348699d7e41cfdf8f84a2db6594eaa7f0b65980aa"
+        "sha256": "8fd0130321f9936d0edd8e36fef3df52c586f11304ebb9f8c6872e653e72c7cc"
       },
-      "reason": "Register the service worker after asynchronous startup and remove a reference to an excluded source map. Bind a station tooltip on map markers for pre-selection progressive disclosure, delegating content to the maintained metadata overlay hook. Dispatch earthradio:station-selected after successful station playback (canonical stream identity for MediaSource/blob playback). Serialize and coalesce boot, manual, retry, cloned, and directory-owned station loads behind one runtime drain promise; settlement now carries a monotonic load ID, and the correlated runtime API is mirrored in src-recovered/main.ts. Previous/next and Media Session navigation carry explicit playback results and dispatch selection only when playback succeeded. Rename the deployed immutable bundle to the deterministic first eight hexadecimal characters of its final SHA-256 while retaining the installed intake path as provenance evidence. November 2026: import maintained discovery ranking/UI and bundled vector atlas; transform the runtime filtered pool, expose station details, observe playback outcomes, refresh current marker payloads/coordinates, and preserve existing successful-selection gates. Add radio-only on-demand mapped-directory normalization and augmentation before filtering, with consistent area/view controls."
+      "reason": "Register the service worker after asynchronous startup and remove a reference to an excluded source map. Bind a station tooltip on map markers for pre-selection progressive disclosure, delegating content to the maintained metadata overlay hook. Dispatch earthradio:station-selected after successful station playback (canonical stream identity for MediaSource/blob playback). Serialize and coalesce boot, manual, retry, cloned, and directory-owned station loads behind one runtime drain promise; settlement now carries a monotonic load ID, and the correlated runtime API is mirrored in src-recovered/main.ts. Previous/next and Media Session navigation carry explicit playback results and dispatch selection only when playback succeeded. Rename the deployed immutable bundle to the deterministic first eight hexadecimal characters of its final SHA-256 while retaining the installed intake path as provenance evidence. November 2026: import maintained discovery ranking/UI and bundled vector atlas; transform the runtime filtered pool, expose station details, observe playback outcomes, refresh current marker payloads/coordinates, and preserve existing successful-selection gates. Add radio-only on-demand mapped-directory normalization and augmentation before filtering, with consistent area/view controls. Align the embedded runtime version with package 0.26.0 for native auth delivery; no station algorithm changes."
     },
     {
       "path": "site/assets/metadata-enrichment.css",
@@ -131,7 +131,7 @@
       },
       "current": {
         "bytes": 27322,
-        "sha256": "31c650099d020de275f95190f5f9e263a8cd51c28ca5e0819210090cf3999cbc"
+        "sha256": "e0463fa79da2d60d87b2b5be5a6e707f0f7153301a822b209fed99b3d063dd12"
       },
       "reason": "Move frame-ancestors enforcement to the deployable response header policy, then add responsive landmarks, iOS viewport/audio attributes, mobile destinations, compact header icons, additive responsive assets, country and station search controls, complete Now Playing metadata and sleep actions, the additive UI refresh stylesheet, and header actions ordered in the rail's reading sequence so keyboard focus follows the visual order. Reference the deployed runtime through its content-addressed filename. Load the git-catalogued LISTEN.moe station overlay before the recovered bundle, and admit wss://listen.moe in the in-page connect-src policy. Atlas lock: Night/Paper You panel, four phone tabs (Atlas/Browse/Kept/You), place-first search, and atlas-lock.css/js. November 2026: add the station discovery controls/details dialog and vector-atlas controls; load and coherently precache the maintained discovery/map assets under worker generation v47."
     },
@@ -155,7 +155,7 @@
       },
       "current": {
         "bytes": 3597,
-        "sha256": "ec1b96356a1aa4e477cff08f2199970ddd43bcc37fd594532bb24caf999d355f"
+        "sha256": "a4f50e1d3ef972200c51b6e25b81863b4421250778fb157b983c4f50a1054899"
       },
       "reason": "Use network-first navigation/configuration updates, keep hashed recovered assets cache-first, reload overlay installation requests so stale browser HTTP entries cannot seed the new service-worker cache, force-cache the hashed runtime bundles, keep the previous worker when reload precaching fails, and precache the UI refresh stylesheet. Precache pinned-stations.js for LISTEN.moe catalog pinning. Precache atlas-lock.css/js and bump the shell cache generation to v46 so clients pick up Night/Paper, glass-on-log, and the four-tab phone chrome. November 2026: add the station discovery controls/details dialog and vector-atlas controls; load and coherently precache the maintained discovery/map assets under worker generation v47. Cache the generated icon PNGs and serve branding/manifest requests from the shell while offline. Native account integration and shared public deployment configuration (2026-11-04)."
     },

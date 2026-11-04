@@ -1,5 +1,35 @@
 # Build state
 
+## 0.26.0 account candidate — 2026-11-04
+
+[PR #20](https://github.com/Protonmatter/earth-radio/pull/20) adds main-owned native
+PKCE sign-in, OS-encrypted sessions, restricted account IPC, single-instance ownership
+and a normal-quit flush gate. It preserves the existing RLS/CAS sync contract. The
+candidate's embedded runtime/package version is 0.26.0, runtime `index-8fd01303.js`,
+and shell generation v54. No private provider credential or new dependency was added.
+
+Live Windows source tests completed Google and GitHub callbacks with existing owner
+accounts, reached Synced, restored Google's encrypted session after restart, and
+verified logout/account isolation. A favorite added on desktop arrived on production
+web; web removal arrived on desktop. A web volume change was confirmed through the
+desktop's supported JSON export, then the original value was restored and verified
+in the hosted configuration row. No fresh outside-team identity was supplied.
+
+The reviewed implementation passed Windows ARM64 native tests locally, Windows x64
+and macOS ARM64/x64 auth/vault/lifecycle tests in CI, local GoTrue/Mailpit/PostgREST
+integration, and the 49-case browser suite. Candidate DMGs are ad-hoc signed and
+unnotarized; verification checks the DMG, architecture, packaged source hashes and
+bounded startup. See the [current PR checks](https://github.com/Protonmatter/earth-radio/pull/20/checks)
+for the exact final source and platform results, and [account operations](AUTHENTICATION.md)
+for evidence boundaries and rollback. Earlier candidate artifacts are superseded when
+the source SHA changes; no existing release tag or published asset is replaced.
+
+**Public email is still gated:** custom SMTP is off and the owner has no sender
+domain. Resend is selected; `earth-radio.app` registration was prepared for owner
+review without purchase. The approved native loopback return was saved in Supabase;
+other hosted auth/provider/schema settings were preserved. Production and published
+v0.25.1 downloads remain separate from this candidate until its release gates close.
+
 ## 0.25.1 safe-area correction and Git delivery
 
 The user subsequently authorized committing/pushing the release, passing CI and

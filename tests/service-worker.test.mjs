@@ -41,7 +41,7 @@ test('the live immutable runtime filename is derived from its final content hash
 
 test('service worker registers even when async startup outlives window load', async () => {
   const source = await readFile(path.join(root, 'src-recovered', 'main.ts'), 'utf8');
-  const bundle = await readFile(path.join(root, 'site', 'assets', 'index-ff42f3f1.js'), 'utf8');
+  const bundle = await readFile(path.join(root, 'site', 'assets', 'index-8fd01303.js'), 'utf8');
   assert.match(source, /document\.readyState === 'complete'/);
   assert.match(bundle, /document\.readyState===`complete`/);
 });
@@ -77,7 +77,7 @@ test('deployed pages send HSTS and revalidate the auth overlays', async () => {
 test('service worker precaches the auth, responsive, and i18n shell under a new cache version', async () => {
   const worker = await readFile(path.join(root, 'site', 'sw.js'), 'utf8');
   assert.match(worker, /cache: isImmutableAsset\(asset\) \? 'force-cache' : 'reload'/);
-  assert.match(worker, /earth-radio-shell-v53-desktop-auth-0-26-0/);
+  assert.match(worker, /earth-radio-shell-v54-desktop-auth-0-26-0/);
   for (const size of [32, 180, 192, 512]) assert.ok(worker.includes(`branding/earth-radio-${size}-v2.png`));
   for (const asset of ['discovery-core.js', 'discovery-ui.js', 'map-directory.js', 'discovery.css', 'vector-atlas.js', 'world-land.js']) {
     assert.ok(worker.includes(`./assets/${asset}`), `Missing discovery shell asset ${asset}`);
