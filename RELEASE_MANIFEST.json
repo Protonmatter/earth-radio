@@ -9,6 +9,11 @@
       "sha256": "ac7bbdff2c8e3fe3da3f14284dbb0ed0399bc34c6b0c519e8ab813a14c4dfa95"
     },
     {
+      "path": ".github/workflows/macos-release.yml",
+      "bytes": 2756,
+      "sha256": "135f8b9bfe3974f68ac31a7f14ec3d8de88d4ba14f38881c8ec963637758f354"
+    },
+    {
       "path": ".github/workflows/supabase.yml",
       "bytes": 1887,
       "sha256": "0d94efaf2c806f5646caace3c6030c0cf189c9430cdc30f968cb30efc3e73a55"
@@ -57,6 +62,11 @@
       "path": "docs/HANDOFF-2026-11-03.md",
       "bytes": 9537,
       "sha256": "4eae03824aa2d6c35ff12d906b3511162b4f998aa7f3fc1a7a5d44525c1b2166"
+    },
+    {
+      "path": "docs/INSTALLATION.md",
+      "bytes": 5733,
+      "sha256": "a2ff6a7f3c0a5e49002fc4c22bf02b463139f831a4b52e6e74131b5ce3c68bfc"
     },
     {
       "path": "docs/LIVE_METADATA.md",
@@ -125,8 +135,8 @@
     },
     {
       "path": "docs/RELEASE-0.25.1.md",
-      "bytes": 5125,
-      "sha256": "82782be12ffb8120c38cb4287ef0e5dff6e1733c56f6cdde66c5675eb1417afb"
+      "bytes": 6409,
+      "sha256": "9aec4cdeca5651c5774ff9cdd1ab8c1b2ea93857b44d5bcefdf6629891eebf9d"
     },
     {
       "path": "docs/RELEASE.md",
@@ -230,8 +240,8 @@
     },
     {
       "path": "package.json",
-      "bytes": 3592,
-      "sha256": "3c0323b7c945753ca9754fbc1ed5b2be94f3e035af16f523a11e02563eaf21f6"
+      "bytes": 3621,
+      "sha256": "5b36a85fe28aca393f504b9fc1212e0509f830d2d822613930c313e240e4cd16"
     },
     {
       "path": "scripts/desktop-package-compat.mjs",
@@ -247,6 +257,11 @@
       "path": "scripts/Import-EarthRadioRecovery.ps1",
       "bytes": 9927,
       "sha256": "982b6b89aeee9b1d52964f3828bea3bd277874d4bd8c71aac58e664ec416c296"
+    },
+    {
+      "path": "scripts/macos-release.mjs",
+      "bytes": 8663,
+      "sha256": "d221a7ca979950eba8fc7834a4e68e596058d97cc3e6b7b6924d8aeb28078da6"
     },
     {
       "path": "scripts/qualify-edge-runtime.mjs",
@@ -952,6 +967,11 @@
       "path": "tests/live-metadata.test.mjs",
       "bytes": 42353,
       "sha256": "8b63e7c7e6220af07abe6bf29bb190e5779409e840a443888fd3bee598e43770"
+    },
+    {
+      "path": "tests/macos-release.test.mjs",
+      "bytes": 1805,
+      "sha256": "db0b4af3412cc3815b33d1dd9fc618ba87e930b2d552f5952262c7a96b989306"
     },
     {
       "path": "tests/net-guard.test.mjs",

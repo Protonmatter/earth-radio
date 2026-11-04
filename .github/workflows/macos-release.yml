@@ -1,0 +1,81 @@
+name: macOS release packages
+
+on:
+  push:
+    branches: [release/installers-v0.25.1]
+  workflow_dispatch:
+    inputs:
+      source_sha:
+        description: Exact application commit for the release tag
+        required: true
+        default: a42187c5e667f5687e57494bac996c8d096ff068
+      release_tag:
+        description: Existing immutable release tag
+        required: true
+        default: v0.25.1
+
+permissions:
+  contents: read
+
+concurrency:
+  group: macos-release-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  package:
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-15
+            arch: arm64
+          - runner: macos-15-intel
+            arch: x64
+    runs-on: ${{ matrix.runner }}
+    env:
+      RELEASE_SOURCE_SHA: ${{ inputs.source_sha || 'a42187c5e667f5687e57494bac996c8d096ff068' }}
+      RELEASE_TAG: ${{ inputs.release_tag || 'v0.25.1' }}
+    steps:
+      - name: Checkout packaging tools
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+      - name: Validate immutable source input
+        shell: bash
+        run: |
+          [[ "$RELEASE_SOURCE_SHA" =~ ^[a-f0-9]{40}$ ]]
+          [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+      - name: Checkout exact application source
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          ref: ${{ env.RELEASE_SOURCE_SHA }}
+          path: application
+          persist-credentials: false
+      - name: Set up locked Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version-file: application/.node-version
+          cache: npm
+          cache-dependency-path: application/package-lock.json
+      - name: Install locked application dependencies
+        working-directory: application
+        run: npm ci
+      - name: Verify release source
+        working-directory: application
+        run: npm run verify
+      - name: Exercise native sandboxed renderer
+        working-directory: application
+        run: npm run test:desktop-renderer
+      - name: Package and qualify unnotarized DMG
+        run: node scripts/macos-release.mjs application ${{ matrix.arch }}
+      - name: Upload qualified release candidate
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: macos-${{ env.RELEASE_TAG }}-${{ matrix.arch }}-${{ github.run_id }}
+          path: |
+            application/.build/macos-release/*.dmg
+            application/.build/macos-release/*.json
+            application/.build/macos-release/SHA256SUMS-*.txt
+          if-no-files-found: error
+          retention-days: 14
