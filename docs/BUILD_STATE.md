@@ -6,7 +6,13 @@
 PKCE sign-in, OS-encrypted sessions, restricted account IPC, single-instance ownership
 and a normal-quit flush gate. It preserves the existing RLS/CAS sync contract. The
 candidate's embedded runtime/package version is 0.26.0, runtime `index-8fd01303.js`,
-and shell generation v54. No private provider credential or new dependency was added.
+and shell generation v55. No private provider credential or new dependency was added.
+
+Final rendered qualification exposed a background-observer timing gap in the previous
+header floor. The effective CSS header depth now clamps to 56px for the header and
+dependent panel positions. A synchronous regression injects a 9px metric and requires
+the 47px-safe-area header to retain its content before observer delivery; the focused
+rendered check measured a 103px header while the raw metric was still 9px.
 
 Live Windows source tests completed Google and GitHub callbacks with existing owner
 accounts, reached Synced, restored Google's encrypted session after restart, and

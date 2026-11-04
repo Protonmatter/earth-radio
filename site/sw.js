@@ -1,4 +1,4 @@
-const CACHE_NAME = 'earth-radio-shell-v54-desktop-auth-0-26-0';
+const CACHE_NAME = 'earth-radio-shell-v55-desktop-auth-0-26-0';
 const SHELL_ASSETS = [
   './',
   './index.html',

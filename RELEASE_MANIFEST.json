@@ -45,8 +45,8 @@
     },
     {
       "path": "docs/BUILD_STATE.md",
-      "bytes": 17900,
-      "sha256": "16be592a106a21a0c3f483d497f66def2595f31216b985710cdba6a3967d7f28"
+      "bytes": 18317,
+      "sha256": "816c457a4cd456df69281bb86d3be09b6a4ff866fe779d1ea6ab325199e0f286"
     },
     {
       "path": "docs/CLOUDFLARE_DEPLOYMENT.md",
@@ -96,7 +96,7 @@
     {
       "path": "docs/provenance/hardening-overlays.json",
       "bytes": 12118,
-      "sha256": "242ba7609183cc484df58a7fe583d39de823a703ec5859db1d6a0b637089ca17"
+      "sha256": "c2ab1ecb7178e6e4f15b77687de78e8b1a3ddcff02164b272119037c1acbcc04"
     },
     {
       "path": "docs/provenance/recovery-manifest.json",
@@ -405,8 +405,8 @@
     },
     {
       "path": "site/assets/atlas-lock.css",
-      "bytes": 7582,
-      "sha256": "c828ba5c14adcec75e79904c71f859d157e77be8eb6965ea22df727b0b47825d"
+      "bytes": 7594,
+      "sha256": "add14990f2e70f2607c26b6e3b9d53d12b4f1541da7ecdee8156e20a32c77cdf"
     },
     {
       "path": "site/assets/atlas-lock.js",
@@ -495,8 +495,8 @@
     },
     {
       "path": "site/assets/responsive-ui.css",
-      "bytes": 28965,
-      "sha256": "a626a276322163bfa03a09ca26ebf8d5d2d3a75f86471bde333628640f795988"
+      "bytes": 29140,
+      "sha256": "d3f1e5c57d1a7faa896d40bfc29aaf08d183344e08295c1fe4acfd6e1b8afe9b"
     },
     {
       "path": "site/assets/responsive-ui.js",
@@ -631,7 +631,7 @@
     {
       "path": "site/sw.js",
       "bytes": 3597,
-      "sha256": "a4f50e1d3ef972200c51b6e25b81863b4421250778fb157b983c4f50a1054899"
+      "sha256": "43c5a04896f140c49eb211c795e6c4dde15b547ca7f6750cac48bb7b70580e6b"
     },
     {
       "path": "src-recovered/core/config.ts",
@@ -895,8 +895,8 @@
     },
     {
       "path": "tests/browser/scenarios.mjs",
-      "bytes": 19025,
-      "sha256": "be17a5cdcc46daf58bc51a2890fdab3e17eac4e8c2c0358b31d5dac6397ee524"
+      "bytes": 19395,
+      "sha256": "6c4c6474a000be086ee905b372c82b1d800ac16a3899c7958df4cf26b4ed7ede"
     },
     {
       "path": "tests/country-search.test.mjs",
@@ -1105,13 +1105,13 @@
     },
     {
       "path": "tests/responsive-ui.test.mjs",
-      "bytes": 13425,
-      "sha256": "51314b39ae09e5881e09b78320173f87bc21f8ac8df49cce8414671cb1f0b7ec"
+      "bytes": 13431,
+      "sha256": "386fa8c6f5a2aa1eabdead559e73610eb78a30b8dc2883c87b6560baf932bc3a"
     },
     {
       "path": "tests/service-worker.test.mjs",
       "bytes": 7968,
-      "sha256": "5d1ae958dcc56f869e4dd2fb68c808224711da3148d717e06d4ce1782e7df13b"
+      "sha256": "3a9248481d730635247ffc17b1b60b3e63ef0da5d3a4383e52630abb9e212d00"
     },
     {
       "path": "tests/smoke-desktop-auth-lifecycle.mjs",
