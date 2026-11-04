@@ -30,8 +30,8 @@
     },
     {
       "path": "docs/AUTHENTICATION.md",
-      "bytes": 6717,
-      "sha256": "e10be909b83c4e49891b28860bd4b2e3631bf069ba593dd18c4dc3d1c186b089"
+      "bytes": 7712,
+      "sha256": "1574b20f6b530e24eb576decd76e1ef0ae285042c70376362196d9546c26e5b5"
     },
     {
       "path": "docs/branding/earth-radio-icon-master.png",
@@ -96,7 +96,7 @@
     {
       "path": "docs/provenance/hardening-overlays.json",
       "bytes": 12007,
-      "sha256": "f2be07ee1b905e6e2c26dadd526fd7a5e1dc4496e0d5cab51fa1452c73dcfaf3"
+      "sha256": "18f6b648d618b91ebd9d840fedfc864bf22f9617040a14e65131f8234a1293ac"
     },
     {
       "path": "docs/provenance/recovery-manifest.json",
@@ -210,8 +210,8 @@
     },
     {
       "path": "electron/auth-ipc-policy.mjs",
-      "bytes": 1424,
-      "sha256": "16a16d352d02b6f4965899501cb55498ea3b8a492447f9462f4485b89e010d28"
+      "bytes": 1934,
+      "sha256": "1d8111dd8d54b9e7f2788e5af134865bed9fcb5f1d38e1a5e20b8f82843d2433"
     },
     {
       "path": "electron/auth-lifecycle.mjs",
@@ -230,8 +230,8 @@
     },
     {
       "path": "electron/main.mjs",
-      "bytes": 6250,
-      "sha256": "ae6b8b0b5929922300c26db68a7144b770023cd9f605c4d5f9ecca465865c8a6"
+      "bytes": 6449,
+      "sha256": "1d3a6755f18b8ea1b386d6d4a7b52d37b32544bb5fb43bb1e8b88169dc3061a4"
     },
     {
       "path": "electron/preload.cjs",
@@ -915,8 +915,8 @@
     },
     {
       "path": "tests/desktop-auth-ipc.test.mjs",
-      "bytes": 1673,
-      "sha256": "fa358778a8ded5cd557acb8fceb0eab77fac2e6275a990f2334c0bcdd5e1bec4"
+      "bytes": 2566,
+      "sha256": "5cf22c5698df13374326049ff875bca7888ca3ff391ac0e0110ef2fa3d60c142"
     },
     {
       "path": "tests/desktop-auth-lifecycle.test.mjs",
@@ -1120,8 +1120,8 @@
     },
     {
       "path": "tests/smoke-desktop-auth.mjs",
-      "bytes": 8177,
-      "sha256": "610858b776232ff231c9f2251336c3d3a15eca32ef26357b885c1056bb85c748"
+      "bytes": 11929,
+      "sha256": "e5ec1ead1d11e84bcbfe7f2fef1a26bd72652fb27fd07da78df9b282da8d75c0"
     },
     {
       "path": "tests/smoke-desktop-renderer.mjs",
@@ -1130,8 +1130,8 @@
     },
     {
       "path": "tests/smoke-desktop.mjs",
-      "bytes": 6663,
-      "sha256": "adc567255bf2db243bd12fc7cb806eea2c42366c80cc93098a56478f06e29889"
+      "bytes": 6677,
+      "sha256": "526e2d8af2b2feb58558e50a8acf64e4421df69ce2556bb767860423c6ae1d03"
     },
     {
       "path": "tests/smoke-metadata.mjs",

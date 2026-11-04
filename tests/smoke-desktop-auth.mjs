@@ -9,7 +9,7 @@ import { pathToFileURL } from 'node:url';
 import { app, BrowserWindow, ipcMain, safeStorage } from 'electron';
 import { createAuthVault } from '../electron/auth-vault.mjs';
 import { createDesktopAuthManager } from '../electron/auth-manager.mjs';
-import { handleAuthIpc, isTrustedAuthSender } from '../electron/auth-ipc-policy.mjs';
+import { handleAuthIpc, isTrustedAuthSender, installAuthNavigationPolicy } from '../electron/auth-ipc-policy.mjs';
 
 const root = path.resolve(import.meta.dirname, '..');
 await mkdir(path.join(root, '.build'), { recursive: true });
@@ -23,7 +23,7 @@ app.whenReady().then(async () => {
   const fixture = path.join(directory, 'auth.html');
   await writeFile(fixture, '<!doctype html><meta http-equiv="Content-Security-Policy" content="default-src \'self\'; script-src \'self\'; frame-src \'self\'"><title>Earth Radio isolated authentication qualification</title><p>Isolated account test</p><iframe src="frame.html"></iframe>');
   await writeFile(path.join(directory, 'frame.html'), '<!doctype html><p>Untrusted child frame</p>');
-  const documentUrl = pathToFileURL(fixture).href;
+  let documentUrl = pathToFileURL(fixture).href;
   const vaultDirectory = path.join(directory, 'credentials');
   const config = { url: 'https://earth-radio-qualification.supabase.co', publishableKey: 'sb_publishable_qualification' };
   let authorize;
@@ -62,7 +62,8 @@ app.whenReady().then(async () => {
     });
   }
   manager = create(await createAuthVault({ directory: vaultDirectory, safeStorage }));
-  ipcMain.handle('earth-radio:auth', (event, request) => handleAuthIpc({ event, request, webContents: window.webContents, documentUrl, manager }));
+  ipcMain.handle('earth-radio:auth', (event, request) => handleAuthIpc({ event, request,
+    webContents: window && !window.isDestroyed() ? window.webContents : null, documentUrl, manager }));
   window = new BrowserWindow({ show: false, webPreferences: { sandbox: true, contextIsolation: true, nodeIntegration: false,
     preload: path.join(root, 'electron', 'preload.cjs') } });
   subscribe();
@@ -86,6 +87,7 @@ app.whenReady().then(async () => {
   const display = await window.webContents.executeJavaScript('window.qualificationAuth.getSession()');
   assert.equal(display.user.id, 'qualification-user');
   const eventText = await window.webContents.executeJavaScript('JSON.stringify(window.qualificationEvents)');
+  assert.equal(JSON.parse(eventText).some(value => value.event === 'SIGNED_IN'), true, 'The renderer must receive the successful sign-in event.');
   assert.doesNotMatch(JSON.stringify(display) + eventText, /qualification-private|access_token|refresh_token|code_verifier/);
   const ciphertext = await readFile(path.join(vaultDirectory, 'session.enc'));
   assert.equal(ciphertext.includes(Buffer.from('qualification-private')), false);
@@ -101,9 +103,52 @@ app.whenReady().then(async () => {
   await manager.close();
   manager = create(await createAuthVault({ directory: vaultDirectory, safeStorage }));
   assert.equal((await window.webContents.executeJavaScript('window.qualificationAuth.initialize()')), null);
+  // Exercise the real account UI rather than only the bridge contract. Native
+  // sign-in completes without leaving the renderer, so its account transition
+  // must be able to reload the exact trusted document and start synchronization.
+  documentUrl = pathToFileURL(path.join(root, 'site', 'index.html')).href;
+  installAuthNavigationPolicy(window.webContents, documentUrl);
+  window.webContents.session.webRequest.onBeforeRequest({ urls: ['http://*/*', 'https://*/*'] }, (_details, callback) => callback({ cancel: true }));
+  subscribe();
+  await window.loadURL(documentUrl);
+  let uiStage = 0;
+  async function until(script) {
+    uiStage++;
+    for (let i = 0; i < 250; i++) {
+      try { if (await window.webContents.executeJavaScript(script)) return; } catch { /* document may be reloading */ }
+      await new Promise(resolve => setTimeout(resolve, 20));
+    }
+    assert.fail(`The real native account UI did not reach expected stage ${uiStage}.`);
+  }
+  await until("document.getElementById('er-auth-button')?.textContent === 'Sign in'");
+  await window.webContents.executeJavaScript("document.getElementById('er-auth-button').click()");
+  await until("Array.from(document.querySelectorAll('.er-auth-provider')).some(button=>button.textContent==='Continue with Google')");
+  authorize = null;
+  await window.webContents.executeJavaScript("Array.from(document.querySelectorAll('.er-auth-provider')).find(button=>button.textContent==='Continue with Google').click()");
+  // Wait for the external-browser PKCE request to be emitted by main.
+  for (let i = 0; i < 100; i++) { if (authorize) break; await new Promise(resolve => setTimeout(resolve, 10)); }
+  assert.ok(authorize, 'Native UI must start the main-owned browser flow.');
+  assert.equal((await fetch(`${authorize.searchParams.get('redirect_to')}?code=ui-qualification-code`)).status, 200);
+  await until("document.getElementById('er-auth-button')?.textContent === 'qualification@earth-radio.test'");
+  await window.webContents.executeJavaScript("document.getElementById('er-auth-button').click()");
+  await until("document.querySelector('.er-auth-modal')?.textContent.includes('Synced')");
+  await window.webContents.executeJavaScript("Array.from(document.querySelectorAll('.er-auth-secondary')).find(button=>button.textContent==='Sign out').click()");
+  await until("document.getElementById('er-auth-button')?.textContent === 'Sign in'");
+  session.user = { id: 'qualification-second-user', email: 'second@earth-radio.test', identities: [{ provider: 'github' }] };
+  await window.webContents.executeJavaScript("document.getElementById('er-auth-button').click()");
+  await until("Array.from(document.querySelectorAll('.er-auth-provider')).some(button=>button.textContent==='Continue with GitHub')");
+  authorize = null;
+  await window.webContents.executeJavaScript("Array.from(document.querySelectorAll('.er-auth-provider')).find(button=>button.textContent==='Continue with GitHub').click()");
+  for (let i = 0; i < 100; i++) { if (authorize) break; await new Promise(resolve => setTimeout(resolve, 10)); }
+  assert.ok(authorize);
+  assert.equal((await fetch(`${authorize.searchParams.get('redirect_to')}?code=second-ui-code`)).status, 200);
+  await until("document.getElementById('er-auth-button')?.textContent === 'second@earth-radio.test'");
+  await window.webContents.executeJavaScript("document.getElementById('er-auth-button').click()");
+  await until("document.querySelector('.er-auth-modal')?.textContent.includes('Synced')");
   console.log(JSON.stringify({ platform: process.platform, arch: process.arch, sandbox: true, contextIsolation: true,
     ownedFrameOnly: true, pkceLoopback: true, tokenFreeRenderer: true, osEncryptedRestart: true,
-    syncAdapterRoundTrip: true, logoutSurvivesRestart: true, providerEvidence: 'synthetic HTTP, separate from live qualification' }));
+    syncAdapterRoundTrip: true, logoutSurvivesRestart: true, actualAccountUiSync: true,
+    providerEvidence: 'synthetic HTTP, separate from live qualification' }));
 }).then(async () => {
   await manager?.close(); window?.destroy(); clearTimeout(watchdog);
   await rm(directory, { recursive: true, force: true });

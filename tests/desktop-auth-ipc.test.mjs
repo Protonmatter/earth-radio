@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { handleAuthIpc } from '../electron/auth-ipc-policy.mjs';
+import { handleAuthIpc, installAuthNavigationPolicy } from '../electron/auth-ipc-policy.mjs';
 
 test('auth IPC accepts only the owned top-level trusted document, with bounded explicit operations', async () => {
   const frame = { url: 'file:///trusted/site/index.html#station=one' };
@@ -23,4 +23,18 @@ test('auth IPC accepts only the owned top-level trusted document, with bounded e
   const failure = await call(trusted);
   assert.equal(failure.ok, false);
   assert.doesNotMatch(JSON.stringify(failure), /secret-refresh|secret-code|backend/);
+});
+
+test('navigation policy permits only trusted self reloads and never remote redirects', () => {
+  const handlers = new Map();
+  installAuthNavigationPolicy({ on: (event, callback) => handlers.set(event, callback) }, 'file:///trusted/site/index.html');
+  for (const [url, expected] of [['file:///trusted/site/index.html', false], ['file:///trusted/site/index.html#station=one', false],
+    ['file:///trusted/site/index.html?injected=true', true], ['file:///other.html', true], ['https://earth-radio.pages.dev/', true]]) {
+    let prevented = false;
+    handlers.get('will-navigate')({ url, preventDefault: () => { prevented = true; } });
+    assert.equal(prevented, expected);
+  }
+  let prevented = false;
+  handlers.get('will-redirect')({ url: 'file:///trusted/site/index.html', preventDefault: () => { prevented = true; } });
+  assert.equal(prevented, true);
 });

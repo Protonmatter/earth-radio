@@ -20,10 +20,24 @@ or advertise arbitrary-address email registration as qualified.
 
 Windows ARM64 source qualification exercised the real Electron sandbox/preload/main
 IPC, loopback PKCE callback, DPAPI-backed asynchronous safeStorage encryption, encrypted
-restart, restricted sync adapter and logout across restart. Its provider HTTP responses
-were synthetic. Live provider returns, local GoTrue integration CI, native macOS
-encryption tests, installer qualification and fresh outside-team signup remain separate
-gates until their results are recorded. The existing v0.25.1 assets remain immutable.
+restart, restricted sync adapter and logout across restart. The automated fixture also
+loads the real account UI, completes sign-in/sync and signs out before switching users.
+Native subprocess tests verify one owner per profile and normal quit waiting for both
+an encrypted update and queued logout deletion. Synthetic provider HTTP in those tests
+is distinct from live provider qualification.
+
+Live Windows Google and GitHub sign-in with the owner's existing accounts both completed
+the system-browser callback and reached **Synced**. Google's encrypted session survived
+an app restart; sign-out removed its local ciphertext. A UI integration failure found in
+this test was reproduced: the previous navigation guard blocked the account namespace
+reload. Only exact trusted-file reloads are now allowed, with other files, query-bearing
+documents, remote URLs and redirects still blocked. Native Windows x64/macOS ARM64/x64
+encryption/lifecycle tests and local GoTrue/Mailpit/PostgREST integration passed on
+review-fix commit `105d2cf`; the expanded real-UI regression must pass on the final head.
+
+Fresh outside-team signup, public email delivery, packaged installer interaction and a
+physical Mac provider-consent test remain separate gates. The existing v0.25.1 assets
+remain immutable. No publication claim is made for this candidate.
 
 ## Desktop use
 

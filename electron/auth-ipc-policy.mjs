@@ -1,13 +1,26 @@
 import { AUTH_OPERATIONS, AUTH_MAX_REQUEST_BYTES, PublicAuthError } from './auth-manager.mjs';
 
-export function isTrustedAuthSender(event, webContents, documentUrl) {
-  if (!webContents || webContents.isDestroyed() || event?.sender !== webContents ||
-      !event.senderFrame || event.senderFrame !== webContents.mainFrame) return false;
+function isTrustedDocumentUrl(value, documentUrl) {
   try {
-    const url = new URL(event.senderFrame.url);
+    const url = new URL(value);
     url.hash = '';
     return url.href === documentUrl;
   } catch { return false; }
+}
+
+export function installAuthNavigationPolicy(contents, documentUrl) {
+  contents.on('will-navigate', event => {
+    // Account namespace transitions reload this exact file. Every other file,
+    // query-bearing document or remote URL remains blocked.
+    if (!isTrustedDocumentUrl(event.url, documentUrl)) event.preventDefault();
+  });
+  contents.on('will-redirect', event => event.preventDefault());
+}
+
+export function isTrustedAuthSender(event, webContents, documentUrl) {
+  if (!webContents || webContents.isDestroyed() || event?.sender !== webContents ||
+      !event.senderFrame || event.senderFrame !== webContents.mainFrame) return false;
+  return isTrustedDocumentUrl(event.senderFrame.url, documentUrl);
 }
 
 export async function handleAuthIpc({ event, request, webContents, documentUrl, manager }) {

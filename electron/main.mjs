@@ -6,7 +6,7 @@ import { installDesktopProxyOrigin, parseNetworkProxyRule } from './proxy-rules.
 import { AUTH_DEPLOYMENT } from '../site/assets/auth-deployment.js';
 import { createAuthVault } from './auth-vault.mjs';
 import { createDesktopAuthManager } from './auth-manager.mjs';
-import { handleAuthIpc, isTrustedAuthSender } from './auth-ipc-policy.mjs';
+import { handleAuthIpc, isTrustedAuthSender, installAuthNavigationPolicy } from './auth-ipc-policy.mjs';
 import { claimDesktopInstance, createQuitGate } from './auth-lifecycle.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -26,6 +26,10 @@ const primaryInstance = claimDesktopInstance(app, () => {
 
 function resolveAsset(...parts) {
   return path.join(appRoot, ...parts);
+}
+
+function ownedContents() {
+  return mainWindow && !mainWindow.isDestroyed() ? mainWindow.webContents : null;
 }
 
 async function createMainWindow(proxyBaseUrl) {
@@ -49,6 +53,11 @@ async function createMainWindow(proxyBaseUrl) {
       spellcheck: false
     }
   });
+  const createdWindow = mainWindow;
+  createdWindow.once('closed', () => {
+    if (mainWindow === createdWindow) mainWindow = null;
+    void authManager?.execute('cancel').catch(() => {});
+  });
 
   mainWindow.once('ready-to-show', () => mainWindow?.show());
 
@@ -57,13 +66,7 @@ async function createMainWindow(proxyBaseUrl) {
     return { action: 'deny' };
   });
 
-  mainWindow.webContents.on('will-navigate', event => {
-    event.preventDefault();
-  });
-
-  mainWindow.webContents.on('will-redirect', event => {
-    event.preventDefault();
-  });
+  installAuthNavigationPolicy(mainWindow.webContents, documentUrl);
 
   const expectedDocumentUrl = pathToFileURL(resolveAsset('site', 'index.html')).href;
   installDesktopProxyOrigin(mainWindow.webContents.session, { proxyBaseUrl,
@@ -85,10 +88,10 @@ async function createMainWindow(proxyBaseUrl) {
 
 function registerIpc() {
   ipcMain.handle('earth-radio:auth', async (event, request) => {
-    if (authUnavailable && isTrustedAuthSender(event, mainWindow?.webContents, documentUrl)) {
+    if (authUnavailable && isTrustedAuthSender(event, ownedContents(), documentUrl)) {
       return { ok: false, error: { message: 'Account storage could not be unlocked. Unlock your keychain and restart Earth Radio.', code: 'AUTH_UNAVAILABLE' } };
     }
-    return handleAuthIpc({ event, request, webContents: mainWindow?.webContents, documentUrl, manager: authManager });
+    return handleAuthIpc({ event, request, webContents: ownedContents(), documentUrl, manager: authManager });
   });
   ipcMain.handle('earth-radio:get-network-proxy', async () => networkProxyRules);
   ipcMain.handle('earth-radio:set-network-proxy', async (_event, rawValue) => {
@@ -115,7 +118,7 @@ if (primaryInstance) app.whenReady().then(async () => {
     const vault = await createAuthVault({ directory: path.join(app.getPath('userData'), 'auth-v1'), safeStorage });
     authManager = createDesktopAuthManager({ config: AUTH_DEPLOYMENT, vault, openExternal: url => shell.openExternal(url) });
     authManager.subscribe(payload => {
-      const contents = mainWindow?.webContents;
+      const contents = ownedContents();
       if (contents && isTrustedAuthSender({ sender: contents, senderFrame: contents.mainFrame }, contents, documentUrl)) {
         contents.send('earth-radio:auth-state', payload);
       }
