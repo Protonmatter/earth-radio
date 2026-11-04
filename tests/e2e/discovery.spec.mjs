@@ -44,7 +44,7 @@ test('area search loads mapped stations outside the initial featured-country cat
   await expect(page.locator('#er-discovery-status')).toContainText('0 matches');
   await page.getByRole('button', { name: 'Search this area' }).click();
   await expect.poll(() => geoRequests.length).toBe(1);
-  await expect(page.locator('.station-card__name')).toHaveText('E2E Rio Samba');
+  await expect(page.locator('.station-card__name')).toHaveText(['E2E Rio Samba']);
   await expect(page.locator('#er-map-count')).toContainText('1 located');
   await expect(page.locator('#audio-player')).toHaveJSProperty('paused', true);
   await page.getByRole('button', { name: 'Search this area' }).click();
@@ -74,7 +74,9 @@ test('failed map-directory loads show a retry and do not poison the next area se
   expect(requests).toBe(2);
   fail = false;
   await page.getByRole('button', { name: 'Search this area' }).click();
-  await expect(page.locator('.station-card__name')).toHaveText('E2E Rio Samba');
+  // The runtime and discovery overlay redraw asynchronously. Assert the whole
+  // final list so transient multiple rows are polled rather than a strict-locator error.
+  await expect(page.locator('.station-card__name')).toHaveText(['E2E Rio Samba']);
   await expect(page.locator('#er-map-directory-status')).toContainText('1 mapped station matches');
   expect(requests).toBe(3);
 });

@@ -880,8 +880,8 @@
     },
     {
       "path": "tests/e2e/discovery.spec.mjs",
-      "bytes": 10394,
-      "sha256": "f8e0f5fe3703f40d8a71d264d29285a764cb85a0e0e17494d912ec72027a9755"
+      "bytes": 10567,
+      "sha256": "cbe8d438213fff94a60b0674de60559ad2336ea5589726ff2d06313c652d2581"
     },
     {
       "path": "tests/e2e/fixtures/hls-media.mjs",
