@@ -1,4 +1,5 @@
 import { createAuthClient } from './auth-core.js';
+import { createDesktopAuthClient, isDesktopAuthAvailable } from './desktop-auth.js';
 import {
   accountDataKey, accountLocalRecords, createSyncEngine, planLocalAccountTransition,
   shouldResetBrowserAccount, stableStringify, syncDocuments
@@ -184,7 +185,9 @@ async function boot() {
   stylesheet.href = './assets/auth-ui.css';
   document.head.appendChild(stylesheet);
 
-  const auth = createAuthClient({ url: config.url, publishableKey: config.publishableKey });
+  const nativeAuth = isDesktopAuthAvailable(window.earthRadio, window.location);
+  const auth = nativeAuth ? createDesktopAuthClient(window.earthRadio.auth)
+    : createAuthClient({ url: config.url, publishableKey: config.publishableKey });
   let session = null;
   let user = null;
   let syncTimer = null;
@@ -267,7 +270,8 @@ async function boot() {
     location.reload();
   }
 
-  auth.onAuthStateChange((event, nextSession) => {
+  auth.onAuthStateChange((event, nextSession, detail) => {
+    if (event === 'AUTH_ERROR') { message(detail || 'Sign-in failed. Please try again.', 'error'); return; }
     if (event === 'SIGNED_OUT' && !signingOut) {
       void resetSignedOutSession(localStorage.getItem(ACTIVE_USER_KEY));
       return;
@@ -418,6 +422,7 @@ async function boot() {
         };
         if (action === 'link') await auth.linkIdentity(provider, options);
         else await auth.signInWithOAuth(provider, options);
+        if (nativeAuth) message('Complete sign-in in your browser, then return here. Keep Earth Radio open.');
       } catch (error) { message(error.message, 'error'); }
     });
     return providerButton;
@@ -455,6 +460,13 @@ async function boot() {
 
     if (!session) {
       card.appendChild(el('p', 'er-auth-copy', 'Sync favorites, recent stations, and preferences privately across devices.'));
+      if (nativeAuth) {
+        card.appendChild(el('p', 'er-auth-copy', 'Sign-in opens your default browser. For email, open the link on this computer within 10 minutes and keep Earth Radio open.'));
+        const cancelSignIn = el('button', 'er-auth-provider', 'Cancel pending sign-in');
+        cancelSignIn.type = 'button';
+        cancelSignIn.addEventListener('click', () => { void auth.cancelPendingSignIn().then(() => message('Pending sign-in canceled.')).catch(error => message(error.message, 'error')); });
+        card.appendChild(cancelSignIn);
+      }
       const providerList = el('div', 'er-auth-providers');
       for (const provider of enabledProviders(config, liveProviders)) providerList.appendChild(providerButton(provider, 'signin'));
       card.appendChild(providerList);
@@ -479,7 +491,7 @@ async function boot() {
         submit.disabled = true;
         try {
           await auth.signInWithEmail(input.value);
-          message('Check your email for a secure sign-in link.', 'success');
+          message(nativeAuth ? 'Check your email on this computer. Keep Earth Radio open while you use the sign-in link.' : 'Check your email for a secure sign-in link.', 'success');
         } catch (error) { message(error.message, 'error'); }
         finally {
           emailSubmitPending = false;

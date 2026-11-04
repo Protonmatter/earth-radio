@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
 import { createAuthClient } from '../site/assets/auth-core.js';
+import { createDesktopAuthManager } from '../electron/auth-manager.mjs';
 
 const required = process.env.AUTH_INTEGRATION === '1';
 const hostedAuthUrl = 'https://earth-radio-ci.supabase.co';
@@ -155,6 +156,40 @@ async function followUntilCode(startUrl) {
 
 const stack = await loadLocalStack();
 const skip = !required && !stack.url;
+
+test('native manager completes real email PKCE and scoped config sync against local GoTrue', {
+  skip: skip ? 'Local Supabase Auth is not running. CI requires this integration.' : false
+}, async t => {
+  assert.ok(stack.url && stack.apikey, 'Local Auth configuration is required.');
+  const vault = { storage: memoryStorage(), flush: async () => {} };
+  const manager = createDesktopAuthManager({ config: { url: hostedAuthUrl,
+    publishableKey: String(stack.publishable || '').startsWith('sb_publishable_') ? stack.publishable : 'sb_publishable_local_ci_placeholder' },
+    vault, fetchImpl: localFetch(stack.url, stack.apikey), openExternal: async () => assert.fail('Email flow should not open an OAuth page.') });
+  t.after(() => manager.close());
+  const email = `native-${randomUUID()}@earth-radio.test`;
+  await manager.execute('email', { email });
+  const verify = await waitForVerifyUrl(stack.mail, email);
+  const callback = await followUntilCode(verify);
+  const url = new URL(callback.href);
+  assert.equal(url.hostname, '127.0.0.1');
+  assert.match(url.pathname, /^\/earth-radio-auth\/callback\/[A-Za-z0-9_-]{43}$/);
+  assert.equal((await fetch(url)).status, 200);
+  const current = await manager.execute('session');
+  assert.ok(current?.user?.id);
+  assert.doesNotMatch(JSON.stringify(current), /access_token|refresh_token/);
+  const expectedUserId = current.user.id;
+  for (const [key, value] of [['favorites', {}], ['recents', []], ['preferences', { volume: 0.4 }]]) {
+    await manager.execute('upsertDocument', { expectedUserId, body: {
+      p_document_key: key, p_value: value, p_expected_revision: 0, p_delete: false
+    } });
+  }
+  const documents = await manager.execute('readDocuments', { expectedUserId });
+  assert.deepEqual(documents.map(row => row.document_key).sort(), ['favorites', 'preferences', 'recents']);
+  assert.equal(documents.find(row => row.document_key === 'preferences').value.volume, 0.4);
+  await assert.rejects(manager.execute('readDocuments', { expectedUserId: randomUUID() }), /account|authentication/i);
+  await manager.execute('signOut');
+  assert.equal(await manager.execute('session'), null);
+});
 
 test('local GoTrue completes the production PKCE email workflow without a flow id on redirect_to', {
   skip: skip ? 'Local Supabase Auth is not running. CI sets AUTH_INTEGRATION=1 after supabase start.' : false

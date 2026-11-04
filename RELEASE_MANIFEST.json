@@ -1,12 +1,12 @@
 {
   "name": "Earth Radio",
-  "version": "0.25.1",
+  "version": "0.26.0",
   "artifactType": "recovered-source-and-static-site",
   "files": [
     {
       "path": ".github/workflows/ci.yml",
-      "bytes": 2672,
-      "sha256": "ac7bbdff2c8e3fe3da3f14284dbb0ed0399bc34c6b0c519e8ab813a14c4dfa95"
+      "bytes": 3308,
+      "sha256": "decfaae13db8ab54b556de476e3b4f5acd8e44a893187873bddd39f8a476916b"
     },
     {
       "path": ".github/workflows/macos-release.yml",
@@ -25,8 +25,13 @@
     },
     {
       "path": "docs/ARCHITECTURE.md",
-      "bytes": 14759,
-      "sha256": "7a63002b77c653e432bf925da0d363cf68083da46cec14fb1d3963aaf5e1218f"
+      "bytes": 15338,
+      "sha256": "1045b24758919fdf83191dfd440291e82b169dfd71927d1cf6fe4b608635827f"
+    },
+    {
+      "path": "docs/AUTHENTICATION.md",
+      "bytes": 6717,
+      "sha256": "e10be909b83c4e49891b28860bd4b2e3631bf069ba593dd18c4dc3d1c186b089"
     },
     {
       "path": "docs/branding/earth-radio-icon-master.png",
@@ -90,8 +95,8 @@
     },
     {
       "path": "docs/provenance/hardening-overlays.json",
-      "bytes": 11276,
-      "sha256": "c7c7c860eaf3bdedf307923ee05bea6e8e7d9be53155ad4594272976799e1a14"
+      "bytes": 12007,
+      "sha256": "f2e601eb8a179558f4a630a546a0af32675d1673fe752355acd9382cb81db3c2"
     },
     {
       "path": "docs/provenance/recovery-manifest.json",
@@ -150,8 +155,8 @@
     },
     {
       "path": "docs/SUPABASE.md",
-      "bytes": 6066,
-      "sha256": "d05326bc7d8e8346cc295451781d0ae16885694fe64031640c4f0fb9d2085b04"
+      "bytes": 6356,
+      "sha256": "02f7aa41867bc396eb2e3b6e89afacfc01268a34425a1360bb00d72079ac6c12"
     },
     {
       "path": "docs/superpowers/plans/2026-08-21-earth-radio-public-cloudflare.md",
@@ -169,6 +174,11 @@
       "sha256": "565c518275d173d6373b39897c7666ae87303fa5a036a3a8da2e6ecbfb49417f"
     },
     {
+      "path": "docs/superpowers/plans/2026-11-04-public-desktop-auth.md",
+      "bytes": 5636,
+      "sha256": "d319e270856ceb60502dd240f93f52e9825393af04c9cd7b23abd2f083fb30fb"
+    },
+    {
       "path": "docs/superpowers/specs/2026-08-21-earth-radio-public-cloudflare-design.md",
       "bytes": 17922,
       "sha256": "815ff3d352b2dec000309074e4157d47c0ee7dbcf99bae8ef9f729520deda43b"
@@ -184,19 +194,44 @@
       "sha256": "9053901844ac434d07480a47cd671584f6fd222ae842f9cfd1a98d01e5b51778"
     },
     {
+      "path": "docs/superpowers/specs/2026-11-04-public-desktop-auth-design.md",
+      "bytes": 6091,
+      "sha256": "d2ad8f162ebb631befec94c76a7ad1c72bf1cdb12f0dd0570c2d6008c59c616f"
+    },
+    {
       "path": "electron-builder.yml",
       "bytes": 1086,
       "sha256": "012413604d872b03edf96700eac92f14103518a42d50afa10e2a47db8658c44d"
     },
     {
+      "path": "electron/auth-callback.mjs",
+      "bytes": 4293,
+      "sha256": "f1b7dca0c0d5b7db525a6889ca09f9e515832e47ece37eb44bdbaf23bf9762b1"
+    },
+    {
+      "path": "electron/auth-ipc-policy.mjs",
+      "bytes": 1424,
+      "sha256": "16a16d352d02b6f4965899501cb55498ea3b8a492447f9462f4485b89e010d28"
+    },
+    {
+      "path": "electron/auth-manager.mjs",
+      "bytes": 9741,
+      "sha256": "82d9d4ca789a1e6af0cd76fb3314feb58e2b7b2d2b8f8080902c8b23c5680e5c"
+    },
+    {
+      "path": "electron/auth-vault.mjs",
+      "bytes": 2792,
+      "sha256": "8dc7c1b308f4981365efdff1beb925d82edbfe8b9580899b058f4487dfb83e7d"
+    },
+    {
       "path": "electron/main.mjs",
-      "bytes": 3960,
-      "sha256": "18aee0dd7a260f288c391ef5b8bdc80a56d5343a7fabaf30d535f859e75e21c4"
+      "bytes": 5570,
+      "sha256": "4d8c2f9805b6fdc06fc5c69b6c9c5d1656509b093d315e3c44da38e065d1764a"
     },
     {
       "path": "electron/preload.cjs",
-      "bytes": 679,
-      "sha256": "b08911076bdf6c64bcd3b177aa5889ab7811667c11dacafe16f5ffa8fb2d59d2"
+      "bytes": 1130,
+      "sha256": "7952f06e017771d7eae62a91e45bafa173df5629a92fbbdb770b4c847865c106"
     },
     {
       "path": "electron/proxy-rules.mjs",
@@ -236,12 +271,12 @@
     {
       "path": "package-lock.json",
       "bytes": 166682,
-      "sha256": "15ea930bc0b58857b51784c37c8060a8f496881f6d7e5492c79b2e9b1a3e9840"
+      "sha256": "2567965007a87d0e4419b8ab1750489d5a40365ad7daf80179d7f1fcee121164"
     },
     {
       "path": "package.json",
-      "bytes": 3621,
-      "sha256": "5b36a85fe28aca393f504b9fc1212e0509f830d2d822613930c313e240e4cd16"
+      "bytes": 3862,
+      "sha256": "805330a3db27e69adad754f497c8958fa0ca49a1c84f66dedba069e4fa4adc3f"
     },
     {
       "path": "scripts/desktop-package-compat.mjs",
@@ -375,8 +410,13 @@
     },
     {
       "path": "site/assets/auth-core.js",
-      "bytes": 17431,
-      "sha256": "ec12ab3deed2d2191e3b05e5cea44fa502f57d8b998eb566deab2df6582c30e8"
+      "bytes": 18127,
+      "sha256": "74c7bffdc7113d19161a77ddb92ff650e8d94e6e0164cd15c4698558332549dc"
+    },
+    {
+      "path": "site/assets/auth-deployment.js",
+      "bytes": 257,
+      "sha256": "a92f5b4589965904526367264599d4cf87618972ea741be0633a341621da1fc3"
     },
     {
       "path": "site/assets/auth-ui.css",
@@ -385,8 +425,13 @@
     },
     {
       "path": "site/assets/auth-ui.js",
-      "bytes": 24888,
-      "sha256": "cb4fac6befc159e757267212bec0a3970a1101ec12d754fb0b87285e92a7e788"
+      "bytes": 26020,
+      "sha256": "9d3cb776c3f1b7fe6389cb4f6af42055056e6c9c61552888f06f175ca6df65f7"
+    },
+    {
+      "path": "site/assets/desktop-auth.js",
+      "bytes": 2189,
+      "sha256": "c7deb35b2972d3bf8f54a4a0703494b5e2686c8a79ec8888d323a31991f6c509"
     },
     {
       "path": "site/assets/directory-expansion.js",
@@ -505,8 +550,8 @@
     },
     {
       "path": "site/config.js",
-      "bytes": 3079,
-      "sha256": "bb938c3d351e8381265e563bddcf76b9b66d543d59d0b20895eb484752a0f0b4"
+      "bytes": 3117,
+      "sha256": "e58eb6efcbf5f1baeb4d987e278831d04153fecc850cdbc20bee2cefefadd45d"
     },
     {
       "path": "site/favicon.svg",
@@ -580,8 +625,8 @@
     },
     {
       "path": "site/sw.js",
-      "bytes": 3531,
-      "sha256": "ec0b3cf21f02a0344c4f4553941c4dc243204b55735c3168a412f13a28704be8"
+      "bytes": 3597,
+      "sha256": "ec1b96356a1aa4e477cff08f2199970ddd43bcc37fd594532bb24caf999d355f"
     },
     {
       "path": "src-recovered/core/config.ts",
@@ -790,8 +835,8 @@
     },
     {
       "path": "supabase/config.toml",
-      "bytes": 1052,
-      "sha256": "83aedff244b9409288b7029ae0650cc433ea8644605bb9607d739f15075ea45c"
+      "bytes": 1104,
+      "sha256": "f3b097ca2e6503f71f3bf07d908fbcd4df48e5477b8166a60f0aa5b7d6656e29"
     },
     {
       "path": "supabase/migrations/20260825010000_auth_and_user_sync.sql",
@@ -820,8 +865,8 @@
     },
     {
       "path": "tests/auth-local-gotrue.test.mjs",
-      "bytes": 9722,
-      "sha256": "6aadacf3c86ca1fbafedaf6a545be343485bdeb366a53eb7411f11541a87d8f2"
+      "bytes": 11944,
+      "sha256": "21c261121e186786afa882bfc5e95213c4e104c745776e35bb788a793445e864"
     },
     {
       "path": "tests/auth-sync.test.mjs",
@@ -852,6 +897,31 @@
       "path": "tests/country-search.test.mjs",
       "bytes": 2471,
       "sha256": "9c1e4c4b89a9f19b856b890613a7c36d5e7b322fb92dccfd2110005b3817e86c"
+    },
+    {
+      "path": "tests/desktop-auth-adapter.test.mjs",
+      "bytes": 1784,
+      "sha256": "d04ba33f93bedef6e348d311e47d13d431841f79c8a9f49086d5f7f21cdc256b"
+    },
+    {
+      "path": "tests/desktop-auth-callback.test.mjs",
+      "bytes": 4144,
+      "sha256": "fb11d0d9c1bbb762745dc9f91df01a891d6f9d54ba9a87d1f562a6f265bda081"
+    },
+    {
+      "path": "tests/desktop-auth-ipc.test.mjs",
+      "bytes": 1673,
+      "sha256": "fa358778a8ded5cd557acb8fceb0eab77fac2e6275a990f2334c0bcdd5e1bec4"
+    },
+    {
+      "path": "tests/desktop-auth-manager.test.mjs",
+      "bytes": 8970,
+      "sha256": "6e0cddb6993005381970fd1a80cae4bc6c937395970a5875c477172ac82c5f61"
+    },
+    {
+      "path": "tests/desktop-auth-vault.test.mjs",
+      "bytes": 3815,
+      "sha256": "87f8a1a744ac0b378eec27a07243a3a7a98cd343e8fe121254cb22aab5bebe7b"
     },
     {
       "path": "tests/directory-expansion.test.mjs",
@@ -1025,8 +1095,13 @@
     },
     {
       "path": "tests/service-worker.test.mjs",
-      "bytes": 7965,
-      "sha256": "a597fa82d7ef86270d3e3201d009be07947972ffb485f9b903be78f96a9acd9a"
+      "bytes": 7968,
+      "sha256": "26e374fb75e172b2d33cbd7eb220bb4ed35400df4eac52ce89c0bf15ab532ec9"
+    },
+    {
+      "path": "tests/smoke-desktop-auth.mjs",
+      "bytes": 8109,
+      "sha256": "56885086d073533b96caef3049c895273ca4a709c69c3f09ba3802d9eca0def4"
     },
     {
       "path": "tests/smoke-desktop-renderer.mjs",

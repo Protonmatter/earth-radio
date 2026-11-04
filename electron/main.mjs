@@ -1,14 +1,21 @@
-import { app, BrowserWindow, ipcMain, shell, session } from 'electron';
+import { app, BrowserWindow, ipcMain, shell, session, safeStorage } from 'electron';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { createDesktopProxy } from '../server/desktop-proxy.mjs';
 import { installDesktopProxyOrigin, parseNetworkProxyRule } from './proxy-rules.mjs';
+import { AUTH_DEPLOYMENT } from '../site/assets/auth-deployment.js';
+import { createAuthVault } from './auth-vault.mjs';
+import { createDesktopAuthManager } from './auth-manager.mjs';
+import { handleAuthIpc, isTrustedAuthSender } from './auth-ipc-policy.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const appRoot = path.resolve(__dirname, '..');
 let desktopProxy = null;
 let mainWindow = null;
 let networkProxyRules = '';
+let authManager = null;
+let authUnavailable = false;
+const documentUrl = pathToFileURL(path.join(appRoot, 'site', 'index.html')).href;
 
 function resolveAsset(...parts) {
   return path.join(appRoot, ...parts);
@@ -70,6 +77,12 @@ async function createMainWindow(proxyBaseUrl) {
 }
 
 function registerIpc() {
+  ipcMain.handle('earth-radio:auth', async (event, request) => {
+    if (authUnavailable && isTrustedAuthSender(event, mainWindow?.webContents, documentUrl)) {
+      return { ok: false, error: { message: 'Account storage could not be unlocked. Unlock your keychain and restart Earth Radio.', code: 'AUTH_UNAVAILABLE' } };
+    }
+    return handleAuthIpc({ event, request, webContents: mainWindow?.webContents, documentUrl, manager: authManager });
+  });
   ipcMain.handle('earth-radio:get-network-proxy', async () => networkProxyRules);
   ipcMain.handle('earth-radio:set-network-proxy', async (_event, rawValue) => {
     const value = parseNetworkProxyRule(rawValue);
@@ -91,6 +104,19 @@ app.on('web-contents-created', (_event, contents) => {
 });
 
 app.whenReady().then(async () => {
+  try {
+    const vault = await createAuthVault({ directory: path.join(app.getPath('userData'), 'auth-v1'), safeStorage });
+    authManager = createDesktopAuthManager({ config: AUTH_DEPLOYMENT, vault, openExternal: url => shell.openExternal(url) });
+    authManager.subscribe(payload => {
+      const contents = mainWindow?.webContents;
+      if (contents && isTrustedAuthSender({ sender: contents, senderFrame: contents.mainFrame }, contents, documentUrl)) {
+        contents.send('earth-radio:auth-state', payload);
+      }
+    });
+  } catch {
+    // Never log keychain errors/session material or prevent local radio playback.
+    authUnavailable = true;
+  }
   registerIpc();
   desktopProxy = await createDesktopProxy({ port: Number(process.env.EARTH_RADIO_PROXY_PORT || 0) });
   await createMainWindow(desktopProxy.baseUrl);
@@ -110,5 +136,6 @@ app.on('window-all-closed', () => {
 });
 
 app.on('before-quit', async () => {
+  try { await authManager?.close(); } catch { /* best effort, ciphertext is atomic */ }
   try { await desktopProxy?.close?.(); } catch { /* best effort */ }
 });

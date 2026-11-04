@@ -9,10 +9,10 @@
         "sha256": "942d2d61015289e649cf74ff509a95fd2ca20090fc40cb9fd3e5f21d89c29dcc"
       },
       "current": {
-        "bytes": 3960,
-        "sha256": "18aee0dd7a260f288c391ef5b8bdc80a56d5343a7fabaf30d535f859e75e21c4"
+        "bytes": 5570,
+        "sha256": "4d8c2f9805b6fdc06fc5c69b6c9c5d1656509b093d315e3c44da38e065d1764a"
       },
-      "reason": "Load the selected site, use the generated desktop icon, validate complete network-proxy rules, and assert opaque Origin only for the owned trusted file renderer on its per-launch capability API."
+      "reason": "Load the selected site, use the generated desktop icon, validate complete network-proxy rules, and assert opaque Origin only for the owned trusted file renderer on its per-launch capability API. Native account integration and shared public deployment configuration (2026-11-04)."
     },
     {
       "path": "server/desktop-proxy.mjs",
@@ -118,10 +118,10 @@
         "sha256": "c83167f40ae7df3b389e35707b4abac834b10dc223ecb836d7840f90a7ef92a6"
       },
       "current": {
-        "bytes": 3079,
-        "sha256": "bb938c3d351e8381265e563bddcf76b9b66d543d59d0b20895eb484752a0f0b4"
+        "bytes": 3117,
+        "sha256": "e58eb6efcbf5f1baeb4d987e278831d04153fecc850cdbc20bee2cefefadd45d"
       },
-      "reason": "Keep Cloudflare Pages on an empty proxy URL and document that only Electron injects the loopback capability path. Add live-metadata runtime options (platform now-playing, HLS ID3, fingerprint) with metered fingerprinting off unless a proxy provides credentials. Restrict deployable authentication to the exact production origin, configure the public Supabase project, enable GitHub and Google in the client, and load the same-origin account overlay without changing the recovered bundle."
+      "reason": "Keep Cloudflare Pages on an empty proxy URL and document that only Electron injects the loopback capability path. Add live-metadata runtime options (platform now-playing, HLS ID3, fingerprint) with metered fingerprinting off unless a proxy provides credentials. Restrict deployable authentication to the exact production origin, configure the public Supabase project, enable GitHub and Google in the client, and load the same-origin account overlay without changing the recovered bundle. Native account integration and shared public deployment configuration (2026-11-04)."
     },
     {
       "path": "site/index.html",
@@ -154,10 +154,22 @@
         "sha256": "b09e3207532fe7f47d14e9c53804d7e8caf31cad2fcb2c652b728a93871ea094"
       },
       "current": {
-        "bytes": 3531,
-        "sha256": "ec0b3cf21f02a0344c4f4553941c4dc243204b55735c3168a412f13a28704be8"
+        "bytes": 3597,
+        "sha256": "ec1b96356a1aa4e477cff08f2199970ddd43bcc37fd594532bb24caf999d355f"
       },
-      "reason": "Use network-first navigation/configuration updates, keep hashed recovered assets cache-first, reload overlay installation requests so stale browser HTTP entries cannot seed the new service-worker cache, force-cache the hashed runtime bundles, keep the previous worker when reload precaching fails, and precache the UI refresh stylesheet. Precache pinned-stations.js for LISTEN.moe catalog pinning. Precache atlas-lock.css/js and bump the shell cache generation to v46 so clients pick up Night/Paper, glass-on-log, and the four-tab phone chrome. November 2026: add the station discovery controls/details dialog and vector-atlas controls; load and coherently precache the maintained discovery/map assets under worker generation v47. Cache the generated icon PNGs and serve branding/manifest requests from the shell while offline."
+      "reason": "Use network-first navigation/configuration updates, keep hashed recovered assets cache-first, reload overlay installation requests so stale browser HTTP entries cannot seed the new service-worker cache, force-cache the hashed runtime bundles, keep the previous worker when reload precaching fails, and precache the UI refresh stylesheet. Precache pinned-stations.js for LISTEN.moe catalog pinning. Precache atlas-lock.css/js and bump the shell cache generation to v46 so clients pick up Night/Paper, glass-on-log, and the four-tab phone chrome. November 2026: add the station discovery controls/details dialog and vector-atlas controls; load and coherently precache the maintained discovery/map assets under worker generation v47. Cache the generated icon PNGs and serve branding/manifest requests from the shell while offline. Native account integration and shared public deployment configuration (2026-11-04)."
+    },
+    {
+      "path": "electron/preload.cjs",
+      "intake": {
+        "bytes": 679,
+        "sha256": "b08911076bdf6c64bcd3b177aa5889ab7811667c11dacafe16f5ffa8fb2d59d2"
+      },
+      "current": {
+        "bytes": 1130,
+        "sha256": "7952f06e017771d7eae62a91e45bafa173df5629a92fbbdb770b4c847865c106"
+      },
+      "reason": "Expose only token-free account operations and sanitized auth events through the sandboxed context bridge; update desktop version to 0.26.0."
     }
   ]
 }

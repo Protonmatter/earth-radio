@@ -12,7 +12,12 @@ Official PKCE notes that extra query parameters on `redirect_to` (`sb_flow_id` /
 
 [Redirect URLs](https://supabase.com/docs/guides/auth/redirect-urls) in `supabase/config.toml` are exact production and local paths. Do not add `https://earth-radio.pages.dev/**` or preview `*.earth-radio.pages.dev` globs. After changing those values, update the hosted URL configuration in the dashboard to match; CI does not push Auth config with a hosted access token.
 
-Production authentication is enabled only on `https://earth-radio.pages.dev`. Local development can inject a runtime auth configuration before `config.js`. Cloudflare preview origins stay excluded.
+Browser authentication is enabled only on `https://earth-radio.pages.dev`. The 0.26.0
+desktop candidate uses a main-process PKCE client with an ephemeral loopback return,
+OS-encrypted session persistence and a token-free preload adapter. Local development
+can inject runtime auth configuration before `config.js`. Cloudflare preview origins
+stay excluded. See [account operation and email setup](AUTHENTICATION.md) for release
+qualification boundaries, sender prerequisites and rollback.
 
 ## Data contract
 

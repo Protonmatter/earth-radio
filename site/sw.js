@@ -1,8 +1,10 @@
-const CACHE_NAME = 'earth-radio-shell-v52-safe-area-0-25-1';
+const CACHE_NAME = 'earth-radio-shell-v53-desktop-auth-0-26-0';
 const SHELL_ASSETS = [
   './',
   './index.html',
   './config.js',
+  './assets/auth-deployment.js',
+  './assets/desktop-auth.js',
   './manifest.webmanifest',
   './branding/earth-radio-32-v2.png',
   './branding/earth-radio-180-v2.png',
