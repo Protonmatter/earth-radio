@@ -18,6 +18,7 @@ app.setPath('userData', path.join(directory, 'profile'));
 app.disableHardwareAcceleration();
 const watchdog = setTimeout(() => { console.error('Native auth qualification timed out.'); app.exit(2); }, 30000);
 let window, manager;
+let qualificationPhase = 'isolated fixture';
 
 app.whenReady().then(async () => {
   const fixture = path.join(directory, 'auth.html');
@@ -107,6 +108,8 @@ app.whenReady().then(async () => {
   // sign-in completes without leaving the renderer, so its account transition
   // must be able to reload the exact trusted document and start synchronization.
   documentUrl = pathToFileURL(path.join(root, 'site', 'index.html')).href;
+  qualificationPhase = 'real account UI';
+  records.set('preferences', { document_key: 'preferences', value: { volume: 0.41 }, revision: 1, deleted_at: null });
   installAuthNavigationPolicy(window.webContents, documentUrl);
   window.webContents.session.webRequest.onBeforeRequest({ urls: ['http://*/*', 'https://*/*'] }, (_details, callback) => callback({ cancel: true }));
   subscribe();
@@ -114,14 +117,30 @@ app.whenReady().then(async () => {
   let uiStage = 0;
   async function until(script) {
     uiStage++;
-    for (let i = 0; i < 250; i++) {
-      try { if (await window.webContents.executeJavaScript(script)) return; } catch { /* document may be reloading */ }
+    let matched = false;
+    for (let i = 0; i < 500; i++) {
+      if (window.webContents.isLoadingMainFrame()) { matched = false; await new Promise(resolve => setTimeout(resolve, 20)); continue; }
+      let current = false;
+      try { current = Boolean(await window.webContents.executeJavaScript(script)); } catch { /* document may be reloading */ }
+      if (current && matched) return;
+      matched = current;
       await new Promise(resolve => setTimeout(resolve, 20));
     }
     assert.fail(`The real native account UI did not reach expected stage ${uiStage}.`);
   }
+  async function openAccount() {
+    await until("Boolean(document.getElementById('er-auth-button'))");
+    for (let i = 0; i < 50; i++) {
+      try {
+        await window.webContents.executeJavaScript("document.getElementById('er-auth-button')?.click()");
+        if (await window.webContents.executeJavaScript("document.querySelector('.er-auth-modal')?.hidden === false")) return;
+      } catch { /* a namespace reload can replace the document after the first read */ }
+      await new Promise(resolve => setTimeout(resolve, 20));
+    }
+    assert.fail('The real native account dialog did not open.');
+  }
   await until("document.getElementById('er-auth-button')?.textContent === 'Sign in'");
-  await window.webContents.executeJavaScript("document.getElementById('er-auth-button').click()");
+  await openAccount();
   await until("Array.from(document.querySelectorAll('.er-auth-provider')).some(button=>button.textContent==='Continue with Google')");
   authorize = null;
   await window.webContents.executeJavaScript("Array.from(document.querySelectorAll('.er-auth-provider')).find(button=>button.textContent==='Continue with Google').click()");
@@ -130,12 +149,22 @@ app.whenReady().then(async () => {
   assert.ok(authorize, 'Native UI must start the main-owned browser flow.');
   assert.equal((await fetch(`${authorize.searchParams.get('redirect_to')}?code=ui-qualification-code`)).status, 200);
   await until("document.getElementById('er-auth-button')?.textContent === 'qualification@earth-radio.test'");
-  await window.webContents.executeJavaScript("document.getElementById('er-auth-button').click()");
+  await openAccount();
   await until("document.querySelector('.er-auth-modal')?.textContent.includes('Synced')");
-  await window.webContents.executeJavaScript("Array.from(document.querySelectorAll('.er-auth-secondary')).find(button=>button.textContent==='Sign out').click()");
+  await until("Math.abs(Number(document.getElementById('volume')?.value)-0.41)<0.001");
+  await until("document.getElementById('er-auth-button')?.textContent === 'qualification@earth-radio.test'");
+  await openAccount();
+  records.set('preferences', { document_key: 'preferences', value: { volume: 0.42 }, revision: 2, deleted_at: null });
+  await window.webContents.executeJavaScript("Array.from(document.querySelectorAll('.er-auth-secondary')).find(button=>button.textContent==='Sync now').click()");
+  await until("Math.abs(Number(document.getElementById('volume')?.value)-0.42)<0.001");
+  await until("document.getElementById('er-auth-button')?.textContent === 'qualification@earth-radio.test'");
+  await openAccount();
+  qualificationPhase = 'UI account switch';
+  await window.webContents.executeJavaScript("Array.from(document.querySelectorAll('.er-auth-secondary')).find(button=>button.textContent==='Sign out').click()")
+    .catch(async () => until("document.getElementById('er-auth-button')?.textContent === 'Sign in'"));
   await until("document.getElementById('er-auth-button')?.textContent === 'Sign in'");
   session.user = { id: 'qualification-second-user', email: 'second@earth-radio.test', identities: [{ provider: 'github' }] };
-  await window.webContents.executeJavaScript("document.getElementById('er-auth-button').click()");
+  await openAccount();
   await until("Array.from(document.querySelectorAll('.er-auth-provider')).some(button=>button.textContent==='Continue with GitHub')");
   authorize = null;
   await window.webContents.executeJavaScript("Array.from(document.querySelectorAll('.er-auth-provider')).find(button=>button.textContent==='Continue with GitHub').click()");
@@ -143,7 +172,7 @@ app.whenReady().then(async () => {
   assert.ok(authorize);
   assert.equal((await fetch(`${authorize.searchParams.get('redirect_to')}?code=second-ui-code`)).status, 200);
   await until("document.getElementById('er-auth-button')?.textContent === 'second@earth-radio.test'");
-  await window.webContents.executeJavaScript("document.getElementById('er-auth-button').click()");
+  await openAccount();
   await until("document.querySelector('.er-auth-modal')?.textContent.includes('Synced')");
   console.log(JSON.stringify({ platform: process.platform, arch: process.arch, sandbox: true, contextIsolation: true,
     ownedFrameOnly: true, pkceLoopback: true, tokenFreeRenderer: true, osEncryptedRestart: true,
@@ -154,6 +183,6 @@ app.whenReady().then(async () => {
   await rm(directory, { recursive: true, force: true });
   app.exit(0);
 }).catch(async error => {
-  console.error('Native auth qualification failed:', error?.name || typeof error, error?.message || String(error));
+  console.error('Native auth qualification failed:', qualificationPhase, error?.name || typeof error, error?.message || String(error));
   await manager?.close().catch(() => {}); window?.destroy(); clearTimeout(watchdog); app.exit(1);
 });

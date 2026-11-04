@@ -109,7 +109,10 @@ export async function buildMacRelease(sourceInput, arch, environment = process.e
   const configFile = path.join(work, 'electron-builder.json');
   await writeFile(configFile, JSON.stringify(config, null, 2) + '\n');
   execFileSync(path.join(source, 'node_modules', '.bin', 'electron-builder'), ['--mac', 'dmg', `--${arch}`, '--config', configFile, '--publish', 'never'], {
-    cwd: source, stdio: 'inherit', env: { ...environment, CSC_IDENTITY_AUTO_DISCOVERY: 'false' }
+    cwd: source, stdio: 'inherit', env: { ...environment, CSC_IDENTITY_AUTO_DISCOVERY: 'false',
+      // Candidate CI is secretless and identity is explicitly ad-hoc. Builder's
+      // general PR safeguard otherwise skips even this certificate-free signing.
+      ...(candidate ? { CSC_FOR_PULL_REQUEST: 'true' } : {}) }
   });
   const dmg = path.join(output, identity.artifactName);
   run('hdiutil', ['verify', dmg]);

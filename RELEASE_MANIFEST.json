@@ -300,8 +300,8 @@
     },
     {
       "path": "scripts/macos-release.mjs",
-      "bytes": 9841,
-      "sha256": "71a5086df052668ef111cb45af13cb2d2ab9e1896de33f7ed1dc640410f4afa1"
+      "bytes": 10066,
+      "sha256": "a16fab7af91bd2b86a3cb8ff2e533127a691bcde6317edd9acc14f8a14ee28ca"
     },
     {
       "path": "scripts/qualify-edge-runtime.mjs",
@@ -1120,8 +1120,8 @@
     },
     {
       "path": "tests/smoke-desktop-auth.mjs",
-      "bytes": 11929,
-      "sha256": "e5ec1ead1d11e84bcbfe7f2fef1a26bd72652fb27fd07da78df9b282da8d75c0"
+      "bytes": 13588,
+      "sha256": "10353c01fa78f8eab5b99fa3486a4dcdfbdbb4c1339ab9a59f509494d260e52d"
     },
     {
       "path": "tests/smoke-desktop-renderer.mjs",
