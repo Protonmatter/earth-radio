@@ -1,4 +1,6 @@
 import './style.css';
+// Maintained modules are shared with the shipped runtime; this evidence snapshot still has no rebuild toolchain.
+import { installDiscovery } from '../site/assets/discovery-ui.js';
 import './domains/radio/index';
 import './domains/sdr/index';
 
@@ -34,7 +36,7 @@ import {
   togglePlay
 } from './core/player';
 import { showToast } from './core/toast';
-import { initMap, setMapTheme, setPlayingStation, updateMapMarkers } from './ui/map';
+import { getMapInstance, initMap, setMapTheme, setPlayingStation, updateMapMarkers } from './ui/map';
 import { initNowPlayingPanel, setNowPlayingCountryFacts, setNowPlayingTrack, showNowPlayingStation } from './ui/nowPlayingPanel';
 import { getCountryFacts, identifyTrack, parseNowPlaying } from './core/enrich';
 import { closeSearch, initSearch, openSearch, updateSearchStations } from './ui/search';
@@ -47,7 +49,7 @@ import {
   setFilterState
 } from './ui/filters';
 import { closeSettings, initSettings } from './ui/settings';
-import { filterStations } from './domains/radio/normalize';
+import { filterStations, normalizeStation } from './domains/radio/normalize';
 import { probeStationStream } from './core/streamProbe';
 import { getUnreachable, isUnreachable, runHealthProbe } from './core/healthProbe';
 import { startNowPlaying, stopNowPlaying } from './core/nowPlaying';
@@ -109,6 +111,23 @@ const exportBtn = byId<HTMLButtonElement>('export-data');
 const importBtn = byId<HTMLButtonElement>('import-data');
 const importInput = byId<HTMLInputElement>('import-data-input');
 
+const discovery = installDiscovery({
+  allowDirectory: () => activePack.id === 'radio',
+  prepareArea: () => {
+    view = 'all';
+    favoritesToggle?.classList.remove('header-btn--active');
+    recentToggle?.classList.remove('header-btn--active');
+    setFilterState({ countries: [] }, { emit: false });
+  },
+  normalize: (raw: unknown) => normalizeStation(raw, getBadStations()),
+  context: () => ({ badStations: getBadStations() }),
+  map: getMapInstance,
+  current: getCurrentStation,
+  visible: () => currentStations,
+  refresh: () => { if (featureModulesReady) applyFilters(); },
+  play: (station: Station) => { void onStationClick(station); }
+});
+
 // ---- Card rendering ----
 
 function renderStationCard(station: Station): HTMLElement {
@@ -152,7 +171,7 @@ function renderStationCard(station: Station): HTMLElement {
   favorite.setAttribute('aria-label', t('player.favorite') + ': ' + station.name);
   favorite.setAttribute('aria-pressed', String(isFavorite(station.stationuuid)));
 
-  card.append(media, body, play, favorite);
+  card.append(media, body, play, favorite, discovery.explainButton(station));
 
   card.addEventListener('click', event => {
     const target = event.target as HTMLElement;
@@ -305,6 +324,7 @@ function computeBaseList(): Station[] {
 }
 
 function applyFilters(): void {
+  allStations = discovery.augment(allStations);
   const filters = getActiveFilters();
   const base = computeBaseList();
   currentStations = filterStations(base, {
@@ -313,6 +333,7 @@ function applyFilters(): void {
     favoriteUuids: getFavorites()
   });
 
+  currentStations = discovery.transform(currentStations, { all: allStations, view });
   renderGrid(currentStations);
   updateMapMarkers(currentStations);
   updateSearchStations(currentStations);
@@ -756,6 +777,7 @@ function setupHeaderEvents(): void {
   emptyStateEl?.addEventListener('click', event => {
     const action = (event.target as HTMLElement).closest('[data-action]')?.getAttribute('data-action');
     if (action === 'clear-filters') {
+      discovery.clear();
       view = 'all';
       favoritesToggle?.classList.remove('header-btn--active');
       recentToggle?.classList.remove('header-btn--active');
@@ -860,6 +882,7 @@ function setupAudioErrorHandling(): void {
     onPrev: () => void btnPrev?.click(),
     onNext: () => void btnNext?.click(),
     onCanPlay: station => {
+      discovery.observe(station, true);
       if (!station) return;
       autoSkipCount = 0;
       clearStationPlaybackFailure(station.stationuuid);
@@ -875,6 +898,7 @@ function setupAudioErrorHandling(): void {
       });
     },
     onError: (station, error) => {
+      discovery.observe(station, false);
       if (station) markStationPlaybackFailure(station.stationuuid, error?.message || 'playback-error');
       stopNowPlaying();
       updatePlayBtnState();

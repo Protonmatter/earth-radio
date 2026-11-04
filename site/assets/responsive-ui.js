@@ -679,6 +679,9 @@ function syncVirtualRows() {
 function applyViewport(state) {
   const mode = classifyViewport();
   applyModeClasses(mode);
+  // Clamp on every presentation pass, including restored state at boot. A later
+  // load or locale callback must not overwrite the resize handler's live clamp.
+  state = { ...state, split: clampSplitPercent(state.split, workspaceWidth()) };
   const root = document.documentElement;
   root.dataset.erDest = state.destination;
   root.dataset.erSaved = state.savedSegment;

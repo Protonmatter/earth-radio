@@ -5,7 +5,29 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import http from 'node:http';
-import { guardedRequest, isPrivateIp, requestLimited, requestPublic, resolvePublicTarget } from '../server/net-guard.mjs';
+import { EventEmitter } from 'node:events';
+import net from 'node:net';
+import { createPinnedLookup, guardedRequest, isPrivateIp, requestLimited, requestPublic, resolvePublicTarget } from '../server/net-guard.mjs';
+
+test('pinned DNS preserves the legacy single-address callback contract', async () => {
+  const lookup = createPinnedLookup({ hostname: 'radio.example', address: '1.1.1.1', family: 4 });
+  const result = await new Promise((resolve, reject) => lookup('radio.example', {}, (error, address, family) => error ? reject(error) : resolve({ address, family })));
+  assert.deepEqual(result, { address: '1.1.1.1', family: 4 });
+});
+
+for (const target of [{ hostname: 'radio.example', address: '1.1.1.1', family: 4 },
+  { hostname: 'radio.example', address: '2606:4700:4700::1111', family: 6 }]) {
+  test(`pinned DNS honors Node family-autoselection all:true for IPv${target.family}`, async () => {
+    const result = await new Promise((resolve, reject) => createPinnedLookup(target)('radio.example', { all: true },
+      (error, addresses) => error ? reject(error) : resolve(addresses)));
+    assert.deepEqual(result, [{ address: target.address, family: target.family }]);
+  });
+}
+
+test('all:true cannot bypass private-address rejection at the pinned callback', async () => {
+  await assert.rejects(new Promise((resolve, reject) => createPinnedLookup({ hostname: 'radio.example', address: '127.0.0.1', family: 4 })(
+    'radio.example', { all: true }, (error, addresses) => error ? reject(error) : resolve(addresses))), /private/);
+});
 import { isPublicIpAddress } from '../server/public-ip-policy.mjs';
 import { sampleHlsAudio, sampleStreamAudio } from '../server/fingerprint-providers.mjs';
 import { deniedIpv6Vectors, publicIpv6Controls } from './fixtures/public-ip-policy-vectors.mjs';
@@ -13,6 +35,47 @@ import { deniedIpv6Vectors, publicIpv6Controls } from './fixtures/public-ip-poli
 function fakeTargetFor(url) {
   return { href: url, url: new URL(url), hostname: new URL(url).hostname, address: '1.1.1.1', family: 4 };
 }
+
+for (const mode of ['complete', 'byte-cap', 'redirect']) {
+  test(`requestLimited absorbs late request and response errors after ${mode} settlement`, async t => {
+    const request = new EventEmitter();
+    const response = new EventEmitter();
+    response.statusCode = mode === 'redirect' ? 302 : 200;
+    response.headers = mode === 'redirect' ? { location: '/next' } : {};
+    response.destroy = () => { response.destroyed = true; queueMicrotask(() => response.emit('close')); };
+    request.destroy = () => {};
+    request.setTimeout = () => request;
+    t.mock.method(http, 'request', (_url, _options, receive) => {
+      request.end = () => queueMicrotask(() => {
+        receive(response);
+        if (mode !== 'redirect') {
+          response.emit('data', Buffer.from('audio'));
+          if (!response.destroyed) response.emit('end');
+        }
+      });
+      return request;
+    });
+    const result = await requestLimited(fakeTargetFor('http://radio.example/live'), { maxBytes: mode === 'byte-cap' ? 3 : 100 });
+    assert.equal(result.statusCode, response.statusCode);
+    assert.equal(result.truncated, mode === 'byte-cap');
+    // Node can deliver a parser/socket failure after body completion or destroy.
+    // This must not become an EventEmitter unhandled error in Electron's main process.
+    assert.doesNotThrow(() => request.emit('error', new Error('Parse Error: Data after Connection: close')));
+    assert.doesNotThrow(() => response.emit('error', new Error('late response stream error')));
+  });
+}
+
+test('a real malformed HTTP tail rejects through the request promise', async t => {
+  const server = net.createServer(socket => socket.once('data', () => {
+    socket.end('HTTP/1.1 200 OK\r\nContent-Length: 5\r\nConnection: close\r\n\r\naudioTRAILING');
+  }));
+  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+  t.after(() => new Promise(resolve => server.close(resolve)));
+  const target = fakeTargetFor(`http://127.0.0.1:${server.address().port}/malformed`);
+  target.address = '127.0.0.1';
+  await assert.rejects(requestLimited(target, { maxBytes: 3 }), { code: 'HPE_CLOSED_CONNECTION' });
+  await new Promise(resolve => setImmediate(resolve));
+});
 
 function makeResolver({ privateHosts = [] } = {}) {
   const resolved = [];

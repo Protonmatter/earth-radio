@@ -6,10 +6,9 @@
 // through the shared guarded boundary (manual revalidated redirects, byte caps, one
 // wall-clock deadline); HLS playlists are resolved and recent segments sampled the same
 // way the desktop implementation does. Rate limiting for this metered route is
-// enforced exclusively by the zone-level WAF rules (6 requests/min/IP, HTTP 429;
-// docs/CLOUDFLARE_DEPLOYMENT.md): a per-isolate counter multiplies by isolate count
-// and would misrepresent the real budget, so production policy has one durable
-// source of truth.
+// enforced by Pages middleware and a private SQLite Durable Object (6 rolling
+// requests/min/IP, HTTP 429). Its persisted counter survives isolate changes;
+// see docs/CLOUDFLARE_DEPLOYMENT.md.
 //
 // GET /api/track/fingerprint                 -> availability probe
 // GET /api/track/fingerprint?url=<stream>    -> identify what is playing right now

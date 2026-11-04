@@ -1,3 +1,4 @@
+import { createVectorBasemap } from '../../site/assets/vector-atlas.js';
 // Leaflet map with clustered, incrementally-updated markers. CSS is bundled (not CDN) for
 // supply-chain control. Clusters and the "now playing" beacon use branded markup so the map
 // reads like a product surface, not a data-viz heat map.
@@ -15,7 +16,7 @@ export interface MapHandlers {
 
 let map: L.Map | null = null;
 let cluster: L.MarkerClusterGroup | null = null;
-let tileLayer: L.TileLayer | null = null;
+let tileLayer: L.LayerGroup | null = null;
 let playingMarker: L.Marker | null = null;
 const markers = new Map<string, L.CircleMarker>();
 let onStationClick: ((station: Station) => void) | null = null;
@@ -34,11 +35,14 @@ export function initMap(containerId: string, stations: Station[], handlers: MapH
 
   map = L.map(containerId, {
     center: [25, 5],
-    zoom: 2,
-    minZoom: 2,
+    zoom: 1,
+    minZoom: 1,
+    maxZoom: 7,
+    maxBounds: [[-85, -180], [85, 180]],
+    maxBoundsViscosity: 1,
     zoomControl: true,
     attributionControl: true,
-    worldCopyJump: true
+    worldCopyJump: false
   });
 
   // Zoom control moves to the right so it never sits under the now-playing sidecar.
@@ -166,12 +170,7 @@ function applyTiles(theme: 'light' | 'dark'): void {
     map.removeLayer(tileLayer);
     tileLayer = null;
   }
-  const variant = theme === 'dark' ? 'dark_all' : 'light_all';
-  tileLayer = L.tileLayer(`https://{s}.basemaps.cartocdn.com/${variant}/{z}/{x}/{y}{r}.png`, {
-    attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
-    subdomains: 'abcd',
-    maxZoom: 19
-  });
+  tileLayer = createVectorBasemap(L, map, theme);
   tileLayer.addTo(map);
 }
 

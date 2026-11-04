@@ -3,8 +3,27 @@ import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import test from 'node:test';
+import vm from 'node:vm';
 
 const root = path.resolve(import.meta.dirname, '..');
+
+for (const relative of ['/branding/earth-radio-192-v2.png', '/manifest.webmanifest']) {
+  test(`service worker serves cached ${relative} when the network is offline`, async () => {
+    const worker = await readFile(path.join(root, 'site', 'sw.js'), 'utf8');
+    const handlers = new Map();
+    const cached = new Response('cached-shell-resource', { headers: { 'Content-Type': relative.endsWith('.png') ? 'image/png' : 'application/manifest+json' } });
+    vm.runInNewContext(worker, {
+      self: { location: { origin: 'https://radio.example' }, addEventListener: (name, handler) => handlers.set(name, handler) },
+      URL, Request, Response,
+      fetch: async () => { throw new Error('offline'); },
+      caches: { match: async request => request.url === `https://radio.example${relative}` ? cached : undefined }
+    });
+    let response;
+    handlers.get('fetch')({ request: new Request(`https://radio.example${relative}`), respondWith: promise => { response = promise; } });
+    assert.ok(response, 'The shell request must be handled by the service worker');
+    assert.equal(await (await response).text(), 'cached-shell-resource');
+  });
+}
 
 test('the live immutable runtime filename is derived from its final content hash everywhere', async () => {
   const html = await readFile(path.join(root, 'site', 'index.html'), 'utf8');
@@ -22,7 +41,7 @@ test('the live immutable runtime filename is derived from its final content hash
 
 test('service worker registers even when async startup outlives window load', async () => {
   const source = await readFile(path.join(root, 'src-recovered', 'main.ts'), 'utf8');
-  const bundle = await readFile(path.join(root, 'site', 'assets', 'index-690938fe.js'), 'utf8');
+  const bundle = await readFile(path.join(root, 'site', 'assets', 'index-84264652.js'), 'utf8');
   assert.match(source, /document\.readyState === 'complete'/);
   assert.match(bundle, /document\.readyState===`complete`/);
 });
@@ -58,7 +77,11 @@ test('deployed pages send HSTS and revalidate the auth overlays', async () => {
 test('service worker precaches the auth, responsive, and i18n shell under a new cache version', async () => {
   const worker = await readFile(path.join(root, 'site', 'sw.js'), 'utf8');
   assert.match(worker, /cache: isImmutableAsset\(asset\) \? 'force-cache' : 'reload'/);
-  assert.match(worker, /earth-radio-shell-v46-atlas-lock-1/);
+  assert.match(worker, /earth-radio-shell-v51-release-0-25-0/);
+  for (const size of [32, 180, 192, 512]) assert.ok(worker.includes(`branding/earth-radio-${size}-v2.png`));
+  for (const asset of ['discovery-core.js', 'discovery-ui.js', 'map-directory.js', 'discovery.css', 'vector-atlas.js', 'world-land.js']) {
+    assert.ok(worker.includes(`./assets/${asset}`), `Missing discovery shell asset ${asset}`);
+  }
   assert.doesNotMatch(worker, /earth-radio-shell-v45-review-auth-1\b/);
   assert.doesNotMatch(worker, /earth-radio-shell-v44-visible-signin-1\b/);
   assert.doesNotMatch(worker, /earth-radio-shell-v43-auth-unfreeze-1\b/);

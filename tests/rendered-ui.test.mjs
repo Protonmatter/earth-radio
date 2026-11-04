@@ -20,7 +20,7 @@ function assertInsideLateralSafeArea(items, id, start = 50, end = 794) {
 }
 
 test('responsive UI rendered matrix preserves layout, actions, and locale contracts', {
-  skip: unavailable,
+  skip: unavailable || false,
   timeout: 180_000
 }, async () => {
   const payload = await runRenderedHarness();
@@ -89,16 +89,16 @@ test('responsive UI rendered matrix preserves layout, actions, and locale contra
   // The ui-refresh layer re-ramps the palette: mobile header/body take the
   // refresh surface and background, and the primary action takes --er2-action.
   const palette = byId(payload.results, 'mobile-listen-390x844').probe.palette;
-  assert.equal(palette.header, 'rgb(255, 255, 255)');
-  assert.equal(palette.body, 'rgb(247, 243, 237)');
-  assert.equal(palette.primary, 'rgb(191, 69, 32)');
-  assert.equal(palette.map, 'rgb(227, 228, 234)');
+  assert.equal(palette.header, 'rgb(255, 253, 248)');
+  assert.equal(palette.body, 'rgb(244, 239, 228)');
+  assert.equal(palette.primary, 'rgb(138, 75, 40)');
+  assert.equal(palette.map, 'rgb(223, 236, 234)');
 
   const darkPalette = byId(payload.results, 'mobile-dark-390x844').probe.palette;
-  assert.equal(darkPalette.header, 'rgb(23, 22, 31)');
-  assert.equal(darkPalette.body, 'rgb(15, 14, 23)');
-  assert.equal(darkPalette.primary, 'rgb(242, 112, 79)');
-  assert.equal(darkPalette.map, 'rgb(41, 40, 56)');
+  assert.equal(darkPalette.header, 'rgb(26, 24, 20)');
+  assert.equal(darkPalette.body, 'rgb(18, 17, 14)');
+  assert.equal(darkPalette.primary, 'rgb(212, 165, 116)');
+  assert.equal(darkPalette.map, 'rgb(16, 44, 50)');
 
   const nowPlaying = byId(payload.results, 'mobile-nowplaying-390x844').probe;
   assert.equal(nowPlaying.nowPlaying.visible, true);

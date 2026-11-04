@@ -56,7 +56,11 @@ export const LISTEN_MOE_STATIONS = Object.freeze([
 
 export function isDirectoryRequest(url) {
   try {
-    const path = new URL(String(url || ''), 'https://earth-radio.invalid').pathname;
+    const parsed = new URL(String(url || ''), 'https://earth-radio.invalid');
+    // Geo samples have a strict record budget and require actual locations.
+    // The pinned stations are already retained by the main catalog.
+    if (parsed.searchParams.get('has_geo_info') === 'true') return false;
+    const path = parsed.pathname;
     return /\/json\/stations\//.test(path) || /\/api\/stations\/(federated|top)\b/.test(path);
   } catch {
     return false;

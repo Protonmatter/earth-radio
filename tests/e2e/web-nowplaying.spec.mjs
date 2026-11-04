@@ -3,7 +3,7 @@
 // for a track title.
 
 import { expect, test } from '@playwright/test';
-import { card, playFromList, setupApp } from './helpers.mjs';
+import { playFromList, revealCard, setupApp } from './helpers.mjs';
 
 test('same-origin now-playing feed surfaces the track in the metadata panel', async ({ page }) => {
   await setupApp(page, {
@@ -49,18 +49,20 @@ test('successful playback dispatches the original selected stream URL and statio
 
 test('next and previous controls emit only after their navigation playback succeeds', async ({ page }) => {
   await setupApp(page);
+  await page.getByRole('searchbox', { name: 'Find a station' }).fill('hls');
+  await expect(page.locator('#er-discovery-status')).toContainText('2 matches');
   await page.evaluate(() => {
     window.__stationSelectedEvents = [];
     window.addEventListener('earthradio:station-selected', event => window.__stationSelectedEvents.push(event.detail));
   });
-  await playFromList(page, 'E2E Seoul Pop');
+  await playFromList(page, 'E2E HLS Mirror');
   await page.locator('#btn-next').click();
   await expect.poll(() => page.evaluate(() => window.__stationSelectedEvents.at(-1))).toEqual(
     { streamUrl: 'https://streams.e2e.example/hls/master.m3u8', stationUuid: 'e2e-hls-0009' }
   );
   await page.locator('#btn-prev').click();
   await expect.poll(() => page.evaluate(() => window.__stationSelectedEvents.at(-1))).toEqual(
-    { streamUrl: 'https://streams.e2e.example/seoul.mp3', stationUuid: 'e2e-seoul-0001' }
+    { streamUrl: 'https://streams.e2e.example/hls/master.m3u8', stationUuid: 'e2e-hls-0010' }
   );
 });
 
@@ -82,11 +84,13 @@ test('the Media Session next-track path uses the same successful-navigation even
     window.__mediaSessionHandlers = handlers;
   });
   await setupApp(page);
+  await page.getByRole('searchbox', { name: 'Find a station' }).fill('hls');
+  await expect(page.locator('#er-discovery-status')).toContainText('2 matches');
   await page.evaluate(() => {
     window.__stationSelectedEvents = [];
     window.addEventListener('earthradio:station-selected', event => window.__stationSelectedEvents.push(event.detail));
   });
-  await playFromList(page, 'E2E Seoul Pop');
+  await playFromList(page, 'E2E HLS Mirror');
   await page.evaluate(() => window.__mediaSessionHandlers.nexttrack());
   await expect.poll(() => page.evaluate(() => window.__stationSelectedEvents.at(-1))).toEqual(
     { streamUrl: 'https://streams.e2e.example/hls/master.m3u8', stationUuid: 'e2e-hls-0009' }
@@ -145,6 +149,9 @@ test('HLS reconnect keeps the canonical identity after its active card is virtua
   });
   await playFromList(page, 'E2E HLS Source');
   await expect.poll(() => page.evaluate(() => document.getElementById('audio-player')?.currentSrc.startsWith('blob:'))).toBe(true);
+  // The label and MediaSource URL precede actual playback. Reconnection applies
+  // only to a stream that has played; an initial connection error correctly skips.
+  await expect.poll(() => page.evaluate(() => document.getElementById('audio-player')?.currentTime || 0)).toBeGreaterThan(0);
 
   await page.locator('#station-grid').evaluate(grid => { grid.scrollTop = grid.scrollHeight; });
   await expect(page.locator('.station-card--active')).toHaveCount(0);
@@ -157,6 +164,9 @@ test('HLS reconnect keeps the canonical identity after its active card is virtua
       value: { code: 2, message: 'fixture transient network failure' }
     });
     audio.dispatchEvent(new Event('error'));
+    // A real transient MediaError clears when the source is reattached. Keeping
+    // this own property forever makes hls.js see a permanent synthetic failure.
+    delete audio.error;
   });
   await expect.poll(() => page.evaluate(() => window.__hlsReconnectLoads), { timeout: 5000 }).toBeGreaterThan(0);
   await expect.poll(() => page.evaluate(() => document.getElementById('audio-player')?.currentSrc.startsWith('blob:'))).toBe(true);
@@ -261,7 +271,7 @@ test('failed playback dispatches no station selection event', async ({ page }) =
     audio.play = () => Promise.reject(new DOMException('blocked by fixture', 'NotAllowedError'));
   });
 
-  await card(page, 'E2E Seoul Pop').locator('.station-card__play').click();
+  await (await revealCard(page, 'E2E Seoul Pop')).locator('.station-card__play').click();
   await expect(page.locator('#status-line')).toContainText(/Playback failed|Station unavailable/, { timeout: 15_000 });
   await expect.poll(() => page.evaluate(() => window.__stationSelectedEvents.length)).toBe(0);
 });

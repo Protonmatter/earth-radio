@@ -8,11 +8,13 @@ files:
   - '!server/example-proxy.mjs'
   - package.json
 asar: true
+beforePack: scripts/desktop-package-compat.mjs
 asarUnpack:
   - server/**
 directories:
   output: release
 win:
+  icon: site/branding/earth-radio-v2.ico
   target:
     - nsis
     - portable
@@ -28,6 +30,13 @@ mac:
   category: public.app-category.music
   artifactName: EarthRadio-${version}-${arch}.${ext}
 nsis:
+  artifactName: EarthRadio-Setup-${version}-${arch}.${ext}
+  # Both targets share an archive cache. Use the hook's legacy-compatible BCJ
+  # filter for both, rather than mixing ZIP/7z payloads in one builder run.
+  useZip: false
+  differentialPackage: false
   oneClick: false
   perMachine: false
   allowToChangeInstallationDirectory: true
+portable:
+  artifactName: EarthRadio-Portable-${version}-${arch}.${ext}

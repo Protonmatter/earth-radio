@@ -1,0 +1,73 @@
+/* Maintained discovery/atlas surface; the runtime's virtual row stride is preserved. */
+html.er-root .logo-mark { object-fit: contain; background: none; flex-shrink: 0; }
+html.er-root body { font-family: 'Segoe UI Variable', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif; }
+html.er-root .grid-title { font: normal 28px/1.1 Georgia, serif; letter-spacing: -.03em; }
+html.er-root .grid-header { padding: 18px 20px 12px; }
+html.er-root .grid-subtitle { display: none; }
+html.er-root #daily-dashboard { display: flex; gap: 6px; margin: 0 18px 8px; padding: 0; }
+html.er-root #daily-dashboard .daily-action { flex: 1 1 0; min-width: 0; min-height: 58px; padding: 8px; display: flex; flex-direction: column; justify-content: center; gap: 4px; }
+html.er-root #daily-dashboard .daily-action__title { font: 11px/1.25 'Segoe UI', sans-serif; }
+html.er-root #daily-dashboard .daily-action__eyebrow { font-size: 8px; }
+html.er-root #daily-dashboard .daily-action__meta { display: none; }
+html.er-root #collections { display: flex; flex-wrap: nowrap; overflow-x: auto; min-height: 36px; padding: 0 18px 4px; gap: 6px; }
+html.er-root #collections .collection-chip { flex: 0 0 auto; min-height: 28px; font: 11px 'Segoe UI', sans-serif; }
+html.er-root .er-discovery { margin: 8px 18px 10px; flex: 0 0 auto; color: var(--text); }
+.er-discovery-advanced summary { color: var(--text-muted); font-size: 11px; cursor: pointer; padding: 9px 0 0; }
+.er-discovery-search { display: flex; align-items: center; gap: 8px; border: 1px solid var(--border-strong); border-radius: 10px; background: var(--surface); padding: 4px 8px; }
+.er-discovery-search-icon { font: 30px Georgia, serif; color: var(--text-muted); }
+.er-discovery-search input { min-width: 0; width: 100%; border: 0; background: transparent; color: var(--text); padding: 10px 0; font: inherit; font-size: 14px; }
+.er-discovery-search:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+.er-discovery-search input:focus-visible { outline: none; }
+.er-discovery button, .er-atlas-tools button { min-height: 36px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); color: var(--text); padding: 6px 9px; font: inherit; font-size: 12px; cursor: pointer; }
+.er-discovery-facets { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
+.er-discovery-facets label { display: flex; flex-direction: column; gap: 5px; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-muted); min-width: 0; }
+.er-discovery-facets select { width: 100%; min-height: 36px; padding: 5px; border: 1px solid var(--border); border-radius: 5px; background: var(--surface); color: var(--text); font: inherit; font-size: 12px; text-transform: none; letter-spacing: 0; }
+.er-discovery-options { display: flex; flex-wrap: wrap; align-items: center; gap: 7px 12px; margin-top: 10px; }
+.er-discovery-options label { display: flex; align-items: center; gap: 4px; min-height: 30px; font-size: 11px; color: var(--text-muted); }
+.er-discovery-options input { accent-color: var(--accent); }
+.er-discovery #er-discovery-pick { margin-left: auto; color: var(--accent-contrast); background: var(--accent); border-color: var(--accent); }
+#er-discovery-status { margin: 9px 0 0; font: 10px var(--er2-mono, monospace); color: var(--text-muted); }
+html.er-root .station-card .er-discovery-why { position: absolute; top: auto; bottom: 12px; left: 12px; z-index: 2; min-height: 36px; padding: 3px 6px; background: transparent; color: var(--text-muted); border: 1px solid var(--border); border-radius: 6px; font: 10px var(--er2-mono, monospace); cursor: pointer; }
+html.er-root #map-panel { position: relative; overflow: hidden; }
+html.er-root #map { background: #102c32; }
+html.er-root #map[data-er-basemap="light"] { background: #dfecea; }
+html.er-root #map .leaflet-pane > svg { max-width: none; }
+.er-atlas-caption { position: absolute; z-index: 450; left: 24px; top: 44px; pointer-events: none; display: flex; flex-direction: column; gap: 6px; max-width: calc(100% - 95px); color: #d9ebe2; text-shadow: 0 1px 8px #102c32; }
+.er-atlas-caption > span { font: 9px var(--er2-mono, monospace); letter-spacing: .18em; color: #afc9be; }
+.er-atlas-caption strong { font: normal clamp(22px, 2.5vw, 38px)/1.08 Georgia, 'Times New Roman', serif; letter-spacing: -.03em; }
+.er-atlas-caption small { font: 10px var(--er2-mono, monospace); color: #afc9be; }
+html[data-er-palette="paper"] .er-atlas-caption { color: #183d38; text-shadow: 0 1px 8px #dfecea; }
+html[data-er-palette="paper"] .er-atlas-caption > span, html[data-er-palette="paper"] .er-atlas-caption small { color: #365f56; }
+.er-atlas-tools { position: absolute; z-index: 600; bottom: 34px; left: 16px; right: 16px; display: flex; justify-content: center; flex-wrap: wrap; gap: 6px; pointer-events: none; }
+.er-atlas-tools button { pointer-events: auto; min-height: 40px; box-shadow: 0 3px 12px #0003; }
+.er-atlas-tools button:disabled { opacity: .55; cursor: default; }
+.er-map-directory-status { flex-basis: 100%; margin: 0; padding: 6px 10px; border-radius: 6px; background: var(--surface); color: var(--text); font: 11px/1.4 var(--er2-mono, monospace); text-align: center; }
+.er-map-directory-status[hidden] { display: none; }
+html.er-root .leaflet-container .leaflet-control-attribution { font-size: 9px; background: var(--surface); color: var(--text-muted); }
+html.er-root .leaflet-container .leaflet-control-attribution a { color: var(--text); }
+html.er-root .er-cluster { background: var(--surface); color: var(--text); border: 1px solid var(--accent); box-shadow: 0 0 0 5px #d8764922; }
+.er-station-detail { max-width: min(460px, calc(100vw - 32px)); box-sizing: border-box; padding: 32px; border: 1px solid var(--border-strong); border-radius: 16px; color: var(--text); background: var(--surface); box-shadow: 0 20px 90px #0006; }
+.er-station-detail::backdrop { background: #071e26aa; }
+.er-station-detail h2 { font: normal 30px/1.1 Georgia, serif; margin: 16px 0; overflow-wrap: anywhere; }
+.er-station-detail p, .er-station-detail li { font-size: 13px; line-height: 1.65; color: var(--text-muted); }
+.er-station-detail ul { padding-left: 20px; }
+.er-detail-eyebrow { font: 10px var(--er2-mono, monospace); letter-spacing: .12em; color: var(--accent); }
+.er-detail-close { position: absolute; right: 8px; top: 8px; width: 44px; height: 44px; border: 0; font-size: 24px; background: transparent; color: var(--text); cursor: pointer; }
+.er-detail-play { padding: 12px 20px; border: 0; border-radius: 8px; background: var(--accent); color: var(--accent-contrast); font: inherit; cursor: pointer; }
+@media (max-width: 767px) {
+  html.er-root .er-discovery { margin: 8px 12px; }
+  html.er-root .grid-header { padding: 12px 18px 8px; }
+  html.er-root #daily-dashboard { margin: 0 12px 6px; overflow: auto; flex: 0 0 auto; }
+  html.er-root #daily-dashboard .daily-action { min-width: 92px; min-height: 48px; }
+  html.er-root #daily-dashboard .daily-action__title { font-size: 10px; }
+  html.er-root #collections { padding-inline: 12px; }
+  .er-discovery-facets { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin-top: 8px; }
+  .er-discovery-facets label { gap: 2px; }
+  .er-discovery-facets select, .er-discovery button { min-height: 36px; }
+  .er-discovery-options { gap: 4px 8px; margin-top: 6px; }
+  .er-discovery-options label { font-size: 10px; }
+  html.er-root .station-card .er-discovery-why { min-height: 44px; }
+  .er-atlas-caption { left: 16px; top: 18px; }
+  .er-atlas-tools { left: 8px; right: 8px; bottom: 28px; }
+  .er-atlas-tools button { min-height: 44px; }
+}

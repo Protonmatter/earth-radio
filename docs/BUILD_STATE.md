@@ -1,5 +1,137 @@
 # Build state
 
+## Production 0.25.0 — 2026-11-03
+
+The user authorized production publication and accepted local desktop signing.
+Production is now <https://earth-radio.pages.dev/>, deployment
+`77a8499e-e8ed-4ae8-a047-4a362306eb86` (**Production**, branch `main`), immutable
+URL <https://77a8499e.earth-radio.pages.dev/>. The shell generation is **v51** and
+the runtime is `index-84264652.js`. All **45 public files**, including the staged
+asset manifest, matched the local artifact by SHA-256 after publication. CSP/HSTS
+and actual v51 service-worker control/cache were verified.
+
+The private metadata quota Worker is deployed. Live preview and production each
+accepted 30/32 now-playing and 6/8 fingerprint probe requests; the excess returned
+429 with Retry-After. Production aliases/encoded routes shared the budget; preview
+and production budgets remained independent. Both endpoints recovered after the
+60-second mitigation. No recognition providers are configured. This is durable
+application rate control and does not eliminate invocation-volume costs.
+
+The final ARM64 setup/portable builds include the current map, generated icon,
+version and privacy disclosure. All 59 packaged application source files matched
+the repository. Portable payload parity covered 87 files; clean installed lab
+payload parity covered 86 files. An isolated 0.24.4 → 0.25.0 upgrade preserved the
+saved station and 55% volume, and final uninstall removed its executable/registration
+while preserving its separate profile. The original installed application was
+not replaced. Local signatures/timestamps are present; Windows does not trust
+the self-signed publisher. No Root certificate was installed.
+
+Validation passed: **386 Node tests / one Windows symlink-policy skip**, metadata
+and desktop proxy smokes, **49 Chromium e2e tests**, the **41-scenario** rendered
+matrix, sandboxed renderer Origin smoke, and a real SQLite/DO lifecycle harness.
+Production live world search returned 10,000 mapped stations; Classic Vinyl HD
+playback advanced with readyState 4 and was paused afterward. The existing hosted
+account displayed Synced. The user confirmed the physical installed preview/map
+works; precise device/OS and lock-screen audio results are not inferred.
+The production phone viewport showed 9,761 mapped stations without horizontal
+overflow. Bounded observations through 02:01:17 UTC (about 15½ minutes from first
+publication checks) retained correct shell hashes and healthy API probes. This
+is a smoke window, not a long-term availability or load qualification.
+
+The initial publication was a verified working-tree upload based on `81c5e59`;
+it did not imply a source commit/push or remote CI result. The user subsequently
+authorized committing/pushing the release, passing CI and merging into main.
+This source delivery reconciles the qualified runtime/configuration with GitHub
+through a release pull request. Use the PR/main commit checks for exact CI status
+and verify the resulting production deployment against the same public hashes.
+See [RELEASE-0.25.0.md](RELEASE-0.25.0.md) for artifact hashes, evidence, release
+exceptions and guarded rollback. Earlier sections below are historical and their
+pending/hold statements are superseded by this record.
+
+## World map area-search follow-up — 2026-11-03
+
+The user installed the initial preview as a Home Screen web app and reported good
+general use, then found that Search this area did not populate regions outside
+Germany. The first implementation only filtered the initial bounded catalog.
+The correction now loads a bounded world mapped directory on demand, clears
+conflicting geographic/view state, retains music filters, and provides visible
+loading/retry/clear controls. A live loader run returned 9,998 valid mapped
+records across 184 country codes. This is a sample, not exhaustive coverage.
+
+Current approved preview: <https://qualification-atlas-20261103.earth-radio.pages.dev/>,
+immutable deployment <https://7ab4d912.earth-radio.pages.dev/>, ID
+`7ab4d912-e292-485b-9a5e-d319722dca9a`, worker **v50**. The runtime is now
+`index-597f6388.js`. The first Home Screen shortcut used an immutable deployment;
+use the stable alias for a replacement shortcut that receives later preview updates.
+
+Final live browser verification populated **9,798 mapped stations** in a world
+rectangle and **1,027** after zooming into South America. The stable alias and all
+45 public files match the staged candidate; the phone-sized document had no
+horizontal overflow. Physical revalidation of the map correction is pending.
+
+Checks passed: **374 Node tests / one Windows symlink-policy skip**, **49 Chromium
+e2e tests**, **41 rendered scenarios**, real sandboxed file-renderer Origin smoke,
+and **205 deterministic release hashes**. Independent review closed toggle-state,
+SDR-domain and malformed-record retry issues; live verification additionally
+caught and corrected a pinned-overlay response-cap interaction. The old desktop
+installer binaries predate this map fix and require rebuilding before distribution.
+Production remains deployment `f9631de3-21e5-4080-8d66-ed74c0577373` on `main`.
+
+## Approved Pages preview — 2026-11-03
+
+The user approved publication of the uncommitted candidate to a separate public
+HTTPS preview: <https://c6b13e3d.earth-radio.pages.dev/> (branch alias
+<https://qualification-atlas-20261103.earth-radio.pages.dev/>), deployment
+`c6b13e3d-b504-426d-aefe-c7fd7d8094a5`, environment **Preview**. No commit or push
+occurred. All **44 public files** including the generated asset manifest match
+the staged candidate by SHA-256. The v48 worker is active/controlling; browser
+smoke loaded **3,273 live stations**, played Classic Vinyl HD, and rendered the
+new icon and 127 atlas features at 390 × 844 without horizontal overflow.
+
+Production remains deployment `f9631de3-21e5-4080-8d66-ed74c0577373` on `main`;
+its HTML and v46 service-worker hashes were unchanged after the preview upload.
+Authentication stays restricted to production. Google and GitHub return flows
+have now separately shown their provider linked and **Synced**; this does not
+establish a single combined provider identity. Physical iPhone/iPad results on
+the new preview remain pending. Durable edge limits and trusted signing still
+block full production qualification. See the [qualification record](QUALIFICATION-2026-11-03.md).
+
+## Live release qualification — 2026-11-03 follow-up
+
+See [QUALIFICATION-2026-11-03.md](QUALIFICATION-2026-11-03.md) for current evidence,
+exact deployment identity and remaining release gates. The explicitly approved
+Supabase restore completed and the project is `ACTIVE_HEALTHY`. An existing live
+session recovered; fresh Google sign-in returned **Google linked / Synced**.
+The later GitHub return displayed **GitHub linked / Synced**. Strict-public routing is configured, but
+durable edge rate enforcement failed the bounded probes. Three real stream
+samples decoded successfully; this does not establish perceptual fidelity.
+
+The local candidate now uses the ChatGPT-generated globe/radio icon and worker
+v48. Public production still serves v46 from commit `36296139`; the user's old
+phone page alone is not proof of a caching defect. Physical iOS/installed-PWA
+results remain pending. The new atlas/icon are available on the approved preview
+above; they have not been deployed to production.
+
+Automated checks: **365 Node tests passed / 1 Windows symlink-policy skip**, all
+**43 Chromium e2e tests**, all **41 Electron rendered scenarios**, and the real
+sandboxed file-renderer Origin regression smoke passed. Signing credentials are
+unavailable; desktop artifacts remain unsigned. Current installer-lab results
+and limitations are maintained in the qualification record. The earlier local
+candidate section below describes the first validation phase, before these live
+checks and packaging fixes.
+
+## Local discovery/atlas candidate — 2026-11-03
+
+This is an uncommitted, undeployed working-tree candidate based on local HEAD `81c5e59`. The public deployment identities below are historical and were not re-qualified or changed by this work.
+
+Implemented: maintained explainable discovery modules, Unicode/typo-aware search, genre/language/bitrate/security filters, reliability/diversity/similarity selection, device failure cooldowns, station explanation dialogs, a bundled Natural Earth vector atlas, and map-area/fit/focus controls. The runtime remains the recovered application with narrow maintained-module hooks; it has not become a reproducible TypeScript build. See [DISCOVERY.md](DISCOVERY.md) and [MAP_DATA.md](MAP_DATA.md).
+
+Qualification: **341 Node tests passed / 1 Windows symlink-policy test skipped**, plus metadata and desktop proxy smokes; all **43 Chromium e2e tests** passed; the **41-scenario Electron rendered matrix** passed its layout/action/locale assertions with no skip or scenario error. The complete `npm run verify` pipeline passed and verified **193 deterministic release file hashes**. Local staging validates **39 source files / 40 staged files** and 34 references. An offline browser smoke confirmed all five discovery/map assets cached, an uncached request blocked, and all 127 land features plus the cached nine-station fixture directory rendered after reload. Tests use hermetic station/audio fixtures. No real station uptime, local GoTrue/hosted authentication, metered identification provider, production edge/WAF configuration, physical phone, desktop signing, installer, or deployment was tested.
+
+Independent read-only review identified two P2 refresh defects and the atlas validator false positive; all were corrected with regressions. Closure review identified no additional actionable P0–P2 defect in the reviewed changes. This is bounded review evidence, not a security certification.
+
+The new discovery copy is currently English. Existing locale chrome remains intact. Offline atlas geometry requires a successful shell cache installation; live audio/catalog updates still require networking. The 1:110m map is a global discovery surface and intentionally stops at zoom 7.
+
 Status date: 2026-08-23. Candidate version: `0.24.0-recovered.1`.
 
 ## Validated

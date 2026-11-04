@@ -15,6 +15,22 @@ const SEEDED = {
 const SAVE_NAVIGATION_MARKER = 'earth-radio.test.locale-save-navigation';
 const SAVE_NAVIGATION_VALUE = 'arabic-preview-committed';
 
+// The running application migrates legacy localStorage preferences into kv/prefs.
+// Assertions after a save must read the authoritative record, not the old seed.
+export const READ_RUNTIME_PREFERENCES = `new Promise(resolve => {
+  const open = indexedDB.open('earthRadio');
+  open.onerror = () => resolve(null);
+  open.onsuccess = () => {
+    const db = open.result;
+    if (!db.objectStoreNames.contains('kv')) { db.close(); resolve(null); return; }
+    const tx = db.transaction('kv', 'readonly'), get = tx.objectStore('kv').get('prefs');
+    get.onsuccess = () => resolve(get.result || null);
+    get.onerror = () => resolve(null);
+    tx.oncomplete = () => db.close();
+    tx.onabort = () => { db.close(); resolve(null); };
+  };
+})`;
+
 const ARABIC_PREVIEW_OBSERVED = `document.documentElement.lang === 'ar'
   && document.documentElement.dir === 'rtl'
   && document.documentElement.dataset.fontProfile === 'ar'
@@ -27,15 +43,16 @@ const ENGLISH_DISMISSAL_OBSERVED = `document.querySelector('#settings-modal')?.h
   && document.querySelector('#setting-locale')?.value === 'en'
   && JSON.parse(localStorage.getItem('earthRadio.ui.v1') || 'null')?.locale === 'en'`;
 
-const ARABIC_RELOAD_OBSERVED = `document.documentElement.dataset.erUiReady === 'true'
+const ARABIC_RELOAD_OBSERVED = `(async () => document.documentElement.dataset.erUiReady === 'true'
+  && document.querySelector('.station-card') !== null
   && document.querySelector('#settings-modal')?.hidden === true
   && document.documentElement.lang === 'ar'
   && document.documentElement.dir === 'rtl'
   && document.documentElement.dataset.fontProfile === 'ar'
   && document.querySelector('#setting-locale')?.value === 'ar'
   && JSON.parse(localStorage.getItem('earthRadio.ui.v1') || 'null')?.locale === 'ar'
-  && JSON.parse(localStorage.getItem('earthRadio.preferences.v1') || 'null')?.locale === 'ar'
-  && sessionStorage.getItem('${SAVE_NAVIGATION_MARKER}') === '${SAVE_NAVIGATION_VALUE}'`;
+  && (await ${READ_RUNTIME_PREFERENCES})?.locale === 'ar'
+  && sessionStorage.getItem('${SAVE_NAVIGATION_MARKER}') === '${SAVE_NAVIGATION_VALUE}')()`;
 
 const ARABIC_REOPEN_OBSERVED = `document.querySelector('#settings-modal')?.hidden === false
   && document.documentElement.lang === 'ar'

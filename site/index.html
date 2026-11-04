@@ -10,8 +10,8 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; media-src https: http: blob:; connect-src 'self' https: http: ws: wss://listen.moe; font-src 'self'; worker-src 'self' blob:; manifest-src 'self'; base-uri 'self'; form-action 'self'" />
   <meta name="description" content="A resilient global internet radio browser with map, search, filters, favorites, dark mode, explainable playback health scoring, and confidence-scored live music metadata." />
   <title>Earth Radio</title>
-  <link rel="icon" type="image/png" href="./icon-192.png" />
-  <link rel="apple-touch-icon" href="./icon-192.png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="./branding/earth-radio-32-v2.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="./branding/earth-radio-180-v2.png" />
   <link rel="manifest" href="./manifest.webmanifest" />
   <script type="module" src="./config.js"></script>
   <script type="module" src="./assets/storage-guard.js"></script>
@@ -19,13 +19,14 @@
   <script type="module" src="./assets/pinned-stations.js"></script>
   <script type="module" src="./assets/metadata-enrichment.js"></script>
   <link rel="stylesheet" href="./assets/metadata-enrichment.css" />
-  <script type="module" crossorigin src="./assets/index-690938fe.js"></script>
+  <script type="module" crossorigin src="./assets/index-84264652.js"></script>
   <link rel="stylesheet" crossorigin href="./assets/index-CSoL7F-Y.css">
   <link rel="stylesheet" href="./assets/responsive-ui.css" />
   <script type="module" src="./assets/responsive-ui.js"></script>
   <script type="module" src="./assets/atlas-lock.js"></script>
   <link rel="stylesheet" href="./assets/ui-refresh.css" />
   <link rel="stylesheet" href="./assets/atlas-lock.css" />
+  <link rel="stylesheet" href="./assets/discovery.css" />
 </head>
 <body>
   <a class="er-skip" href="#grid-panel" data-i18n="app.skip">Skip to station list</a>
@@ -33,7 +34,7 @@
 
   <header class="header">
     <div class="header-left">
-      <a href="./" class="logo" aria-label="Earth Radio home"><span class="logo-mark" aria-hidden="true"></span>Earth Radio</a>
+      <a href="./" class="logo" aria-label="Earth Radio home"><img class="logo-mark" src="./branding/earth-radio-192-v2.png" alt="" width="24" height="24" />Earth Radio</a>
       <span class="status-line" id="status-line">Initializing...</span>
     </div>
     <div class="er-header-tools">
@@ -112,6 +113,31 @@
         </button>
       </section>
       <div class="collections" id="collections" role="group" aria-label="Curated collections"></div>
+      <form class="er-discovery" id="er-discovery" role="search" aria-label="Station discovery">
+        <div class="er-discovery-search">
+          <label class="sr-only" for="er-discovery-query">Find a station</label>
+          <span aria-hidden="true" class="er-discovery-search-icon">⌕</span>
+          <input id="er-discovery-query" name="query" type="search" placeholder="A station, a sound, a place…" maxlength="160" autocomplete="off" spellcheck="false" aria-describedby="er-discovery-status" />
+          <button type="button" data-discovery-reset aria-label="Reset discovery">Reset</button>
+        </div>
+        <details class="er-discovery-advanced" open><summary>Refine selection</summary>
+        <div class="er-discovery-facets">
+          <label>Genre<select name="genre" aria-label="Genre"><option value="">All genres</option></select></label>
+          <label>Language<select name="language" aria-label="Language"><option value="">All languages</option></select></label>
+          <label>Selection<select name="sort" aria-label="Selection method">
+            <option value="best">Best match</option><option value="reliable">Reliability</option><option value="explore">Explore the world</option>
+            <option value="similar">Similar to playing</option><option value="bitrate">Highest bitrate</option><option value="name">Name A–Z</option>
+          </select></label>
+          <label>Bitrate<select name="minBitrate" aria-label="Minimum bitrate"><option value="0">Any bitrate</option><option value="128">128+ kbps</option><option value="192">192+ kbps</option><option value="320">320+ kbps</option></select></label>
+        </div>
+        <div class="er-discovery-options">
+          <label><input type="checkbox" name="secureOnly" /> HTTPS only</label>
+          <label><input type="checkbox" name="avoidFailures" /> Hide recent failures</label>
+          <button type="button" id="er-discovery-pick">Find my next station ↗</button>
+        </div>
+        </details>
+        <p id="er-discovery-status" role="status" aria-live="polite">Loading station discovery…</p>
+      </form>
       <div class="station-grid" id="station-grid"></div>
       <div class="empty-state" id="empty-state" style="display:none;"></div>
     </section>
@@ -122,6 +148,14 @@
       <button class="er-collapse" type="button" data-er-collapse="map" data-i18n="desktop.hideMap">Hide map</button>
       <p class="sr-only" data-i18n="map.assistive">The map is a visual aid. Use the keyboard-accessible station list on the left to browse and play stations.</p>
       <div id="map"></div>
+      <div class="er-atlas-caption" aria-hidden="true"><span>THE LISTENING ATLAS</span><strong>A world of frequencies.</strong><small id="er-map-count">Locating stations…</small></div>
+      <div class="er-atlas-tools" role="group" aria-label="Atlas controls">
+        <p id="er-map-directory-status" class="er-map-directory-status" role="status" aria-live="polite" hidden></p>
+        <button type="button" id="er-map-search">Search this area</button>
+        <button type="button" id="er-map-area" hidden aria-label="Clear map area">Clear area ×</button>
+        <button type="button" id="er-map-fit">Fit stations</button>
+        <button type="button" id="er-map-focus" disabled aria-label="Focus playing station">On air ↗</button>
+      </div>
       <aside class="nowcard" id="nowcard" aria-live="polite" aria-label="Now playing" hidden>
         <button class="nowcard-close" id="nowcard-close" type="button" aria-label="Hide now playing">&#10005;</button>
         <div class="nowcard-head">
@@ -138,6 +172,13 @@
       </aside>
     </section>
   </main>
+  <dialog class="er-station-detail" id="er-station-detail" aria-label="Station details" aria-describedby="er-detail-note">
+    <button type="button" class="er-detail-close" data-detail-close aria-label="Close station details">×</button>
+    <span class="er-detail-eyebrow">BEHIND THE SELECTION</span>
+    <h2></h2><p data-detail-meta></p><ul></ul>
+    <p id="er-detail-note">Ranking uses directory information and playback outcomes from this tab. It is a guide, not a guarantee that a stream is available.</p>
+    <button type="button" class="er-detail-play" data-detail-play>Play station</button>
+  </dialog>
 
   <section id="er-you" class="er-you" hidden>
     <h2 data-i18n="you.title">You</h2>

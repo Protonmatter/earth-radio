@@ -3,8 +3,15 @@
 This document is the authoritative procedure for deploying the Earth Radio public web
 app (static site + `/api/*` Pages Functions) and for the external edge controls that
 the in-repository code assumes exist. The Functions fetch listener-supplied stream
-URLs, so two controls are **mandatory before production traffic**: the strict-public
-fetch compatibility flag and the WAF rate-limit rules below.
+URLs, so two controls are **mandatory before production traffic**: strict-public
+fetch routing and the private durable quota service described below.
+
+The earlier zone-WAF design failed qualification because this `pages.dev` project
+has no controlled zone. Release 0.25.0 replaces that missing control with Pages
+middleware backed by a private SQLite Durable Object Worker. Denied requests
+consume a Pages/DO invocation, but must not perform station fetching, sampling
+or recognition. This does not provide WAF-level protection against invocation
+volume costs. Historical results remain in the [qualification record](QUALIFICATION-2026-11-03.md).
 
 ## Project configuration
 
@@ -67,7 +74,7 @@ DNS/egress enforcement that JavaScript in the Workers runtime cannot implement.
 
 `/api/nowplaying` uses one 11-second deadline. Specific platform probes and concurrent
 generic Icecast/Shoutcast probes consume only their stage slice, leaving eight seconds
-for the ICY fallback. `/api/track/fingerprint` uses one 20-second deadline for the
+for the ICY fallback. `/api/track/fingerprint` uses one 40-second deadline for the
 complete stream/HLS sample, provider recognition, and optional catalog enrichment. HLS
 sampling reads at most 64 KiB per playlist, follows a bounded master/media chain,
 selects at most the last three coherent segments plus the applicable `EXT-X-MAP`, caps
@@ -75,26 +82,69 @@ the combined sample at 1 MiB, and allows at most 16 raw stream-controlled fetch
 attempts. Provider POSTs go only to configured ACRCloud/AudD destinations and are capped
 at 15 seconds or the route's remaining time, whichever is shorter.
 
-## WAF rate limiting (required, single source of rate policy)
+## Durable quota service (required)
 
-Create zone-level rate-limiting rules exactly as follows. Use a 60-second mitigation
-timeout and an HTTP 429 response for both rules:
+`functions/api/_middleware.js` checks the private `METADATA_LIMITS` binding before
+calling either metadata handler, including probes and cache hits. The Worker is
+`earth-radio-metadata-limits`, class `MetadataRateLimit`, under `workers/rate-limit/`.
+Its public `workers.dev` and preview URLs are disabled. The following rolling
+budgets apply to `(now - 60 seconds, now]`:
 
 | Path | Threshold | Action |
 | --- | --- | --- |
 | `/api/nowplaying` | 30 requests/minute/IP | Block with HTTP 429; mitigation timeout 60 seconds |
 | `/api/track/fingerprint` | 6 requests/minute/IP | Block with HTTP 429; mitigation timeout 60 seconds |
 
-These rules must execute before the Function. A WAF-denied request must consume no
-Function invocation and trigger no outbound fetch. They are the **only** durable rate
-policy:
+The first excess request starts a non-extending 60-second mitigation. SQLite
+transactions persist at most 30/6 accepted timestamps per quota kind. One object
+coordinates each scope/client hash across isolates and locations. The key uses
+Cloudflare's trusted `CF-Connecting-IP`; visitor `X-Forwarded-For` is ignored.
+No raw IP, account identity or stream URL is stored in the counter. Alarms remove
+idle rows after two minutes and delete storage when empty. No new analytics/log
+collection is enabled, following the repository's telemetry rule.
 
-- `/api/track/fingerprint` (metered third-party recognition credit) carries **no**
-  in-isolate counter. A per-isolate budget multiplies by however many isolates
-  Cloudflare runs and would misrepresent the real limit, so the WAF rule is the single
-  source of truth.
-- `/api/nowplaying` keeps a best-effort in-isolate limiter purely as defense in depth;
-  it must never be tuned as if it were the enforcement point.
+Root `wrangler.jsonc` explicitly binds both Pages environments. The non-secret
+`METADATA_LIMIT_SCOPE` is `production` or `preview`; it comes from deployment
+configuration, not the hostname. Thus a production deployment's immutable URL
+shares the production budget, while preview traffic cannot consume it. Missing
+identity, binding or scope, failed RPC, and the 3-second quota deadline return
+HTTP 503 without downstream work. HTTP 429 includes `Retry-After`. Middleware
+responses use `Cache-Control: no-store`.
+
+### Deployment order
+
+Use an already installed Wrangler and record its version. Commands below do not
+commit or push source. Obtain authorization for remote changes and select the
+exact account/project before running them.
+
+```powershell
+$wranglerCli = '<installed-wrangler>/bin/wrangler.js'
+# Private Worker/class must exist before Pages binds to it.
+node $wranglerCli deploy --config workers/rate-limit/wrangler.jsonc
+npm run release:manifest
+npm run verify
+npm run test:e2e -- --workers=2
+npm run test:rendered
+node $wranglerCli pages deploy .build/site --project-name earth-radio --branch qualification-release-0-25-0 --commit-dirty=true
+# Only after preview qualification and production authorization:
+node $wranglerCli pages deploy .build/site --project-name earth-radio --branch main --commit-dirty=true
+```
+
+The initial migration creates a fresh SQLite namespace. Do not apply the initial
+table schema over a different existing schema; use a forward migration. Do not
+delete the namespace to reset a quota. Absence of the Worker was verified before
+its first deployment for this release.
+
+Optional runtime verification uses the installed tool's existing Miniflare; it
+installs nothing and deploys no remote resource:
+
+```powershell
+node scripts/qualify-edge-runtime.mjs --wrangler $wranglerCli
+```
+
+If the cached engine cannot support the production date, an explicit
+`--compatibility-date YYYY-MM-DD` tests only that older runtime. Record the
+limitation and still qualify the real production date on the remote preview.
 
 ## Environment variables (optional)
 
@@ -109,22 +159,31 @@ and performs no outbound requests. Credentials are never committed;
 Run against the preview URL after every deployment that touches `functions/` or
 `wrangler.jsonc`:
 
-1. `/api/nowplaying` answers the JSON probe (`ok: true`).
-2. A public stream URL that redirects resolves correctly (redirects are followed
+1. Before opening a browser (whose probes consume budget), issue 32 now-playing
+   and 8 fingerprint requests without stream URLs. A fresh client/scope must allow
+   exactly 30 and 6, then HTTP 429. Check Retry-After and mitigation recovery.
+2. `/api/nowplaying` answers its JSON probe after budget recovery.
+3. A public stream URL that redirects resolves correctly (redirects are followed
    manually with per-hop revalidation).
-3. An initial loopback/private/reserved/same-zone URL returns HTTP 400 without an
+4. An initial loopback/private/reserved/same-zone URL returns HTTP 400 without an
    outbound fetch; a redirect to any such target stops before fetching the denied hop.
-4. Exercise `/api/nowplaying` past 30 requests/minute/IP and
-   `/api/track/fingerprint` past 6 requests/minute/IP; record HTTP 429 and the
-   60-second mitigation window, then confirm in Cloudflare analytics that each denied
-   request did not invoke the Pages Function.
+5. Verify production/preview scope separation and encoded/trailing-slash routes.
+   Rejections occur before metadata/provider work; they still invoke Pages/DO.
+   Unit/runtime tests cover binding/RPC failures without fault-injecting production.
 
-Record the evidence (deployment ID, flag screenshot or API read-back, 429 traces) in
+Record the evidence (Worker version, Pages deployment ID, bindings and 429 traces) in
 `docs/BUILD_STATE.md`. **A pull request that changes the Functions is not merge-ready
 until this validation has been performed on a deployment of its head commit**; without
 Cloudflare account access, mark the PR blocked instead.
 
 ## Rollback
 
-See `docs/OPERATIONS.md` — rollback is a Pages deployment operation (select the last
-known-good deployment), never a Git history rewrite.
+Preserve a known-good staged static artifact and the counter Worker version. If
+the UI regresses, deploy that static artifact from the current repository root so
+current guarded Functions and bindings remain attached. Rolling the entire
+project back to a pre-0.25 deployment restores unmetered routes and is not the safe
+default. If the quota service fails, retain its 503 behavior while restoring a
+compatible Worker version or fixing forward. Do not remove bindings or fail open.
+Namespace data is not reverted by Worker code rollback. Historical immutable
+URLs remain separate artifacts: this middleware protects deployments containing
+it, not old URLs predating the gate. Keep paid recognition disabled on those builds.

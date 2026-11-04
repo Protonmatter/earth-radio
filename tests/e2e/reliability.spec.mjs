@@ -15,7 +15,7 @@ test.describe('user data reliability', () => {
 
     await page.reload();
     await expect(page.locator('.station-card').first()).toBeVisible({ timeout: 20_000 });
-    await expect(card(page, 'E2E Seoul Pop').locator('.station-card__favorite--active')).toBeVisible();
+    await expect((await revealCard(page, 'E2E Seoul Pop')).locator('.station-card__favorite--active')).toBeVisible();
   });
 
   test('favorites survive complete loss of the primary store via the backup', async ({ page }) => {
@@ -62,7 +62,7 @@ test.describe('dynamic directory expansion', () => {
     expect(result.code).toBe('JP');
 
     // The refresh pulls the JP country batch and the new stations appear.
-    await expect(card(page, 'E2E Tokyo FM')).toBeVisible({ timeout: 20_000 });
+    await expect(await revealCard(page, 'E2E Tokyo FM')).toBeVisible();
     const codes = await page.evaluate(() => window.earthRadioDirectory.activeCodes());
     expect(codes).toContain('JP');
 
@@ -71,7 +71,7 @@ test.describe('dynamic directory expansion', () => {
     await expect(page.locator('.station-card').first()).toBeVisible({ timeout: 20_000 });
     const persisted = await page.evaluate(() => window.earthRadioDirectory.activeCodes());
     expect(persisted).toContain('JP');
-    await expect(card(page, 'E2E Tokyo FM')).toBeVisible({ timeout: 20_000 });
+    await expect(await revealCard(page, 'E2E Tokyo FM')).toBeVisible();
 
     // Idempotent: expanding the same country again is a no-op, not a second refresh.
     const again = await page.evaluate(() => window.earthRadioDirectory.expand('Japan'));
@@ -206,7 +206,7 @@ test.describe('semantic country selection', () => {
     await country.press('Enter');
 
     await expect.poll(() => countries).toEqual([{ country: 'Japan' }]);
-    await expect(card(page, 'E2E Tokyo FM')).toBeVisible({ timeout: 20_000 });
+    await expect(await revealCard(page, 'E2E Tokyo FM')).toBeVisible();
   });
 
   test('rapid expansions of different countries coalesce into a complete final set', async ({ page }) => {
@@ -252,8 +252,18 @@ test.describe('semantic country selection', () => {
             return await nativeRefresh.apply(nativeRuntime, args);
           } finally {
             cycles.active -= 1;
-            cycles.results.push([...document.querySelectorAll('.station-card__name')]
-              .map(node => node.textContent?.trim() || ''));
+            // Read the completed catalog, including virtualized offscreen rows.
+            cycles.results.push(await new Promise((resolve, reject) => {
+              const open = indexedDB.open('earthRadio');
+              open.onerror = () => reject(open.error);
+              open.onsuccess = () => {
+                const db = open.result, tx = db.transaction('cache', 'readonly');
+                const get = tx.objectStore('cache').get('stations.v3');
+                get.onsuccess = () => resolve((get.result?.stations ?? []).map(station => station.name));
+                get.onerror = () => reject(get.error);
+                tx.oncomplete = () => db.close();
+              };
+            }));
           }
         }
       });
@@ -268,8 +278,8 @@ test.describe('semantic country selection', () => {
     expect(results.filter(item => item.expanded).length).toBe(2);
 
     await page.waitForFunction(() => window.__erDirectoryCycles.results.length === 2);
-    await expect(card(page, 'E2E Tokyo FM')).toBeVisible({ timeout: 30_000 });
-    await expect(card(page, 'E2E Rio Samba')).toBeVisible({ timeout: 30_000 });
+    await expect(await revealCard(page, 'E2E Tokyo FM')).toBeVisible();
+    await expect(await revealCard(page, 'E2E Rio Samba')).toBeVisible();
     const state = await page.evaluate(() => ({
       activeCodes: window.earthRadioDirectory.activeCodes(),
       cycles: window.__erDirectoryCycles
@@ -357,6 +367,6 @@ test.describe('ISO-code expansion', () => {
     const result = await page.evaluate(() => window.earthRadioDirectory.expand('JP'));
     expect(result.expanded).toBe(true);
     expect(result.code).toBe('JP');
-    await expect(card(page, 'E2E Tokyo FM')).toBeVisible({ timeout: 20_000 });
+    await expect(await revealCard(page, 'E2E Tokyo FM')).toBeVisible();
   });
 });
