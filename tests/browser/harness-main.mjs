@@ -169,8 +169,15 @@ const PROBE = `(async () => {
     bodyFontFamily: style.fontFamily,
     rowHeightVariable: rootStyle.getPropertyValue('--er-row-h').trim(),
     safeAreaVariables: {
+      top: rootStyle.getPropertyValue('--er-safe-top').trim(),
+      bottom: rootStyle.getPropertyValue('--er-safe-bottom').trim(),
       start: rootStyle.getPropertyValue('--er-safe-start').trim(),
       end: rootStyle.getPropertyValue('--er-safe-end').trim()
+    },
+    chromeMetrics: {
+      header: rootStyle.getPropertyValue('--er-header').trim(),
+      headerMinHeight: getComputedStyle(document.querySelector('header.header')).minHeight,
+      headerPaddingTop: getComputedStyle(document.querySelector('header.header')).paddingTop
     },
     horizontalOverflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
     bodyOverflow: document.body.scrollWidth - document.body.clientWidth,

@@ -38,6 +38,14 @@ jobs:
         if: runner.os == 'Windows'
         shell: powershell
         run: powershell.exe -NoProfile -ExecutionPolicy Bypass -File tests/smoke-recovery-import.ps1
+      - name: Upload failed rendered evidence
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: rendered-evidence-${{ matrix.os }}-${{ github.sha }}
+          path: .build/evidence/responsive-ui
+          if-no-files-found: ignore
+          retention-days: 7
       - name: Upload tested static site
         if: matrix.os == 'ubuntu-latest'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02

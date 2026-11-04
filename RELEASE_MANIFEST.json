@@ -5,8 +5,8 @@
   "files": [
     {
       "path": ".github/workflows/ci.yml",
-      "bytes": 2332,
-      "sha256": "af70bffd05e09a5d01019db044cf10aab24f7ad51042d5984649aaeab20d0f6f"
+      "bytes": 2672,
+      "sha256": "ac7bbdff2c8e3fe3da3f14284dbb0ed0399bc34c6b0c519e8ab813a14c4dfa95"
     },
     {
       "path": ".github/workflows/supabase.yml",
@@ -815,8 +815,8 @@
     },
     {
       "path": "tests/browser/harness-main.mjs",
-      "bytes": 33394,
-      "sha256": "393e9b22e0160567041f0f2ca9f416a899c7f900a83679083f472ac493083045"
+      "bytes": 33803,
+      "sha256": "3afba95c2e110562bffdd815bef0044a6cceb76d0804a7dacf3e57d7497dbcfa"
     },
     {
       "path": "tests/browser/harness.mjs",
@@ -990,8 +990,8 @@
     },
     {
       "path": "tests/rendered-ui.test.mjs",
-      "bytes": 11465,
-      "sha256": "10450b513b3423e938286dc5c1b284a780cd11e7cfe87e48334623da4c996dcd"
+      "bytes": 11616,
+      "sha256": "8ae699c5e70c0a3468d9f41ed4ff70229eba825521f19180049bade99a19abcc"
     },
     {
       "path": "tests/responsive-ui.test.mjs",
