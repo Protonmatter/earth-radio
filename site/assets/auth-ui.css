@@ -88,6 +88,7 @@ html.er-root .header-right .er-auth-button:hover {
 }
 .er-auth-provider, .er-auth-secondary { background: transparent; color: inherit; }
 .er-auth-primary { background: #5b58d6; border-color: #5b58d6; color: #fff; }
+.er-auth-provider:disabled, .er-auth-primary:disabled, .er-auth-secondary:disabled { cursor: not-allowed; opacity: .55; }
 .er-auth-divider { color: color-mix(in srgb, currentColor 55%, transparent); font-size: .82rem; text-align: center; }
 .er-auth-email { display: grid; gap: .6rem; }
 .er-auth-email input { border: 1px solid color-mix(in srgb, currentColor 22%, transparent); border-radius: .65rem; font: inherit; padding: .75rem; }

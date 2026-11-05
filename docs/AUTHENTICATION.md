@@ -35,8 +35,10 @@ an app restart; sign-out removed its local ciphertext. A UI integration failure 
 this test was reproduced: the previous navigation guard blocked the account namespace
 reload. Only exact trusted-file reloads are now allowed, with other files, query-bearing
 documents, remote URLs and redirects still blocked. Native Windows x64/macOS ARM64/x64
-encryption/lifecycle tests and local GoTrue/Mailpit/PostgREST integration passed on
-review-fix commit `105d2cf`; the expanded real-UI regression must pass on the final head.
+encryption/lifecycle tests, the expanded real-UI regression and local
+GoTrue/Mailpit/PostgREST integration passed on `7c07085`. Follow the
+[current PR checks](https://github.com/Protonmatter/earth-radio/pull/20/checks) for
+qualification of later changes; earlier binaries do not establish current-source parity.
 
 Fresh outside-team signup, public email delivery, packaged installer interaction and a
 physical Mac provider-consent test remain separate gates. The existing v0.25.1 assets
@@ -53,6 +55,17 @@ remain immutable. No publication claim is made for this candidate.
 4. Check the account identity and **Synced** status before checking another device.
 5. **Sign out** clears the local encrypted session even when remote revocation fails.
    Account namespaces prevent another user's favorites/preferences from being uploaded.
+
+If credential removal or local account storage fails, the dialog reports **Sign-out
+incomplete · sync paused**. Sync, linking and duplicate sign-out attempts are blocked
+while sign-out is running; sync and linking stay paused after failure. Unlock the OS
+keychain/check device storage (desktop), or restore browser storage access (web), then
+retry **Sign out**. The application does not detach the account namespace or report
+success until both credential removal and the local account transition finish.
+
+The account dialog retains keyboard focus when provider discovery or sync repaints its
+controls. Tab/Shift+Tab remain inside the dialog. Escape/Close restore focus to the
+desktop account button, or to **More actions** when the mobile overflow sheet opened it.
 
 The browser callback listener binds only to an ephemeral IPv4 loopback port and a
 random one-time path. No inbound firewall rule or custom protocol registration is

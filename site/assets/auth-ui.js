@@ -194,6 +194,7 @@ async function boot() {
   let syncing = false;
   let syncStatus = 'Local only';
   let signingOut = false;
+  let signOutFailed = false;
   let resettingSession = false;
   let syncGeneration = 0;
   let accountTransition = Promise.resolve();
@@ -236,7 +237,9 @@ async function boot() {
   function close() {
     lastMessage = null;
     modal.hidden = true;
-    button.focus();
+    const target = [button, document.getElementById('er-overflow-toggle')]
+      .find(control => control?.getClientRects().length && !control.disabled);
+    target?.focus({ preventScroll: true });
   }
 
   // The status line outlives a render: provider discovery can resolve after an
@@ -302,7 +305,7 @@ async function boot() {
   });
 
   async function runSync() {
-    if (!session || syncing) return;
+    if (!session || syncing || signingOut || signOutFailed) return;
     syncing = true;
     syncStatus = navigator.onLine ? 'Syncing…' : 'Offline';
     render();
@@ -387,9 +390,9 @@ async function boot() {
         if (!reloadTimer) reloadTimer = setTimeout(reload, reloadDelay);
       }
     } catch (error) {
+      if (error?.code === 'ACCOUNT_CHANGED') return;
       syncStatus = navigator.onLine ? 'Sync paused' : 'Offline';
       console.warn('Earth Radio account sync:', error);
-      if (error?.code === 'ACCOUNT_CHANGED') return;
     } finally {
       syncing = false;
       render();
@@ -413,6 +416,8 @@ async function boot() {
     const definition = PROVIDERS[provider];
     const providerButton = el('button', 'er-auth-provider', `${action === 'link' ? 'Link' : 'Continue with'} ${definition.label}`);
     providerButton.type = 'button';
+    providerButton.dataset.authAction = `${action}:${provider}`;
+    providerButton.disabled = signingOut || signOutFailed;
     providerButton.addEventListener('click', async () => {
       message(`${action === 'link' ? 'Opening' : 'Continuing to'} ${definition.label}…`);
       try {
@@ -437,6 +442,8 @@ async function boot() {
     // the email field's value, focus, and selection across the rebuild.
     // Only while the dialog is on screen: opening it fresh should still start blank.
     const previousEmail = modal.hidden ? null : card.querySelector('input[type="email"]');
+    const focusedAction = !modal.hidden && card.contains(document.activeElement)
+      ? document.activeElement.dataset.authAction : null;
     const carriedEmail = previousEmail
       ? {
         value: previousEmail.value,
@@ -453,6 +460,7 @@ async function boot() {
     title.id = 'er-auth-title';
     const closeButton = el('button', 'er-auth-close', '×');
     closeButton.type = 'button';
+    closeButton.dataset.authAction = 'close';
     closeButton.setAttribute('aria-label', 'Close account dialog');
     closeButton.addEventListener('click', close);
     header.append(title, closeButton);
@@ -483,6 +491,7 @@ async function boot() {
       input.setAttribute('aria-label', 'Email address');
       const submit = el('button', 'er-auth-primary', 'Email me a sign-in link');
       submit.type = 'submit';
+      submit.dataset.authAction = 'email-submit';
       submit.disabled = emailSubmitPending;
       form.append(input, submit);
       form.addEventListener('submit', async event => {
@@ -527,44 +536,47 @@ async function boot() {
       card.appendChild(identityList);
       const syncNow = el('button', 'er-auth-secondary', 'Sync now');
       syncNow.type = 'button';
+      syncNow.dataset.authAction = 'sync';
+      syncNow.disabled = signingOut || signOutFailed;
       syncNow.addEventListener('click', () => void runSync());
       const signOut = el('button', 'er-auth-secondary', 'Sign out');
       signOut.type = 'button';
+      signOut.dataset.authAction = 'sign-out';
+      signOut.disabled = signingOut;
       signOut.addEventListener('click', async () => {
+        if (signingOut) return;
         const userId = session?.user?.id;
         signingOut = true;
+        signOutFailed = false;
         syncTimer = quiesceSignOut({
           cancelReload,
           syncTimer,
           invalidateSync: () => { syncGeneration += 1; }
         });
-        let signedOut = false;
+        syncStatus = 'Signing out…';
+        render();
         try {
-          signedOut = await auth.signOut();
-        } finally {
-          if (signedOut) {
-            try {
-              await switchLocalAccount(userId, null);
-            } finally {
-              localStorage.removeItem(ACTIVE_USER_KEY);
-              session = null;
-              user = null;
-              syncStatus = 'Local only';
-            }
-          } else {
+          const signedOut = await auth.signOut();
+          if (!signedOut) {
+            // Another session won the race; initialize its namespace on reload.
             signingOut = false;
+            location.reload();
+            return;
           }
-        }
-        if (!signedOut) {
-          // A replacement session won the race; reload to reinitialize its namespace and sync loop.
+          await switchLocalAccount(userId, null);
+          localStorage.removeItem(ACTIVE_USER_KEY);
+          session = null;
+          user = null;
+          syncStatus = 'Local only';
           location.reload();
-          return;
-        }
-        try {
-          location.reload();
-        } catch (error) {
+        } catch {
           signingOut = false;
-          message(error.message, 'error');
+          signOutFailed = true;
+          syncStatus = 'Sign-out incomplete · sync paused';
+          render();
+          message(nativeAuth
+            ? 'Sign-out did not finish. Unlock your keychain and check device storage, then try Sign out again. Your account data remains on this device until sign-out completes.'
+            : 'Sign-out did not finish. Check browser storage access, then try Sign out again. Your account data remains on this device until sign-out completes.', 'error');
         }
       });
       const actions = el('div', 'er-auth-actions');
@@ -581,6 +593,11 @@ async function boot() {
       status.dataset.kind = lastMessage.kind;
     }
     restoreFocus?.();
+    if (focusedAction && !restoreFocus) {
+      const control = [...card.querySelectorAll('[data-auth-action]')]
+        .find(candidate => candidate.dataset.authAction === focusedAction && !candidate.disabled);
+      (control || closeButton).focus({ preventScroll: true });
+    }
   }
 
   button.addEventListener('click', () => {
@@ -589,7 +606,21 @@ async function boot() {
     card.querySelector('button, input')?.focus();
   });
   modal.addEventListener('click', event => { if (event.target === modal) close(); });
-  document.addEventListener('keydown', event => { if (event.key === 'Escape' && !modal.hidden) close(); });
+  document.addEventListener('keydown', event => {
+    if (modal.hidden) return;
+    if (event.key === 'Escape') { event.preventDefault(); close(); return; }
+    if (event.key !== 'Tab') return;
+    const controls = [...card.querySelectorAll('button:not(:disabled), input:not(:disabled)')]
+      .filter(control => control.getClientRects().length);
+    const first = controls[0], last = controls.at(-1);
+    if (!card.contains(document.activeElement) || (event.shiftKey && document.activeElement === first)) {
+      event.preventDefault();
+      (event.shiftKey ? last : first)?.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first?.focus();
+    }
+  });
   window.addEventListener('online', () => void runSync());
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') void runSync(); });
 

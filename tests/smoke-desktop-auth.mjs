@@ -2,7 +2,7 @@
 // loopback PKCE and OS encryption. Provider HTTP responses are synthetic here;
 // real GoTrue/RLS and live external providers are separate qualification gates.
 import assert from 'node:assert/strict';
-import { mkdir, mkdtemp, writeFile, readFile, rm } from 'node:fs/promises';
+import { mkdir, mkdtemp, writeFile, readFile, rename, rmdir, rm } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -161,6 +161,27 @@ app.whenReady().then(async () => {
   await until("Math.abs(Number(document.getElementById('volume')?.value)-0.42)<0.001");
   await until("document.getElementById('er-auth-button')?.textContent === 'qualification@earth-radio.test'");
   await openAccount();
+  qualificationPhase = 'UI sign-out persistence failure';
+  // Force a real filesystem deletion failure in this disposable profile. The
+  // encrypted session remains recoverable until sign-out can be retried.
+  const credentialFile = path.join(vaultDirectory, 'session.enc');
+  const credentialBackup = path.join(vaultDirectory, 'session.backup');
+  await rename(credentialFile, credentialBackup);
+  await mkdir(credentialFile);
+  try {
+    await window.webContents.executeJavaScript(`window.qualificationUnhandled = 0;
+      window.addEventListener('unhandledrejection', () => { window.qualificationUnhandled++; });
+      Array.from(document.querySelectorAll('.er-auth-secondary')).find(button=>button.textContent==='Sign out').click()`);
+    await until("document.querySelector('.er-auth-sync')?.textContent === 'Sign-out incomplete · sync paused'");
+    assert.equal(await window.webContents.executeJavaScript('window.qualificationUnhandled'), 0, 'Sign-out failure must be handled in the account UI.');
+    assert.equal(await window.webContents.executeJavaScript("localStorage.getItem('earthRadio.auth.activeUser.v1')"), 'qualification-user', 'Do not detach the namespace until credential deletion succeeds.');
+    assert.equal(await window.webContents.executeJavaScript("Array.from(document.querySelectorAll('.er-auth-secondary')).find(button=>button.textContent==='Sign out').disabled"), false, 'A failed sign-out must remain retryable.');
+    await window.webContents.executeJavaScript("window.dispatchEvent(new Event('online')); document.dispatchEvent(new Event('visibilitychange'));");
+    assert.equal(await window.webContents.executeJavaScript("document.querySelector('.er-auth-sync')?.textContent"), 'Sign-out incomplete · sync paused', 'Background events must not resume sync with an uncertain session.');
+  } finally {
+    await rmdir(credentialFile);
+    await rename(credentialBackup, credentialFile);
+  }
   qualificationPhase = 'UI account switch';
   await window.webContents.executeJavaScript("Array.from(document.querySelectorAll('.er-auth-secondary')).find(button=>button.textContent==='Sign out').click()")
     .catch(async () => until("document.getElementById('er-auth-button')?.textContent === 'Sign in'"));
@@ -178,7 +199,7 @@ app.whenReady().then(async () => {
   await until("document.querySelector('.er-auth-modal')?.textContent.includes('Synced')");
   console.log(JSON.stringify({ platform: process.platform, arch: process.arch, sandbox: true, contextIsolation: true,
     ownedFrameOnly: true, pkceLoopback: true, tokenFreeRenderer: true, osEncryptedRestart: true,
-    syncAdapterRoundTrip: true, logoutSurvivesRestart: true, actualAccountUiSync: true,
+    syncAdapterRoundTrip: true, logoutSurvivesRestart: true, actualAccountUiSync: true, signOutFailureRecovery: true,
     providerEvidence: 'synthetic HTTP, separate from live qualification' }));
 }).then(async () => {
   await manager?.close(); window?.destroy(); clearTimeout(watchdog);

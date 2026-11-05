@@ -6,7 +6,14 @@
 PKCE sign-in, OS-encrypted sessions, restricted account IPC, single-instance ownership
 and a normal-quit flush gate. It preserves the existing RLS/CAS sync contract. The
 candidate's embedded runtime/package version is 0.26.0, runtime `index-8fd01303.js`,
-and shell generation v55. No private provider credential or new dependency was added.
+and shell generation v56. No private provider credential or new dependency was added.
+
+The readiness follow-up reproduces a real encrypted-session deletion failure in an
+isolated native profile. A failed sign-out now reports an incomplete state, keeps sync
+and linking paused, preserves the account namespace and allows an explicit retry after
+storage recovery. The native regression retries successfully before switching accounts.
+Keyboard regressions also cover Tab/Shift+Tab containment, focus preservation across
+provider discovery and mobile focus return to the visible More actions trigger.
 
 Final rendered qualification exposed a background-observer timing gap in the previous
 header floor. The effective CSS header depth now clamps to 56px for the header and

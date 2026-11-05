@@ -30,8 +30,8 @@
     },
     {
       "path": "docs/AUTHENTICATION.md",
-      "bytes": 8372,
-      "sha256": "d0f8c5477aaf4f54da576d5f972e59634dca9d71f89390feffe5211d447238d6"
+      "bytes": 9278,
+      "sha256": "5cb6e8c338ecb745b7b21a7f82d02fe14a76e0ed939831b73d764d6a59293904"
     },
     {
       "path": "docs/branding/earth-radio-icon-master.png",
@@ -45,8 +45,8 @@
     },
     {
       "path": "docs/BUILD_STATE.md",
-      "bytes": 18317,
-      "sha256": "816c457a4cd456df69281bb86d3be09b6a4ff866fe779d1ea6ab325199e0f286"
+      "bytes": 18828,
+      "sha256": "6266dc9f678306be1d2bca64fb370de28d357cf579f938dbcd45e273b3c43de0"
     },
     {
       "path": "docs/CLOUDFLARE_DEPLOYMENT.md",
@@ -96,7 +96,7 @@
     {
       "path": "docs/provenance/hardening-overlays.json",
       "bytes": 12118,
-      "sha256": "5ed775023528f655f6c54a04a606f5162c4f8bd7697c5c70d4bf02e89edd96ef"
+      "sha256": "d283f05d6fb967f1c558d4aa1748ac38be4c2c9ffe68fa64e3ebdfa74fec0089"
     },
     {
       "path": "docs/provenance/recovery-manifest.json",
@@ -425,13 +425,13 @@
     },
     {
       "path": "site/assets/auth-ui.css",
-      "bytes": 3778,
-      "sha256": "3904fdab8c31bbc5055ef1006f7029c2e8a192ad7f8833b08d460b8b65049571"
+      "bytes": 3900,
+      "sha256": "07640966918c97e4a22fab469bc1442e16eac9b6ca06d8db072352bb019f4ba4"
     },
     {
       "path": "site/assets/auth-ui.js",
-      "bytes": 26020,
-      "sha256": "9d3cb776c3f1b7fe6389cb4f6af42055056e6c9c61552888f06f175ca6df65f7"
+      "bytes": 28041,
+      "sha256": "7e7cfb55b260626a8ab31f0f1bb19e9d5d7d4ebd43fb8a9b3afd53bed2810090"
     },
     {
       "path": "site/assets/desktop-auth.js",
@@ -630,8 +630,8 @@
     },
     {
       "path": "site/sw.js",
-      "bytes": 3597,
-      "sha256": "43c5a04896f140c49eb211c795e6c4dde15b547ca7f6750cac48bb7b70580e6b"
+      "bytes": 3602,
+      "sha256": "4ed246c5da6cebd7b83d72dd593cb8da9c1b1648665f7ae7a0c7703227891018"
     },
     {
       "path": "src-recovered/core/config.ts",
@@ -955,8 +955,8 @@
     },
     {
       "path": "tests/e2e/auth-ui.spec.mjs",
-      "bytes": 2170,
-      "sha256": "72efe32b4030c078b815fb02d749946372116ea1cf60b8ebea43ae831bb326d5"
+      "bytes": 7515,
+      "sha256": "b2c3045f4af975307be39494fe4c88bc586752d08e22f6479cce36a9cc9dcb30"
     },
     {
       "path": "tests/e2e/discovery.spec.mjs",
@@ -1110,8 +1110,8 @@
     },
     {
       "path": "tests/service-worker.test.mjs",
-      "bytes": 7968,
-      "sha256": "3a9248481d730635247ffc17b1b60b3e63ef0da5d3a4383e52630abb9e212d00"
+      "bytes": 7973,
+      "sha256": "223eb83c41f89a55979ecd53558653dd1053cb3c48304dd44d9b3dc440519da9"
     },
     {
       "path": "tests/smoke-desktop-auth-lifecycle.mjs",
@@ -1120,8 +1120,8 @@
     },
     {
       "path": "tests/smoke-desktop-auth.mjs",
-      "bytes": 13839,
-      "sha256": "cc325632c8f5e056b258333d1e2b5d6650f97dcb28c6c853f26c5a010c981ff1"
+      "bytes": 15808,
+      "sha256": "c874373a9647514b9a858e84ec54dec3e4f42ca3a4597e57329853a8b3e8b807"
     },
     {
       "path": "tests/smoke-desktop-renderer.mjs",
