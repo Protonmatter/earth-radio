@@ -128,7 +128,10 @@ test('browser storage failure pauses sign-out safely and lets the user retry', a
   expect(await page.evaluate(() => localStorage.getItem('earthRadio.auth.activeUser.v1'))).toBe(user.id);
   expect(await page.evaluate(() => localStorage.getItem('earthRadio.auth.session.v1') !== null)).toBe(true);
   await page.evaluate(() => { Storage.prototype.removeItem = window.qualificationRemoveItem; });
-  await dialog.getByRole('button', { name: 'Sign out', exact: true }).click();
+  await Promise.all([
+    page.waitForEvent('domcontentloaded'),
+    dialog.getByRole('button', { name: 'Sign out', exact: true }).click()
+  ]);
   await expect(account).toHaveText('Sign in');
   expect(await page.evaluate(() => localStorage.getItem('earthRadio.auth.session.v1'))).toBeNull();
   expect(await page.evaluate(() => localStorage.getItem('earthRadio.auth.activeUser.v1'))).toBeNull();

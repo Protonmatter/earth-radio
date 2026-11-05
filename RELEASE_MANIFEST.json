@@ -955,8 +955,8 @@
     },
     {
       "path": "tests/e2e/auth-ui.spec.mjs",
-      "bytes": 7515,
-      "sha256": "b2c3045f4af975307be39494fe4c88bc586752d08e22f6479cce36a9cc9dcb30"
+      "bytes": 7581,
+      "sha256": "db324df3cfff2e69765dd81c2d3b91469f5799533d097c744273d665a8a2600a"
     },
     {
       "path": "tests/e2e/discovery.spec.mjs",
