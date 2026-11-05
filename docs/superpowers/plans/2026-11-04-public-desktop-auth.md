@@ -9,7 +9,7 @@ qualified with separate automated and live end-to-end evidence.
 Electron main owns tokens and encrypted persistence; a validated, token-free IPC
 adapter lets the existing renderer account/sync engine operate unchanged in scope.
 
-**Tech Stack:** Existing Electron 43.4.1, Node 24.18.0, native WebCrypto/HTTP,
+**Tech Stack:** Electron 43.8.7 (security update from 43.4.1), Node 24.18.0, native WebCrypto/HTTP,
 Electron async safeStorage, Supabase Auth/PostgREST, existing Playwright/GoTrue tests.
 
 **Spec:** `docs/superpowers/specs/2026-11-04-public-desktop-auth-design.md`

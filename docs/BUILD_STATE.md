@@ -15,6 +15,13 @@ storage recovery. The native regression retries successfully before switching ac
 Keyboard regressions also cover Tab/Shift+Tab containment, focus preservation across
 provider discovery and mobile focus return to the visible More actions trigger.
 
+The subsequent dependency audit identified 16 affected package nodes (5 high and
+11 moderate), including shipped Electron 43.4.1. The candidate now pins 43.8.7 and
+uses bounded build-tool overrides for patched glob/minimatch lines. CI adds a published
+advisory gate. [Dependency security](SECURITY.md#dependency-security) records scope,
+compatibility checks and rollback. Every older desktop candidate predates this runtime
+security update and must be superseded before publication.
+
 Final rendered qualification exposed a background-observer timing gap in the previous
 header floor. The effective CSS header depth now clamps to 56px for the header and
 dependent panel positions. A synchronous regression injects a 9px metric and requires
