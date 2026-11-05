@@ -2,6 +2,13 @@
 
 ## 0.26.0 account candidate — 2026-11-04
 
+The [0.26.0 qualification record](QUALIFICATION-0.26.0.md) now includes the
+2026-11-05 Windows installer follow-up: an isolated 0.25.1 → 0.26.0 upgrade,
+86-file installed payload parity, saved favorite/55% volume preservation, clean
+candidate startup and both uninstall paths passed. The original 0.24.0 executable
+and registration stayed unchanged. This does not claim an original-identity
+upgrade or close the public-email/fresh-signup/physical-device gates.
+
 [PR #20](https://github.com/Protonmatter/earth-radio/pull/20) adds main-owned native
 PKCE sign-in, OS-encrypted sessions, restricted account IPC, single-instance ownership
 and a normal-quit flush gate. It preserves the existing RLS/CAS sync contract. The

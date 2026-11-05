@@ -8,6 +8,10 @@ Listening does not require an account.
 Native account support is enabled for Windows and macOS. Linux retains local-only
 behavior; its credential-provider combinations are outside this qualification.
 
+The [0.26.0 qualification record](QUALIFICATION-0.26.0.md) separates current
+automated/live account evidence, the isolated Windows installer/upgrade tests,
+artifact provenance and remaining release gates.
+
 ## Current qualification boundary (2026-11-04)
 
 The hosted project allows public signups, manual identity linking and confirmed email.

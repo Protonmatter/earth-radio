@@ -30,8 +30,8 @@
     },
     {
       "path": "docs/AUTHENTICATION.md",
-      "bytes": 9278,
-      "sha256": "5cb6e8c338ecb745b7b21a7f82d02fe14a76e0ed939831b73d764d6a59293904"
+      "bytes": 9484,
+      "sha256": "48b8a97f1e8c155bad28ae020e1f4b25e39f79d6fa56765a907ed640a0deae84"
     },
     {
       "path": "docs/branding/earth-radio-icon-master.png",
@@ -45,8 +45,8 @@
     },
     {
       "path": "docs/BUILD_STATE.md",
-      "bytes": 19312,
-      "sha256": "0324f13167997014bb033d4954afd62fe62298bb64364b096bb8be49aa8d9671"
+      "bytes": 19776,
+      "sha256": "547bb4ffa2bee6f375d5d6782a669a3a4139821b18bd25aff7278565414ec9f1"
     },
     {
       "path": "docs/CLOUDFLARE_DEPLOYMENT.md",
@@ -102,6 +102,11 @@
       "path": "docs/provenance/recovery-manifest.json",
       "bytes": 12732,
       "sha256": "e1cd6788e0a912b58c7d8d87dd4513cb19c15ff3e50fcf8b247463d55e34786d"
+    },
+    {
+      "path": "docs/QUALIFICATION-0.26.0.md",
+      "bytes": 8317,
+      "sha256": "0d8381a2b35ed4eefae34cd3fc7393c6d5348549a3f4f13c38db13e94366a6ee"
     },
     {
       "path": "docs/QUALIFICATION-2026-11-03.md",
