@@ -19,11 +19,18 @@ Google's Earth Radio project is **External / In production**, with only OpenID, 
 and email scopes and no configured sensitive/restricted scopes. GitHub is enabled with
 the Supabase callback. These configuration checks do not prove a fresh outsider signup.
 
-**Public email is blocked:** custom SMTP is off, and the owner confirmed that there is
-no sender domain yet. Resend was selected, but no domain was purchased, sender verified,
-new provider account accepted, credential created or SMTP setting changed. Supabase's
-default mailer is not a public email delivery service. Do not remove email confirmation
-or advertise arbitrary-address email registration as qualified.
+**Sender infrastructure update (2026-11-06):** the owner registered
+`earthradio.stream` for three years, through November 6, 2029. The registry and
+Cloudflare/Google public DNS resolvers confirmed its Cloudflare delegation. WHOIS
+redaction is enabled. DNSSEC activation was requested; public DNSKEY records were
+visible, but the parent DS record was not yet visible at this check, so a complete
+validated delegation is not claimed.
+
+**Public email remains unqualified:** Resend account setup, verification of
+`auth.earthradio.stream`, restricted credential entry, custom SMTP and real external
+delivery are still pending. No SMTP credential has been created or configured by this
+setup. Supabase's default mailer is not a public email delivery service. Do not remove
+email confirmation or advertise arbitrary-address email registration as qualified.
 
 Windows ARM64 source qualification exercised the real Electron sandbox/preload/main
 IPC, loopback PKCE callback, DPAPI-backed asynchronous safeStorage encryption, encrypted
@@ -81,15 +88,16 @@ OS users, not arbitrary software already running as the signed-in Windows user.
 
 ## Public email setup: Resend
 
-The owner must acquire/control a sender domain before this can be completed. A concrete
-deployment layout is `auth.<owned-domain>` with sender `Earth Radio
-<signin@auth.<owned-domain>>`. Use the existing Cloudflare account for DNS if desired;
-do not buy a domain or accept registration/provider terms without the owner's action.
-The Pages hostname cannot serve as a domain the owner controls for email DNS.
+The owned sender domain is `earthradio.stream`. The selected deployment layout is
+`auth.earthradio.stream` with sender `Earth Radio <signin@auth.earthradio.stream>`.
+Use the existing Cloudflare account for its DNS. Registration is complete; provider
+account/terms and private credential entry remain required before SMTP can be enabled.
+The Pages hostname cannot serve as a domain the owner controls for email DNS. Keep the
+existing production web origin and approved return URLs during this sender setup.
 
-1. Register the chosen available domain with the owner's registrar/account. Review
-   the checkout price and renewal price before payment. Create/sign into the owner's
-   Resend account and complete any legal/billing step personally.
+1. Registration is complete. Create/sign into the owner's Resend account and complete
+   the required account verification and service agreement step. Any additional paid
+   plan or billing commitment needs the owner's review; none is required by this plan.
 2. Add the `auth` sending subdomain in Resend. Add **only the exact DNS records shown
    by Resend** to the authoritative DNS zone. Preserve existing MX and unrelated mail
    records. Wait for the domain's Verified status; retain a redacted DNS receipt.

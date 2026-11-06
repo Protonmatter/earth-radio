@@ -51,11 +51,19 @@ for the exact final source and platform results, and [account operations](AUTHEN
 for evidence boundaries and rollback. Earlier candidate artifacts are superseded when
 the source SHA changes; no existing release tag or published asset is replaced.
 
-**Public email is still gated:** custom SMTP is off and the owner has no sender
-domain. Resend is selected; `earth-radio.app` registration was prepared for owner
-review without purchase. The approved native loopback return was saved in Supabase;
-other hosted auth/provider/schema settings were preserved. Production and published
-v0.25.1 downloads remain separate from this candidate until its release gates close.
+**Sender infrastructure update (2026-11-06):** the owner registered
+`earthradio.stream` through November 6, 2029. Registry and public DNS readback confirmed
+its Cloudflare nameservers; WHOIS redaction is enabled. DNSSEC activation was requested
+and DNSKEY records are published, with parent DS publication still pending at the
+check. The selected sender is `Earth Radio <signin@auth.earthradio.stream>`.
+
+**Public email is still gated:** Resend account setup, sender verification, restricted
+credential entry, custom SMTP and real external delivery remain pending. The approved
+native loopback return was saved in Supabase; existing web origins, hosted provider
+settings and schema are preserved. Production and published v0.25.1 downloads remain
+separate from this candidate until its release gates close. The fresh 2026-11-06 npm
+audit reported zero known advisories; all nine PR checks passed on `d3469f2` before
+this documentation follow-up.
 
 ## 0.25.1 safe-area correction and Git delivery
 

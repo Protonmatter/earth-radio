@@ -106,11 +106,30 @@ The local delivery receipt and four-file checksums are
 manifests, and all packaged application source files match the qualified cut.
 These are candidate artifacts, not a new public GitHub release.
 
+## Sender infrastructure follow-up (2026-11-06)
+
+The owner registered `earthradio.stream` for three years. Cloudflare's completed
+checkout and public registry readback independently confirmed registration on
+November 6, 2026 and expiration on November 6, 2029. Cloudflare and Google public
+resolvers returned `megan.ns.cloudflare.com` and `yahir.ns.cloudflare.com`.
+
+Registrar status is Active, WHOIS redaction is enabled and transfers are locked.
+DNSSEC activation was requested through the registrar. DNSKEY records are public;
+the parent DS record was still absent at the check, so fully authenticated DNSSEC
+delegation remains pending. Cloudflare manages the DS publication; no manual DS value
+was invented or submitted.
+
+The selected email provider remains Resend, with the proposed sending subdomain
+`auth.earthradio.stream`. Account setup, exact provider-generated DNS records,
+verification and private SMTP credential entry remain pending. No SMTP/provider
+credential or private registrant/payment data belongs in repository evidence. This
+domain setup does not move the website or change its approved auth return URLs.
+
 ## Open acceptance gates
 
-- **Public email:** owner-controlled domain selection/registration, verified
-  Resend sender, local credential entry, custom SMTP and real external delivery.
-  Confirmation stays enabled. The owner has not yet acquired a sender domain.
+- **Public email:** domain selection/registration is complete; verified Resend
+  sender, local credential entry, custom SMTP and real external delivery remain.
+  Confirmation stays enabled. Registration alone does not qualify email delivery.
 - **Fresh signup:** authorized outside-team Google/GitHub identities and external
   inboxes must prove new-account creation, confirmation and cross-client sync.
 - **Physical device coverage:** installed iOS/iPadOS account returns and a physical
