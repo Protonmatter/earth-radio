@@ -1,4 +1,4 @@
-const CACHE_NAME = 'earth-radio-shell-v56-account-readiness-0-26-0';
+const CACHE_NAME = 'earth-radio-shell-v58-listening-room-0-27-0';
 const SHELL_ASSETS = [
   './',
   './index.html',
@@ -11,7 +11,7 @@ const SHELL_ASSETS = [
   './branding/earth-radio-192-v2.png',
   './branding/earth-radio-512-v2.png',
   './assets/hls.light-Dr1Fv81C.js',
-  './assets/index-8fd01303.js',
+  './assets/index-a673e435.js',
   './assets/index-CSoL7F-Y.css',
   './assets/storage-guard.js',
   './assets/directory-expansion.js',
@@ -27,6 +27,7 @@ const SHELL_ASSETS = [
   './assets/map-directory.js',
   './assets/discovery-ui.js',
   './assets/discovery.css',
+  './assets/listening-room.css',
   './assets/vector-atlas.js',
   './assets/world-land.js',
   './assets/auth-core.js',
@@ -92,7 +93,7 @@ async function cacheFirst(request) {
 }
 
 function isImmutableAsset(pathname) {
-  return /index-8fd01303|index-CSoL7F-Y|hls\.light-Dr1Fv81C/.test(pathname);
+  return /index-a673e435|index-CSoL7F-Y|hls\.light-Dr1Fv81C/.test(pathname);
 }
 
 self.addEventListener('fetch', event => {

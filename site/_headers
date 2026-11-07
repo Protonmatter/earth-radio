@@ -9,7 +9,7 @@
 /assets/hls.light-Dr1Fv81C.js
   Cache-Control: public, max-age=31536000, immutable
 
-/assets/index-8fd01303.js
+/assets/index-a673e435.js
   Cache-Control: public, max-age=31536000, immutable
 
 /assets/index-CSoL7F-Y.css
@@ -52,6 +52,9 @@
   Cache-Control: public, max-age=300, must-revalidate
 
 /assets/discovery.css
+  Cache-Control: public, max-age=300, must-revalidate
+
+/assets/listening-room.css
   Cache-Control: public, max-age=300, must-revalidate
 
 /assets/vector-atlas.js

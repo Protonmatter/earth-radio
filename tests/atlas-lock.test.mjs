@@ -7,7 +7,7 @@ import { t } from '../site/i18n/index.js';
 
 const root = path.resolve(import.meta.dirname, '..');
 
-test('phone destinations are Atlas, Browse, Kept, and You', async () => {
+test('phone destinations are Map, Browse, Favorites, and Account', async () => {
   const html = await readFile(path.join(root, 'site', 'index.html'), 'utf8');
   const nav = html.match(/<nav class="er-mobile-nav"[\s\S]*?<\/nav>/);
   assert.ok(nav, 'missing mobile nav');
@@ -25,10 +25,10 @@ test('phone destinations are Atlas, Browse, Kept, and You', async () => {
 test('search copy and markup put places first', async () => {
   const html = await readFile(path.join(root, 'site', 'index.html'), 'utf8');
   assert.equal(t('search.stationPlaceholder', undefined, 'en'), 'Country or station');
-  assert.equal(t('nav.map', undefined, 'en'), 'Atlas');
+  assert.equal(t('nav.map', undefined, 'en'), 'Map');
   assert.equal(t('nav.listen', undefined, 'en'), 'Browse');
-  assert.equal(t('nav.saved', undefined, 'en'), 'Kept');
-  assert.equal(t('nav.you', undefined, 'en'), 'You');
+  assert.equal(t('nav.saved', undefined, 'en'), 'Favorites');
+  assert.equal(t('nav.you', undefined, 'en'), 'Account');
   const country = html.indexOf('id="er-country-query"');
   const station = html.indexOf('id="er-station-query"');
   assert.ok(country > 0 && station > country);
@@ -42,6 +42,7 @@ test('You is a first-class destination and glass/palette persist', () => {
   assert.equal(sanitizeUiState({ glassLog: false }).glassLog, false);
   assert.equal(sanitizeUiState({ palette: 'paper' }).palette, 'paper');
   assert.equal(sanitizeUiState({ palette: 'night' }).palette, 'night');
+  assert.equal(sanitizeUiState({}).palette, 'paper');
   assert.equal(sanitizeUiState({ palette: 'system' }).palette, 'night');
 });
 
@@ -100,7 +101,7 @@ test('the operations smoke checklist names the destinations the app actually has
   const html = await readFile(path.join(root, 'site', 'index.html'), 'utf8');
   const nav = html.match(/<nav class="er-mobile-nav"[\s\S]*?<\/nav>/)[0];
   const smoke = operations.slice(operations.indexOf('## Local smoke'), operations.indexOf('## Deploy'));
-  for (const label of ['Atlas', 'Browse', 'Kept', 'You']) {
+  for (const label of ['Map', 'Browse', 'Favorites', 'Account']) {
     assert.ok(nav.includes(label), `the mobile nav no longer offers ${label}`);
     assert.ok(smoke.includes(label), `the smoke checklist omits the ${label} destination`);
   }

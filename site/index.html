@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="theme-color" content="#12110e" />
+  <meta name="theme-color" content="#f5f1e9" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="mobile-web-app-capable" content="yes" />
@@ -19,7 +19,7 @@
   <script type="module" src="./assets/pinned-stations.js"></script>
   <script type="module" src="./assets/metadata-enrichment.js"></script>
   <link rel="stylesheet" href="./assets/metadata-enrichment.css" />
-  <script type="module" crossorigin src="./assets/index-8fd01303.js"></script>
+  <script type="module" crossorigin src="./assets/index-a673e435.js"></script>
   <link rel="stylesheet" crossorigin href="./assets/index-CSoL7F-Y.css">
   <link rel="stylesheet" href="./assets/responsive-ui.css" />
   <script type="module" src="./assets/responsive-ui.js"></script>
@@ -27,6 +27,7 @@
   <link rel="stylesheet" href="./assets/ui-refresh.css" />
   <link rel="stylesheet" href="./assets/atlas-lock.css" />
   <link rel="stylesheet" href="./assets/discovery.css" />
+  <link rel="stylesheet" href="./assets/listening-room.css" />
 </head>
 <body>
   <a class="er-skip" href="#grid-panel" data-i18n="app.skip">Skip to station list</a>
@@ -48,6 +49,7 @@
       <button class="header-btn" id="surprise" type="button" data-i18n="header.surprise" aria-label="Surprise me with a station">World Scan</button>
       <button class="header-btn" id="favorites-toggle" type="button" aria-pressed="false" data-i18n="header.favorites" data-i18n-attr="aria-label" aria-label="Show favorites only">
         <span class="heart-icon" aria-hidden="true">&#9829;</span>
+        <span data-i18n="saved.favorites">Favorites</span>
         <span class="favorites-count">0</span>
       </button>
       <button class="header-btn" id="recent-toggle" type="button" aria-pressed="false" data-i18n="saved.recent" aria-label="Show recently played">Recent</button>
@@ -73,23 +75,7 @@
     <button type="button" data-click-id="import-data" data-i18n="header.import">Import</button>
     <button type="button" data-click-id="export-data" data-i18n="header.export">Export</button>
     <button type="button" data-click-id="settings-toggle" data-i18n="header.settings">Settings</button>
-    <button type="button" data-er-dest="you" data-i18n="nav.you">You</button>
-  </div>
-
-  <main class="main" data-i18n="a11y.workspace" data-i18n-attr="aria-label" aria-label="Station workspace">
-    <section class="panel panel--grid" id="grid-panel" data-i18n="grid.label" data-i18n-attr="aria-label" aria-label="Station list">
-      <div class="grid-header">
-        <div>
-          <h1 class="grid-title" id="grid-title">All Stations</h1>
-          <p class="grid-subtitle" id="grid-subtitle">Quality score favors recent checks, secure streams, declared codec, bitrate, and local playback health.</p>
-        </div>
-        <span class="grid-count" id="grid-count">0 stations</span>
-        <button class="er-collapse" type="button" data-er-collapse="list" data-i18n="desktop.hideStations">Hide stations</button>
-      </div>
-      <div class="er-saved-seg" role="group" data-i18n="saved.favorites" data-i18n-attr="aria-label">
-        <button type="button" data-er-saved="favorites" data-i18n="saved.favorites">Favorites</button>
-        <button type="button" data-er-saved="recent" data-i18n="saved.recent">Recent</button>
-      </div>
+    <button type="button" data-er-dest="you" data-i18n="nav.you">Account</button>
       <section class="daily-dashboard" id="daily-dashboard" aria-label="Daily listening dashboard">
         <button class="daily-action daily-action--primary" type="button" data-dashboard-action="continue">
           <span class="daily-action__eyebrow" data-i18n="listen.continueEyebrow">Continue</span>
@@ -112,15 +98,30 @@
           <span class="daily-action__meta" id="dashboard-reliable-meta" data-i18n="listen.worksNowMeta">Strong quality stations</span>
         </button>
       </section>
-      <div class="collections" id="collections" role="group" aria-label="Curated collections"></div>
+  </div>
+
+  <main class="main" data-i18n="a11y.workspace" data-i18n-attr="aria-label" aria-label="Station workspace">
+    <section class="panel panel--grid" id="grid-panel" data-i18n="grid.label" data-i18n-attr="aria-label" aria-label="Station list">
+      <div class="grid-header">
+        <div>
+          <h1 class="grid-title" id="grid-title">Stations</h1>
+          <p class="grid-subtitle" id="grid-subtitle">Quality score favors recent checks, secure streams, declared codec, bitrate, and local playback health.</p>
+        </div>
+        <span class="grid-count" id="grid-count">0 stations</span>
+        <button class="er-collapse" type="button" data-er-collapse="list" data-i18n="desktop.hideStations">Hide stations</button>
+      </div>
+      <div class="er-saved-seg" role="group" data-i18n="saved.favorites" data-i18n-attr="aria-label">
+        <button type="button" data-er-saved="favorites" data-i18n="saved.favorites">Favorites</button>
+        <button type="button" data-er-saved="recent" data-i18n="saved.recent">Recent</button>
+      </div>
       <form class="er-discovery" id="er-discovery" role="search" aria-label="Station discovery">
         <div class="er-discovery-search">
           <label class="sr-only" for="er-discovery-query">Find a station</label>
           <span aria-hidden="true" class="er-discovery-search-icon">⌕</span>
-          <input id="er-discovery-query" name="query" type="search" placeholder="A station, a sound, a place…" maxlength="160" autocomplete="off" spellcheck="false" aria-describedby="er-discovery-status" />
+          <input id="er-discovery-query" name="query" type="search" placeholder="Search stations, genres or places" maxlength="160" autocomplete="off" spellcheck="false" aria-describedby="er-discovery-status" />
           <button type="button" data-discovery-reset aria-label="Reset discovery">Reset</button>
         </div>
-        <details class="er-discovery-advanced" open><summary>Refine selection</summary>
+        <details class="er-discovery-advanced" open><summary>Filters</summary>
         <div class="er-discovery-facets">
           <label>Genre<select name="genre" aria-label="Genre"><option value="">All genres</option></select></label>
           <label>Language<select name="language" aria-label="Language"><option value="">All languages</option></select></label>
@@ -138,6 +139,7 @@
         </details>
         <p id="er-discovery-status" role="status" aria-live="polite">Loading station discovery…</p>
       </form>
+      <div class="collections" id="collections" role="group" aria-label="Curated collections"></div>
       <div class="station-grid" id="station-grid"></div>
       <div class="empty-state" id="empty-state" style="display:none;"></div>
     </section>
@@ -232,10 +234,10 @@
   </footer>
 
   <nav class="er-mobile-nav" data-i18n="nav.label" data-i18n-attr="aria-label" aria-label="Primary destinations">
-    <button type="button" data-er-dest="map" data-i18n="nav.map">Atlas</button>
+    <button type="button" data-er-dest="map" data-i18n="nav.map">Map</button>
     <button type="button" data-er-dest="listen" data-i18n="nav.listen">Browse</button>
-    <button type="button" data-er-dest="saved" data-i18n="nav.saved">Kept</button>
-    <button type="button" data-er-dest="you" data-i18n="nav.you">You</button>
+    <button type="button" data-er-dest="saved" data-i18n="nav.saved">Favorites</button>
+    <button type="button" data-er-dest="you" data-i18n="nav.you">Account</button>
   </nav>
 
   <section id="er-nowplaying" class="er-nowplaying" hidden>

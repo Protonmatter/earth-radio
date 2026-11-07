@@ -136,6 +136,9 @@ export async function playFromList(page, name) {
   const target = await revealCard(page, name);
   await target.locator('.station-card__play').click();
   await expect(page.locator('#player-station')).toHaveText(name, { timeout: 15_000 });
+  // The name updates on selection, before play() resolves. Subsequent transport
+  // actions need the application's settled playing state, not only that label.
+  await expect(page.locator('#player-bar')).toHaveClass(/is-playing/, { timeout: 15_000 });
 }
 
 export function audioPaused(page) {

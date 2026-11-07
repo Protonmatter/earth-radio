@@ -16,7 +16,7 @@ export function applyAtlasChrome(state = loadUiState()) {
   if (root.style.colorScheme !== theme) root.style.colorScheme = theme;
   root.classList.toggle('er-glass-log', state.glassLog === true);
   const meta = document.querySelector('meta[name="theme-color"]');
-  if (meta) meta.content = palette === 'paper' ? '#f4efe4' : '#12110e';
+  if (meta) meta.content = palette === 'paper' ? '#f5f1e9' : '#142b27';
   for (const button of document.querySelectorAll('#er-you [data-er-palette]')) {
     button.setAttribute('aria-pressed', String(button.getAttribute('data-er-palette') === palette));
   }

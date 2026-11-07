@@ -84,12 +84,14 @@ test('narrowing the window re-clamps the saved split to the live workspace', asy
   }, { timeout: 10_000, message: 'the split must re-clamp after the window narrows' }).toBe(true);
 });
 
-test('the saved theme survives without the legacy preference key', async ({ page }) => {
+test('an explicit Night palette survives without the legacy preference key', async ({ page }) => {
   await setupApp(page);
-  // The runtime's authoritative preference store is IndexedDB kv/prefs; a migrated
-  // profile may have no legacy localStorage key at all.
+  // Night/Paper is the presentation preference; a migrated profile may also
+  // retain the runtime's IndexedDB theme without a legacy localStorage key.
   await page.evaluate(async () => {
     localStorage.removeItem('earthRadio.preferences.v1');
+    const ui = JSON.parse(localStorage.getItem('earthRadio.ui.v1') || '{}');
+    localStorage.setItem('earthRadio.ui.v1', JSON.stringify({ ...ui, palette: 'night' }));
     await new Promise((resolve, reject) => {
       const request = indexedDB.open('earthRadio', 1);
       request.onerror = () => reject(request.error);
