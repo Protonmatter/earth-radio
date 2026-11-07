@@ -1,5 +1,17 @@
 # Build state
 
+## 0.27.0 listening room
+
+The approved desktop/mobile presentation uses compact, single-column station rows,
+Paper by default for new profiles, retained Night preferences, clearer navigation,
+and quieter bundled-map controls. Runtime `index-a673e435.js` and shell v58 carry
+version 0.27.0. Discovery and account behavior retain their existing contracts.
+The large-catalog regression covers finding an unrendered station, end-of-list
+selection, no-result reset and a cached directory reload while its source is down.
+See [release identity and gates](RELEASE-0.27.0.md) and [qualification](QUALIFICATION-0.27.0.md).
+The release provenance and Spaces operations record retain the final commit,
+exact-head CI, production parity and binary verification receipts.
+
 ## 0.26.0 desktop distribution
 
 The [release record](RELEASE-0.26.0.md) and [installation guide](INSTALLATION.md)

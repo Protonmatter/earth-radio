@@ -197,7 +197,7 @@ export function sanitizeUiState(raw, viewportWidth = 1440) {
     locale: normalizeLocale(src.locale),
     localeExplicit,
     glassLog: src.glassLog === true,
-    palette: src.palette === 'paper' ? 'paper' : 'night'
+    palette: src.palette === 'paper' || src.palette === undefined ? 'paper' : 'night'
   };
 }
 
@@ -1528,6 +1528,13 @@ function bindActions() {
     if (target.closest('[data-er-overflow]')) {
       const sheet = byId('er-overflow');
       setOverflowOpen(Boolean(sheet?.hidden), target.closest('[data-er-overflow]'));
+      return;
+    }
+
+    // Quick picks keep their delegated runtime handlers; dismiss only their
+    // new overflow presentation after that handler has received the click.
+    if (target.closest('#er-overflow [data-dashboard-action]')) {
+      setOverflowOpen(false);
       return;
     }
 

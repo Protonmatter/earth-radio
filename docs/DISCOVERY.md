@@ -5,13 +5,62 @@ The November 2026 candidate adds maintained discovery modules to the recovered a
 ## Listener controls
 
 - **Find a station:** inline search across station name, country, country code, genre tags, and language. All terms must match. Accents are normalized, non-Latin scripts are retained, and words of 5–32 characters allow one edit for spelling mistakes. Search is debounced by 140 ms and waits for IME composition to finish. Search never starts playback.
-- **Refine selection:** exact genre and language facets, minimum declared bitrate, HTTPS-only selection, and a switch to hide stations that recently failed on this device. These are additional constraints on the existing country, favorites, recent, and genre-collection filters. The disclosure starts closed on phones.
+- **Filters:** exact genre and language facets, minimum declared bitrate, HTTPS-only selection, and a switch to hide stations that recently failed on this device. These are additional constraints on the existing country, favorites, recent, and genre-collection filters. The disclosure starts closed on phones.
 - **Selection method:** Best match, Reliability, Explore the world, Similar to playing, Highest bitrate, or Name A–Z. Similar is unavailable until there is a selected station. The default keeps Recent in chronological order and preserves the Similar view's ranking.
 - **Find my next station:** selects an alternative from the current visible pool. It excludes the current stream, duplicate stream endpoints, and stations within the failure cooldown. On HTTPS pages it only selects HTTPS streams. With no suitable alternative, it explains how to broaden discovery.
 - **Details:** opens an accessible station dialog with country/language/format and the factors that influenced ranking. Escape closes the dialog; the dialog's Play action selects that exact station. Merely opening details does not start playback.
 - **Atlas controls:** Search this area captures the current geographic rectangle and, on first use in the tab, loads a bounded world directory of mapped stations. It switches to All and clears conflicting country selections while retaining genre, language, query and quality constraints. Panning afterwards does not silently change the rectangle. Clear area is available on the map, including phones. Fit stations fits the current pool's valid locations. On air focuses the selected station. Missing locations are counted separately.
 
 Reset clears the new discovery controls and map rectangle. The existing empty-state Clear filters action clears both the new controls and the runtime's traditional filters.
+
+## Approved listening-room presentation (November 7)
+
+`site/assets/listening-room.css` is the final presentation override, loaded after
+the previous stylesheets. It implements the approved ivory, forest-green and
+copper concept with a 208px desktop rail, platform serif headings, station artwork,
+compact rows, quieter map controls and the existing mobile safe-area shell. Paper
+is the default for a new profile; explicit saved Night/Paper choices are preserved.
+English navigation uses Map, Browse, Favorites and Account. Other locales retain
+their maintained translations. The displayed station data comes from the directory.
+Search precedes genre shortcuts in the reading/focus order. The existing quick-pick
+section moves intact into More actions, preserving its delegated runtime handlers.
+The map's station card is bounded and scrollable so it cannot cover the atlas;
+the full Now Playing view remains available from the bottom player.
+
+The recovered virtualizer's presentation constants now use an **88px row stride,
+12px gap and one column**. Its existing renderer, click handlers, filtering,
+scroll-window calculation, network requests and account logic are preserved.
+The source reference carries the same constants. The runtime is fingerprinted
+again using `node scripts/fingerprint-runtime.mjs`, with provenance retained in
+`docs/provenance/hardening-overlays.json`. The responsive adapter measures the
+actual stride and sizes the visible cards to 76px. CSS alone cannot safely change
+the virtualizer's stride. Details remain available on every station row.
+
+The bundled Natural Earth land atlas remains tile-free. The concept's illustrative
+city labels and country boundaries are not asserted as data that this land-only
+dataset contains. No font service, map provider, tracking or dependency was added.
+
+Validation: `npm run verify`, `npm run test:e2e`, and `npm run test:rendered`.
+Rendered tests cover virtual-row geometry, touch targets, narrow/large windows,
+zoom, RTL, locale and modal navigation. Fixture playback verifies interactions;
+it does not qualify live station availability or fidelity. See the final task
+report for observed results. This is a local candidate, not a published release.
+
+November 7 local results: `npm run verify` passed (415 tests, three platform skips,
+metadata/desktop smokes, 48 staged site files and 241 source hashes); all 57
+Chromium end-to-end tests and all 42 Electron rendered scenarios passed. Evidence
+is under the ignored `.build/ui-*.log` and `.build/evidence/` paths. The rendered
+harness clears its test database between scenarios to prevent stale locale and
+favorites from contaminating screenshots. Browser playback helpers wait for the
+application's settled playing state before issuing transport commands. The local
+preview also loaded the cached directory and displayed Classic Vinyl HD's details.
+Live audio and authentication were not requalified for this visual change.
+
+Rollback: revert this candidate's tracked changes as a unit (including the hashed
+runtime, references and provenance), rebuild with `npm run build:web`, and run
+`npm run verify`. If a candidate was ever deployed, publish the prior verified
+source with a newer shell-cache name so installed clients receive the rollback.
+Never republish a changed artifact under an existing desktop release tag.
 
 ## On-demand world map coverage
 

@@ -357,7 +357,15 @@ function seedScript(scenario) {
     locale: scenario.locale || 'en',
     palette: scenario.theme === 'dark' ? 'night' : 'paper'
   };
-  return `(() => {
+  return `(async () => {
+    // Each scenario owns a fresh profile. LocalStorage-only seeding otherwise
+    // leaves an earlier locale/favorites record in the authoritative IndexedDB.
+    await new Promise((resolve, reject) => {
+      const request = indexedDB.deleteDatabase('earthRadio');
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(request.error);
+      request.onblocked = () => reject(new Error('Previous rendered scenario retained its database'));
+    });
     localStorage.clear();
     localStorage.setItem('earthRadio.preferences.v1', ${JSON.stringify(JSON.stringify(preferences))});
     localStorage.setItem('earthRadio.favorites.v2', ${JSON.stringify(JSON.stringify(favorites))});

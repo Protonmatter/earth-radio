@@ -15,9 +15,9 @@ export default {
 
   'nav.listen': 'Browse',
   'nav.search': 'Search',
-  'nav.map': 'Atlas',
-  'nav.saved': 'Kept',
-  'nav.you': 'You',
+  'nav.map': 'Map',
+  'nav.saved': 'Favorites',
+  'nav.you': 'Account',
   'nav.label': 'Primary destinations',
 
   'header.search': 'Search stations',
@@ -34,8 +34,8 @@ export default {
 
   'dest.listen': 'Browse',
   'dest.search': 'Search',
-  'dest.map': 'Atlas',
-  'dest.saved': 'Kept',
+  'dest.map': 'Map',
+  'dest.saved': 'Favorites',
   'dest.you': 'You',
 
   'listen.intro': 'Listen around the world.',
@@ -52,7 +52,7 @@ export default {
   'listen.worksNowTitle': 'High-confidence streams',
   'listen.worksNowMeta': 'Strong quality stations',
 
-  'grid.all': 'All Stations',
+  'grid.all': 'Stations',
   'grid.favorites': 'Favorites',
   'grid.filtered': 'Filtered Stations',
   'grid.recent': 'Recently Played',

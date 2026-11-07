@@ -51,7 +51,7 @@ test('area search loads mapped stations outside the initial featured-country cat
   await expect(page.getByRole('button', { name: 'Search this area' })).toBeEnabled();
   expect(geoRequests).toHaveLength(1);
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.getByRole('button', { name: 'Atlas', exact: true }).click();
+  await page.getByRole('button', { name: 'Map', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Clear map area' })).toBeVisible();
   await page.getByRole('button', { name: 'Clear map area' }).click();
   await expect(page.getByRole('button', { name: 'Clear map area' })).not.toBeVisible();
@@ -89,7 +89,7 @@ for (const mode of ['favorites', 'recent']) {
     await expect(toggle).toHaveClass(/header-btn--active/);
     await page.getByRole('button', { name: 'Search this area' }).click();
     await expect(toggle).not.toHaveClass(/header-btn--active/);
-    await expect(page.locator('#grid-title')).toHaveText('All Stations');
+    await expect(page.locator('#grid-title')).toHaveText('Stations');
     await expect(page.locator('#station-grid .station-card').first()).toBeVisible();
   });
 }

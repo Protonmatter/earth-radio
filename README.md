@@ -2,11 +2,11 @@
 
 Explore live radio stations around the world in a recovered, auditable web and Electron application.
 
-Release **0.26.0** adds Google, GitHub and verified email sign-in to Windows and macOS, encrypted session recovery, and account sync for favorites, recent stations and preferences. It retains inline station discovery, genre/language/bitrate facets, explainable ranking, similar-station selection and the bundled vector listening atlas. Use **Search this area** to load the bounded worldwide mapped directory. See [Discovery](docs/DISCOVERY.md), [Map data](docs/MAP_DATA.md), and the [0.26.0 release record](docs/RELEASE-0.26.0.md) for behavior, provenance and qualification limits.
+Release **0.27.0** introduces the approved ivory, forest-green and copper interface, compact station rows, clearer navigation and a quieter map. It preserves Google, GitHub and email sign-in, encrypted desktop sessions, account sync, inline discovery, ranking, similar-station selection and worldwide area search. See [Discovery](docs/DISCOVERY.md), [Map data](docs/MAP_DATA.md), and the [0.27.0 release record](docs/RELEASE-0.27.0.md) for behavior, provenance and qualification limits.
 
 Live production site: **https://earth-radio.pages.dev/**. Public repository: **https://github.com/Protonmatter/earth-radio**.
 
-See the [installation guide](docs/INSTALLATION.md) for Windows ARM64, macOS Apple Silicon/Intel, and Safari Home Screen installation on iPhone/iPad. Get desktop downloads, checksums and build provenance from the [v0.26.0 release page](https://github.com/Protonmatter/earth-radio/releases/tag/v0.26.0). Windows uses the accepted local signer; macOS builds are explicitly labeled unnotarized.
+See the [installation guide](docs/INSTALLATION.md) for Windows ARM64, macOS Apple Silicon/Intel, and Safari Home Screen installation on iPhone/iPad. Get desktop downloads, checksums and build provenance from the [v0.27.0 release page](https://github.com/Protonmatter/earth-radio/releases/tag/v0.27.0). Windows uses the accepted local signer; macOS builds are explicitly labeled unnotarized.
 
 This repository was reconstructed from the installed Earth Radio 0.24.0 application and two user-supplied archives. It is not a byte-for-byte reproduction of the original development repository. The newest runnable installed assets were selected where they differed from older archived source; those decisions are recorded in [docs/PROVENANCE.md](docs/PROVENANCE.md).
 

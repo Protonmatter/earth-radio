@@ -82,12 +82,17 @@ test.describe('directory and playback selection', () => {
     const playButton = page.locator('#btn-play');
     const paused = () => page.evaluate(() => document.getElementById('audio-player')?.paused ?? true);
 
+    // paused becomes false before play() settles. Wait for the application's
+    // playing state too; otherwise the test pauses a still-pending play promise
+    // and exercises the separate interrupted-play/error-skip path.
     await page.waitForFunction(() => document.getElementById('audio-player')?.paused === false);
+    await expect(page.locator('#player-bar')).toHaveClass(/is-playing/);
     for (let cycle = 0; cycle < 2; cycle += 1) {
       await playButton.click();
       await expect.poll(paused, { timeout: 5000 }).toBe(true);
       await playButton.click();
       await expect.poll(paused, { timeout: 5000 }).toBe(false);
+      await expect(page.locator('#player-bar')).toHaveClass(/is-playing/);
     }
     await expect(page.locator('#player-station')).toHaveText('E2E Berlin Techno');
     await expect(page.locator('.station-card--active')).toHaveCount(1);
@@ -113,8 +118,16 @@ test.describe('map progressive disclosure', () => {
         { timeout: 5000 }
       ).catch(() => {});
     }
-    await expect(markers.first()).toBeVisible();
-    return markers;
+    // SVG paths outside the clipped map can still satisfy Playwright :visible.
+    // The rail/split geometry changes which marker is first; select a genuinely
+    // exposed dot using its center and browser hit testing, without force clicks.
+    const index = await markers.evaluateAll(paths => paths.findIndex(path => {
+      const r = path.getBoundingClientRect(), map = path.closest('#map').getBoundingClientRect();
+      const x = r.left + r.width / 2, y = r.top + r.height / 2;
+      return x > map.left && x < map.right && y > map.top && y < map.bottom && document.elementFromPoint(x, y) === path;
+    }));
+    expect(index, 'no station marker is exposed inside the map viewport').toBeGreaterThanOrEqual(0);
+    return markers.nth(index);
   }
 
   test('hovering a station dot discloses the station before selection', async ({ page }) => {

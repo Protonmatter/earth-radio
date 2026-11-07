@@ -93,16 +93,16 @@ test('responsive UI rendered matrix preserves layout, actions, and locale contra
   // The ui-refresh layer re-ramps the palette: mobile header/body take the
   // refresh surface and background, and the primary action takes --er2-action.
   const palette = byId(payload.results, 'mobile-listen-390x844').probe.palette;
-  assert.equal(palette.header, 'rgb(255, 253, 248)');
-  assert.equal(palette.body, 'rgb(244, 239, 228)');
-  assert.equal(palette.primary, 'rgb(138, 75, 40)');
-  assert.equal(palette.map, 'rgb(223, 236, 234)');
+  assert.equal(palette.header, 'rgb(245, 241, 233)');
+  assert.equal(palette.body, 'rgb(245, 241, 233)');
+  assert.equal(palette.primary, 'rgb(169, 77, 48)');
+  assert.equal(palette.map, 'rgb(153, 188, 181)');
 
   const darkPalette = byId(payload.results, 'mobile-dark-390x844').probe.palette;
-  assert.equal(darkPalette.header, 'rgb(26, 24, 20)');
-  assert.equal(darkPalette.body, 'rgb(18, 17, 14)');
-  assert.equal(darkPalette.primary, 'rgb(212, 165, 116)');
-  assert.equal(darkPalette.map, 'rgb(16, 44, 50)');
+  assert.equal(darkPalette.header, 'rgb(20, 43, 39)');
+  assert.equal(darkPalette.body, 'rgb(20, 43, 39)');
+  assert.equal(darkPalette.primary, 'rgb(169, 77, 48)');
+  assert.equal(darkPalette.map, 'rgb(25, 60, 57)');
 
   const nowPlaying = byId(payload.results, 'mobile-nowplaying-390x844').probe;
   assert.equal(nowPlaying.nowPlaying.visible, true);

@@ -66,9 +66,10 @@ import type { DomainPack, Station } from './core/types';
 
 type View = 'all' | 'favorites' | 'recent' | 'similar';
 
-const ROW_HEIGHT = 168;
+const ROW_HEIGHT = 88;
 const CARD_GAP = 12;
-const MIN_COLUMN_WIDTH = 210;
+// A single reading column, including when the map is collapsed.
+const MIN_COLUMN_WIDTH = 1_000_000;
 const MAX_AUTO_SKIPS = 8;
 
 let allStations: Station[] = [];
