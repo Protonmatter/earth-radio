@@ -12,7 +12,7 @@ The [0.26.0 qualification record](QUALIFICATION-0.26.0.md) separates current
 automated/live account evidence, the isolated Windows installer/upgrade tests,
 artifact provenance and remaining release gates.
 
-## Current qualification boundary (2026-11-04)
+## Current qualification boundary (2026-11-06)
 
 The hosted project allows public signups, manual identity linking and confirmed email.
 Google's Earth Radio project is **External / In production**, with only OpenID, profile
@@ -22,15 +22,23 @@ the Supabase callback. These configuration checks do not prove a fresh outsider 
 **Sender infrastructure update (2026-11-06):** the owner registered
 `earthradio.stream` for three years, through November 6, 2029. The registry and
 Cloudflare/Google public DNS resolvers confirmed its Cloudflare delegation. WHOIS
-redaction is enabled. DNSSEC activation was requested; public DNSKEY records were
-visible, but the parent DS record was not yet visible at this check, so a complete
-validated delegation is not claimed.
+redaction is enabled. DNSSEC activation completed: at 22:10 UTC, Cloudflare and Google
+each returned authenticated parent DS, zone DNSKEY and sender DKIM TXT answers.
 
-**Public email remains unqualified:** Resend account setup, verification of
-`auth.earthradio.stream`, restricted credential entry, custom SMTP and real external
-delivery are still pending. No SMTP credential has been created or configured by this
-setup. Supabase's default mailer is not a public email delivery service. Do not remove
-email confirmation or advertise arbitrary-address email registration as qualified.
+**Live public email passed with an authorized external Gmail inbox:** the Resend account is connected and
+`auth.earthradio.stream` is Verified. Its DKIM TXT and two DNS-only sending CNAME
+records matched through Cloudflare and Google public DNS. Open/click tracking and
+receiving are disabled. A sending-only key restricted to this domain was saved in
+Windows Credential Manager with encrypted readback, then used to enable custom SMTP.
+The saved setting survived a dashboard reload. A new email account received its real
+confirmation message in the Inbox with SPF, DKIM and DMARC passing, redeemed the
+link on production web, reached Synced and retained its session after reload.
+The Windows ARM64 client then completed a fresh email PKCE callback, imported the
+web favorite and volume, and synced a volume change back to web. After a normal quit
+and relaunch with diagnostic hooks removed, it restored the encrypted session,
+favorite and 61% volume and reached Synced without another link. This establishes
+the tested Gmail path; other mailbox providers remain untested. No credential value
+belongs in documentation or source. Keep email confirmation enabled.
 
 Windows ARM64 source qualification exercised the real Electron sandbox/preload/main
 IPC, loopback PKCE callback, DPAPI-backed asynchronous safeStorage encryption, encrypted
@@ -51,16 +59,19 @@ GoTrue/Mailpit/PostgREST integration passed on `7c07085`. Follow the
 [current PR checks](https://github.com/Protonmatter/earth-radio/pull/20/checks) for
 qualification of later changes; earlier binaries do not establish current-source parity.
 
-Fresh outside-team signup, public email delivery, packaged installer interaction and a
-physical Mac provider-consent test remain separate gates. The existing v0.25.1 assets
-remain immutable. No publication claim is made for this candidate.
+Fresh outside-team Google/GitHub signup, other mailbox providers and a physical Mac
+provider-consent test remain coverage limits. The owner-controlled email alias was a
+new Supabase account. The original Earth Radio login was subsequently restored
+through GitHub, with Synced status and the original 74% volume verified after reload;
+GitHub account settings were not changed. The existing v0.25.1 assets remain immutable.
+Follow the release record and current PR for publication status.
 
 ## Desktop use
 
 1. Open **Account**, then **Continue with Google** or **Continue with GitHub**.
 2. Complete the existing provider's sign-in in the default browser and return to Earth
    Radio. Keep the app open. A successful return says that sign-in completed.
-3. For email (once public SMTP is qualified), request a link and open it on the same
+3. For email, request a link and open it on the same
    computer within ten minutes. Restarting the app or starting a later attempt cancels
    the earlier verifier. Use **Cancel pending sign-in** to abandon an attempt.
 4. Check the account identity and **Synced** status before checking another device.
@@ -90,20 +101,25 @@ OS users, not arbitrary software already running as the signed-in Windows user.
 
 The owned sender domain is `earthradio.stream`. The selected deployment layout is
 `auth.earthradio.stream` with sender `Earth Radio <signin@auth.earthradio.stream>`.
-Use the existing Cloudflare account for its DNS. Registration is complete; provider
-account/terms and private credential entry remain required before SMTP can be enabled.
+Use the existing Cloudflare account for its DNS. Registration, the Resend account and
+sender verification, encrypted credential backup, saved SMTP and the authorized
+external Gmail signup/native-return test are complete.
 The Pages hostname cannot serve as a domain the owner controls for email DNS. Keep the
 existing production web origin and approved return URLs during this sender setup.
 
-1. Registration is complete. Create/sign into the owner's Resend account and complete
-   the required account verification and service agreement step. Any additional paid
-   plan or billing commitment needs the owner's review; none is required by this plan.
-2. Add the `auth` sending subdomain in Resend. Add **only the exact DNS records shown
-   by Resend** to the authoritative DNS zone. Preserve existing MX and unrelated mail
-   records. Wait for the domain's Verified status; retain a redacted DNS receipt.
-3. Create a sending-only key restricted to that domain where the service supports it.
-   Enter it locally into Supabase SMTP's password field; never paste it into chat,
-   shell arguments, screenshots, GitHub, a workflow variable or repository files.
+1. Registration and the Resend account/service-agreement step are complete. Any
+   additional paid plan or billing commitment needs the owner's review; none was
+   selected by this setup.
+2. The sending subdomain is Verified. The exact provider-generated DKIM TXT and
+   `rsend.auth`/`send.auth` CNAME records are published, with proxying disabled. The
+   optional `_dmarc` TXT is the initial `v=DMARC1; p=none;` monitoring policy. Keep
+   these records; preserve unrelated DNS and retain the verification receipts.
+3. The `Earth Radio Supabase Auth` key has Sending access restricted to this domain.
+   Its value is backed up in the owner's Windows Credential Manager and configured
+   in Supabase SMTP. Never paste the key
+   into chat, shell arguments, screenshots, GitHub, workflow variables or repository
+   files. If the one-time key view is lost before backup, create a replacement and
+   revoke the unused key after the replacement is securely stored and verified.
 4. In Supabase Authentication → Emails → SMTP, configure host `smtp.resend.com`,
    port `465`, username `resend`, password the Resend API key, sender name `Earth Radio`,
    and the verified sender address. Keep email confirmation on and review the hosted

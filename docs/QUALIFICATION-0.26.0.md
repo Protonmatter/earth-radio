@@ -114,24 +114,60 @@ November 6, 2026 and expiration on November 6, 2029. Cloudflare and Google publi
 resolvers returned `megan.ns.cloudflare.com` and `yahir.ns.cloudflare.com`.
 
 Registrar status is Active, WHOIS redaction is enabled and transfers are locked.
-DNSSEC activation was requested through the registrar. DNSKEY records are public;
-the parent DS record was still absent at the check, so fully authenticated DNSSEC
-delegation remains pending. Cloudflare manages the DS publication; no manual DS value
-was invented or submitted.
+DNSSEC activation was requested through the registrar. The first check found public
+DNSKEY records while parent DS publication was pending. By 22:10 UTC, Cloudflare and
+Google public resolvers each returned authenticated, successful DS, DNSKEY and DKIM
+TXT answers: six checks passed. Cloudflare managed the DS publication; no manual DS
+value was invented or submitted.
 
-The selected email provider remains Resend, with the proposed sending subdomain
-`auth.earthradio.stream`. Account setup, exact provider-generated DNS records,
-verification and private SMTP credential entry remain pending. No SMTP/provider
-credential or private registrant/payment data belongs in repository evidence. This
-domain setup does not move the website or change its approved auth return URLs.
+The Resend account is connected and `auth.earthradio.stream` is Verified in North
+Virginia (`us-east-1`). Open/click tracking and receiving are disabled. The initially
+empty Cloudflare zone now contains exactly the provider-generated DKIM TXT, two
+DNS-only sending CNAMEs and optional DMARC monitoring TXT. All four values matched
+through Cloudflare and Google public resolvers: eight checks passed. Resend then
+reported the domain and three required records Verified.
+
+A sending-only key restricted to this domain was saved in Windows Credential Manager
+and encrypted readback passed. Supabase custom SMTP was saved and retained enabled
+state after reload. The credential value, private registrant contacts
+and payment data are excluded from repository evidence. This domain setup does not
+move the website or change its approved auth return URLs.
+
+## Live email and restart follow-up (2026-11-06)
+
+A new owner-authorized external Gmail alias received the production confirmation
+message in the Inbox. SPF, DKIM and DMARC passed. Redemption created a confirmed
+email identity, consumed the callback and reached Synced. A browser reload restored
+the session; read-only backend checks confirmed the account and three configuration
+documents. A saved favorite and 55% volume synced to the Windows ARM64 client after
+a real email PKCE callback returned through the approved loopback route.
+
+The native callback passed its one-time verifier check and token exchange (HTTP 200).
+Changing native volume to 61% updated the backend revision and the web client's normal
+JSON export. After a normal quit, the same isolated native profile was relaunched
+without diagnostic fetch hooks. Its encrypted session restored the same account,
+favorite and 61% volume, and the account dialog reached Synced without a new email.
+The restarted QA app was then closed normally. Local nonsecret receipts and UI
+captures are retained under `.build/auth-qualification/`; tokens, verifiers and mail
+links are excluded.
+
+An earlier attempt used an older message in Gmail's cached conversation after a
+newer request had canceled that attempt. Refreshing and selecting the newest link
+completed the flow; no production code change was needed. The qualification harness
+also explicitly isolated both Electron userData and sessionData. Neither adjustment
+changed the installed application or the original user's profile.
+
+After testing, the original Earth Radio login was restored through GitHub. The
+account displayed GitHub linked and Synced; reload restored its original 74% volume.
+The original cloud documents remained present. GitHub account credentials, security
+settings and permissions were not changed. The test email identity is retained.
 
 ## Open acceptance gates
 
-- **Public email:** domain selection/registration is complete; verified Resend
-  sender, local credential entry, custom SMTP and real external delivery remain.
-  Confirmation stays enabled. Registration alone does not qualify email delivery.
-- **Fresh signup:** authorized outside-team Google/GitHub identities and external
-  inboxes must prove new-account creation, confirmation and cross-client sync.
+- **Delivery breadth:** the new external Gmail email account passed signup,
+  confirmation, web/native sync and encrypted native restart. Other mailbox providers
+  and fresh outside-team Google/GitHub identities remain untested. Confirmation stays
+  enabled; existing-owner OAuth success is not fresh outsider OAuth evidence.
 - **Physical device coverage:** installed iOS/iPadOS account returns and a physical
   Mac provider/upgrade path remain unqualified. Native CI and earlier Home Screen
   playback/map feedback do not substitute for those account checks.

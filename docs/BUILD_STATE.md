@@ -7,7 +7,7 @@ The [0.26.0 qualification record](QUALIFICATION-0.26.0.md) now includes the
 86-file installed payload parity, saved favorite/55% volume preservation, clean
 candidate startup and both uninstall paths passed. The original 0.24.0 executable
 and registration stayed unchanged. This does not claim an original-identity
-upgrade or close the public-email/fresh-signup/physical-device gates.
+upgrade or establish fresh outside-team OAuth signup or physical-device account coverage.
 
 [PR #20](https://github.com/Protonmatter/earth-radio/pull/20) adds main-owned native
 PKCE sign-in, OS-encrypted sessions, restricted account IPC, single-instance ownership
@@ -53,17 +53,28 @@ the source SHA changes; no existing release tag or published asset is replaced.
 
 **Sender infrastructure update (2026-11-06):** the owner registered
 `earthradio.stream` through November 6, 2029. Registry and public DNS readback confirmed
-its Cloudflare nameservers; WHOIS redaction is enabled. DNSSEC activation was requested
-and DNSKEY records are published, with parent DS publication still pending at the
-check. The selected sender is `Earth Radio <signin@auth.earthradio.stream>`.
+its Cloudflare nameservers; WHOIS redaction is enabled. DNSSEC is now validated: both
+public resolvers authenticated the DS, DNSKEY and DKIM TXT answers at 22:10 UTC.
+The selected sender is `Earth Radio <signin@auth.earthradio.stream>`.
 
-**Public email is still gated:** Resend account setup, sender verification, restricted
-credential entry, custom SMTP and real external delivery remain pending. The approved
-native loopback return was saved in Supabase; existing web origins, hosted provider
-settings and schema are preserved. Production and published v0.25.1 downloads remain
-separate from this candidate until its release gates close. The fresh 2026-11-06 npm
-audit reported zero known advisories; all nine PR checks passed on `d3469f2` before
-this documentation follow-up.
+**Live email and restart passed (2026-11-06):** Resend is connected and the sender domain and required
+records are Verified. All four DNS values, including the initial DMARC monitoring
+policy, matched through two public resolvers. A domain-restricted sending key was
+stored in Windows Credential Manager with encrypted readback, then configured in
+Supabase SMTP and reload-verified. A new authorized external Gmail alias completed
+real confirmation on production web, with Inbox delivery and SPF/DKIM/DMARC passing.
+The Windows ARM64 client completed a live email PKCE return, imported the web favorite
+and 55% volume, and synced a change to 61% back to web. A normal quit/relaunch without
+diagnostic hooks restored its encrypted session, favorite and 61% volume and reached
+Synced. The QA application was closed normally. The original Earth Radio login was
+restored through GitHub, with Synced and the original 74% volume verified after reload;
+GitHub account settings were not changed. Other mailbox providers, fresh outsider
+OAuth identities and physical Mac/installed iOS account returns remain untested.
+The approved native loopback return was saved in Supabase; existing web origins,
+hosted provider settings and schema are preserved. Production and published v0.25.1
+downloads remain separate from this candidate until its release gates close. The
+fresh 2026-11-06 npm audit reported zero known advisories; all nine PR checks passed
+on `d587d8d` before this sender-verification documentation follow-up.
 
 ## 0.25.1 safe-area correction and Git delivery
 
