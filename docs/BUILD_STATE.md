@@ -1,5 +1,20 @@
 # Build state
 
+## 0.26.0 desktop distribution
+
+The [release record](RELEASE-0.26.0.md) and [installation guide](INSTALLATION.md)
+cover Windows ARM64 setup/portable, Apple Silicon/Intel unnotarized DMGs, verified
+email sign-in and Home Screen installation. Final distribution requires exact-source
+CI, packaged-source parity, signatures/DMG verification and release download readback.
+`BUILD-PROVENANCE.json` on the release carries the final source and binary identities.
+
+PR #20 merged as `7998245b2d6b056947149149bed1c40abd83e3b7`, with all nine PR and
+main checks passing. Cloudflare production `af9d0bf7-492e-4aea-86bd-23ab737a1f46`
+served all 47 public files with matching hashes, runtime `index-8fd01303.js` and an
+activated controlling v56 worker. Live map search returned 10,000 mapped stations.
+The desktop distribution follow-up changes documentation/manifests only; compare its
+final tag to this application-source cut before claiming payload parity.
+
 ## 0.26.0 account candidate — 2026-11-04
 
 The [0.26.0 qualification record](QUALIFICATION-0.26.0.md) now includes the

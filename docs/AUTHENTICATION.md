@@ -1,6 +1,6 @@
 # Account sign-in and synchronization
 
-The 0.26.0 candidate adds Windows/macOS account support. Google and GitHub use the
+Version 0.26.0 adds Windows/macOS account support. Google and GitHub use the
 default system browser. Email uses a verified magic link. Favorites, recent stations
 and preferences use the existing per-user Supabase configuration documents and RLS.
 Listening does not require an account.

@@ -23,7 +23,7 @@ For discovery smoke, enter a multiword name/place query, a non-Latin query, and 
 
 For atlas smoke, verify visible coastlines in both Night/Paper palettes without CARTO/tile requests, pan and zoom, capture Search this area, clear it, fit the current results, and focus the playing station. Stations without coordinates must appear in the list and the unmapped count. Directory refreshes must update marker payloads as well as styles. Verify offline coastlines after a successful worker install; fresh directories and live audio still require connectivity.
 
-After an audited recovered-runtime edit run `node scripts/fingerprint-runtime.mjs`, then regenerate the release manifest after all edits settle. Never reuse an immutable filename with different bytes. The discovery candidate uses worker cache `earth-radio-shell-v52-safe-area-0-25-1` and precaches all maintained discovery/map modules and versioned icon PNGs together. Branding and the manifest use network-first delivery with an offline shell-cache fallback.
+After an audited recovered-runtime edit run `node scripts/fingerprint-runtime.mjs`, then regenerate the release manifest after all edits settle. Never reuse an immutable filename with different bytes. Version 0.26.0 uses worker cache `earth-radio-shell-v56-account-readiness-0-26-0` and precaches the account adapter, maintained discovery/map modules and versioned icon PNGs together. Branding and the manifest use network-first delivery with an offline shell-cache fallback.
 
 Area-search qualification must start with a country absent from the initial pool,
 not merely click the button over existing markers. Verify a mapped-directory

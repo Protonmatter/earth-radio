@@ -30,8 +30,8 @@
     },
     {
       "path": "docs/AUTHENTICATION.md",
-      "bytes": 11228,
-      "sha256": "8a52766d6da902c7b6b959e60ba99477d3f3095ccda4f45669cb65dd7e5ba93c"
+      "bytes": 11222,
+      "sha256": "4c69e5a37556165f734d6785a9bb68724c025b42ffb94f2f417a58a8dfb864b6"
     },
     {
       "path": "docs/branding/earth-radio-icon-master.png",
@@ -45,8 +45,8 @@
     },
     {
       "path": "docs/BUILD_STATE.md",
-      "bytes": 21286,
-      "sha256": "3adbd608e1ad20cfc6fd2b415a5d34178d6bbc2470419340546aa8ca3cc1a2a2"
+      "bytes": 22233,
+      "sha256": "d57fe623f5f51de62668a545613f9859f6fdabbab7566584b5a34238040c47a1"
     },
     {
       "path": "docs/CLOUDFLARE_DEPLOYMENT.md",
@@ -70,8 +70,8 @@
     },
     {
       "path": "docs/INSTALLATION.md",
-      "bytes": 6138,
-      "sha256": "108af793b5209e11ae7f3bfbba0a308dc12a5e32291a5b9ad38232600d4c7ea6"
+      "bytes": 7765,
+      "sha256": "26e94e72e0d3f5494a5d3bd6f48719a8f884df48b936385f81648ce4f559abe7"
     },
     {
       "path": "docs/LIVE_METADATA.md",
@@ -85,8 +85,8 @@
     },
     {
       "path": "docs/OPERATIONS.md",
-      "bytes": 9283,
-      "sha256": "1660b85243539308816868de58d91e9a930cc1f7865e5977ea695b24ba53e1fa"
+      "bytes": 9299,
+      "sha256": "c9c57c12e7a33a121fd0a86648b927e3dad66794b8697c5146d67d51b054e4a9"
     },
     {
       "path": "docs/PROVENANCE.md",
@@ -105,8 +105,8 @@
     },
     {
       "path": "docs/QUALIFICATION-0.26.0.md",
-      "bytes": 11784,
-      "sha256": "ea2f429b802b4a87c9af76c6bbdf492d2500e1d817ef294a2492f11ecb7d824f"
+      "bytes": 11999,
+      "sha256": "8e62c492acb4091b57d642e5e7a1ecacb899e836d18ed6141473aa6b77c1d8b7"
     },
     {
       "path": "docs/QUALIFICATION-2026-11-03.md",
@@ -149,9 +149,14 @@
       "sha256": "9aec4cdeca5651c5774ff9cdd1ab8c1b2ea93857b44d5bcefdf6629891eebf9d"
     },
     {
+      "path": "docs/RELEASE-0.26.0.md",
+      "bytes": 4578,
+      "sha256": "d1f3eb76403cfa19e3c4ea024ea07760b1b102a0909f176db86b07174ca512db"
+    },
+    {
       "path": "docs/RELEASE.md",
-      "bytes": 2019,
-      "sha256": "cbf3fa2c9431cf127ce74ac5a82eed077964a1cf428e5754f47527fdf949b3ff"
+      "bytes": 1954,
+      "sha256": "efab90f6dc5bd3c693f44812f72f6bd73886f82474fad5ec7071a6cfaf22a1d6"
     },
     {
       "path": "docs/SECURITY.md",
