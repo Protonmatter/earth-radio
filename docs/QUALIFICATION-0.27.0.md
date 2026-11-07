@@ -21,6 +21,14 @@ keyboard navigation and split sizing. Each scenario starts with a fresh test
 database. Playback helpers wait for settled application state before the next
 transport command; exposed map markers are selected using browser hit testing.
 
+The first post-merge CI run exposed a real Now Playing label synchronization defect
+under suspended animation frames. The semantic observer now coalesces microtasks,
+and the canonical translation key follows the audio's paused state. An adversarial
+browser regression suspends animation frames and reproduces the translation overwrite,
+then requires both canonical and sheet labels to recover and follow pause/resume.
+The map idempotency test also retains the exact marker element rather than a DOM
+index that can change after selection updates ranking/health.
+
 ## Release evidence
 
 Run the documented local checks and all exact-head hosted CI checks. The CI matrix

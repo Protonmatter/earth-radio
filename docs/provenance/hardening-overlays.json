@@ -154,10 +154,10 @@
         "sha256": "b09e3207532fe7f47d14e9c53804d7e8caf31cad2fcb2c652b728a93871ea094"
       },
       "current": {
-        "bytes": 3632,
-        "sha256": "d103f3716c308877e3736e84971eff30037aef2ab5f27cc56d787f18b67ea291"
+        "bytes": 3628,
+        "sha256": "c5c26ad6d19c94db6a71fbe33a1218db9abd60f84b8331479408cbe5bd2e57fc"
       },
-      "reason": "Use network-first navigation/configuration updates, keep hashed recovered assets cache-first, reload overlay installation requests so stale browser HTTP entries cannot seed the new service-worker cache, force-cache the hashed runtime bundles, keep the previous worker when reload precaching fails, and precache the UI refresh stylesheet. Precache pinned-stations.js for LISTEN.moe catalog pinning. Precache atlas-lock.css/js and bump the shell cache generation to v46 so clients pick up Night/Paper, glass-on-log, and the four-tab phone chrome. November 2026: add the station discovery controls/details dialog and vector-atlas controls; load and coherently precache the maintained discovery/map assets under worker generation v47. Cache the generated icon PNGs and serve branding/manifest requests from the shell while offline. Native account integration and shared public deployment configuration (2026-11-04). Approved listening-room presentation and shell cache update (2026-11-07)."
+      "reason": "Use network-first navigation/configuration updates, keep hashed recovered assets cache-first, reload overlay installation requests so stale browser HTTP entries cannot seed the new service-worker cache, force-cache the hashed runtime bundles, keep the previous worker when reload precaching fails, and precache the UI refresh stylesheet. Precache pinned-stations.js for LISTEN.moe catalog pinning. Precache atlas-lock.css/js and bump the shell cache generation to v46 so clients pick up Night/Paper, glass-on-log, and the four-tab phone chrome. November 2026: add the station discovery controls/details dialog and vector-atlas controls; load and coherently precache the maintained discovery/map assets under worker generation v47. Cache the generated icon PNGs and serve branding/manifest requests from the shell while offline. Native account integration and shared public deployment configuration (2026-11-04). Approved listening-room presentation and shell cache update (2026-11-07). Bump to v59 for dynamic playback-label synchronization."
     },
     {
       "path": "electron/preload.cjs",

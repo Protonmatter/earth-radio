@@ -429,6 +429,7 @@ function readLocale(state) {
 function applyLocale(locale) {
   const resolved = normalizeLocale(locale);
   applyDocumentLocale(resolved);
+  syncPlayLabel(resolved);
   applyDeclarativeI18n(document, resolved);
   localizeRuntime(resolved);
   refreshCountryPresentation();
@@ -1367,7 +1368,19 @@ export function nowPlayingSheetCopy({ station = '', facts = '', trackTitle = '',
   return { title: liveLine, meta: factsLine };
 }
 
+function syncPlayLabel(locale = effectiveLocale()) {
+  const play = byId('btn-play');
+  if (!play) return;
+  const key = byId('audio-player')?.paused === false ? 'player.pause' : 'player.play';
+  const label = t(key, undefined, locale);
+  // The generic translation pass must preserve this dynamic state. Write only
+  // on change so the narrow attribute observer cannot feed itself indefinitely.
+  if (play.getAttribute('data-i18n') !== key) play.setAttribute('data-i18n', key);
+  if (play.getAttribute('aria-label') !== label) play.setAttribute('aria-label', label);
+}
+
 function syncNowPlaying() {
+  syncPlayLabel();
   const title = byId('er-nowplaying-title');
   const meta = byId('er-nowplaying-meta');
   const live = byId('er-nowplaying-live');
@@ -1665,6 +1678,7 @@ function bindActions() {
   const audio = byId('audio-player');
   for (const type of ['play', 'pause', 'loadstart', 'error', 'emptied']) {
     audio?.addEventListener(type, () => {
+      syncPlayLabel();
       if (document.documentElement.classList.contains('er-nowplaying-open')) syncNowPlaying();
     });
   }
@@ -1743,12 +1757,16 @@ function bindSeparator() {
  * ------------------------------------------------------------------ */
 
 function observeRuntime() {
-  let frame = 0;
+  let pending = false;
   const schedule = () => {
-    if (frame) return;
-    frame = requestAnimationFrame(() => {
-      frame = 0;
+    if (pending) return;
+    pending = true;
+    // Semantic labels must update even when Windows suspends animation frames
+    // for a background window. Geometry remains separately frame-scheduled.
+    queueMicrotask(() => {
+      pending = false;
       const locale = effectiveLocale();
+      syncPlayLabel(locale);
       applyDeclarativeI18n(document, locale);
       localizeRuntime(locale);
       if (document.documentElement.classList.contains('er-nowplaying-open')) syncNowPlaying();

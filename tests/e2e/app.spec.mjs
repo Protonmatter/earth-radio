@@ -147,7 +147,10 @@ test.describe('map progressive disclosure', () => {
     await setupApp(page);
     const markers = await openMapMarkers(page);
 
-    const marker = markers.first();
+    // Retain the actual dot, not its numeric position among paths: selecting
+    // updates health/ranking and can reorder the marker DOM without changing it.
+    const marker = await markers.first().elementHandle();
+    expect(marker).not.toBeNull();
     await marker.hover();
     const tooltip = page.locator('.er-station-tooltip .er-tt-name');
     await expect(tooltip).toBeVisible();
@@ -155,9 +158,11 @@ test.describe('map progressive disclosure', () => {
 
     await marker.click();
     await expect(page.locator('#player-station')).toHaveText(disclosedName, { timeout: 15_000 });
+    await expect(page.locator('#player-bar')).toHaveClass(/is-playing/);
 
     // Clicking the same dot again keeps the same state (idempotent selection).
-    await marker.click({ force: true });
+    await marker.click();
+    await expect(page.locator('#player-bar')).toHaveClass(/is-playing/);
     await page.waitForTimeout(600);
     await expect(page.locator('#player-station')).toHaveText(disclosedName);
   });
