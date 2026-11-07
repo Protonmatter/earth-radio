@@ -22,7 +22,7 @@ if (!config.includes('desktopProxyBaseUrl')) throw new Error('site/config.js doe
 if (!config.includes('proxyBaseUrl: desktopProxyBaseUrl')) throw new Error('desktop proxy is not wired into runtime config');
 
 const main = fs.readFileSync(path.join(root, 'electron/main.mjs'), 'utf8');
-for (const invariant of ['contextIsolation: true', 'nodeIntegration: false', 'sandbox: true', 'setWindowOpenHandler', 'will-navigate']) {
+for (const invariant of ['contextIsolation: true', 'nodeIntegration: false', 'sandbox: true', 'setWindowOpenHandler', 'installAuthNavigationPolicy']) {
   if (!main.includes(invariant)) throw new Error(`Electron main missing invariant: ${invariant}`);
 }
 if (!main.includes("resolveAsset('site', 'index.html')") || main.includes("resolveAsset('dist', 'index.html')")) {

@@ -14,6 +14,12 @@ export function releaseIdentity({ tag, sha, version, arch }) {
   return { tag, sha, version, arch, artifactName: `EarthRadio-${version}-macOS-${arch}-unnotarized.dmg` };
 }
 
+export function candidateIdentity({ sha, version, arch }) {
+  const { tag: _tag, ...identity } = releaseIdentity({ tag: `v${version}`, sha, version, arch });
+  return { ...identity, candidate: true,
+    artifactName: `EarthRadio-Candidate-${version}-${sha.slice(0, 12)}-macOS-${arch}-unnotarized.dmg` };
+}
+
 const digest = bytes => createHash('sha256').update(bytes).digest('hex');
 const run = (command, args, options = {}) => execFileSync(command, args, { encoding: 'utf8', ...options }).trim();
 
@@ -73,11 +79,15 @@ export async function buildMacRelease(sourceInput, arch, environment = process.e
   assert.equal(process.arch, arch, 'Use a native runner for each release architecture');
   const source = await realpath(sourceInput);
   const metadata = JSON.parse(await readFile(path.join(source, 'package.json'), 'utf8'));
-  const identity = releaseIdentity({ tag: environment.RELEASE_TAG, sha: environment.RELEASE_SOURCE_SHA, version: metadata.version, arch });
+  const candidate = environment.RELEASE_CANDIDATE === '1';
+  const input = { tag: environment.RELEASE_TAG, sha: environment.RELEASE_SOURCE_SHA, version: metadata.version, arch };
+  const identity = candidate ? candidateIdentity(input) : releaseIdentity(input);
   assert.equal(run('git', ['-C', source, 'rev-parse', 'HEAD']), identity.sha);
-  const refs = run('git', ['-C', source, 'ls-remote', '--tags', 'origin', `refs/tags/${identity.tag}`, `refs/tags/${identity.tag}^{}`]);
-  const tagRefs = new Map(refs.split('\n').filter(Boolean).map(line => { const [sha, ref] = line.split(/\s+/); return [ref, sha]; }));
-  assert.equal(tagRefs.get(`refs/tags/${identity.tag}^{}`) || tagRefs.get(`refs/tags/${identity.tag}`), identity.sha, 'Tag/source mismatch');
+  if (!candidate) {
+    const refs = run('git', ['-C', source, 'ls-remote', '--tags', 'origin', `refs/tags/${identity.tag}`, `refs/tags/${identity.tag}^{}`]);
+    const tagRefs = new Map(refs.split('\n').filter(Boolean).map(line => { const [sha, ref] = line.split(/\s+/); return [ref, sha]; }));
+    assert.equal(tagRefs.get(`refs/tags/${identity.tag}^{}`) || tagRefs.get(`refs/tags/${identity.tag}`), identity.sha, 'Tag/source mismatch');
+  }
   const require = createRequire(path.join(source, 'package.json'));
   const yaml = require('js-yaml');
   const asar = await import(pathToFileURL(require.resolve('@electron/asar')).href);
@@ -99,7 +109,10 @@ export async function buildMacRelease(sourceInput, arch, environment = process.e
   const configFile = path.join(work, 'electron-builder.json');
   await writeFile(configFile, JSON.stringify(config, null, 2) + '\n');
   execFileSync(path.join(source, 'node_modules', '.bin', 'electron-builder'), ['--mac', 'dmg', `--${arch}`, '--config', configFile, '--publish', 'never'], {
-    cwd: source, stdio: 'inherit', env: { ...environment, CSC_IDENTITY_AUTO_DISCOVERY: 'false' }
+    cwd: source, stdio: 'inherit', env: { ...environment, CSC_IDENTITY_AUTO_DISCOVERY: 'false',
+      // Candidate CI is secretless and identity is explicitly ad-hoc. Builder's
+      // general PR safeguard otherwise skips even this certificate-free signing.
+      ...(candidate ? { CSC_FOR_PULL_REQUEST: 'true' } : {}) }
   });
   const dmg = path.join(output, identity.artifactName);
   run('hdiutil', ['verify', dmg]);

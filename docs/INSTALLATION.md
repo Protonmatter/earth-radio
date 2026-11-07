@@ -48,10 +48,15 @@ vary by OS version and Safari layout.
   stream availability, HTTPS/CORS and codec support differ by station/device.
 - Background and lock-screen playback depend on iOS/iPadOS and the stream. Test your
   device rather than assuming every station continues through locking or interruptions.
-- Optional account sign-in/sync is enabled on the production web origin. Google,
-  GitHub and email are configured, and new signups are allowed, but Google publishing
-  restrictions and public email delivery have not been fully qualified. The current
-  desktop file-based builds keep local preferences and do not enable hosted sign-in.
+- Optional account sign-in/sync is enabled on the production web origin. Google is
+  External/In production, GitHub is enabled, and new signups are allowed. Public email
+  delivery is awaiting a verified sender domain and custom SMTP. The published
+  **v0.25.1 desktop builds** keep local preferences and do not enable hosted sign-in.
+  The **0.26.0 desktop candidate** adds Google/GitHub and email-link sign-in through the
+  default browser, encrypted session recovery and account sync. Keep Earth Radio open
+  while signing in; return to its account dialog and check **Synced**. Email becomes
+  generally available after the sender setup is qualified. See the
+  [account guide](AUTHENTICATION.md) for candidate status and troubleshooting.
 
 ## Windows ARM64
 

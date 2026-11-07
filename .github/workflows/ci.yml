@@ -14,6 +14,50 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  native-auth:
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            arch: x64
+          - os: macos-15
+            arch: arm64
+          - os: macos-15-intel
+            arch: x64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Exercise native sandbox, auth IPC and OS credential vault
+        run: npm run test:desktop-auth
+      - name: Build and qualify unnotarized macOS candidate
+        if: runner.os == 'macOS'
+        shell: bash
+        run: RELEASE_CANDIDATE=1 RELEASE_SOURCE_SHA="$(git rev-parse HEAD)" node scripts/macos-release.mjs . ${{ matrix.arch }}
+      - name: Upload qualified macOS candidate
+        if: runner.os == 'macOS'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: earth-radio-macos-candidate-${{ matrix.arch }}-${{ github.run_id }}
+          path: |
+            .build/macos-release/*.dmg
+            .build/macos-release/*.json
+            .build/macos-release/SHA256SUMS-*.txt
+          if-no-files-found: error
+          retention-days: 14
+
   verify:
     strategy:
       fail-fast: false
@@ -32,6 +76,9 @@ jobs:
         run: npm ci
       - name: Verify repository and build
         run: npm run verify
+      - name: Check published dependency advisories
+        if: matrix.os == 'ubuntu-latest'
+        run: npm audit --audit-level=moderate
       - name: Run focused remediation tests
         run: node --test tests/directory-expansion.test.mjs tests/hls-fixture.test.mjs tests/player-navigation.test.mjs tests/rendered-ui.test.mjs
       - name: Exercise recovery importer

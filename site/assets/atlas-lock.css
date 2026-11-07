@@ -227,7 +227,7 @@ html.er-glass-log.er-root #map-panel {
   position: fixed;
   z-index: 50;
   inset-inline: 0;
-  top: calc(var(--er-header) + var(--er-safe-top));
+  top: calc(var(--er-header-depth) + var(--er-safe-top));
   bottom: calc(var(--er-player) + var(--er-nav) + var(--er-safe-bottom));
 }
 
@@ -240,7 +240,7 @@ html.er-desktop #er-you:not([hidden]) {
 }
 
 html.er-tablet #er-you:not([hidden]) {
-  top: calc(var(--er-header) + var(--er-safe-top));
+  top: calc(var(--er-header-depth) + var(--er-safe-top));
   bottom: var(--er-player);
 }
 

@@ -405,7 +405,14 @@ export const SCENARIOS = [
     destination: 'listen',
     safeArea: IPHONE_SAFE_AREA,
     seed: SEEDED,
-    actions: [{ type: 'script', code: `document.documentElement.style.setProperty('--er-header', '9px')` }]
+    actions: [{ type: 'script', code: `
+      document.documentElement.style.setProperty('--er-header', '9px');
+      // This must hold synchronously, even while background throttling defers
+      // ResizeObserver delivery. A later JavaScript repair is not a CSS floor.
+      if (document.querySelector('header.header').getBoundingClientRect().height < 90) {
+        throw new Error('The header safe-area content floor must survive before observer delivery');
+      }
+    ` }]
   },
   {
     id: 'mobile-landscape-844x390',

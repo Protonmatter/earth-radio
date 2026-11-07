@@ -17,6 +17,7 @@ site_url = "https://earth-radio.pages.dev"
 additional_redirect_urls = [
   "https://earth-radio.pages.dev",
   "https://earth-radio.pages.dev/",
+  "http://127.0.0.1:*/earth-radio-auth/callback/*",
   "http://127.0.0.1:8788",
   "http://127.0.0.1:8788/",
   "http://localhost:8788",

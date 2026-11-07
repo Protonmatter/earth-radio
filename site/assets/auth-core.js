@@ -125,7 +125,8 @@ export function createAuthClient({
   location = globalThis.location,
   history = globalThis.history,
   cryptoImpl = globalThis.crypto,
-  eventTarget = globalThis
+  eventTarget = globalThis,
+  resolveRedirect
 }) {
   if (!/^https:\/\/[a-z0-9-]+\.supabase\.co$/i.test(String(url || ''))) {
     throw new Error('A valid Supabase project URL is required.');
@@ -140,6 +141,7 @@ export function createAuthClient({
   const cookies = cookieJar || createDocumentCookieJar(location);
   let session = readSession();
   let refreshPromise = null;
+  let signInGeneration = 0;
   const subscribers = new Set();
 
   function readSession() {
@@ -273,6 +275,7 @@ export function createAuthClient({
   }
 
   async function beginPkce() {
+    const generation = ++signInGeneration;
     const verifier = createVerifier(cryptoImpl);
     const idBytes = new Uint8Array(16);
     cryptoImpl.getRandomValues(idBytes);
@@ -281,10 +284,12 @@ export function createAuthClient({
       [flowId]: { verifier, createdAt: Date.now() }
     }, flowId);
     const challenge = await challengeFor(cryptoImpl, verifier);
-    return { verifier, challenge, flowId };
+    if (generation !== signInGeneration) throw new Error('Sign-in canceled. Please start again.');
+    return { verifier, challenge, flowId, generation };
   }
 
   function allowlistedRedirect(target) {
+    if (resolveRedirect) return resolveRedirect();
     const originRoot = `${location.origin}/`;
     try {
       const redirect = new URL(target, location.origin);
@@ -311,6 +316,7 @@ export function createAuthClient({
   }
 
   async function exchangeCode(code, requestedFlowId) {
+    const generation = signInGeneration;
     const { flowId, verifier, flows } = resolvePkceFlow(requestedFlowId);
     if (!verifier) {
       cleanCallbackUrl();
@@ -321,6 +327,7 @@ export function createAuthClient({
       const value = await request(`${authUrl}/token?grant_type=pkce`, {
         method: 'POST', body: { auth_code: code, code_verifier: verifier }
       });
+      if (generation !== signInGeneration) throw new Error('Sign-in canceled or account changed. Please start again.');
       const next = saveSession(value);
       if (!next?.user?.id) throw new Error('Sign-in did not return a user. Please try again.');
       return next;
@@ -328,7 +335,7 @@ export function createAuthClient({
       consumeFlow = !retryableRequestError(error);
       throw error;
     } finally {
-      if (consumeFlow) {
+      if (consumeFlow && generation === signInGeneration) {
         delete flows[flowId];
         persistFlows(flows, null);
         cleanCallbackUrl();
@@ -337,6 +344,12 @@ export function createAuthClient({
   }
 
   return {
+    exchangeCode,
+
+    cancelPendingSignIn() {
+      signInGeneration++;
+      persistFlows({}, null);
+    },
     async initialize() {
       const current = new URL(location.href);
       if (current.searchParams.get('error')) {
@@ -381,7 +394,7 @@ export function createAuthClient({
       endpoint.searchParams.set('code_challenge_method', 's256');
       if (scopes) endpoint.searchParams.set('scopes', scopes);
       for (const [key, value] of Object.entries(queryParams)) endpoint.searchParams.set(key, String(value));
-      location.assign(endpoint.href);
+      await location.assign(endpoint.href);
     },
 
     async signInWithEmail(email, { redirectTo = redirectTarget() } = {}) {
@@ -397,9 +410,11 @@ export function createAuthClient({
     },
 
     async linkIdentity(provider, { redirectTo = redirectTarget(), scopes, queryParams = {} } = {}) {
+      const requestedGeneration = signInGeneration;
       const current = await freshSession();
+      if (requestedGeneration !== signInGeneration) throw new Error('Sign-in canceled. Please start again.');
       if (!current) throw new Error('Sign in before linking another account.');
-      const { challenge } = await beginPkce();
+      const { challenge, generation } = await beginPkce();
       const endpoint = new URL(`${authUrl}/user/identities/authorize`);
       endpoint.searchParams.set('provider', provider);
       endpoint.searchParams.set('redirect_to', redirectForFlow(redirectTo));
@@ -409,8 +424,9 @@ export function createAuthClient({
       if (scopes) endpoint.searchParams.set('scopes', scopes);
       for (const [key, value] of Object.entries(queryParams)) endpoint.searchParams.set(key, String(value));
       const result = await request(endpoint.href, { accessToken: current.access_token });
+      if (generation !== signInGeneration || session !== current) throw new Error('Sign-in canceled or account changed. Please start again.');
       if (!result?.url) throw new Error('The identity provider did not return a link URL.');
-      location.assign(result.url);
+      await location.assign(result.url);
     },
 
     async getUser() {
@@ -424,9 +440,11 @@ export function createAuthClient({
       }
     },
 
-    async signOut() {
+    async signOut({ immediate = false } = {}) {
+      signInGeneration++;
       const current = session;
-      let signedOut = false;
+      let signedOut = immediate;
+      if (immediate) { saveSession(null, 'SIGNED_OUT'); persistFlows({}, null); }
       try {
         if (current) await request(`${authUrl}/logout`, { method: 'POST', accessToken: current.access_token });
       } catch {

@@ -1,3 +1,5 @@
+import { AUTH_DEPLOYMENT } from './assets/auth-deployment.js';
+import { isDesktopAuthAvailable } from './assets/desktop-auth.js';
 // Runtime configuration, loaded as a same-origin script so a strict Content-Security-Policy
 // (script-src 'self') stays intact. Deployers edit this file; the `|| ` guard preserves any
 // value injected earlier (e.g. by tests or a server-rendered runtime).
@@ -22,9 +24,8 @@ window.RADIO_CONFIG = window.RADIO_CONFIG || {
   nowPlayingEnabled: true,
   auth: {
     // The publishable key is intentionally public; authorization is enforced by RLS.
-    enabled: authOriginAllowed && !(window.earthRadio && window.earthRadio.isDesktop),
-    url: 'https://ueomkorngpgvthqioqns.supabase.co',
-    publishableKey: 'sb_publishable_5oaWYxR0LVs4UHplfnaP6g_ArQQSBa0',
+    enabled: authOriginAllowed || isDesktopAuthAvailable(window.earthRadio, window.location),
+    ...AUTH_DEPLOYMENT,
     providers: {
       github: true,
       google: true,

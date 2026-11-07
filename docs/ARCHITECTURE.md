@@ -1,5 +1,13 @@
 # Architecture
 
+The 0.26.0 candidate adds native account ownership in Electron main. `auth-manager.mjs`
+reuses the browser PKCE implementation with a main-owned redirect resolver;
+`auth-callback.mjs` handles a bounded one-time loopback return and `auth-vault.mjs`
+persists only OS-encrypted session ciphertext. `auth-ipc-policy.mjs` accepts the owned
+top-level file document only. The preload and renderer adapter expose safe session
+metadata plus the existing three-document read/CAS contract, without a generic token,
+fetch or RPC channel. See [authentication operations](AUTHENTICATION.md).
+
 Earth Radio has three deliberately separate execution boundaries.
 
 ## November 2026 candidate discovery and atlas

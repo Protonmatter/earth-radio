@@ -154,7 +154,7 @@ test('Now Playing history state is distinct from runtime hash writes', () => {
 
 test('responsive assets are referenced after the recovered runtime and staged as site files', async () => {
   const html = await readFile(path.join(root, 'site', 'index.html'), 'utf8');
-  const runtime = html.indexOf('index-ff42f3f1.js');
+  const runtime = html.indexOf('index-8fd01303.js');
   const layer = html.indexOf('responsive-ui.js');
   assert.ok(runtime >= 0 && layer > runtime);
   assert.match(html, /viewport-fit=cover/);
@@ -178,7 +178,7 @@ test('overflow menu can become visible and search occupies the mobile workspace'
   assert.match(css, /html\.er-mobile \.search-modal\.er-search-destination\s*\{[\s\S]*position:\s*fixed;/);
   assert.match(css, /html\.er-mobile \.search-modal\.er-search-destination\s*\{[\s\S]*padding:\s*0;/);
   assert.match(css, /html\.er-root \.player-info\s*\{[\s\S]*appearance:\s*none;/);
-  assert.match(css, /html\.er-root #toast-container\s*\{[\s\S]*top:\s*calc\(var\(--er-header\)/);
+  assert.match(css, /html\.er-root #toast-container\s*\{[\s\S]*top:\s*calc\(var\(--er-header-depth\)/);
   assert.match(css, /\.er-nowplaying-art\s*\{[\s\S]*flex-shrink:\s*0;/);
   // Header favorites/recent listeners exist only after the recovered runtime
   // finishes loadStations(). Clicking those toggles during overlay start()

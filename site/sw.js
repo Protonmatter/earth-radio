@@ -1,15 +1,17 @@
-const CACHE_NAME = 'earth-radio-shell-v52-safe-area-0-25-1';
+const CACHE_NAME = 'earth-radio-shell-v56-account-readiness-0-26-0';
 const SHELL_ASSETS = [
   './',
   './index.html',
   './config.js',
+  './assets/auth-deployment.js',
+  './assets/desktop-auth.js',
   './manifest.webmanifest',
   './branding/earth-radio-32-v2.png',
   './branding/earth-radio-180-v2.png',
   './branding/earth-radio-192-v2.png',
   './branding/earth-radio-512-v2.png',
   './assets/hls.light-Dr1Fv81C.js',
-  './assets/index-ff42f3f1.js',
+  './assets/index-8fd01303.js',
   './assets/index-CSoL7F-Y.css',
   './assets/storage-guard.js',
   './assets/directory-expansion.js',
@@ -90,7 +92,7 @@ async function cacheFirst(request) {
 }
 
 function isImmutableAsset(pathname) {
-  return /index-ff42f3f1|index-CSoL7F-Y|hls\.light-Dr1Fv81C/.test(pathname);
+  return /index-8fd01303|index-CSoL7F-Y|hls\.light-Dr1Fv81C/.test(pathname);
 }
 
 self.addEventListener('fetch', event => {

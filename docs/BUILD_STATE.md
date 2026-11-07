@@ -1,5 +1,81 @@
 # Build state
 
+## 0.26.0 account candidate — 2026-11-04
+
+The [0.26.0 qualification record](QUALIFICATION-0.26.0.md) now includes the
+2026-11-05 Windows installer follow-up: an isolated 0.25.1 → 0.26.0 upgrade,
+86-file installed payload parity, saved favorite/55% volume preservation, clean
+candidate startup and both uninstall paths passed. The original 0.24.0 executable
+and registration stayed unchanged. This does not claim an original-identity
+upgrade or establish fresh outside-team OAuth signup or physical-device account coverage.
+
+[PR #20](https://github.com/Protonmatter/earth-radio/pull/20) adds main-owned native
+PKCE sign-in, OS-encrypted sessions, restricted account IPC, single-instance ownership
+and a normal-quit flush gate. It preserves the existing RLS/CAS sync contract. The
+candidate's embedded runtime/package version is 0.26.0, runtime `index-8fd01303.js`,
+and shell generation v56. No private provider credential or new dependency was added.
+
+The readiness follow-up reproduces a real encrypted-session deletion failure in an
+isolated native profile. A failed sign-out now reports an incomplete state, keeps sync
+and linking paused, preserves the account namespace and allows an explicit retry after
+storage recovery. The native regression retries successfully before switching accounts.
+Keyboard regressions also cover Tab/Shift+Tab containment, focus preservation across
+provider discovery and mobile focus return to the visible More actions trigger.
+
+The subsequent dependency audit identified 16 affected package nodes (5 high and
+11 moderate), including shipped Electron 43.4.1. The candidate now pins 43.8.7 and
+uses bounded build-tool overrides for patched glob/minimatch lines. CI adds a published
+advisory gate. [Dependency security](SECURITY.md#dependency-security) records scope,
+compatibility checks and rollback. Every older desktop candidate predates this runtime
+security update and must be superseded before publication.
+
+Final rendered qualification exposed a background-observer timing gap in the previous
+header floor. The effective CSS header depth now clamps to 56px for the header and
+dependent panel positions. A synchronous regression injects a 9px metric and requires
+the 47px-safe-area header to retain its content before observer delivery; the focused
+rendered check measured a 103px header while the raw metric was still 9px.
+
+Live Windows source tests completed Google and GitHub callbacks with existing owner
+accounts, reached Synced, restored Google's encrypted session after restart, and
+verified logout/account isolation. A favorite added on desktop arrived on production
+web; web removal arrived on desktop. A web volume change was confirmed through the
+desktop's supported JSON export, then the original value was restored and verified
+in the hosted configuration row. No fresh outside-team identity was supplied.
+
+The reviewed implementation passed Windows ARM64 native tests locally, Windows x64
+and macOS ARM64/x64 auth/vault/lifecycle tests in CI, local GoTrue/Mailpit/PostgREST
+integration, and the 49-case browser suite. Candidate DMGs are ad-hoc signed and
+unnotarized; verification checks the DMG, architecture, packaged source hashes and
+bounded startup. See the [current PR checks](https://github.com/Protonmatter/earth-radio/pull/20/checks)
+for the exact final source and platform results, and [account operations](AUTHENTICATION.md)
+for evidence boundaries and rollback. Earlier candidate artifacts are superseded when
+the source SHA changes; no existing release tag or published asset is replaced.
+
+**Sender infrastructure update (2026-11-06):** the owner registered
+`earthradio.stream` through November 6, 2029. Registry and public DNS readback confirmed
+its Cloudflare nameservers; WHOIS redaction is enabled. DNSSEC is now validated: both
+public resolvers authenticated the DS, DNSKEY and DKIM TXT answers at 22:10 UTC.
+The selected sender is `Earth Radio <signin@auth.earthradio.stream>`.
+
+**Live email and restart passed (2026-11-06):** Resend is connected and the sender domain and required
+records are Verified. All four DNS values, including the initial DMARC monitoring
+policy, matched through two public resolvers. A domain-restricted sending key was
+stored in Windows Credential Manager with encrypted readback, then configured in
+Supabase SMTP and reload-verified. A new authorized external Gmail alias completed
+real confirmation on production web, with Inbox delivery and SPF/DKIM/DMARC passing.
+The Windows ARM64 client completed a live email PKCE return, imported the web favorite
+and 55% volume, and synced a change to 61% back to web. A normal quit/relaunch without
+diagnostic hooks restored its encrypted session, favorite and 61% volume and reached
+Synced. The QA application was closed normally. The original Earth Radio login was
+restored through GitHub, with Synced and the original 74% volume verified after reload;
+GitHub account settings were not changed. Other mailbox providers, fresh outsider
+OAuth identities and physical Mac/installed iOS account returns remain untested.
+The approved native loopback return was saved in Supabase; existing web origins,
+hosted provider settings and schema are preserved. Production and published v0.25.1
+downloads remain separate from this candidate until its release gates close. The
+fresh 2026-11-06 npm audit reported zero known advisories; all nine PR checks passed
+on `d587d8d` before this sender-verification documentation follow-up.
+
 ## 0.25.1 safe-area correction and Git delivery
 
 The user subsequently authorized committing/pushing the release, passing CI and
