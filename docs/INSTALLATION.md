@@ -1,8 +1,12 @@
-# Install Earth Radio v0.25.1
+# Install Earth Radio v0.26.0
 
 Production web app: **https://earth-radio.pages.dev/**
 
-Desktop downloads: **https://github.com/Protonmatter/earth-radio/releases/tag/v0.25.1**
+Desktop downloads: **https://github.com/Protonmatter/earth-radio/releases/tag/v0.26.0**
+
+Download only the file for your computer, plus `SHA256SUMS.txt`. The release also
+includes `BUILD-PROVENANCE.json`, platform verification receipts and this guide as
+`INSTALL.md`. Older published releases retain their original files and checksums.
 
 ## iPhone (iOS) and iPad (iPadOS)
 
@@ -48,25 +52,47 @@ vary by OS version and Safari layout.
   stream availability, HTTPS/CORS and codec support differ by station/device.
 - Background and lock-screen playback depend on iOS/iPadOS and the stream. Test your
   device rather than assuming every station continues through locking or interruptions.
-- Optional account sign-in/sync is enabled on the production web origin. Google is
-  External/In production, GitHub is enabled, and new signups are allowed. Public email
-  delivery is awaiting a verified sender domain and custom SMTP. The published
-  **v0.25.1 desktop builds** keep local preferences and do not enable hosted sign-in.
-  The **0.26.0 desktop candidate** adds Google/GitHub and email-link sign-in through the
-  default browser, encrypted session recovery and account sync. Keep Earth Radio open
-  while signing in; return to its account dialog and check **Synced**. Email becomes
-  generally available after the sender setup is qualified. See the
-  [account guide](AUTHENTICATION.md) for candidate status and troubleshooting.
+- Optional Google, GitHub and email sign-in/sync is enabled on production web and
+  the **v0.26.0 Windows/macOS apps**. Custom SMTP and a verified sender are configured;
+  real Gmail signup, confirmation, Windows return, sync and encrypted restart passed.
+  Other mailbox providers, new outside-team OAuth identities and physical installed
+  iOS/iPadOS account returns remain untested. See [account operations](AUTHENTICATION.md).
+
+## Sign in and sync on desktop
+
+1. Open **Sign in** (or **Account**) and choose Google, GitHub or email.
+2. For Google/GitHub, finish sign-in in the default system browser. Keep Earth Radio
+   open and return to its account dialog after the browser reports completion.
+3. For email, request a link and open the newest message on the same computer within
+   ten minutes, while Earth Radio remains open. Starting another request or restarting
+   the app cancels the earlier attempt. Use **Cancel pending sign-in** to abandon it.
+4. Check the displayed identity and **Synced** before checking another device.
+
+Favorites, recent stations and preferences sync through per-user cloud documents.
+Desktop session credentials are encrypted by the operating system. If the keychain
+is unavailable, unlock it and restart; local listening remains available. If sign-out
+reports incomplete removal, sync/linking stay paused: resolve storage access and retry
+**Sign out**. Do not clear a profile or remove credentials manually as the first step.
 
 ## Windows ARM64
 
-Use `EarthRadio-Setup-0.25.1-arm64.exe` for the installer or
-`EarthRadio-Portable-0.25.1-arm64.exe` for the portable app. These are for ARM64
+Use `EarthRadio-Setup-0.26.0-arm64.exe` for the installer or
+`EarthRadio-Portable-0.26.0-arm64.exe` for the portable app. These are for ARM64
 Windows; no Windows x64 package is included in this release.
 
 Download from the release page, verify its hash against `SHA256SUMS.txt`, then run
 the selected package. The installer supports a per-user installation. Close an
 older Earth Radio instance before upgrading, and export local preferences first.
+
+The installer lab verified a 0.25.1-to-0.26.0 upgrade, favorite/volume preservation,
+clean startup and uninstall with a separate qualification identity. Original-identity
+upgrade across every existing profile remains unqualified. Keep your export for rollback.
+For a separate portable profile, run from the download folder in PowerShell:
+
+```powershell
+$radioProfile = Join-Path $env:LOCALAPPDATA 'EarthRadio-Portable-0.26.0'
+& .\EarthRadio-Portable-0.26.0-arm64.exe "--user-data-dir=$radioProfile"
+```
 
 These builds have local self-signed Authenticode signatures and DigiCert timestamps.
 They do not have public Windows publisher trust. No Root certificate is installed
@@ -78,8 +104,8 @@ Choose the DMG matching **Apple menu → About This Mac**:
 
 | Mac | Release file |
 | --- | --- |
-| Apple Silicon (M-series chip) | `EarthRadio-0.25.1-macOS-arm64-unnotarized.dmg` |
-| Intel processor | `EarthRadio-0.25.1-macOS-x64-unnotarized.dmg` |
+| Apple Silicon (M-series chip) | `EarthRadio-0.26.0-macOS-arm64-unnotarized.dmg` |
+| Intel processor | `EarthRadio-0.26.0-macOS-x64-unnotarized.dmg` |
 
 1. Download and verify the appropriate DMG from the release page.
 2. Open the disk image and drag **Earth Radio** into **Applications**.
@@ -92,8 +118,10 @@ approval. macOS may block the first launch. Keep Gatekeeper enabled and follow
 only if you have reviewed and trust this release. The production web app remains
 available if you do not want to approve an unnotarized desktop app.
 
-Native runner checks do not establish compatibility on every physical Mac, OS version,
-audio device or user profile. Release verification reports state the actual tested host.
+The application declares macOS 12 minimum; native qualification used macOS 15 on
+Apple Silicon and Intel. Native runner checks do not establish physical provider
+consent, audio-device behavior or upgrades on every Mac/OS/profile. Platform receipts
+and the [qualification record](QUALIFICATION-0.26.0.md) state the tested scope.
 
 ## Check a download's SHA-256
 
@@ -104,13 +132,13 @@ you do not need to download every platform's installer.
 Windows PowerShell:
 
 ```powershell
-Get-FileHash -LiteralPath .\EarthRadio-Setup-0.25.1-arm64.exe -Algorithm SHA256
+Get-FileHash -LiteralPath .\EarthRadio-Setup-0.26.0-arm64.exe -Algorithm SHA256
 ```
 
 macOS Terminal (replace the filename for Intel):
 
 ```sh
-shasum -a 256 EarthRadio-0.25.1-macOS-arm64-unnotarized.dmg
+shasum -a 256 EarthRadio-0.26.0-macOS-arm64-unnotarized.dmg
 ```
 
 The checksums prove file equality with this release's published values. They do not

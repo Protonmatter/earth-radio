@@ -1,11 +1,10 @@
 # Release model
 
-Current release: [0.25.0 production record](RELEASE-0.25.0.md), including exact
-deployment/artifact identities, bounded live qualification, local-only signing
-exception and guarded rollback. It was initially uploaded directly from the verified
-working tree. The user subsequently authorized a release pull request, CI checks
-and merge into main to reconcile source control; GitHub check results must be read
-for that exact source revision. No tag or binary GitHub Release is implied.
+Current version: [0.26.0 release record](RELEASE-0.26.0.md), with Windows ARM64
+installer/portable, Apple Silicon/Intel unnotarized DMGs, checksums and source
+provenance. The [GitHub release](https://github.com/Protonmatter/earth-radio/releases/tag/v0.26.0)
+is the publication authority for its tag and assets. Earlier 0.25.x release records
+remain historical evidence and their published tags/assets remain immutable.
 
 Earth Radio distinguishes three identities that must not be conflated:
 

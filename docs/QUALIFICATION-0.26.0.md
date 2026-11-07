@@ -1,14 +1,17 @@
-# Earth Radio 0.26.0 candidate qualification
+# Earth Radio 0.26.0 qualification
 
-Status: **candidate, not published**. Windows installer follow-up: **2026-11-05**.
+This record preserves the candidate and live qualification evidence. See the
+[release record](RELEASE-0.26.0.md) and linked GitHub release for final distribution,
+checksums, exact build sources and production parity. Windows installer follow-up:
+**2026-11-05**.
 The application payload qualified here is commit
 `570bac4366731055940246e575e351072c932194`, package/runtime **0.26.0**, Electron
 **43.8.7**, runtime asset `index-8fd01303.js`, and service-worker generation **v56**.
 Subsequent documentation-only commits do not create new desktop payload evidence.
 
-[PR #20](https://github.com/Protonmatter/earth-radio/pull/20) remains the delivery
-candidate. Production and the published v0.25.1 assets are separate, immutable
-deliveries. This record does not promote or replace them.
+[PR #20](https://github.com/Protonmatter/earth-radio/pull/20) merged as `7998245`.
+Production deployment `af9d0bf7-492e-4aea-86bd-23ab737a1f46` served the same application
+payload with all 47 public files verified. Published v0.25.1 assets remain immutable.
 
 ## Automated and hosted evidence
 
@@ -171,8 +174,8 @@ settings and permissions were not changed. The test email identity is retained.
 - **Physical device coverage:** installed iOS/iPadOS account returns and a physical
   Mac provider/upgrade path remain unqualified. Native CI and earlier Home Screen
   playback/map feedback do not substitute for those account checks.
-- **Stable publication:** final source/artifact identity, main merge, new release
-  and production served readback remain gated on the accepted release scope.
+- **Distribution identity:** final source/artifact identities and publication status
+  are recorded in the [release record](RELEASE-0.26.0.md) and release provenance.
 
 See [account operations](AUTHENTICATION.md) for sender setup, retry behavior and
 rollback, [dependency security](SECURITY.md#dependency-security) for patched
