@@ -25,7 +25,7 @@ export function createDirectoryHosts({fetchImpl=globalThis.fetch,now=Date.now,ti
       for(const base of available([...cached,...DIRECTORY_SEEDS]).slice(0,3)){
         const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),timeoutMs);
         try{
-          const data=await directoryJson(await fetchImpl(base+'/json/servers',{signal:controller.signal,redirect:'error',credentials:'omit',headers:{Accept:'application/json'}}),65536);
+          const data=await directoryJson(await fetchImpl(base+'/json/servers',{signal:controller.signal,redirect:'manual',credentials:'omit',headers:{Accept:'application/json'}}),65536);
           const hosts=directoryHosts(data);if(!hosts.length)throw Error('Empty host discovery');
           cached=hosts;savedAt=now();try{storage?.setItem(key,JSON.stringify({savedAt,hosts}));}catch{/* Best effort. */}
           return ordered();

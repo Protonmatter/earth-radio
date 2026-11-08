@@ -46,7 +46,7 @@
     {
       "path": "docs/BUILD_STATE.md",
       "bytes": 26471,
-      "sha256": "2b12c24f62debf264adf808e7350b5fa9ee6c673bfa3cf853e2fa4c387a4071b"
+      "sha256": "debf53c27a2218c77adf4e828643ac423f6a447422b7a3a9b2117656de4e97fd"
     },
     {
       "path": "docs/CLOUDFLARE_DEPLOYMENT.md",
@@ -55,8 +55,8 @@
     },
     {
       "path": "docs/DISCOVERY_RELIABILITY.md",
-      "bytes": 9499,
-      "sha256": "3f96189495affe86f41f5e104dae7faf182eecce7465fc885292cbe9be59faa8"
+      "bytes": 9868,
+      "sha256": "a2006d6837f30885cd48b976f1e72635e091fcc0912487eef2dcdeeadb3fd2cb"
     },
     {
       "path": "docs/DISCOVERY.md",
@@ -160,8 +160,8 @@
     },
     {
       "path": "docs/QUALIFICATION-0.31.0.md",
-      "bytes": 3668,
-      "sha256": "9f3c123b956fbce88b1121c062917a4b3b4d5ba1efe97b6a2f1ba744a8d5bba2"
+      "bytes": 3938,
+      "sha256": "dd88f7ced4a0abb0274f85aae2191e5adcdcb0e2b5a7c70ff7aa3f39227f8785"
     },
     {
       "path": "docs/QUALIFICATION-2026-11-03.md",
@@ -365,13 +365,13 @@
     },
     {
       "path": "eslint.config.mjs",
-      "bytes": 3010,
-      "sha256": "af56a43ffcdc8a801d2b3a52fb5fed4985e811fe791d7745320b69e439389604"
+      "bytes": 3032,
+      "sha256": "6fd5b4730d0d479b478a7d79d56e0331112000ce896adf3ad5114d07770ed360"
     },
     {
       "path": "functions/_shared/directory-snapshot.js",
-      "bytes": 5796,
-      "sha256": "162ac811cc66610a9dd951862d985b4cddb938a3272de78a4be72b88df2c431a"
+      "bytes": 5797,
+      "sha256": "9036f855b2af0b34e01026d37f7f9e5fe2a88ce6affe70d7273b53fab72e187c"
     },
     {
       "path": "functions/_shared/guarded-fetch.js",
@@ -625,8 +625,8 @@
     },
     {
       "path": "site/assets/directory-hosts.js",
-      "bytes": 3324,
-      "sha256": "71169438415c6e3aefeeefe64554171262bc5581bfd579585458cec5d419043a"
+      "bytes": 3325,
+      "sha256": "c9b197bd0b29c8a91cfba70eb9d8013f9937e67d484571ef7c3d922c71c34d95"
     },
     {
       "path": "site/assets/discovery-core.js",
@@ -1210,8 +1210,8 @@
     },
     {
       "path": "tests/directory-snapshot.test.mjs",
-      "bytes": 10868,
-      "sha256": "48d2c3f852eca5bc8579649ba60ce4b1513e7788212f7270d55ca2a20e3ab6af"
+      "bytes": 12195,
+      "sha256": "fabb101d94fe9bd525d39a369cffd795bba127f6576f005f46dcd7f594fed00d"
     },
     {
       "path": "tests/discovery-core.test.mjs",

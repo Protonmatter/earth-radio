@@ -52,6 +52,26 @@ test('snapshot exposes finite paths and refuses arbitrary targets, methods and q
   assert.equal((await handler({request:new Request('https://radio.example/directory/snapshot?url=https://evil.example')})).status,400);
   assert.equal((await handler({request:new Request('https://radio.example/directory/snapshot',{method:'POST'})})).status,405);
 });
+
+test('directory fetches use Workers-supported manual redirects without following a different origin',async()=>{
+  const handler=createDirectorySnapshot({fetchImpl:async(url,options)=>{
+    if(options.redirect==='error')throw new TypeError('Unsupported redirect mode: error');
+    assert.equal(options.redirect,'manual');
+    return url.endsWith('/json/servers')?Response.json([{name:'de1.api.radio-browser.info'}]):Response.json([{stationuuid:'one',name:'One'}]);
+  }});
+  const response=await handler({request:new Request('https://radio.example/directory/snapshot')});
+  assert.equal(response.status,200);assert.match(await response.text(),/One/);
+});
+test('directory redirects are rejected at each finite provider hop',async()=>{
+  const calls=[];
+  const handler=createDirectorySnapshot({fetchImpl:async(url,options)=>{
+    calls.push({url,redirect:options.redirect});
+    if(url.endsWith('/json/servers'))return Response.json([{name:'de1.api.radio-browser.info'}]);
+    return new Response(null,{status:302,headers:{location:'http://127.0.0.1/private'}});
+  }});
+  assert.equal((await handler({request:new Request('https://radio.example/directory/snapshot')})).status,503);
+  assert.ok(calls.length>0&&calls.every(({url,redirect})=>redirect==='manual'&&/^https:\/\/[a-z0-9-]+\.api\.radio-browser\.info\//.test(url)));
+});
 test('snapshot cache supports ETags, one-hour refresh, stale fallback and single-flight misses',async()=>{
   let clock=1000,calls=0,outage=false;const data=new Map(),work=[];
   const cache={async match(key){return data.get(key.url)?.clone();},async put(key,response){data.set(key.url,new Response(await response.text(),response));}};

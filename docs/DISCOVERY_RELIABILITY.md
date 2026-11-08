@@ -29,6 +29,11 @@ Every destination is HTTPS under a strictly validated Radio Browser API hostname
 redirects are refused. The existing `global_fetch_strictly_public` flag remains
 mandatory. This is a provider-specific directory reader, not an exposed desktop
 proxy. Metadata quotas, credentials, SMTP and account configuration are unchanged.
+Discovery and snapshot fetches use `redirect: 'manual'` and reject non-success
+responses. Workers does not implement Fetch's `error` redirect mode: that mode
+caused an immediate 503 in the first live preview before any provider request.
+The preview gate caught it before production; explicit compatibility and redirect
+rejection regressions now cover both fetch paths.
 
 The Cache API retains snapshots up to seven days. After one hour, a request returns
 the old snapshot while starting a shared background refresh. A failed refresh keeps

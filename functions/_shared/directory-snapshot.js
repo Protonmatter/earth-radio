@@ -19,7 +19,7 @@ export function createDirectorySnapshot({fetchImpl=globalThis.fetch,cacheImpl=nu
       const remaining=deadline-now();if(remaining<=0)break;
       const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),remaining);
       try{
-        const result=await fetchImpl(host+path,{signal:controller.signal,redirect:'error',credentials:'omit',headers:{Accept:'application/json','User-Agent':'EarthRadio directory snapshot (+https://earthradio.stream)'}});
+        const result=await fetchImpl(host+path,{signal:controller.signal,redirect:'manual',credentials:'omit',headers:{Accept:'application/json','User-Agent':'EarthRadio directory snapshot (+https://earthradio.stream)'}});
         if(!result.ok||!result.headers.get('content-type')?.includes('application/json')||Number(result.headers.get('content-length'))>MAX_BYTES){await result.body?.cancel();throw Error('Unavailable directory');}
         const reader=result.body?.getReader();if(!reader)throw Error('Missing directory body');let bytes=0;
         const state={deadline,error:null};

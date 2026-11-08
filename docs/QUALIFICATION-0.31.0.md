@@ -4,7 +4,7 @@ This release targets the five directory/search/map findings in the November 8
 review. Its architecture, limits, data provenance and rollback are documented in
 [DISCOVERY_RELIABILITY.md](DISCOVERY_RELIABILITY.md).
 
-Local full verification passed 490 tests with three environment-dependent skips,
+Local full verification passed 492 tests with three environment-dependent skips,
 including metadata/desktop smokes, lint, coherent module versions, static-site and
 website validation, and deterministic source hashes. Focused adversarial tests
 cover country-code alias collisions, malformed mixed-country batches before a
@@ -49,6 +49,10 @@ then verify all ten exact-head checks before merge. Final production origin hash
 header policies, preserved original-account session, desktop payload/source matches,
 signature and DMG checks, all release-asset checksums and anonymous downloads belong
 in release provenance and the existing Spaces operations record after publication.
+The initial preview returned immediate 503s because Workers rejects `redirect:
+'error'`. Manual redirect handling with non-success rejection replaces it, with
+focused regressions and a new preview required before merge. The first preview
+was not promoted to production.
 
 Provider, account and cloud-document code is unchanged. The live Google/email
 native return, restart and cross-browser sync evidence remains the dated

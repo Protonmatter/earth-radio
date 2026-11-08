@@ -8,6 +8,7 @@ export default [
     ignores: [
       'node_modules/**',
       '.build/**',
+      '.wrangler/**',
       'website/.build/**',
       '.recovery/**',
       'release/**',

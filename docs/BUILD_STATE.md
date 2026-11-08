@@ -9,7 +9,7 @@ lazy and immutable, with legacy URLs retained for already-open tabs. Shell preca
 is about 1.92 MB, down from 33.72 MB (94.3% less). Focused cache/search/map tests,
 one-request Chromium/WebKit boot, targeted-country retry, legacy loader and installed
 Chromium offline-shell checks passed during development. Final local gates passed
-490 tests (three skips), 149 browser cases, 42 rendered scenarios, seven standalone
+492 tests (three skips), 149 browser cases, 42 rendered scenarios, seven standalone
 cases and Windows renderer/auth/lifecycle checks. Hosted/live preview and release
 qualification still gate publication. No new paid service
 or dependency is configured. See [release gates](RELEASE-0.31.0.md) and
