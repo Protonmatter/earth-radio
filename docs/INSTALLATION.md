@@ -1,8 +1,8 @@
-# Install Earth Radio v0.27.0
+# Install Earth Radio v0.28.0
 
 Production web app: **https://earth-radio.pages.dev/**
 
-Desktop downloads: **https://github.com/Protonmatter/earth-radio/releases/tag/v0.27.0**
+Desktop downloads: **https://github.com/Protonmatter/earth-radio/releases/tag/v0.28.0**
 
 Download only the file for your computer, plus `SHA256SUMS.txt`. The release also
 includes `BUILD-PROVENANCE.json`, platform verification receipts and this guide as
@@ -48,6 +48,8 @@ vary by OS version and Safari layout.
   Cached app/atlas assets do not provide offline radio playback.
 - Tap **Map → Search this area** to load the bounded worldwide mapped sample.
   **Clear area** removes that filter. Genre/query/quality filters can still narrow results.
+  Open **Map labels** to switch country and city names independently. More names and
+  geographic detail appear as you zoom in; label settings are remembered on that device.
 - Safari requires a user gesture to start playback. If a station fails, try another;
   stream availability, HTTPS/CORS and codec support differ by station/device.
 - Background and lock-screen playback depend on iOS/iPadOS and the stream. Test your
@@ -76,8 +78,8 @@ reports incomplete removal, sync/linking stay paused: resolve storage access and
 
 ## Windows ARM64
 
-Use `EarthRadio-Setup-0.27.0-arm64.exe` for the installer or
-`EarthRadio-Portable-0.27.0-arm64.exe` for the portable app. These are for ARM64
+Use `EarthRadio-Setup-0.28.0-arm64.exe` for the installer or
+`EarthRadio-Portable-0.28.0-arm64.exe` for the portable app. These are for ARM64
 Windows; no Windows x64 package is included in this release.
 
 Download from the release page, verify its hash against `SHA256SUMS.txt`, then run
@@ -90,8 +92,8 @@ upgrade across every existing profile remains unqualified. Keep your export for 
 For a separate portable profile, run from the download folder in PowerShell:
 
 ```powershell
-$radioProfile = Join-Path $env:LOCALAPPDATA 'EarthRadio-Portable-0.27.0'
-& .\EarthRadio-Portable-0.27.0-arm64.exe "--user-data-dir=$radioProfile"
+$radioProfile = Join-Path $env:LOCALAPPDATA 'EarthRadio-Portable-0.28.0'
+& .\EarthRadio-Portable-0.28.0-arm64.exe "--user-data-dir=$radioProfile"
 ```
 
 These builds have local self-signed Authenticode signatures and DigiCert timestamps.
@@ -104,8 +106,8 @@ Choose the DMG matching **Apple menu → About This Mac**:
 
 | Mac | Release file |
 | --- | --- |
-| Apple Silicon (M-series chip) | `EarthRadio-0.27.0-macOS-arm64-unnotarized.dmg` |
-| Intel processor | `EarthRadio-0.27.0-macOS-x64-unnotarized.dmg` |
+| Apple Silicon (M-series chip) | `EarthRadio-0.28.0-macOS-arm64-unnotarized.dmg` |
+| Intel processor | `EarthRadio-0.28.0-macOS-x64-unnotarized.dmg` |
 
 1. Download and verify the appropriate DMG from the release page.
 2. Open the disk image and drag **Earth Radio** into **Applications**.
@@ -132,13 +134,13 @@ you do not need to download every platform's installer.
 Windows PowerShell:
 
 ```powershell
-Get-FileHash -LiteralPath .\EarthRadio-Setup-0.27.0-arm64.exe -Algorithm SHA256
+Get-FileHash -LiteralPath .\EarthRadio-Setup-0.28.0-arm64.exe -Algorithm SHA256
 ```
 
 macOS Terminal (replace the filename for Intel):
 
 ```sh
-shasum -a 256 EarthRadio-0.27.0-macOS-arm64-unnotarized.dmg
+shasum -a 256 EarthRadio-0.28.0-macOS-arm64-unnotarized.dmg
 ```
 
 The checksums prove file equality with this release's published values. They do not

@@ -103,14 +103,20 @@ test.describe('map progressive disclosure', () => {
   async function openMapMarkers(page) {
     const map = page.locator('#map');
     await expect(map).toBeVisible();
-    // Zoom in until clusters break apart into individual station dots.
+    // Start with a known Seoul fixture station. Global cluster order changes
+    // with viewport/zoom; it is not a reliable navigation target for this test.
+    await page.getByRole('searchbox', { name: 'Find a station' }).fill('E2E Seoul');
+    await expect(page.locator('.station-card__name')).toHaveText(['E2E Seoul Pop']);
+    await page.getByRole('button', { name: 'Fit stations', exact: true }).click();
+    await expect(map).toHaveAttribute('data-er-map-detail', 'detail');
+    await expect(map).not.toHaveClass(/leaflet-zoom-anim/);
     // :visible filters out zero-size placeholder paths markercluster leaves in the pane.
     const markers = page.locator('#map path.leaflet-interactive:visible');
     for (let attempt = 0; attempt < 6 && (await markers.count()) < FIXTURE_STATIONS.length; attempt += 1) {
-      const cluster = page.locator('#map .er-cluster').first();
+      const cluster = page.locator('#map .er-cluster');
       if (!(await cluster.count())) break;
       const before = await markers.count();
-      await cluster.click();
+      await cluster.first().click();
       // Wait for the zoom animation to actually change the marker/cluster layout.
       await page.waitForFunction(
         previous => document.querySelectorAll('#map path.leaflet-interactive').length !== previous,
@@ -156,8 +162,12 @@ test.describe('map progressive disclosure', () => {
     await expect(tooltip).toBeVisible();
     const disclosedName = (await tooltip.textContent()).trim();
 
+    const panel = page.locator('#map-panel');
+    expect(await panel.evaluate(node => node.scrollHeight - node.clientHeight)).toBe(0);
+
     await marker.click();
     await expect(page.locator('#player-station')).toHaveText(disclosedName, { timeout: 15_000 });
+    expect(await panel.evaluate(node => node.scrollTop)).toBe(0);
     await expect(page.locator('#player-bar')).toHaveClass(/is-playing/);
 
     // Clicking the same dot again keeps the same state (idempotent selection).

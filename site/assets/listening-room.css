@@ -155,10 +155,60 @@ html.er-root #map[data-er-basemap="dark"] { background: #193c39; }
 html.er-root #map[data-er-basemap="light"] .er-vector-land { fill: #f0ecdf; stroke: #839e8e; }
 html.er-root #map[data-er-basemap="dark"] .er-vector-land { fill: #34594c; stroke: #779785; }
 html.er-root #map .leaflet-erAtlasLand-pane path:not(.er-vector-land) { opacity: .12; }
+/* Leaflet panes have no intrinsic width. The generic responsive canvas cap
+ * would reduce this explicitly sized geographic renderer to zero pixels. */
+html.er-root #map .leaflet-erAtlasDetail-pane canvas { max-width: none; }
 html.er-root .er-atlas-tools { top: 18px; bottom: auto; left: 58px; right: 16px; align-items: start; }
 html.er-root .er-atlas-tools button { background: var(--er2-surface); color: var(--er2-ink); min-height: 42px; border-radius: 8px; border-color: var(--er2-line-strong); font-size: 12px; box-shadow: var(--er2-shadow); }
+html.er-root .er-map-options { position: relative; pointer-events: auto; color: var(--er2-ink); font-size: 12px; }
+html.er-root .er-map-options summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; gap: 8px; padding: 0 12px; border: 1px solid var(--er2-line-strong); border-radius: 8px; background: var(--er2-surface); box-shadow: var(--er2-shadow); list-style: none; }
+html.er-root .er-map-options summary::-webkit-details-marker { display: none; }
+html.er-root .er-map-options summary::after { content: '⌄'; font-size: 14px; }
+html.er-root .er-map-options-panel { position: absolute; top: calc(100% + 6px); inset-inline-end: 0; width: min(240px, calc(100vw - 32px)); padding: 10px 14px; border: 1px solid var(--er2-line-strong); border-radius: 8px; background: var(--er2-surface); box-shadow: var(--er2-shadow); }
+html.er-root .er-map-options-panel label { display: flex; align-items: center; gap: 10px; min-height: 44px; cursor: pointer; }
+html.er-root .er-map-options-panel input { width: 18px; height: 18px; accent-color: var(--er2-action); }
+html.er-root .er-map-options-panel p { margin: 6px 0; color: var(--er2-muted); font-size: 12px; line-height: 1.5; }
+html.er-root .er-map-data-status { flex-basis: 100%; margin: 0; padding: 6px 10px; border-radius: 5px; background: var(--er2-surface); color: var(--er2-muted); font-size: 11px; text-align: center; }
+html.er-root .er-map-data-status[hidden] { display: none; }
+html.er-root .er-geo-label { pointer-events: none; background: transparent; border: 0; color: #405950; font: 500 11.5px/18px var(--er2-mono); text-shadow: -1px -1px 0 #f0ecdf, 1px -1px 0 #f0ecdf, -1px 1px 0 #f0ecdf, 1px 1px 0 #f0ecdf; }
+html.er-root .er-geo-label > span { display: block; box-sizing: border-box; width: 100%; height: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+html.er-root .er-geo-country { font-size: 11px; line-height: 20px; font-weight: 650; text-align: center; text-transform: uppercase; letter-spacing: .04em; }
+html.er-root .er-geo-city > span { padding-inline-start: 9px; }
+html.er-root .er-geo-city::before { content: ''; position: absolute; width: 4px; height: 4px; inset-inline-start: 0; top: 7px; border-radius: 50%; background: #6a8174; }
+html.er-root #map[data-er-basemap="dark"] .er-geo-label { color: #e3ecde; text-shadow: -1px -1px 0 #34594c, 1px -1px 0 #34594c, -1px 1px 0 #34594c, 1px 1px 0 #34594c; }
+html.er-root #map[data-er-basemap="dark"] .er-geo-city::before { background: #bcd3b7; }
+html.er-root[data-font-profile="ar"] .er-geo-country,
+html.er-root[data-font-profile="ko"] .er-geo-country,
+html.er-root[data-font-profile="zh-Hans"] .er-geo-country,
+html.er-root[data-font-profile="zh-Hant"] .er-geo-country { letter-spacing: 0; }
 html.er-root .leaflet-popup-content-wrapper, html.er-root .leaflet-popup-tip { background: var(--er2-surface); color: var(--er2-ink); }
 html.er-root .leaflet-popup-content-wrapper { border-radius: 10px; box-shadow: var(--er2-shadow); }
+/* Leaflet's positioning pane has no intrinsic width. A maximum alone lets a
+ * grid tooltip shrink to its minimum content width and stack individual words. */
+html.er-root[data-er-palette] .leaflet-tooltip.er-station-tooltip {
+  box-sizing: border-box;
+  width: 280px;
+  max-width: calc(100vw - 32px);
+  padding: 12px 14px;
+  border: 1px solid var(--er2-line-strong);
+  border-radius: 10px;
+  background: var(--er2-surface);
+  color: var(--er2-ink);
+  box-shadow: var(--er2-shadow);
+  white-space: normal;
+}
+html.er-root[data-er-palette] .leaflet-tooltip-top.er-station-tooltip::before { border-top-color: var(--er2-surface); }
+html.er-root[data-er-palette] .leaflet-tooltip-bottom.er-station-tooltip::before { border-bottom-color: var(--er2-surface); }
+html.er-root[data-er-palette] .leaflet-tooltip-left.er-station-tooltip::before { border-left-color: var(--er2-surface); }
+html.er-root[data-er-palette] .leaflet-tooltip-right.er-station-tooltip::before { border-right-color: var(--er2-surface); }
+html.er-root .er-station-tooltip[data-er-clamped]::before { display: none; }
+html.er-root .er-tt { min-width: 0; gap: 6px; font: 13px/1.45 var(--er2-mono); text-align: start; }
+html.er-root .er-tt > * { min-width: 0; }
+html.er-root .er-tt-name { font-size: 15px; font-weight: 650; line-height: 1.35; color: var(--er2-ink); overflow-wrap: anywhere; word-break: normal; }
+html.er-root .er-tt-meta { font-size: 12px; line-height: 1.45; color: var(--er2-muted); opacity: 1; overflow-wrap: anywhere; }
+html.er-root .er-tt-np { font-size: 13px; line-height: 1.45; font-weight: 500; color: var(--er2-ink); overflow-wrap: anywhere; }
+html.er-root .er-tt-np--pending { font-style: normal; font-weight: 400; color: var(--er2-muted); opacity: 1; }
+html.er-root .er-tt-hint { margin-top: 2px; padding-top: 8px; border-top: 1px solid var(--er2-line); color: var(--er2-action); font-size: 11px; line-height: 1.35; font-weight: 600; letter-spacing: 0; text-transform: none; opacity: 1; }
 html.er-root .er-cluster { background: var(--er2-surface); border-color: var(--room-copper); color: var(--er2-ink); box-shadow: 0 0 0 4px #a94d301f; }
 html.er-root #map path.leaflet-interactive { fill: #b65c3b; stroke: #faf7f1; }
 html.er-root .nowcard { max-width: min(320px, calc(100% - 32px)); border-radius: 10px; box-shadow: var(--er2-shadow); top: auto; bottom: 64px; max-height: min(220px, 45%); overflow-y: auto; overscroll-behavior: contain; }
@@ -203,7 +253,7 @@ html.er-desktop .er-header-tools [data-er-dest]::before { content: ''; display: 
   html.er-root .header .header-btn svg { width: 18px; height: 18px; flex-shrink: 0; }
   html.er-root .header :is(#theme-toggle, #settings-toggle, #er-overflow-toggle, [data-er-open-search])::after { content: attr(aria-label); font-size: 13px; margin-inline-start: 10px; }
   html.er-root .header #er-auth-button { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  html.er-root #map-panel > .er-collapse { top: auto; bottom: 32px; right: 12px; }
+  html.er-root #map-panel > .er-collapse { position: absolute; z-index: 450; top: auto; bottom: 32px; right: 12px; }
 }
 
 html.er-root .er-overflow:not([hidden]) { grid-template-columns: repeat(2, minmax(0, 1fr)); width: min(360px, calc(100vw - 32px)); max-width: min(360px, calc(100vw - 32px)); border-radius: 10px; }

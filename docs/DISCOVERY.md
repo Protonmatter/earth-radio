@@ -62,6 +62,21 @@ runtime, references and provenance), rebuild with `npm run build:web`, and run
 source with a newer shell-cache name so installed clients receive the rollback.
 Never republish a changed artifact under an existing desktop release tag.
 
+## Tooltip layout follow-up
+
+The maintained listening-room stylesheet gives the map tooltip a 280px border-box
+width capped at the viewport minus 32px. Leaflet's positioning pane has no intrinsic
+width; a maximum alone allowed the former grid tooltip to shrink to 69px and break
+the country, pending message and listening hint into a narrow column. The follow-up
+uses the current Paper/Night surface colors, readable metadata contrast, natural
+long-name wrapping and a separated, sentence-case listening hint. Tooltip lookup,
+hover and station-selection handlers are unchanged. The shell advances to v61 so
+the changed stylesheet is refreshed when this candidate is deployed.
+
+The rendered tooltip regression covers 1440px, 390px and 320px layouts, both
+palettes, long station names, pending/resolved metadata and hover without autoplay.
+This follow-up is a local candidate until separately committed and published.
+
 ## On-demand world map coverage
 
 The initial catalog is a bounded popular/featured-country sample, so filtering it
@@ -137,3 +152,13 @@ git diff --check
 ```
 
 Browser tests intercept external requests and use fixture audio. They establish application behavior, not real station uptime, stream fidelity, physical-device compatibility, or production deployment configuration. A local 10,000-record synthetic timing probe took approximately 80–115 ms for these ranking/selection operations on the development host; this is not a throughput guarantee or recommendation-quality evaluation.
+
+## Geographic atlas interaction follow-up
+
+Version 0.28.0 bundles country/city labels and geographic detail; see [map data](MAP_DATA.md).
+Station tooltip cards stay inside the visible map/viewport, including while their
+metadata changes. The desktop Hide map control is absolutely positioned so it does
+not add a hidden 30px scroll row that moves a station during pointer selection.
+Explicit Fit stations and area-search actions stop residual camera corrections,
+measure the map and restore the same drag limits in a finally path. This prevents
+a hidden-to-visible resize correction from overriding a newer fitted view.

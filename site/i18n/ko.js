@@ -1,5 +1,12 @@
 // Engineering-authored Korean catalog. Native editorial review has not occurred.
 export default {
+  "map.labels": "지도 이름 표시",
+  "map.labelsGroup": "지리 이름 표시",
+  "map.countryNames": "국가 이름",
+  "map.cityNames": "도시 이름",
+  "map.labelHint": "확대하면 더 많은 도시 이름이 표시됩니다.",
+  "map.loadingDetail": "지도 세부 정보를 불러오는 중…",
+  "map.detailUnavailable": "지도 세부 정보를 불러올 수 없어 기본 지도를 표시합니다.",
   'app.tagline': '회복력 있는 글로벌 라디오',
   'app.skip': '방송국 목록으로 건너뛰기',
 

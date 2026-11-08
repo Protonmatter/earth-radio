@@ -1,5 +1,12 @@
 // Engineering-authored Simplified Chinese catalog. Native editorial review has not occurred.
 export default {
+  "map.labels": "地图标注",
+  "map.labelsGroup": "地理标注",
+  "map.countryNames": "国家名称",
+  "map.cityNames": "城市名称",
+  "map.labelHint": "放大地图可显示更多城市名称。",
+  "map.loadingDetail": "正在加载地图详情…",
+  "map.detailUnavailable": "地图详情不可用，显示基础地图。",
   'app.tagline': '可靠的全球广播',
   'app.skip': '跳到电台列表',
 

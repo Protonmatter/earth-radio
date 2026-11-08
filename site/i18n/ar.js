@@ -1,5 +1,12 @@
 // Engineering-authored Arabic catalog. Native editorial review has not occurred.
 export default {
+  "map.labels": "تسميات الخريطة",
+  "map.labelsGroup": "التسميات الجغرافية",
+  "map.countryNames": "أسماء البلدان",
+  "map.cityNames": "أسماء المدن",
+  "map.labelHint": "تظهر أسماء مدن أكثر عند التكبير.",
+  "map.loadingDetail": "جارٍ تحميل تفاصيل الخريطة…",
+  "map.detailUnavailable": "تفاصيل الخريطة غير متاحة. يتم عرض الأطلس الأساسي.",
   'app.tagline': 'راديو عالمي مَرِن',
   'app.skip': 'تخطي إلى قائمة المحطات',
 

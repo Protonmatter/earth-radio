@@ -19,7 +19,7 @@
   <script type="module" src="./assets/pinned-stations.js"></script>
   <script type="module" src="./assets/metadata-enrichment.js"></script>
   <link rel="stylesheet" href="./assets/metadata-enrichment.css" />
-  <script type="module" crossorigin src="./assets/index-a673e435.js"></script>
+  <script type="module" crossorigin src="./assets/index-fdff159e.js"></script>
   <link rel="stylesheet" crossorigin href="./assets/index-CSoL7F-Y.css">
   <link rel="stylesheet" href="./assets/responsive-ui.css" />
   <script type="module" src="./assets/responsive-ui.js"></script>
@@ -157,6 +157,15 @@
         <button type="button" id="er-map-area" hidden aria-label="Clear map area">Clear area ×</button>
         <button type="button" id="er-map-fit">Fit stations</button>
         <button type="button" id="er-map-focus" disabled aria-label="Focus playing station">On air ↗</button>
+        <details class="er-map-options" id="er-map-options">
+          <summary data-i18n="map.labels">Map labels</summary>
+          <div class="er-map-options-panel" role="group" aria-label="Geographic labels" data-i18n="map.labelsGroup" data-i18n-attr="aria-label">
+            <label><input type="checkbox" data-map-label="countries" checked /><span data-i18n="map.countryNames">Country names</span></label>
+            <label><input type="checkbox" data-map-label="cities" checked /><span data-i18n="map.cityNames">City names</span></label>
+            <p data-i18n="map.labelHint">More city names appear as you zoom in.</p>
+          </div>
+        </details>
+        <p id="er-map-data-status" class="er-map-data-status" role="status" aria-live="polite" hidden></p>
       </div>
       <aside class="nowcard" id="nowcard" aria-live="polite" aria-label="Now playing" hidden>
         <button class="nowcard-close" id="nowcard-close" type="button" aria-label="Hide now playing">&#10005;</button>

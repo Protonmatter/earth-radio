@@ -143,7 +143,7 @@ for (let index = 0; index < 520; index += 1) {
 if (getIdentifyCacheSize() !== 512) throw new Error(`identify cache is not bounded at 512 entries: ${getIdentifyCacheSize()}`);
 clearIdentifyCache();
 
-const bundle = fs.readFileSync(path.join(root, 'site/assets/index-a673e435.js'), 'utf8');
+const bundle = fs.readFileSync(path.join(root, 'site/assets/index-fdff159e.js'), 'utf8');
 if (bundle.includes('Ya(Yh(i))')) throw new Error('runtime bundle still seeds provider links from station metadata');
 
 const panelSource = fs.readFileSync(path.join(root, 'src-recovered/ui/nowPlayingPanel.ts'), 'utf8');

@@ -1,5 +1,16 @@
 # Build state
 
+## 0.28.0 geographic atlas
+
+This candidate adds bounded station tooltips and bundled Natural Earth country/city
+labels, country and regional borders, lakes, rivers and selected roads. Data-only
+assets load by zoom; directory and playback ownership remain with the existing runtime.
+Independent label preferences are local to the device. No map service, subscription,
+new dependency or credential is required. See [map provenance](MAP_DATA.md),
+[release gates](RELEASE-0.28.0.md) and [qualification scope](QUALIFICATION-0.28.0.md).
+The GitHub release provenance and Spaces operations record carry final publication
+identities after exact-source CI, production parity and desktop verification.
+
 ## 0.27.0 listening room
 
 The approved desktop/mobile presentation uses compact, single-column station rows,
