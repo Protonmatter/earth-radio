@@ -8,6 +8,21 @@ import http from 'node:http';
 import { EventEmitter } from 'node:events';
 import net from 'node:net';
 import { createPinnedLookup, guardedRequest, isPrivateIp, requestLimited, requestPublic, resolvePublicTarget } from '../server/net-guard.mjs';
+import {fetchJson} from '../server/desktop-proxy.mjs';
+
+test('desktop directory keeps the caller deadline after nine seconds of guarded resolution',async t=>{
+  let clock=1000;
+  t.mock.method(Date,'now',()=>clock);
+  const result=await fetchJson('https://radio.example/json/stations',15000,{requestImpl:(url,options)=>requestPublic(url,{
+    ...options,
+    resolveTarget:async href=>{clock+=9000;return{href,hostname:'radio.example',address:'1.1.1.1',family:4};},
+    requestOnce:async(_target,{deadlineAt})=>{
+      assert.equal(deadlineAt-clock,6000);
+      return{statusCode:200,headers:{},body:Buffer.from('[{"stationuuid":"slow-valid"}]')};
+    }
+  })});
+  assert.deepEqual(result,[{stationuuid:'slow-valid'}]);
+});
 
 test('pinned DNS preserves the legacy single-address callback contract', async () => {
   const lookup = createPinnedLookup({ hostname: 'radio.example', address: '1.1.1.1', family: 4 });

@@ -51,6 +51,10 @@ even though a targeted country endpoint can return up to 1,000 records.
 Cache reads/writes are best effort and bounded. Writes get the full remaining
 body-transfer deadline plus a cache margin, so a healthy slow snapshot can warm
 the cache. Failed or stalled cache operations do not hide a valid fresh response.
+On a cold cache, a provider body reset/size failure retries another healthy mirror
+before starting the outage cooldown. At most three body attempts share one absolute
+network deadline; retries do not reset that budget. Desktop guarded JSON requests
+also pass the caller's absolute deadline through DNS, redirect and body phases.
 
 Discovery uses `/json/servers`, deduplicates validated hostnames, caches the healthy
 set, and temporarily deprioritizes failed hosts. Three bootstrap names remain

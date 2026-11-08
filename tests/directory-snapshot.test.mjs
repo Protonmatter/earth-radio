@@ -103,6 +103,20 @@ test('a healthy slow body gets the full download budget and warms one shared cac
   const context={request:new Request('https://radio.example/directory/snapshot')};
   const first=await handler(context),second=await handler(context);assert.equal(await first.text(),await second.text());assert.equal(catalogs,1);assert.equal(second.headers.get('x-directory-state'),'cached');
 });
+
+test('a cold snapshot retries a healthy mirror after the first body resets',async()=>{
+  const entries=new Map(),catalogs=[];
+  const handler=createDirectorySnapshot({cacheImpl:{match:async key=>entries.get(key.url)?.clone(),put:async(key,response)=>{entries.set(key.url,new Response(await response.text(),response));}},fetchImpl:async url=>{
+    if(url.endsWith('/json/servers'))return Response.json([{name:'de1.api.radio-browser.info'},{name:'de2.api.radio-browser.info'}]);
+    catalogs.push(new URL(url).hostname);
+    if(url.startsWith('https://de1.'))return new Response(new ReadableStream({start(controller){controller.enqueue(new TextEncoder().encode('[{"stationuuid":'));setTimeout(()=>controller.error(Error('late provider reset')),10);}}),{headers:{'content-type':'application/json'}});
+    return Response.json([{stationuuid:'healthy',name:'Healthy'}]);
+  }});
+  const context={request:new Request('https://radio.example/directory/snapshot')};
+  const response=await handler(context);assert.equal(response.status,200);assert.match(await response.text(),/healthy/);
+  assert.deepEqual(catalogs,['de1.api.radio-browser.info','de2.api.radio-browser.info']);
+  const cached=await handler(context);assert.equal(cached.headers.get('x-directory-state'),'cached');assert.match(await cached.text(),/healthy/);assert.equal(catalogs.length,2);
+});
 for(const mode of ['reset','oversize'])test(`a provider body ${mode} is an outage, not a cache-backend failure`,async()=>{
   let catalogs=0;
   const handler=createDirectorySnapshot({cacheImpl:{match:async()=>undefined,put:async(_key,response)=>{await response.text();}},fetchImpl:async url=>{

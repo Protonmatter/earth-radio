@@ -46,7 +46,7 @@
     {
       "path": "docs/BUILD_STATE.md",
       "bytes": 26471,
-      "sha256": "debf53c27a2218c77adf4e828643ac423f6a447422b7a3a9b2117656de4e97fd"
+      "sha256": "1e3abc492c7860f48748810536da9e6d98bf8d88e1fbce15b0cbe8ec42d9b8f6"
     },
     {
       "path": "docs/CLOUDFLARE_DEPLOYMENT.md",
@@ -55,8 +55,8 @@
     },
     {
       "path": "docs/DISCOVERY_RELIABILITY.md",
-      "bytes": 9868,
-      "sha256": "a2006d6837f30885cd48b976f1e72635e091fcc0912487eef2dcdeeadb3fd2cb"
+      "bytes": 10197,
+      "sha256": "247f948223b832c6f1916eb6864f13c0ce70565ce9387f5ec06371f61ca90463"
     },
     {
       "path": "docs/DISCOVERY.md",
@@ -111,7 +111,7 @@
     {
       "path": "docs/provenance/hardening-overlays.json",
       "bytes": 14046,
-      "sha256": "49fdca22f7f10ee124c6eb12c66d22c0b78cc43f175ff736d36098d8278f572e"
+      "sha256": "c8265bc08e48d1260a2f49609a3f027700c037c03a045531d655aa651374b6bf"
     },
     {
       "path": "docs/provenance/map-data.json",
@@ -160,8 +160,8 @@
     },
     {
       "path": "docs/QUALIFICATION-0.31.0.md",
-      "bytes": 3938,
-      "sha256": "dd88f7ced4a0abb0274f85aae2191e5adcdcb0e2b5a7c70ff7aa3f39227f8785"
+      "bytes": 4329,
+      "sha256": "73dd7c86d605528f3c39312d6777135d117a0ce52becce6662bad2990c5e75c5"
     },
     {
       "path": "docs/QUALIFICATION-2026-11-03.md",
@@ -370,8 +370,8 @@
     },
     {
       "path": "functions/_shared/directory-snapshot.js",
-      "bytes": 5797,
-      "sha256": "9036f855b2af0b34e01026d37f7f9e5fe2a88ce6affe70d7273b53fab72e187c"
+      "bytes": 6243,
+      "sha256": "33ca7fcaed7b72f723a2d9b53ffe93d5e85f62001bb1e217163e906f080e31d1"
     },
     {
       "path": "functions/_shared/guarded-fetch.js",
@@ -500,8 +500,8 @@
     },
     {
       "path": "server/desktop-proxy.mjs",
-      "bytes": 22380,
-      "sha256": "1a75d3085b27f8d00757501a367c8e0aa5ce5fb7b8ca3e2d022edc0c98f396aa"
+      "bytes": 22480,
+      "sha256": "462a9257b2ebb9b54be91b17bbde54314f87390737430c05c603356abd53de1b"
     },
     {
       "path": "server/example-proxy.mjs",
@@ -1210,8 +1210,8 @@
     },
     {
       "path": "tests/directory-snapshot.test.mjs",
-      "bytes": 12195,
-      "sha256": "fabb101d94fe9bd525d39a369cffd795bba127f6576f005f46dcd7f594fed00d"
+      "bytes": 13545,
+      "sha256": "6841a1b78b42a7a4ba95b448b59b7dbe997700eeb353fd5bd99d869e1b452dd8"
     },
     {
       "path": "tests/discovery-core.test.mjs",
@@ -1390,8 +1390,8 @@
     },
     {
       "path": "tests/net-guard.test.mjs",
-      "bytes": 38005,
-      "sha256": "2f42b0bde497eb990051c2af28068bfc3d64aeebd8058975f0a024a41bb207bc"
+      "bytes": 38728,
+      "sha256": "8d018ef81079382c3dbf993ce1e773d7764bb99668a211967dab03f7eca515f3"
     },
     {
       "path": "tests/nowplaying-clone.test.mjs",

@@ -21,8 +21,8 @@
         "sha256": "329c8af7c7fa7b0921dd2c0028a057e8fea8ff4ac706c0760b8d8de629ede401"
       },
       "current": {
-        "bytes": 22380,
-        "sha256": "1a75d3085b27f8d00757501a367c8e0aa5ce5fb7b8ca3e2d022edc0c98f396aa"
+        "bytes": 22480,
+        "sha256": "462a9257b2ebb9b54be91b17bbde54314f87390737430c05c603356abd53de1b"
       },
       "reason": "Require a per-launch capability path and Origin on API routes, and reject mapped IPv6, CGNAT, and other private stream targets. Mount the combined metadata API (platform now-playing, fingerprint) and import the shared outbound network guard extracted to server/net-guard.mjs. Validated dynamic directory mirrors, fail-fast fan-out and bounded guarded JSON reads (0.31.0)."
     },

@@ -13,7 +13,7 @@ import {createDirectoryHosts} from '../site/assets/directory-hosts.js';
 
 const USER_AGENT = 'EarthRadio/0.24.0 desktop-proxy (+https://github.com/Protonmatter/EarthRadio)';
 const directoryHosts=createDirectoryHosts({fetchImpl:async(url,options)=>{
-  const result=await requestPublic(url,{signal:options.signal,timeoutMs:4000,maxBytes:65536,headers:{Accept:'application/json','User-Agent':USER_AGENT}});
+  const result=await requestPublic(url,{signal:options.signal,timeoutMs:4000,deadlineAt:Date.now()+4000,maxBytes:65536,headers:{Accept:'application/json','User-Agent':USER_AGENT}});
   return new Response(result.body,{status:result.statusCode,headers:result.headers});
 }});
 const DIRECTORY_CACHE_TTL_MS = 10 * 60 * 1000;
@@ -502,8 +502,8 @@ export function decodeIcyMetadata(buffer) {
   return decoded.replace(/\0+$/g, '').trim();
 }
 
-async function fetchJson(url, timeoutMs = 8000) {
-  const response = await requestPublic(url,{timeoutMs,maxBytes:16*1024*1024,headers:{Accept:'application/json','User-Agent':USER_AGENT}});
+export async function fetchJson(url, timeoutMs = 8000, {requestImpl = requestPublic} = {}) {
+  const response = await requestImpl(url,{timeoutMs,deadlineAt:Date.now()+timeoutMs,maxBytes:16*1024*1024,headers:{Accept:'application/json','User-Agent':USER_AGENT}});
   if(response.statusCode!==200)throw Error(`HTTP ${response.statusCode}`);
   return JSON.parse(response.body.toString('utf8'));
 }

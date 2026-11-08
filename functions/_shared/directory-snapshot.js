@@ -13,9 +13,8 @@ export function directoryPath(pathname){
 export function createDirectorySnapshot({fetchImpl=globalThis.fetch,cacheImpl=null,now=Date.now,timeoutMs=15000,cacheTimeoutMs=1000}={}){
   const hosts=createDirectoryHosts({fetchImpl,now});const pending=new Map(),failures=new Map(),bodyStates=new WeakMap();
   async function cacheOperation(operation,budget=cacheTimeoutMs){let timer;try{return await Promise.race([operation(),new Promise((_resolve,reject)=>{timer=setTimeout(()=>reject(Error('Cache deadline exceeded')),budget);})]);}finally{clearTimeout(timer);}}
-  async function upstream(path){
-    const deadline=now()+timeoutMs;
-    for(const host of await hosts.discover()){
+  async function upstream(path,deadline){
+    for(const host of (await hosts.discover()).slice(0,3)){
       const remaining=deadline-now();if(remaining<=0)break;
       const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),remaining);
       try{
@@ -44,7 +43,27 @@ export function createDirectorySnapshot({fetchImpl=globalThis.fetch,cacheImpl=nu
     async function refresh(){
       if(pending.has(key.url))return (await pending.get(key.url)).clone();
       if(pending.size>=4)throw Error('Directory refresh capacity reached');
-      const task=upstream(path).then(async response=>{if(cache){const copy=response.clone(),state=bodyStates.get(response);try{await cacheOperation(()=>cache.put(key,copy),Math.max(cacheTimeoutMs,(state?.deadline||now())-now()+cacheTimeoutMs));}catch(error){void copy.body?.cancel().catch(()=>{});if(state?.error)throw error;cacheUnavailable=true;}}failures.delete(key.url);return response;}).catch(error=>{failures.set(key.url,now()+60000);throw error;}).finally(()=>pending.delete(key.url));
+      const task=(async()=>{
+        const deadline=now()+timeoutMs;
+        for(let attempt=0;attempt<3;attempt++){
+          const response=await upstream(path,deadline);
+          if(cache){
+            const copy=response.clone(),state=bodyStates.get(response);
+            try{await cacheOperation(()=>cache.put(key,copy),Math.max(cacheTimeoutMs,deadline-now()+cacheTimeoutMs));}
+            catch(error){
+              void copy.body?.cancel().catch(()=>{});
+              if(state?.error){
+                void response.body?.cancel().catch(()=>{});
+                if(now()>=deadline||attempt===2)throw error;
+                continue;
+              }
+              cacheUnavailable=true;
+            }
+          }
+          failures.delete(key.url);return response;
+        }
+        throw Error('Directory body retries exhausted');
+      })().catch(error=>{failures.set(key.url,now()+60000);throw error;}).finally(()=>pending.delete(key.url));
       pending.set(key.url,task);return (await task).clone();
     }
     let response=stored;

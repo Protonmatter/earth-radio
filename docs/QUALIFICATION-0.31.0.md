@@ -4,14 +4,18 @@ This release targets the five directory/search/map findings in the November 8
 review. Its architecture, limits, data provenance and rollback are documented in
 [DISCOVERY_RELIABILITY.md](DISCOVERY_RELIABILITY.md).
 
-Local full verification passed 492 tests with three environment-dependent skips,
+Local full verification passed 494 tests with three environment-dependent skips,
 including metadata/desktop smokes, lint, coherent module versions, static-site and
 website validation, and deterministic source hashes. Focused adversarial tests
 cover country-code alias collisions, malformed mixed-country batches before a
 configured limit, protected place/genre terms, cache failures and deadlines,
 late provider resets, body-size caps, stale refresh and conditional ETags.
-The independent review's two final P2 findings were reproduced, corrected and
-read back with 23 focused cases passing.
+The independent review's country-code and limit-ordering P2 findings were reproduced,
+corrected and read back with 23 focused cases passing. Hosted review then identified
+an eight-second desktop default truncating the caller's 15-second budget, and a
+provider body reset bypassing healthy-mirror failover. Both have behavioral regressions:
+nine seconds of simulated resolution still leaves six seconds for the response, and
+a failed body retries a healthy sibling and warms the cache within one shared budget.
 
 The final local repeat passed all 149 Chromium/WebKit browser cases, the 42-scenario
 rendered matrix, seven standalone directory/HLS/navigation cases, and Windows ARM64
