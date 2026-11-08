@@ -1,0 +1,136 @@
+{
+  "schemaVersion": 1,
+  "sourceRevision": "v5.1.2",
+  "license": "Public domain",
+  "terms": "https://www.naturalearthdata.com/about/terms-of-use/",
+  "sources": [
+    {
+      "name": "ne_10m_admin_0_countries",
+      "url": "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/v5.1.2/geojson/ne_10m_admin_0_countries.geojson",
+      "bytes": 13287234,
+      "sha256": "239eec57ac17f100a11e2536cffc56752c318b50ae765b0918ff7aab4ce8f255",
+      "features": 258
+    },
+    {
+      "name": "ne_10m_admin_1_states_provinces_lines",
+      "url": "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/v5.1.2/geojson/ne_10m_admin_1_states_provinces_lines.geojson",
+      "bytes": 21092537,
+      "sha256": "1a1f30ccaaf4cc9c4bde34266f0b8cbb955d3a4cf254b756912255f2ec7c75b6",
+      "features": 10179
+    },
+    {
+      "name": "ne_10m_lakes",
+      "url": "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/v5.1.2/geojson/ne_10m_lakes.geojson",
+      "bytes": 5043554,
+      "sha256": "2d036f53dedec578001c5c30c2959ee7d4eebc1306900fa4367c49929ec8f2d9",
+      "features": 1355
+    },
+    {
+      "name": "ne_10m_populated_places_simple",
+      "url": "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/v5.1.2/geojson/ne_10m_populated_places_simple.geojson",
+      "bytes": 4932147,
+      "sha256": "fd3fa867a320cbd5c5b6bb5bc550afeec2939fb2cef688e508007282a55ac42f",
+      "features": 7342
+    },
+    {
+      "name": "ne_10m_rivers_lake_centerlines",
+      "url": "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/v5.1.2/geojson/ne_10m_rivers_lake_centerlines.geojson",
+      "bytes": 7307743,
+      "sha256": "bb854a900ecbd3b408df46d5e16e3e0f974ba55993f9d8b5c26e855273c0905a",
+      "features": 1455
+    },
+    {
+      "name": "ne_10m_roads",
+      "url": "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/v5.1.2/geojson/ne_10m_roads.geojson",
+      "bytes": 50474096,
+      "sha256": "66a0c7b438e92fd124822cc5921cfa11042f48c294ade5e0f03f2c6640fd0248",
+      "features": 56600
+    },
+    {
+      "name": "ne_50m_admin_0_countries",
+      "url": "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/v5.1.2/geojson/ne_50m_admin_0_countries.geojson",
+      "bytes": 3083490,
+      "sha256": "3e458fc036ad0a66411f2c1e6cac49c5d7bfb81cb1123bc513b22511a2b7fdeb",
+      "features": 242
+    }
+  ],
+  "outputs": [
+    {
+      "path": "site/assets/map-world.js",
+      "bytes": 2774372,
+      "sha256": "b021d4b516b305427c515128b556ceaea5ac7a4bee37358ca619a5f61171dabc",
+      "countries": 242,
+      "lakes": 46,
+      "omittedGeometry": {
+        "ne_10m_admin_0_countries": 0,
+        "ne_10m_admin_1_states_provinces_lines": 1,
+        "ne_10m_lakes": 0,
+        "ne_10m_populated_places_simple": 0,
+        "ne_10m_rivers_lake_centerlines": 1,
+        "ne_10m_roads": 0,
+        "ne_50m_admin_0_countries": 0
+      },
+      "labels": 7600
+    },
+    {
+      "path": "site/assets/map-detail.js",
+      "bytes": 10588454,
+      "sha256": "5d713b76949df7b1fb7453c5e85eacdc22d658cd2e00a091f33220f1a1225584",
+      "countries": 258,
+      "lakes": 1355,
+      "omittedGeometry": {
+        "ne_10m_admin_0_countries": 0,
+        "ne_10m_admin_1_states_provinces_lines": 1,
+        "ne_10m_lakes": 0,
+        "ne_10m_populated_places_simple": 0,
+        "ne_10m_rivers_lake_centerlines": 1,
+        "ne_10m_roads": 0,
+        "ne_50m_admin_0_countries": 0
+      },
+      "lines": 0
+    },
+    {
+      "path": "site/assets/map-terrain.js",
+      "bytes": 8829410,
+      "sha256": "c2f063b976d58da973882e858463c4978950f5a4e96bed4bd0395fc8763a9474",
+      "countries": 0,
+      "lakes": 0,
+      "omittedGeometry": {
+        "ne_10m_admin_0_countries": 0,
+        "ne_10m_admin_1_states_provinces_lines": 1,
+        "ne_10m_lakes": 0,
+        "ne_10m_populated_places_simple": 0,
+        "ne_10m_rivers_lake_centerlines": 1,
+        "ne_10m_roads": 0,
+        "ne_50m_admin_0_countries": 0
+      },
+      "lines": 11379
+    },
+    {
+      "path": "site/assets/map-roads.js",
+      "bytes": 9816217,
+      "sha256": "d81fc5eac4cf6c61d08184e76c55b3b6a4f06adc7b30f00f6a7e9cfcf0305543",
+      "countries": 0,
+      "lakes": 0,
+      "omittedGeometry": {
+        "ne_10m_admin_0_countries": 0,
+        "ne_10m_admin_1_states_provinces_lines": 1,
+        "ne_10m_lakes": 0,
+        "ne_10m_populated_places_simple": 0,
+        "ne_10m_rivers_lake_centerlines": 1,
+        "ne_10m_roads": 0,
+        "ne_50m_admin_0_countries": 0
+      },
+      "lines": 30481
+    }
+  ],
+  "transform": {
+    "coordinateDecimals": 4,
+    "worldToleranceDegrees": 0.01,
+    "detailToleranceDegrees": 0.0015,
+    "lakeToleranceDegrees": 0.002,
+    "lineToleranceDegrees": 0.003,
+    "roads": "Major/Secondary Highway, Road, Beltway and Bypass; other classes omitted",
+    "emptyGeometryFeaturesOmitted": 2
+  }
+}

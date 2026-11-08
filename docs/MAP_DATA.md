@@ -1,21 +1,79 @@
-# Bundled atlas data
+# Bundled geographic atlas
 
-The listening atlas replaces the previous CARTO raster basemap with bundled Natural Earth land geometry. The existing Leaflet engine handles panning, zoom, marker clustering, and interaction. The basemap makes no external tile, geocoding, location, or provider API requests.
+Earth Radio 0.28.0 draws a local geographic map using the existing Leaflet 1.9.4
+engine. Country and city labels have independent switches in **Map labels**;
+preferences are remembered on this device, independently of account sync. Zoom
+reveals more names, country/regional borders, lakes, rivers and selected roads.
+Labels are priority ordered and collision checked before rendering. They cannot
+capture station pointer or keyboard input.
 
-- Dataset: Natural Earth 1:110m land, release **v5.1.2**.
-- Source: https://raw.githubusercontent.com/nvkelso/natural-earth-vector/v5.1.2/geojson/ne_110m_land.geojson
-- Source repository: https://github.com/nvkelso/natural-earth-vector
-- Terms: https://www.naturalearthdata.com/about/terms-of-use/
-- Retrieved: 2026-11-03.
-- Source length: 138,160 bytes.
-- Source SHA-256: `9e0729ee253ca7d7a5c4ae9395fb1902264c5377c52e224d13dd85010e2835d9`.
-- Transformation: preserve all 127 land features and their polygon/ring structure; remove descriptive properties; round coordinates to three decimal degrees; serialize compactly as the `WORLD_LAND` export in `site/assets/world-land.js`.
-- Bundled size at introduction: 96,439 bytes including the module wrapper.
+All geography comes from Natural Earth **v5.1.2**. Its [terms](https://www.naturalearthdata.com/about/terms-of-use/)
+place vector and raster data in the public domain, permitting commercial use,
+modification and redistribution without a data license fee or request quota.
+Leaflet uses BSD-2-Clause and markercluster uses MIT; their notices and the data
+attribution ship in [map-data-notices.txt](../site/map-data-notices.txt). These
+component/data terms do not change Earth Radio's application licensing.
+No tile server, map subscription, provider key, geocoder, GPS request or new npm
+dependency is used. Ordinary application hosting still has its own limits.
 
-Natural Earth's terms place its vector and raster map data in the public domain. The map shows a voluntary "Made with Natural Earth" attribution. This data attribution does not change the application's licensing.
+## Sources and transformations
 
-The layer is deliberately a global radio-discovery atlas, not a street map. Zoom is limited to 1–7 because the source is generalized at 1:110m. Coastline precision, tiny islands, and inland details are limited. The data contains land outlines rather than political borders or geocoded station locations; station locations still come from the directory, and missing/invalid coordinates are never fabricated.
+[The source manifest](provenance/map-data.json) pins seven upstream GeoJSON files
+by URL, byte length and SHA-256: 1:50m countries for the overview; 1:10m countries,
+populated places, administrative boundaries, lakes, rivers and roads for detail.
+Country names include the six supported application languages where the dataset
+provides them. City names retain their source proper names.
 
-The basemap is drawn in a noninteractive Leaflet pane beneath station markers, using existing Night/Paper palette controls. Graticules and geography work without tile connectivity after the application shell has been cached. Internet connectivity is still needed for fresh directories and live radio streams.
+The deterministic curator rounds to four decimal degrees, simplifies lines with
+an iterative Ramer-Douglas-Peucker algorithm, preserves closed polygon rings and
+bounds, and removes descriptive properties except the explicit rendering schema.
+It omits two empty source geometries (one regional boundary and one river) rather
+than inventing coordinates. Unknown/ferry road classes are omitted.
 
-Before replacing this dataset, verify the source version and terms, review geometry bounds/rings and resulting file size, update this provenance, bump the service-worker generation, regenerate release hashes, and run the discovery browser suite. Keep all imported data local rather than adding a runtime provider dependency without a separate decision.
+| Bundled module | Contents | Approximate size | Loaded at |
+| --- | --- | --- | --- |
+| map-world.js | 242 countries, 46 major lakes, 258 country labels, 7,342 cities | 2.8 MB | Overview |
+| map-detail.js | 258 countries and 1,355 lakes | 10.6 MB | Zoom 4 |
+| map-terrain.js | 1,201 rivers and 10,178 regional boundaries | 8.8 MB | Zoom 5 |
+| map-roads.js | 30,481 selected road lines | 9.8 MB | Zoom 6 |
+
+Every module stays below the 16 MiB curation cap. Detailed features are filtered to
+the viewport and source minimum zoom, then drawn on a noninteractive canvas. The
+initial overview uses SVG country polygons. The service worker caches these assets
+for offline geography; fresh directories, streams and sync still need internet.
+If a module cannot load, the overview/fallback remains usable, a status message
+explains the missing detail, and station loading/search remain available.
+
+This is generalized geographic data, not a navigation product. Natural Earth does
+not supply all local streets, building addresses, traffic or routing. Zoom is
+bounded to 1–10 and city labels are decluttered. Coastline precision and coverage
+vary with scale. Political boundaries follow Natural Earth's cartographic choices;
+they do not imply endorsement. Station locations remain directory-provided and
+missing/invalid station coordinates are never fabricated.
+
+## Rebuild and validation
+
+Normal web/desktop builds use committed curated assets without upstream downloads.
+To reproduce them from the pinned sources, run from the repository root:
+
+```powershell
+node scripts/build-map-data.mjs --download
+node --test tests/map-atlas.test.mjs
+npm run verify
+npm run test:e2e
+npm run test:rendered
+```
+
+The first command downloads and hash-checks inputs under ignored `.build/map-source/`.
+Omit `--download` to rebuild from those existing verified inputs. It prints output
+sizes/hashes; unchanged pinned inputs must reproduce the committed output hashes.
+Tests strictly parse data-only exports, validate every coordinate/ring/bound/schema,
+and compare output hashes with provenance. CI does not need a live upstream source.
+
+Before changing data or its curator, review terms, sources, output sizes, omissions,
+geometry and label priorities. Update provenance, the service-worker generation,
+release hashes and documentation, and run station loading, area search, tooltip,
+label toggle/persistence, palette, RTL and failure-path regressions.
+For rollback, restore the previous verified application/data set with a newer
+service-worker generation; retain the guarded Functions and private metadata quota
+binding. A local label preference can simply be changed in Map labels.

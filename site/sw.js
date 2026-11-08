@@ -1,4 +1,4 @@
-const CACHE_NAME = 'earth-radio-shell-v59-state-sync-0-27-0';
+const CACHE_NAME = 'earth-radio-shell-v61-geographic-atlas';
 const SHELL_ASSETS = [
   './',
   './index.html',
@@ -11,7 +11,7 @@ const SHELL_ASSETS = [
   './branding/earth-radio-192-v2.png',
   './branding/earth-radio-512-v2.png',
   './assets/hls.light-Dr1Fv81C.js',
-  './assets/index-a673e435.js',
+  './assets/index-fdff159e.js',
   './assets/index-CSoL7F-Y.css',
   './assets/storage-guard.js',
   './assets/directory-expansion.js',
@@ -30,6 +30,12 @@ const SHELL_ASSETS = [
   './assets/listening-room.css',
   './assets/vector-atlas.js',
   './assets/world-land.js',
+  './assets/map-core.js',
+  './assets/map-world.js',
+  './assets/map-detail.js',
+  './assets/map-terrain.js',
+  './assets/map-roads.js',
+  './map-data-notices.txt',
   './assets/auth-core.js',
   './assets/sync-core.js',
   './assets/auth-ui.js',
@@ -93,7 +99,7 @@ async function cacheFirst(request) {
 }
 
 function isImmutableAsset(pathname) {
-  return /index-a673e435|index-CSoL7F-Y|hls\.light-Dr1Fv81C/.test(pathname);
+  return /index-fdff159e|index-CSoL7F-Y|hls\.light-Dr1Fv81C/.test(pathname);
 }
 
 self.addEventListener('fetch', event => {

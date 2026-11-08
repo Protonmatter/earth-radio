@@ -75,7 +75,7 @@
       "reason": "Remove a reference to an excluded source map from the vendored HLS runtime."
     },
     {
-      "path": "site/assets/index-a673e435.js",
+      "path": "site/assets/index-fdff159e.js",
       "intakePath": "site/assets/index-B4rKOAHV.js",
       "intake": {
         "bytes": 273352,
@@ -83,9 +83,9 @@
       },
       "current": {
         "bytes": 275522,
-        "sha256": "a673e43528abd100a2cdbdb05637e4dbd67139cf25cb4da0c76c1497e4449a06"
+        "sha256": "fdff159e7ca26fa9e4d385d220b29c8b58b6475f48d3300ca915fdedd6c57b1e"
       },
-      "reason": "Register the service worker after asynchronous startup and remove a reference to an excluded source map. Bind a station tooltip on map markers for pre-selection progressive disclosure, delegating content to the maintained metadata overlay hook. Dispatch earthradio:station-selected after successful station playback (canonical stream identity for MediaSource/blob playback). Serialize and coalesce boot, manual, retry, cloned, and directory-owned station loads behind one runtime drain promise; settlement now carries a monotonic load ID, and the correlated runtime API is mirrored in src-recovered/main.ts. Previous/next and Media Session navigation carry explicit playback results and dispatch selection only when playback succeeded. Rename the deployed immutable bundle to the deterministic first eight hexadecimal characters of its final SHA-256 while retaining the installed intake path as provenance evidence. November 2026: import maintained discovery ranking/UI and bundled vector atlas; transform the runtime filtered pool, expose station details, observe playback outcomes, refresh current marker payloads/coordinates, and preserve existing successful-selection gates. Add radio-only on-demand mapped-directory normalization and augmentation before filtering, with consistent area/view controls. Align the embedded runtime version with package 0.26.0 for native auth delivery; no station algorithm changes. Approved listening-room presentation (2026-11-07): virtual-list sizing constants change to 88px stride and a single column, and the English all-stations heading becomes Stations; item selection, rendering, network and playback handlers remain unchanged."
+      "reason": "Register the service worker after asynchronous startup and remove a reference to an excluded source map. Bind a station tooltip on map markers for pre-selection progressive disclosure, delegating content to the maintained metadata overlay hook. Dispatch earthradio:station-selected after successful station playback (canonical stream identity for MediaSource/blob playback). Serialize and coalesce boot, manual, retry, cloned, and directory-owned station loads behind one runtime drain promise; settlement now carries a monotonic load ID, and the correlated runtime API is mirrored in src-recovered/main.ts. Previous/next and Media Session navigation carry explicit playback results and dispatch selection only when playback succeeded. Rename the deployed immutable bundle to the deterministic first eight hexadecimal characters of its final SHA-256 while retaining the installed intake path as provenance evidence. November 2026: import maintained discovery ranking/UI and bundled vector atlas; transform the runtime filtered pool, expose station details, observe playback outcomes, refresh current marker payloads/coordinates, and preserve existing successful-selection gates. Add radio-only on-demand mapped-directory normalization and augmentation before filtering, with consistent area/view controls. Align the embedded runtime version with package 0.26.0 for native auth delivery; no station algorithm changes. Approved listening-room presentation (2026-11-07): virtual-list sizing constants change to 88px stride and a single column, and the English all-stations heading becomes Stations; item selection, rendering, network and playback handlers remain unchanged. Geographic atlas release (2026-11-07): embedded version marker advances to 0.28.0; geographic rendering remains in maintained modules."
     },
     {
       "path": "site/assets/metadata-enrichment.css",
@@ -130,10 +130,10 @@
         "sha256": "c007984ee6349eaee532c1b3e2297e7fdac81610d4fae167c7595e127cef2d42"
       },
       "current": {
-        "bytes": 27445,
-        "sha256": "d294d6c14d95b91784a8e3633067835e9c8c60378a2908314faca8c86cf76d16"
+        "bytes": 28218,
+        "sha256": "9c16ff7adc96fdb188c3783664386ce7a34ca7b9a838d4d49df485fb600b1d58"
       },
-      "reason": "Move frame-ancestors enforcement to the deployable response header policy, then add responsive landmarks, iOS viewport/audio attributes, mobile destinations, compact header icons, additive responsive assets, country and station search controls, complete Now Playing metadata and sleep actions, the additive UI refresh stylesheet, and header actions ordered in the rail's reading sequence so keyboard focus follows the visual order. Reference the deployed runtime through its content-addressed filename. Load the git-catalogued LISTEN.moe station overlay before the recovered bundle, and admit wss://listen.moe in the in-page connect-src policy. Atlas lock: Night/Paper You panel, four phone tabs (Atlas/Browse/Kept/You), place-first search, and atlas-lock.css/js. November 2026: add the station discovery controls/details dialog and vector-atlas controls; load and coherently precache the maintained discovery/map assets under worker generation v47. Approved listening-room presentation and shell cache update (2026-11-07)."
+      "reason": "Move frame-ancestors enforcement to the deployable response header policy, then add responsive landmarks, iOS viewport/audio attributes, mobile destinations, compact header icons, additive responsive assets, country and station search controls, complete Now Playing metadata and sleep actions, the additive UI refresh stylesheet, and header actions ordered in the rail's reading sequence so keyboard focus follows the visual order. Reference the deployed runtime through its content-addressed filename. Load the git-catalogued LISTEN.moe station overlay before the recovered bundle, and admit wss://listen.moe in the in-page connect-src policy. Atlas lock: Night/Paper You panel, four phone tabs (Atlas/Browse/Kept/You), place-first search, and atlas-lock.css/js. November 2026: add the station discovery controls/details dialog and vector-atlas controls; load and coherently precache the maintained discovery/map assets under worker generation v47. Approved listening-room presentation and shell cache update (2026-11-07). Geographic atlas release: independent localized country/city label controls and detail-loading status."
     },
     {
       "path": "site/manifest.webmanifest",
@@ -154,10 +154,10 @@
         "sha256": "b09e3207532fe7f47d14e9c53804d7e8caf31cad2fcb2c652b728a93871ea094"
       },
       "current": {
-        "bytes": 3628,
-        "sha256": "c5c26ad6d19c94db6a71fbe33a1218db9abd60f84b8331479408cbe5bd2e57fc"
+        "bytes": 3792,
+        "sha256": "78b4376cd2507f7dd8e80173d73ffe979d9f67dc1a28c37279426845e50eefae"
       },
-      "reason": "Use network-first navigation/configuration updates, keep hashed recovered assets cache-first, reload overlay installation requests so stale browser HTTP entries cannot seed the new service-worker cache, force-cache the hashed runtime bundles, keep the previous worker when reload precaching fails, and precache the UI refresh stylesheet. Precache pinned-stations.js for LISTEN.moe catalog pinning. Precache atlas-lock.css/js and bump the shell cache generation to v46 so clients pick up Night/Paper, glass-on-log, and the four-tab phone chrome. November 2026: add the station discovery controls/details dialog and vector-atlas controls; load and coherently precache the maintained discovery/map assets under worker generation v47. Cache the generated icon PNGs and serve branding/manifest requests from the shell while offline. Native account integration and shared public deployment configuration (2026-11-04). Approved listening-room presentation and shell cache update (2026-11-07). Bump to v59 for dynamic playback-label synchronization."
+      "reason": "Use network-first navigation/configuration updates, keep hashed recovered assets cache-first, reload overlay installation requests so stale browser HTTP entries cannot seed the new service-worker cache, force-cache the hashed runtime bundles, keep the previous worker when reload precaching fails, and precache the UI refresh stylesheet. Precache pinned-stations.js for LISTEN.moe catalog pinning. Precache atlas-lock.css/js and bump the shell cache generation to v46 so clients pick up Night/Paper, glass-on-log, and the four-tab phone chrome. November 2026: add the station discovery controls/details dialog and vector-atlas controls; load and coherently precache the maintained discovery/map assets under worker generation v47. Cache the generated icon PNGs and serve branding/manifest requests from the shell while offline. Native account integration and shared public deployment configuration (2026-11-04). Approved listening-room presentation and shell cache update (2026-11-07). Bump to v59 for dynamic playback-label synchronization. Advance to v60 so the tooltip-width stylesheet is refreshed on deployment. Supersede the local v60 candidate with v61 geographic atlas, coherently precaching its data modules, rules and notices."
     },
     {
       "path": "electron/preload.cjs",

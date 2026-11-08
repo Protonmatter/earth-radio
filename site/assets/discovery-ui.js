@@ -1,6 +1,20 @@
 import { coordinates, fold, pickStation, rankStations, sanitizePreferences } from './discovery-core.js';
 import { createMapDirectory, mergeMappedStations } from './map-directory.js';
 
+// A hidden-to-visible resize can leave Leaflet's animated bounds correction
+// running. Its moveend handler can start another correction while stop() fires.
+// Suspend that handler through the public bounds API for this synchronous action,
+// then restore the same bounds against the final view. No drag limits are lost.
+export function settledMapAction(map, action) {
+  const bounds = map.options.maxBounds;
+  map.setMaxBounds(null);
+  try {
+    map.stop();
+    map.invalidateSize({ pan: false });
+    return action();
+  } finally { map.setMaxBounds(bounds); }
+}
+
 // Adapter contract is documented in docs/DISCOVERY.md. This module owns only
 // discovery state, never playback, persisted account records, or runtime routes.
 export function installDiscovery(adapter) {
@@ -60,7 +74,7 @@ export function installDiscovery(adapter) {
     if (!adapter.allowDirectory()) { mapSearch.disabled = true; return; }
     const map = adapter.map();
     if (!map) return;
-    const box = map.getBounds();
+    const box = settledMapAction(map, () => map.getBounds());
     bounds = { south: box.getSouth(), north: box.getNorth(), west: box.getWest(), east: box.getEast() };
     adapter.prepareArea();
     area.hidden = false;
@@ -92,8 +106,10 @@ export function installDiscovery(adapter) {
   document.getElementById('er-map-fit').addEventListener('click', () => {
     const map = adapter.map(), points = adapter.visible().map(coordinates).filter(Boolean);
     if (!map) return;
-    if (points.length) map.fitBounds(points, { padding: [48, 64], maxZoom: 6, animate: false });
-    else map.setView([25, 5], 2);
+    settledMapAction(map, () => {
+      if (points.length) map.fitBounds(points, { padding: [48, 64], maxZoom: 6, animate: false });
+      else map.setView([25, 5], 2);
+    });
   });
   focus.addEventListener('click', () => {
     const point = coordinates(adapter.current());

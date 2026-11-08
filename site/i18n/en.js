@@ -1,5 +1,12 @@
 // English catalog. Canonical key set for Earth Radio chrome and known runtime labels.
 export default {
+  "map.labels": "Map labels",
+  "map.labelsGroup": "Geographic labels",
+  "map.countryNames": "Country names",
+  "map.cityNames": "City names",
+  "map.labelHint": "More city names appear as you zoom in.",
+  "map.loadingDetail": "Loading map detail…",
+  "map.detailUnavailable": "Map detail unavailable. Showing the basic atlas.",
   'app.tagline': 'Resilient global radio',
   'app.skip': 'Skip to station list',
 

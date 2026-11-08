@@ -1,5 +1,12 @@
 // Engineering-authored Traditional Chinese catalog. Native editorial review has not occurred.
 export default {
+  "map.labels": "地圖標註",
+  "map.labelsGroup": "地理標註",
+  "map.countryNames": "國家名稱",
+  "map.cityNames": "城市名稱",
+  "map.labelHint": "放大地圖可顯示更多城市名稱。",
+  "map.loadingDetail": "正在載入地圖詳情…",
+  "map.detailUnavailable": "地圖詳情無法載入，顯示基礎地圖。",
   'app.tagline': '可靠的全球廣播',
   'app.skip': '跳到電臺列表',
 

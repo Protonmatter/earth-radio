@@ -1,6 +1,7 @@
 import { readFile, readdir } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { validateMapData } from '../site/assets/map-core.js';
 
 async function collectFiles(root) {
   const files = [];
@@ -90,6 +91,17 @@ function atlasTextForScan(source) {
   return match[1] + JSON.stringify(world);
 }
 
+export function mapDataTextForScan(source, kind) {
+  const match = source.match(/^(\/\/[^\r\n]*\r?\n)export const MAP_(WORLD|DETAIL|TERRAIN|ROADS) = ([\s\S]+);\s*$/);
+  if (!match || match[2].toLowerCase() !== kind) throw new Error('Expected a data-only map module');
+  const data = validateMapData(JSON.parse(match[3]), kind === 'world' ? 'world' : 'detail');
+  for (const key of ['countries', 'water', 'lines']) {
+    for (const feature of data[key]?.features ?? []) { feature.geometry.coordinates = []; feature.properties.bounds = []; }
+  }
+  for (const label of data.labels ?? []) label.point = [];
+  return match[1] + JSON.stringify(data);
+}
+
 export async function validateSite(rootInput) {
   const root = path.resolve(rootInput);
   const files = await collectFiles(root);
@@ -146,6 +158,11 @@ export async function validateSite(rootInput) {
     if (relative === 'assets/world-land.js') {
       try { textForScan = atlasTextForScan(content); }
       catch (error) { errors.push(`Invalid atlas data in ${relative}: ${error.message}`); }
+    }
+    const mapData = relative.match(/^assets\/map-(world|detail|terrain|roads)\.js$/);
+    if (mapData) {
+      try { textForScan = mapDataTextForScan(content, mapData[1]); }
+      catch (error) { errors.push(`Invalid map data in ${relative}: ${error.message}`); }
     }
     if (forbidden.test(textForScan)) {
       errors.push(`Forbidden local reference in ${relative}`);

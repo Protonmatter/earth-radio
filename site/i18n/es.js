@@ -1,5 +1,12 @@
 // Engineering-authored Spanish catalog. Native editorial review has not occurred.
 export default {
+  "map.labels": "Etiquetas del mapa",
+  "map.labelsGroup": "Etiquetas geográficas",
+  "map.countryNames": "Nombres de países",
+  "map.cityNames": "Nombres de ciudades",
+  "map.labelHint": "Acerca el mapa para ver más ciudades.",
+  "map.loadingDetail": "Cargando detalles del mapa…",
+  "map.detailUnavailable": "No se pudieron cargar los detalles. Se muestra el atlas básico.",
   'app.tagline': 'Radio global resiliente',
   'app.skip': 'Saltar a la lista de emisoras',
 

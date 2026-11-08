@@ -17,6 +17,12 @@ export default [
       // hardening overlays; never a lint target.
       'site/assets/index-*.js',
       'site/assets/hls.light-*.js',
+      // Generated data-only modules are parsed/validated as JSON by site checks;
+      // avoid building an ESLint AST for millions of numeric coordinates.
+      'site/assets/map-world.js',
+      'site/assets/map-detail.js',
+      'site/assets/map-terrain.js',
+      'site/assets/map-roads.js',
       // Evidence-only source snapshot (TypeScript, no toolchain in this repo).
       'src-recovered/**'
     ]

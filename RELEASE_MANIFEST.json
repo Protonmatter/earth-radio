@@ -1,6 +1,6 @@
 {
   "name": "Earth Radio",
-  "version": "0.27.0",
+  "version": "0.28.0",
   "artifactType": "recovered-source-and-static-site",
   "files": [
     {
@@ -45,8 +45,8 @@
     },
     {
       "path": "docs/BUILD_STATE.md",
-      "bytes": 22992,
-      "sha256": "84481823a942193d464993eebdabe56490f43669b01a87fc89ee195b30813036"
+      "bytes": 23685,
+      "sha256": "4a6f779576552122ff0cbebe01a7bcef510e29fa815a27c074b858140244752e"
     },
     {
       "path": "docs/CLOUDFLARE_DEPLOYMENT.md",
@@ -55,8 +55,8 @@
     },
     {
       "path": "docs/DISCOVERY.md",
-      "bytes": 13481,
-      "sha256": "556b0dc94a310a46e00d78537329ad88c9b1a0fc831e0a20eb4baee27417c6c9"
+      "bytes": 15019,
+      "sha256": "633d3f075ebf1eff94d5befd2ff3ca01de7a037af9c7fcc4130ace84318e3ab9"
     },
     {
       "path": "docs/E2E_TESTING.md",
@@ -70,8 +70,8 @@
     },
     {
       "path": "docs/INSTALLATION.md",
-      "bytes": 7773,
-      "sha256": "468204d102bea0e01a8fc00f442bcc680586c36e20257b8706f76cdfc0612b22"
+      "bytes": 7947,
+      "sha256": "7392a62196cc0ab90afa13df4e26ac660ff46d6e1017bc584d3e707916aab906"
     },
     {
       "path": "docs/LIVE_METADATA.md",
@@ -80,8 +80,8 @@
     },
     {
       "path": "docs/MAP_DATA.md",
-      "bytes": 2339,
-      "sha256": "e0d79b13eaacb3405bf3aae6c52f95d57f990f301e2ec376bf25c2eac1f75f32"
+      "bytes": 4606,
+      "sha256": "800b6dcba3c6bb338a4729d1161778d89d04c3535f4516e58a5a7d32b1c3defc"
     },
     {
       "path": "docs/OPERATIONS.md",
@@ -95,8 +95,13 @@
     },
     {
       "path": "docs/provenance/hardening-overlays.json",
-      "bytes": 12650,
-      "sha256": "6832b4ae250b63ac58bdee2b481f363c387948a076eeebb4291961ded04a897a"
+      "bytes": 13083,
+      "sha256": "3ad048645a546436653b02dee2bcd225389ff77a38236ed3f3f824fcc9d33351"
+    },
+    {
+      "path": "docs/provenance/map-data.json",
+      "bytes": 4847,
+      "sha256": "b480ba103466558975cd521818656cf8ae04c312ef29102ed47185864ad3e1ba"
     },
     {
       "path": "docs/provenance/recovery-manifest.json",
@@ -112,6 +117,11 @@
       "path": "docs/QUALIFICATION-0.27.0.md",
       "bytes": 3571,
       "sha256": "79ae714a32575065725e3e54b54a3c2c5692d56e34ba1a46356c1200f0b10100"
+    },
+    {
+      "path": "docs/QUALIFICATION-0.28.0.md",
+      "bytes": 2428,
+      "sha256": "6d0c18eed446658fa6eecda249846450f73ab2fe422141b9a30de886e85fa3ae"
     },
     {
       "path": "docs/QUALIFICATION-2026-11-03.md",
@@ -164,9 +174,14 @@
       "sha256": "66d3b943466824997c4718b7688ac33d8fcace10af9509b1b51d4615372e784e"
     },
     {
+      "path": "docs/RELEASE-0.28.0.md",
+      "bytes": 3052,
+      "sha256": "462e41d043581a63e7addd45776e52b95d772f27e1b164919ae1a83df068d402"
+    },
+    {
       "path": "docs/RELEASE.md",
       "bytes": 1961,
-      "sha256": "d77b9211cf33663776ce37e580de3d9e899bdf39c26da099676cee253d74f314"
+      "sha256": "735340877ddebd1a75c3d8c52e883c28ac9d949884621df64c5b2a06dfb7bd28"
     },
     {
       "path": "docs/SECURITY.md",
@@ -265,8 +280,8 @@
     },
     {
       "path": "eslint.config.mjs",
-      "bytes": 2494,
-      "sha256": "18540e4d232dfa22fc583dc9ba37663871b8d77ffcea0cfbb20a442b28d3ed04"
+      "bytes": 2790,
+      "sha256": "2d68b6a0ade13b3f1d521f514cb8f97a468330470b2cc5a7b72081ba58ca870f"
     },
     {
       "path": "functions/_shared/guarded-fetch.js",
@@ -296,12 +311,17 @@
     {
       "path": "package-lock.json",
       "bytes": 165688,
-      "sha256": "9e5671c3257ed2ac449bcb6a9d273c8f10ec7b797ef15454c0115c8e0086d1a2"
+      "sha256": "71ff53dea958d72522ccb4d5cdc934e66b6e5941b3bc7f930f8278896c9d8e60"
     },
     {
       "path": "package.json",
-      "bytes": 4053,
-      "sha256": "66ea616a25e2814352f9d4748293c6cad8abaeabf7a7e9ad326197468ef70a97"
+      "bytes": 4078,
+      "sha256": "88aac33bef43674596d5572a49478ea4248dc91f1beadffada17113a5bcce44c"
+    },
+    {
+      "path": "scripts/build-map-data.mjs",
+      "bytes": 9667,
+      "sha256": "a51bb86f792ca748827ce9411e6e9125a7b5157dc70ad6698aff768b8822d3b7"
     },
     {
       "path": "scripts/desktop-package-compat.mjs",
@@ -355,8 +375,8 @@
     },
     {
       "path": "scripts/validate-site.mjs",
-      "bytes": 7651,
-      "sha256": "5596a34d2c116d28e674bc19b1b3df731242a725cf1d6bfdfcd4a51eeb20f0f3"
+      "bytes": 8631,
+      "sha256": "80ed7cf624647e4076c7a06ed7a1980b2f6bf3f63baee32456faf8cab2dd582e"
     },
     {
       "path": "server/desktop-proxy.mjs",
@@ -420,8 +440,8 @@
     },
     {
       "path": "site/_headers",
-      "bytes": 2667,
-      "sha256": "8a03ec5109a58d9cf98ad95632c5ccd4091570db49d33f49a4fcbb6c4b8647cb"
+      "bytes": 2816,
+      "sha256": "040bd77d35029275494986643d8b91ac1b8d08463ef624db8f07f272a881da04"
     },
     {
       "path": "site/assets/atlas-lock.css",
@@ -470,8 +490,8 @@
     },
     {
       "path": "site/assets/discovery-ui.js",
-      "bytes": 11160,
-      "sha256": "fb839044413dee362c6733233bf448e76826a44508b1dd0adcf935ae2f3a92af"
+      "bytes": 11801,
+      "sha256": "a1c201305672fdbefb0a08d01711593aaafb15d6988cf3eeab294702d5edae88"
     },
     {
       "path": "site/assets/discovery.css",
@@ -484,24 +504,49 @@
       "sha256": "6560373fba977682d3acc4290af72029fb722879a2edce30504f8a93caec069c"
     },
     {
-      "path": "site/assets/index-a673e435.js",
-      "bytes": 275522,
-      "sha256": "a673e43528abd100a2cdbdb05637e4dbd67139cf25cb4da0c76c1497e4449a06"
-    },
-    {
       "path": "site/assets/index-CSoL7F-Y.css",
       "bytes": 43016,
       "sha256": "60f44cedcfa837816c145a1b34cdf1b25c64b5530f84b0867016e6097bb27001"
     },
     {
+      "path": "site/assets/index-fdff159e.js",
+      "bytes": 275522,
+      "sha256": "fdff159e7ca26fa9e4d385d220b29c8b58b6475f48d3300ca915fdedd6c57b1e"
+    },
+    {
       "path": "site/assets/listening-room.css",
-      "bytes": 18108,
-      "sha256": "90b062fa96258acdcb68d3001e90f88629918bae6463e41c5731451d8fecb951"
+      "bytes": 23097,
+      "sha256": "344120d37a50e807ebd6f53340394dba3276e113a5385c7b654d91fd7bc33839"
+    },
+    {
+      "path": "site/assets/map-core.js",
+      "bytes": 7718,
+      "sha256": "c939325d85985e237c0f4b51bf68c3c76d61760b48b5048cf1ba375edfefe870"
+    },
+    {
+      "path": "site/assets/map-detail.js",
+      "bytes": 10588454,
+      "sha256": "5d713b76949df7b1fb7453c5e85eacdc22d658cd2e00a091f33220f1a1225584"
     },
     {
       "path": "site/assets/map-directory.js",
       "bytes": 4488,
       "sha256": "916999a35bd253ed38b2fd1f5c0cd6f2f139ca16904efa14a01773969507d90f"
+    },
+    {
+      "path": "site/assets/map-roads.js",
+      "bytes": 9816217,
+      "sha256": "d81fc5eac4cf6c61d08184e76c55b3b6a4f06adc7b30f00f6a7e9cfcf0305543"
+    },
+    {
+      "path": "site/assets/map-terrain.js",
+      "bytes": 8829410,
+      "sha256": "c2f063b976d58da973882e858463c4978950f5a4e96bed4bd0395fc8763a9474"
+    },
+    {
+      "path": "site/assets/map-world.js",
+      "bytes": 2774372,
+      "sha256": "b021d4b516b305427c515128b556ceaea5ac7a4bee37358ca619a5f61171dabc"
     },
     {
       "path": "site/assets/metadata-enrichment.css",
@@ -545,8 +590,8 @@
     },
     {
       "path": "site/assets/vector-atlas.js",
-      "bytes": 1389,
-      "sha256": "a63b5ceb9a22241344d1f43bcb1358e18bd3dd4067586012f833db99f7818c02"
+      "bytes": 12491,
+      "sha256": "7867fa2c621928f03acf7e4965449719977b65eb734c3c402c927f1c61ab96e8"
     },
     {
       "path": "site/assets/world-land.js",
@@ -590,18 +635,18 @@
     },
     {
       "path": "site/i18n/ar.js",
-      "bytes": 11171,
-      "sha256": "c80d6c2175b4327b3c713518f79df813b12b9fa92418bc9f6f7392449be6c26a"
+      "bytes": 11651,
+      "sha256": "76f2ebdff2b34303fcb33793055d4a84f6e40e5591c84c63951d8a068db74ecd"
     },
     {
       "path": "site/i18n/en.js",
-      "bytes": 8580,
-      "sha256": "7210f8c40096b6fcabd9597d66196feb3e6a17e1bbde942f421398393705ba42"
+      "bytes": 8912,
+      "sha256": "33985485a43e0b6319823f0cc7ae0190439070dc15ce89ccb08ab9a7250afe91"
     },
     {
       "path": "site/i18n/es.js",
-      "bytes": 9307,
-      "sha256": "f35a5c8422e2ab85ea4dc112efe91a1740e9564b774fb0481e4ab132dcd1e189"
+      "bytes": 9690,
+      "sha256": "dcc1695eb00c2ef06c3cf9addad9070dafc68025eb2af6e744250f0ef8084033"
     },
     {
       "path": "site/i18n/index.js",
@@ -610,18 +655,18 @@
     },
     {
       "path": "site/i18n/ko.js",
-      "bytes": 9948,
-      "sha256": "715e7bdf0eb5457fe72afe052df3abcc27e2ea8347950172e16d85ef849c1ceb"
+      "bytes": 10367,
+      "sha256": "c841cd40dff60687cc120ba32e95a31e7366423b9605ea297f71784337d28248"
     },
     {
       "path": "site/i18n/zh-Hans.js",
-      "bytes": 8618,
-      "sha256": "525c1257c68445d02868051890eeca8bd096774fa4179500b77a6c5010fabc59"
+      "bytes": 8955,
+      "sha256": "4ae6debb2e1f3e99d7008503e364f7b74a5fbcd51bf32ffc77487a438b53f0fc"
     },
     {
       "path": "site/i18n/zh-Hant.js",
-      "bytes": 8685,
-      "sha256": "c193fcba2e60f9d3c6ee1b345ff8f7c9e3bb91c09d7f296c231bbf2464007f0e"
+      "bytes": 9025,
+      "sha256": "80a3c8a9c2c622ed1b7453721424a47075df66c61edf744432ee66bcf94699a7"
     },
     {
       "path": "site/icon-192.png",
@@ -640,8 +685,8 @@
     },
     {
       "path": "site/index.html",
-      "bytes": 27445,
-      "sha256": "d294d6c14d95b91784a8e3633067835e9c8c60378a2908314faca8c86cf76d16"
+      "bytes": 28218,
+      "sha256": "9c16ff7adc96fdb188c3783664386ce7a34ca7b9a838d4d49df485fb600b1d58"
     },
     {
       "path": "site/manifest.webmanifest",
@@ -649,14 +694,19 @@
       "sha256": "03c5618d097002f540fc12f6f469a25c82c71a17f28606ea8efc07858454aca7"
     },
     {
+      "path": "site/map-data-notices.txt",
+      "bytes": 3090,
+      "sha256": "7b5e24222aa39f49cd542c265c72537f9a543fec4be603d37e5e5aa31c9211ad"
+    },
+    {
       "path": "site/privacy.html",
-      "bytes": 4436,
-      "sha256": "eead63db3e8afb0f4805dc841135c529be070cab6af3c488bba4c1d661b56fc1"
+      "bytes": 4980,
+      "sha256": "699a87afa32a6a54029145e2d6228f0357990f2b0180c4bbb133f3f18dd5b53b"
     },
     {
       "path": "site/sw.js",
-      "bytes": 3628,
-      "sha256": "c5c26ad6d19c94db6a71fbe33a1218db9abd60f84b8331479408cbe5bd2e57fc"
+      "bytes": 3792,
+      "sha256": "78b4376cd2507f7dd8e80173d73ffe979d9f67dc1a28c37279426845e50eefae"
     },
     {
       "path": "src-recovered/core/config.ts",
@@ -975,8 +1025,8 @@
     },
     {
       "path": "tests/e2e/app.spec.mjs",
-      "bytes": 8305,
-      "sha256": "8e83a619b287c16ad26fcfd67cafee944c7baf108392d123ea6ee0215ecc6b04"
+      "bytes": 8978,
+      "sha256": "0a8120acbd6c8720b308efd41153b5c00c966d15a4be60f34e052fdb4a4a9e1d"
     },
     {
       "path": "tests/e2e/auth-ui.spec.mjs",
@@ -1007,6 +1057,16 @@
       "path": "tests/e2e/listening-room.spec.mjs",
       "bytes": 3837,
       "sha256": "505119c41477191b71cecdcc2c0821f36a233dcaf4e1fa92d93abaaa06afa19b"
+    },
+    {
+      "path": "tests/e2e/map-labels.spec.mjs",
+      "bytes": 5201,
+      "sha256": "efa9bc17d1c431398198bdeeba184c9c41514d4af864adbc0d35e67fce9fe6b1"
+    },
+    {
+      "path": "tests/e2e/map-tooltip.spec.mjs",
+      "bytes": 5368,
+      "sha256": "343eccfa521894d587a78ba432d373229550691730003b885a372109d0e87eca"
     },
     {
       "path": "tests/e2e/playwright.config.mjs",
@@ -1086,12 +1146,17 @@
     {
       "path": "tests/live-metadata.test.mjs",
       "bytes": 42353,
-      "sha256": "26f80b80261f5b44a08b345f8b96bc0ee738e828221ac5005edc87b874a175b9"
+      "sha256": "9b9c76d9a4dbe3cce0d2ea62c76ae9ccdae0c92ad054e37ecf0d89155e243580"
     },
     {
       "path": "tests/macos-release.test.mjs",
       "bytes": 5033,
       "sha256": "9c8a3e09e9915b640da00074e68cd826497e0776ff32568b5e260a6384fdd6f7"
+    },
+    {
+      "path": "tests/map-atlas.test.mjs",
+      "bytes": 6710,
+      "sha256": "57fefb0ac198e7f4b02f833f58f3f538f1dea297c307b995fadb83abca0b28ed"
     },
     {
       "path": "tests/net-guard.test.mjs",
@@ -1141,12 +1206,12 @@
     {
       "path": "tests/responsive-ui.test.mjs",
       "bytes": 13431,
-      "sha256": "fcc643c5538915292ec2fe31c2245eb6facb4604d1ccb79381c7f9a8c87c2c64"
+      "sha256": "fad329ad6777f7726c6aa5f6b20f8ad973d3e859c2ba5e864ada7899e480a7b2"
     },
     {
       "path": "tests/service-worker.test.mjs",
-      "bytes": 7988,
-      "sha256": "611329985720b6116bf25b725880be952b0d46a0c6a46e4ca952a7f11da473ec"
+      "bytes": 7987,
+      "sha256": "1da008ec7f7689b61429ed7cc29760a09b3c2d636f6287204f308329376d5712"
     },
     {
       "path": "tests/smoke-desktop-auth-lifecycle.mjs",
@@ -1171,7 +1236,7 @@
     {
       "path": "tests/smoke-metadata.mjs",
       "bytes": 7009,
-      "sha256": "e5d33e53bd77195093d39d9bce0c465a8a8334f8587e531196190e1414b6e191"
+      "sha256": "084ef1e9ad5ff64bc1dfd925b0bb3150c003ff4354fb03e18d51bbdf491950f1"
     },
     {
       "path": "tests/smoke-recovery-import.ps1",
