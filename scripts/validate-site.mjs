@@ -139,14 +139,15 @@ export async function validateSite(rootInput) {
   }
 
   const headerRules = parseHeaderRules(await readFile(path.join(root, '_headers'), 'utf8'));
-  for (const relative of files.filter(file => !isCloudflareControlFile(file) && !isFingerprintedAsset(file))) {
-    const cacheControl = headerRules
+  for (const relative of files.filter(file => !isCloudflareControlFile(file))) {
+    const policies = headerRules
       .filter(rule => headerPatternMatches(rule.pattern, relative))
       .flatMap(rule => rule.headers)
       .filter(header => header.name === 'cache-control')
-      .map(header => header.value)
-      .join(', ');
-    if (/\bimmutable\b/i.test(cacheControl)) {
+      .map(header => header.value);
+    if (policies.length > 1) errors.push(`Overlapping Cache-Control policies for ${relative}`);
+    const cacheControl = policies.join(', ');
+    if (!isFingerprintedAsset(relative) && /\bimmutable\b/i.test(cacheControl)) {
       errors.push(`Non-fingerprinted asset ${relative} inherits immutable caching`);
     }
   }

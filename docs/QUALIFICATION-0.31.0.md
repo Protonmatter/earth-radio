@@ -4,7 +4,7 @@ This release targets the five directory/search/map findings in the November 8
 review. Its architecture, limits, data provenance and rollback are documented in
 [DISCOVERY_RELIABILITY.md](DISCOVERY_RELIABILITY.md).
 
-Local full verification passed 494 tests with three environment-dependent skips,
+Local full verification passed 495 tests with three environment-dependent skips,
 including metadata/desktop smokes, lint, coherent module versions, static-site and
 website validation, and deterministic source hashes. Focused adversarial tests
 cover country-code alias collisions, malformed mixed-country batches before a
@@ -57,6 +57,11 @@ The initial preview returned immediate 503s because Workers rejects `redirect:
 'error'`. Manual redirect handling with non-success rejection replaces it, with
 focused regressions and a new preview required before merge. The first preview
 was not promoted to production.
+The first production asset readback found that a mutable `map-*.js` wildcard added
+a second Cache-Control value to hashed map data. Explicit mutable-loader paths
+remove the overlap; the site validator now rejects duplicate policies even on
+fingerprinted assets. The corrected headers require a fresh served readback before
+the desktop release, and the desktop packages must include that final source.
 
 Provider, account and cloud-document code is unchanged. The live Google/email
 native return, restart and cross-browser sync evidence remains the dated
