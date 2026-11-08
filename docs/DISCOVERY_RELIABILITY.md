@@ -116,6 +116,10 @@ node scripts/build-discovery-geography.mjs
 ```
 
 All four large map modules have content-hashed names and immutable cache headers.
+Mutable map-core/map-directory rules are explicit: no wildcard can add a second
+Cache-Control policy to immutable geography. Site validation rejects overlapping
+cache policies, because Pages concatenates matching headers rather than replacing
+the earlier value. Production served-header checks remain a separate gate.
 They load by zoom and cache only after use. Installation precaches the small
 `world-land` fallback plus application shell; it does not fetch the roughly 32 MB
 of overview/detail/terrain/roads data. Offline navigation falls back to the cached
@@ -124,7 +128,7 @@ offline map use retains the small coastline fallback.
 Query-bearing navigations are never written to the shell cache, including OAuth
 return URLs that may contain one-time codes. Offline navigation uses the canonical
 root instead; versioned module/configuration requests retain normal caching.
-Measured shell assets fell from 33,721,853 to 1,924,821 decoded bytes
+Measured shell assets fell from 33,721,853 to approximately 1.925 million decoded bytes
 (94.3% less). This is an installation-payload measurement, not a measured network
 latency or physical iPhone benchmark. Detailed geography must be requested in the
 current cache generation before it is available offline. Old online module URLs

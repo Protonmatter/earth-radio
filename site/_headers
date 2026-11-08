@@ -60,7 +60,10 @@
 /assets/vector-atlas.js
   Cache-Control: public, max-age=300, must-revalidate
 
-/assets/map-*.js
+/assets/map-core.js
+  Cache-Control: public, max-age=300, must-revalidate
+
+/assets/map-directory.js
   Cache-Control: public, max-age=300, must-revalidate
 
 /map-data-notices.txt

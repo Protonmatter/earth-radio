@@ -46,7 +46,7 @@
     {
       "path": "docs/BUILD_STATE.md",
       "bytes": 26471,
-      "sha256": "1e3abc492c7860f48748810536da9e6d98bf8d88e1fbce15b0cbe8ec42d9b8f6"
+      "sha256": "9e3f655908cddf077157a267767af97ad70dfc6ad52f14de95a0d67fe60568df"
     },
     {
       "path": "docs/CLOUDFLARE_DEPLOYMENT.md",
@@ -55,8 +55,8 @@
     },
     {
       "path": "docs/DISCOVERY_RELIABILITY.md",
-      "bytes": 10197,
-      "sha256": "247f948223b832c6f1916eb6864f13c0ce70565ce9387f5ec06371f61ca90463"
+      "bytes": 10533,
+      "sha256": "be34e556f4b0b8b1b959bd4f5bb5fb5d03ddf293fa6acb729c3ba2e3b0a493af"
     },
     {
       "path": "docs/DISCOVERY.md",
@@ -160,8 +160,8 @@
     },
     {
       "path": "docs/QUALIFICATION-0.31.0.md",
-      "bytes": 4329,
-      "sha256": "73dd7c86d605528f3c39312d6777135d117a0ce52becce6662bad2990c5e75c5"
+      "bytes": 4730,
+      "sha256": "34cf01cd3dc4cbae739963f868fa8ca77f83933554fc0b289335d3bd084e39ce"
     },
     {
       "path": "docs/QUALIFICATION-2026-11-03.md",
@@ -485,8 +485,8 @@
     },
     {
       "path": "scripts/validate-site.mjs",
-      "bytes": 9433,
-      "sha256": "a915ac3816076f444c439d408629025a0a9878599f52d0e933580571c4e8c25b"
+      "bytes": 9557,
+      "sha256": "35720675a6ea69bf466b2995d1ab113c74de82816298bae0b71caed756a066d9"
     },
     {
       "path": "scripts/validate-website.mjs",
@@ -560,8 +560,8 @@
     },
     {
       "path": "site/_headers",
-      "bytes": 3393,
-      "sha256": "732e4844e638d05899dc68f0bdeebebfea713f85cca040b299402e231d86a178"
+      "bytes": 3476,
+      "sha256": "a349bca9a92bef677daf60089de646fa36e0bb06a52288d130fca14b0a48c104"
     },
     {
       "path": "site/_redirects",
@@ -1510,8 +1510,8 @@
     },
     {
       "path": "tests/validate-site.test.mjs",
-      "bytes": 8702,
-      "sha256": "c8b75a4397fd8dfeee4ee25ebef746e5bf2156e13244d33518062d008c3a5f1b"
+      "bytes": 9296,
+      "sha256": "2e3ccb5f44c00a4882b6fb5ecb3922bcc60607353b76ebbae1802089ccb719fc"
     },
     {
       "path": "tests/web-origins.test.mjs",

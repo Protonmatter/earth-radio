@@ -33,6 +33,15 @@ test('validateSite accepts a complete direct-mode site', async () => {
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
+test('validateSite rejects overlapping cache policies that Pages would concatenate',async()=>{
+  const root=await mkdtemp(path.join(os.tmpdir(),'earth-radio-cache-overlap-'));
+  try{
+    await createSite(root,{headers:'/assets/app-*.js\n  Cache-Control: public, max-age=300, must-revalidate\n/assets/app-deadbeef.js\n  Cache-Control: public, max-age=31536000, immutable\n'});
+    await writeFile(path.join(root,'assets/app-deadbeef.js'),'export {};\n');
+    await assert.rejects(()=>validateSite(root),/overlapping cache-control/i);
+  }finally{await rm(root,{recursive:true,force:true});}
+});
+
 const landData = coordinates => `// Public-domain atlas data\nexport const WORLD_LAND = ${JSON.stringify({ type: 'FeatureCollection', features: [
   { type: 'Feature', properties: {}, geometry: { type: 'Polygon', coordinates } }
 ] })};\n`;
