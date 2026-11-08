@@ -60,8 +60,8 @@
     },
     {
       "path": "docs/DOMAINS.md",
-      "bytes": 6337,
-      "sha256": "365274b222d06cf2fc24250124dd4391fc1d44e458c75ce6c215446f50d42919"
+      "bytes": 6900,
+      "sha256": "9496b5218d6c6047685ee0a443d46d69dc20f61869aa908589cff447d07efb27"
     },
     {
       "path": "docs/E2E_TESTING.md",
@@ -425,8 +425,8 @@
     },
     {
       "path": "scripts/validate-website.mjs",
-      "bytes": 3226,
-      "sha256": "be28d73206e20401c07daac2612ca7269cafcc8eb63e9d7864194989120b4cb2"
+      "bytes": 3369,
+      "sha256": "3f2f1dba6f80705394fcbfe6c7dba3d93d20efc0ced617ac4067a626b89900be"
     },
     {
       "path": "scripts/version-site-modules.mjs",
@@ -1370,8 +1370,8 @@
     },
     {
       "path": "tests/website.test.mjs",
-      "bytes": 4029,
-      "sha256": "af9a3a618a3135224cd225fb2e6bca622686862ee08c8f4d65dd0c4b7e6e5afa"
+      "bytes": 4377,
+      "sha256": "da7ae203155749a950f07934283e7fba2f6edd6437e615812ffa755a58b46475"
     },
     {
       "path": "tests/workflow.test.mjs",
@@ -1385,8 +1385,8 @@
     },
     {
       "path": "website/_redirects",
-      "bytes": 69,
-      "sha256": "8f40687ea64706dae78bc5dc1f00551d0fe22ab51c43ba8b462d74b8d705a553"
+      "bytes": 138,
+      "sha256": "d63f571c0bd9d153e44a28d38a9a99886762791c85b8f9821c0db01d9e81b6e7"
     },
     {
       "path": "website/.node-version",

@@ -47,6 +47,10 @@ test('real website artifact has correct app, installation, origin-migration and 
   const appHeaders=await readFile('site/_headers','utf8');
   for(const endpoint of ['/privacy','/privacy.html'])assert.ok(appHeaders.includes(`${endpoint}\n  Cache-Control: public, max-age=0, must-revalidate, no-transform`));
   assert.equal(result.files.some(row=>/functions|auth-deployment|config\.js|\.node-version|wrangler/.test(row.path)),false);
+  const redirects=path.join(result.output,'_redirects'),validRedirects=await readFile(redirects,'utf8');
+  await writeFile(redirects,'https://www.earthradio.stream/* https://earthradio.stream/:splat 301\n');
+  await assert.rejects(validateWebsite(result.output),/unsupported.*host|host.*unsupported/i);
+  await writeFile(redirects,validRedirects);
   const forbidden=path.join(result.output,'_worker.js');await writeFile(forbidden,'// must not ship');
   await assert.rejects(validateWebsite(result.output),/unexpected|worker|static/i);
 });

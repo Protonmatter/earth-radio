@@ -1,1 +1,2 @@
-https://www.earthradio.stream/* https://earthradio.stream/:splat 301
+# Host routing is handled by the zone rule "Earth Radio www to apex".
+# Pages _redirects supports path sources only. See docs/DOMAINS.md.
