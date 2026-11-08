@@ -7,6 +7,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', 'site');
+const websiteRoot = path.resolve(root, '..', '.build', 'website');
 const port = Number(process.env.E2E_PORT || 4173);
 
 const types = new Map(Object.entries({
@@ -22,11 +23,14 @@ const types = new Map(Object.entries({
 createServer(async (req, res) => {
   try {
     const pathname = decodeURIComponent(new URL(req.url || '/', 'http://localhost').pathname);
-    const relative = pathname.replace(/\/+$/, '') || '/';
-    const target = path.normalize(path.join(root, relative === '/' ? 'index.html' : relative));
+    const website = pathname.startsWith('/__website/');
+    const selectedRoot = website ? websiteRoot : root;
+    let relative = (website ? pathname.slice('/__website'.length) : pathname).replace(/\/+$/, '') || '/';
+    if (website && relative === '/privacy') relative = '/privacy.html';
+    const target = path.normalize(path.join(selectedRoot, relative === '/' ? 'index.html' : relative));
     // Percent-encoded dot segments decode after URL normalization; re-check containment
     // with a separator suffix so sibling directories sharing the prefix stay unreachable.
-    if (target !== root && !target.startsWith(root + path.sep)) {
+    if (target !== selectedRoot && !target.startsWith(selectedRoot + path.sep)) {
       res.writeHead(403).end();
       return;
     }

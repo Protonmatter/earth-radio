@@ -1,5 +1,11 @@
 # Operations
 
+The public website at `earthradio.stream` and app at `app.earthradio.stream` use
+separate Pages projects from the same repository. The original pages.dev app remains
+available. Use [domain setup, build settings, migration and rollback](DOMAINS.md) for
+the website; the application build/Functions instructions below remain specific to
+the existing `earth-radio` project.
+
 ## Build and validate
 
 Prerequisites are Git, Node.js 24.18.0, npm 11.16.0, and Windows PowerShell 5.1 only for the recovery-import smoke test.

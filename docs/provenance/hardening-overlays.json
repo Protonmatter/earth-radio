@@ -75,7 +75,7 @@
       "reason": "Remove a reference to an excluded source map from the vendored HLS runtime."
     },
     {
-      "path": "site/assets/index-c40766e7.js",
+      "path": "site/assets/index-b6ef62ee.js",
       "intakePath": "site/assets/index-B4rKOAHV.js",
       "intake": {
         "bytes": 273352,
@@ -83,7 +83,7 @@
       },
       "current": {
         "bytes": 275746,
-        "sha256": "c40766e7f81aa1a0329784b577a7b40123d260fdb3434035b9f3aecde31c6393"
+        "sha256": "b6ef62ee216387fbb2559d8a0f63da795e6dfc57fe319345c553690bff6dd529"
       },
       "reason": "Register the service worker after asynchronous startup and remove a reference to an excluded source map. Bind a station tooltip on map markers for pre-selection progressive disclosure, delegating content to the maintained metadata overlay hook. Dispatch earthradio:station-selected after successful station playback (canonical stream identity for MediaSource/blob playback). Serialize and coalesce boot, manual, retry, cloned, and directory-owned station loads behind one runtime drain promise; settlement now carries a monotonic load ID, and the correlated runtime API is mirrored in src-recovered/main.ts. Previous/next and Media Session navigation carry explicit playback results and dispatch selection only when playback succeeded. Rename the deployed immutable bundle to the deterministic first eight hexadecimal characters of its final SHA-256 while retaining the installed intake path as provenance evidence. November 2026: import maintained discovery ranking/UI and bundled vector atlas; transform the runtime filtered pool, expose station details, observe playback outcomes, refresh current marker payloads/coordinates, and preserve existing successful-selection gates. Add radio-only on-demand mapped-directory normalization and augmentation before filtering, with consistent area/view controls. Align the embedded runtime version with package 0.26.0 for native auth delivery; no station algorithm changes. Approved listening-room presentation (2026-11-07): virtual-list sizing constants change to 88px stride and a single column, and the English all-stations heading becomes Stations; item selection, rendering, network and playback handlers remain unchanged. Geographic atlas release (2026-11-07): embedded version marker advances to 0.28.0; geographic rendering remains in maintained modules. Skip zero-size hidden-map flight and publish successful station identity before presentation."
     },
@@ -107,9 +107,9 @@
       },
       "current": {
         "bytes": 73695,
-        "sha256": "0e9dd7deaae51f5b8a9a42e19484d5f31cdd71e83cbec095038c23b46e710962"
+        "sha256": "3d2fb59505052f9ecf19848eca76f41618809704c482588c60bf884878595677"
       },
-      "reason": "Layer live-metadata feeds above raw ICY: hosting-platform now-playing APIs, HLS timed ID3 text tracks, and an opt-in fingerprint identify button. Preserve the canonical selected URL and UUID through same-station MediaSource reattachment, invalidate only on correlated selection/change or explicit clear, retain the original trimmed URL after validation, and fence both cross-station and same-station out-of-order metadata polls by identity plus a monotonic poll generation. Cap speculative map-tooltip /api/nowplaying lookups at 8 per 60 seconds so marker sweeps cannot exhaust the zone WAF. Coalesce play-event polls, recheck fingerprint identity after the availability probe, and promote structured Station feed results onto the primary card. Export detectPlatformEndpoints so catalogued LISTEN.moe stream URLs can be tested against the browser WebSocket gateway. Hold background platform and HLS feeds while Identify is sampling so they cannot steal the in-flight token, and clear Now Playing art when a promoted identity has no https artwork. Auto-fingerprint the playing stream when free feeds miss, parse iHeart MediaBase ICY including the current-song text= form and comma-containing artist prefixes, resolve SomaFM songs JSON from ice*.somafm.com URLs, keep structured Icecast titles that contain lowercase by, and mirror promoted tracks onto the player-bar live line using the configured promotion threshold. Compact player/song-library integration and coherent release module URLs (2026-11-08)."
+      "reason": "Layer live-metadata feeds above raw ICY: hosting-platform now-playing APIs, HLS timed ID3 text tracks, and an opt-in fingerprint identify button. Preserve the canonical selected URL and UUID through same-station MediaSource reattachment, invalidate only on correlated selection/change or explicit clear, retain the original trimmed URL after validation, and fence both cross-station and same-station out-of-order metadata polls by identity plus a monotonic poll generation. Cap speculative map-tooltip /api/nowplaying lookups at 8 per 60 seconds so marker sweeps cannot exhaust the zone WAF. Coalesce play-event polls, recheck fingerprint identity after the availability probe, and promote structured Station feed results onto the primary card. Export detectPlatformEndpoints so catalogued LISTEN.moe stream URLs can be tested against the browser WebSocket gateway. Hold background platform and HLS feeds while Identify is sampling so they cannot steal the in-flight token, and clear Now Playing art when a promoted identity has no https artwork. Auto-fingerprint the playing stream when free feeds miss, parse iHeart MediaBase ICY including the current-song text= form and comma-containing artist prefixes, resolve SomaFM songs JSON from ice*.somafm.com URLs, keep structured Icecast titles that contain lowercase by, and mirror promoted tracks onto the player-bar live line using the configured promotion threshold. Compact player/song-library integration and coherent release module URLs (2026-11-08).  Release 0.29.1 versions the same maintained module graph and admits the exact new app origin while retaining the legacy origin."
     },
     {
       "path": "site/config.js",
@@ -118,10 +118,10 @@
         "sha256": "c83167f40ae7df3b389e35707b4abac834b10dc223ecb836d7840f90a7ef92a6"
       },
       "current": {
-        "bytes": 3144,
-        "sha256": "251a6c338f54bd95fb4794a926110c6e9d6929de85d4f0d9c385df41a12d3f26"
+        "bytes": 3142,
+        "sha256": "8f48d253a9b6962fdb35902dd34f3062fc9241a60526a4d621412d74c40698fe"
       },
-      "reason": "Keep Cloudflare Pages on an empty proxy URL and document that only Electron injects the loopback capability path. Add live-metadata runtime options (platform now-playing, HLS ID3, fingerprint) with metered fingerprinting off unless a proxy provides credentials. Restrict deployable authentication to the exact production origin, configure the public Supabase project, enable GitHub and Google in the client, and load the same-origin account overlay without changing the recovered bundle. Native account integration and shared public deployment configuration (2026-11-04). Compact player/song-library integration and coherent release module URLs (2026-11-08)."
+      "reason": "Keep Cloudflare Pages on an empty proxy URL and document that only Electron injects the loopback capability path. Add live-metadata runtime options (platform now-playing, HLS ID3, fingerprint) with metered fingerprinting off unless a proxy provides credentials. Restrict deployable authentication to the exact production origin, configure the public Supabase project, enable GitHub and Google in the client, and load the same-origin account overlay without changing the recovered bundle. Native account integration and shared public deployment configuration (2026-11-04). Compact player/song-library integration and coherent release module URLs (2026-11-08).  Release 0.29.1 versions the same maintained module graph and admits the exact new app origin while retaining the legacy origin."
     },
     {
       "path": "site/index.html",
@@ -131,7 +131,7 @@
       },
       "current": {
         "bytes": 31584,
-        "sha256": "b55a892ffda3fe27613e5dfe953abcfc03df3f6a2ddccc92aad220ae32cd9cca"
+        "sha256": "0a77bf1b2e1eb9c0b6285ed5feae8ee62f71c23013d9c31c969499c89c428265"
       },
       "reason": "Move frame-ancestors enforcement to the deployable response header policy, then add responsive landmarks, iOS viewport/audio attributes, mobile destinations, compact header icons, additive responsive assets, country and station search controls, complete Now Playing metadata and sleep actions, the additive UI refresh stylesheet, and header actions ordered in the rail's reading sequence so keyboard focus follows the visual order. Reference the deployed runtime through its content-addressed filename. Load the git-catalogued LISTEN.moe station overlay before the recovered bundle, and admit wss://listen.moe in the in-page connect-src policy. Atlas lock: Night/Paper You panel, four phone tabs (Atlas/Browse/Kept/You), place-first search, and atlas-lock.css/js. November 2026: add the station discovery controls/details dialog and vector-atlas controls; load and coherently precache the maintained discovery/map assets under worker generation v47. Approved listening-room presentation and shell cache update (2026-11-07). Geographic atlas release: independent localized country/city label controls and detail-loading status."
     },
@@ -154,8 +154,8 @@
         "sha256": "b09e3207532fe7f47d14e9c53804d7e8caf31cad2fcb2c652b728a93871ea094"
       },
       "current": {
-        "bytes": 4207,
-        "sha256": "7f35e743aaefbfe085db6a52141247424c9dd41d3378d246c64e0a50f90f8ac4"
+        "bytes": 4209,
+        "sha256": "255acd9865243ba5ef2c1aee71db9f41008177a4fb7f6b9c182a6a982daf20f3"
       },
       "reason": "Use network-first navigation/configuration updates, keep hashed recovered assets cache-first, reload overlay installation requests so stale browser HTTP entries cannot seed the new service-worker cache, force-cache the hashed runtime bundles, keep the previous worker when reload precaching fails, and precache the UI refresh stylesheet. Precache pinned-stations.js for LISTEN.moe catalog pinning. Precache atlas-lock.css/js and bump the shell cache generation to v46 so clients pick up Night/Paper, glass-on-log, and the four-tab phone chrome. November 2026: add the station discovery controls/details dialog and vector-atlas controls; load and coherently precache the maintained discovery/map assets under worker generation v47. Cache the generated icon PNGs and serve branding/manifest requests from the shell while offline. Native account integration and shared public deployment configuration (2026-11-04). Approved listening-room presentation and shell cache update (2026-11-07). Bump to v59 for dynamic playback-label synchronization. Advance to v60 so the tooltip-width stylesheet is refreshed on deployment. Supersede the local v60 candidate with v61 geographic atlas, coherently precaching its data modules, rules and notices."
     },

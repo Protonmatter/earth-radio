@@ -1,5 +1,13 @@
 # Account sign-in and synchronization
 
+The primary app origin from 0.29.1 is `https://app.earthradio.stream`; the existing
+`https://earth-radio.pages.dev` origin remains allowed. The public website at
+`https://earthradio.stream` does not hold account sessions. Sign in at the new app
+address to load synced account data; do not transfer session tokens between origins.
+Unsynced local collections stay accessible at the earlier address. Native PKCE
+loopback callbacks and the existing Supabase provider callback remain unchanged.
+See [domain configuration and rollback](DOMAINS.md).
+
 Version 0.26.0 adds Windows/macOS account support. Google and GitHub use the
 default system browser. Email uses a verified magic link. Favorites, recent stations
 and preferences use the existing per-user Supabase configuration documents and RLS.

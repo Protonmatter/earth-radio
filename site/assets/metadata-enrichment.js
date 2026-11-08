@@ -7,7 +7,7 @@
 //   3. On-demand audio fingerprinting through the desktop proxy (ACRCloud/AudD), user-triggered.
 // The canonical source implementation is mirrored under recovered_src/ for the next full desktop build.
 
-import { normalizeSong } from './song-library-core.js?v=0.29.0';
+import { normalizeSong } from './song-library-core.js?v=0.29.1';
 
 const VERSION = '0.25.0-metadata-overlay';
 let publishedSong = null;

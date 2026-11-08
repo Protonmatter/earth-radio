@@ -3,7 +3,7 @@ import { readFile, readdir, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const includeRoots = ['.github', 'site', 'electron', 'server', 'docs', 'tests', 'src-recovered', 'scripts', 'functions', 'workers', 'supabase'];
+const includeRoots = ['.github', 'site', 'website', 'electron', 'server', 'docs', 'tests', 'src-recovered', 'scripts', 'functions', 'workers', 'supabase'];
 const includeFiles = ['.node-version', 'eslint.config.mjs', 'package.json', 'package-lock.json', 'electron-builder.yml', 'wrangler.jsonc'];
 
 async function collectFiles(root) {

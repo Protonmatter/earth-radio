@@ -1,5 +1,16 @@
 # Build state
 
+## 0.29.1 website and app domains
+
+The product website and downloads use `earthradio.stream`; listening and optional
+account sync use `app.earthradio.stream`. Two Pages projects share this repository.
+The marketing build is static and has no application Functions or account session.
+The original `earth-radio.pages.dev` app stays available. Browser storage remains
+origin-scoped; synced collections load after sign-in, and unsynced collections can
+be exported at the earlier address. See [domain operations](DOMAINS.md) and
+[release gates](RELEASE-0.29.1.md). Final deployment identities are recorded in
+release provenance and Spaces after verification.
+
 ## 0.29.0 compact player and songs
 
 The compact Now Playing card keeps the feed and grouped controls together. Song

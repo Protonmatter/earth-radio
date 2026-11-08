@@ -1,19 +1,23 @@
-# Install Earth Radio v0.29.0
+# Install Earth Radio v0.29.1
 
-Production web app: **https://earth-radio.pages.dev/**
+Website and downloads: **https://earthradio.stream/**
 
-Desktop downloads: **https://github.com/Protonmatter/earth-radio/releases/tag/v0.29.0**
+Production web app: **https://app.earthradio.stream/**
+
+Desktop downloads: **https://github.com/Protonmatter/earth-radio/releases/tag/v0.29.1**
 
 Download only the file for your computer, plus `SHA256SUMS.txt`. The release also
 includes `BUILD-PROVENANCE.json`, platform verification receipts and this guide as
 `INSTALL.md`. Older published releases retain their original files and checksums.
+
+The earlier **https://earth-radio.pages.dev/** app and existing Home Screen shortcuts remain available. Browser-local data stays at that origin. Sign in at the new app address for synced data; export unsynced favorites/preferences and songs at the earlier address before switching. See [domain operations](DOMAINS.md).
 
 ## iPhone (iOS) and iPad (iPadOS)
 
 Earth Radio installs as a Home Screen web app. No App Store download or configuration
 profile is required. Listening works without an account.
 
-1. Open **Safari** and visit **https://earth-radio.pages.dev/** directly. Use the
+1. Open **Safari** and visit **https://app.earthradio.stream/** directly. Use the
    production address, not a `qualification-*` or hexadecimal preview address.
 2. On iPhone, open Safari's page menu/More button and choose **Share**, or tap Share
    directly if your toolbar shows it. On iPad, tap **Share**; expand **More/View More**
@@ -79,8 +83,8 @@ reports incomplete removal, sync/linking stay paused: resolve storage access and
 
 ## Windows ARM64
 
-Use `EarthRadio-Setup-0.29.0-arm64.exe` for the installer or
-`EarthRadio-Portable-0.29.0-arm64.exe` for the portable app. These are for ARM64
+Use `EarthRadio-Setup-0.29.1-arm64.exe` for the installer or
+`EarthRadio-Portable-0.29.1-arm64.exe` for the portable app. These are for ARM64
 Windows; no Windows x64 package is included in this release.
 
 Download from the release page, verify its hash against `SHA256SUMS.txt`, then run
@@ -93,8 +97,8 @@ upgrade across every existing profile remains unqualified. Keep your export for 
 For a separate portable profile, run from the download folder in PowerShell:
 
 ```powershell
-$radioProfile = Join-Path $env:LOCALAPPDATA 'EarthRadio-Portable-0.29.0'
-& .\EarthRadio-Portable-0.29.0-arm64.exe "--user-data-dir=$radioProfile"
+$radioProfile = Join-Path $env:LOCALAPPDATA 'EarthRadio-Portable-0.29.1'
+& .\EarthRadio-Portable-0.29.1-arm64.exe "--user-data-dir=$radioProfile"
 ```
 
 These builds have local self-signed Authenticode signatures and DigiCert timestamps.
@@ -107,8 +111,8 @@ Choose the DMG matching **Apple menu → About This Mac**:
 
 | Mac | Release file |
 | --- | --- |
-| Apple Silicon (M-series chip) | `EarthRadio-0.29.0-macOS-arm64-unnotarized.dmg` |
-| Intel processor | `EarthRadio-0.29.0-macOS-x64-unnotarized.dmg` |
+| Apple Silicon (M-series chip) | `EarthRadio-0.29.1-macOS-arm64-unnotarized.dmg` |
+| Intel processor | `EarthRadio-0.29.1-macOS-x64-unnotarized.dmg` |
 
 1. Download and verify the appropriate DMG from the release page.
 2. Open the disk image and drag **Earth Radio** into **Applications**.
@@ -135,13 +139,13 @@ you do not need to download every platform's installer.
 Windows PowerShell:
 
 ```powershell
-Get-FileHash -LiteralPath .\EarthRadio-Setup-0.29.0-arm64.exe -Algorithm SHA256
+Get-FileHash -LiteralPath .\EarthRadio-Setup-0.29.1-arm64.exe -Algorithm SHA256
 ```
 
 macOS Terminal (replace the filename for Intel):
 
 ```sh
-shasum -a 256 EarthRadio-0.29.0-macOS-arm64-unnotarized.dmg
+shasum -a 256 EarthRadio-0.29.1-macOS-arm64-unnotarized.dmg
 ```
 
 The checksums prove file equality with this release's published values. They do not

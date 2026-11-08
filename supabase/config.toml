@@ -11,10 +11,12 @@ enabled = true
 enable_signup = true
 enable_anonymous_sign_ins = false
 enable_manual_linking = true
-site_url = "https://earth-radio.pages.dev"
+site_url = "https://app.earthradio.stream"
 # Official Auth docs: production redirect URLs should be exact paths, not globstars.
 # Extra query parameters on redirect_to are not part of the default PKCE flow.
 additional_redirect_urls = [
+  "https://app.earthradio.stream",
+  "https://app.earthradio.stream/",
   "https://earth-radio.pages.dev",
   "https://earth-radio.pages.dev/",
   "http://127.0.0.1:*/earth-radio-auth/callback/*",

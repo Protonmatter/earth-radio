@@ -96,8 +96,8 @@ export async function setupApp(page, { sameOriginNowPlaying = null, sameOriginFi
     await page.route('**/config.js*', async route => {
       const response = await route.fetch();
       const body = (await response.text()).replace(
-        "window.location.origin === 'https://earth-radio.pages.dev'",
-        'true'
+        'const authOriginAllowed = isWebAuthOrigin(window.location.origin);',
+        'const authOriginAllowed = true;'
       );
       await route.fulfill({
         status: 200,

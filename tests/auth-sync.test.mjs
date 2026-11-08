@@ -1220,9 +1220,12 @@ test('a remote download cannot overwrite a newer local edit', async () => {
 test('production auth excludes Cloudflare preview origins', async () => {
   const root = path.resolve(import.meta.dirname, '..');
   const runtimeConfig = await readFile(path.join(root, 'site', 'config.js'), 'utf8');
+  const deployment = await readFile(path.join(root, 'site', 'assets', 'auth-deployment.js'), 'utf8');
   const supabaseConfig = await readFile(path.join(root, 'supabase', 'config.toml'), 'utf8');
   assert.match(runtimeConfig, /authOriginAllowed/);
-  assert.match(runtimeConfig, /https:\/\/earth-radio\.pages\.dev/);
+  assert.match(runtimeConfig, /isWebAuthOrigin\(window\.location\.origin\)/);
+  assert.match(deployment, /https:\/\/earth-radio\.pages\.dev/);
+  assert.match(deployment, /https:\/\/app\.earthradio\.stream/);
   assert.doesNotMatch(runtimeConfig, /localhost|127\.0\.0\.1/);
   assert.doesNotMatch(runtimeConfig, /\*\.earth-radio\.pages\.dev/);
   assert.doesNotMatch(supabaseConfig, /\*\.earth-radio\.pages\.dev/);
