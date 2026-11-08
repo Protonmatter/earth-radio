@@ -1,4 +1,4 @@
-import { mergeSongLibraries, mergeSongLibrariesThreeWay } from './song-library-core.js?v=0.30.0';
+import { mergeSongLibraries, mergeSongLibrariesThreeWay } from './song-library-core.js?v=0.31.0';
 
 const DOCUMENTS = Object.freeze([
   {

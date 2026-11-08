@@ -1,7 +1,8 @@
 // Maintained, pure discovery algorithms. Scores are engineering heuristics, not
 // calibrated probabilities of stream uptime. No network, storage, or browser globals.
-import {fold,canonicalGenre,canonicalLanguage,countryWords,genreWords,languageWords,closeWord,searchTerms,facetLabel} from './search-core.js?v=0.30.0';
-export {fold} from './search-core.js?v=0.30.0';
+import {fold,canonicalGenre,canonicalLanguage,countryWords,genreWords,languageWords,closeWord,searchTerms,facetLabel,isPlaceTerm,isGenreTerm,correctGenre} from './search-core.js?v=0.31.0';
+export {fold} from './search-core.js?v=0.31.0';
+import {stationLocation} from './station-location.js?v=0.31.0';
 const SORTS = new Set(['best', 'reliable', 'explore', 'bitrate', 'name', 'similar']);
 const COOLDOWN_MS = 15 * 60 * 1000;
 const clamp = (value, max = 100) => Math.min(max, Math.max(0, Number.isFinite(Number(value)) ? Number(value) : 0));
@@ -44,7 +45,7 @@ export function distanceKm(a, b) {
 }
 
 export function inBounds(station, bounds) {
-  const point = coordinates(station);
+  const location=stationLocation(station),point=location&&!location.approximate?location.point:null;
   if (!point || !bounds) return false;
   const { south, north, west, east } = bounds;
   if (![south, north, west, east].every(Number.isFinite) || south > north || point[0] < south || point[0] > north) return false;
@@ -82,40 +83,59 @@ function documentFor(station) {
   documents.set(station,{signature,doc});return doc;
 }
 
-function termFrequency(doc, term) {
+function termMatch(doc,term,fuzzy=false){
+  if(doc.words[0].includes(term))return 0;
+  if(doc.words[0].some(word=>word.startsWith(term)))return 1;
+  if(doc.words.slice(1).some(words=>words.includes(term)))return 2;
+  if(term.length>=3&&doc.fields.some(field=>field.includes(term)))return 3;
+  return fuzzy&&!isPlaceTerm(term)&&doc.words.some(words=>words.slice(0,40).some(word=>closeWord(term,word)))?4:Infinity;
+}
+function termFrequency(doc, term, fuzzy=false) {
   const weights = [6, 3, 4, 2, 1];
   return doc.fields.reduce((sum, field, index) => {
     if (doc.words[index].some(word => word.startsWith(term) || (term.length >= 3 && word.includes(term)))) return sum + weights[index];
-    return sum + (doc.words[index].slice(0, 40).some(word => closeWord(term, word)) ? weights[index] * 0.4 : 0);
+    return sum + (fuzzy&&!isPlaceTerm(term)&&doc.words[index].slice(0, 40).some(word => closeWord(term, word)) ? weights[index] * 0.4 : 0);
   }, 0);
 }
 
 /** Field-weighted BM25 + explicit quality/health signals. Every query term must match. */
 export function rankStations(stations, options = {}) {
   const prefs = sanitizePreferences(options);
-  const terms = searchTerms(prefs.query,options.locale);
+  let terms = searchTerms(prefs.query,options.locale);
   const genre = canonicalGenre(prefs.genre), language = canonicalLanguage(prefs.language);
-  const rows = [];
+  const rows = [],genreTerms=new Set();
   const targetTags = options.current ? tags(options.current) : [];
   for (const station of Array.isArray(stations) ? stations : []) {
     if (!station || typeof station.stationuuid !== 'string' || !station.stationuuid || !streamIdentity(station)) continue;
     const endpoint = streamIdentity(station), failure = failureState(station, options), stationTags = tags(station);
+    for(const tag of stationTags)for(const word of [tag,...tag.split(' ')])genreTerms.add(word);
     if ((prefs.secureOnly && !endpoint.startsWith('https:')) || (prefs.avoidFailures && failure.active) ||
       (prefs.minBitrate && clamp(station.bitrate, 1536) < prefs.minBitrate) ||
       (genre && !stationTags.includes(genre)) || (language && !parts(station.language).map(canonicalLanguage).includes(language)) ||
       (options.bounds && !inBounds(station, options.bounds))) continue;
     const doc = documentFor(station);
-    const tf = terms.map(term => termFrequency(doc, term));
     const similarity = options.current ? overlap(targetTags, stationTags) : 0;
     if (prefs.sort === 'similar' && options.current && (station.stationuuid === options.current.stationuuid ||
       endpoint === streamIdentity(options.current) || (targetTags.length > 0 && similarity === 0))) continue;
-    rows.push({ station, doc, tf, failure, similarity, endpoint });
+    rows.push({ station, doc, failure, similarity, endpoint });
   }
+  let correction='',fuzzy=false;
+  const protectedTerm=term=>isPlaceTerm(term)||isGenreTerm(term)||genreTerms.has(term);
+  const matches=(row,words,allowFuzzy=false)=>words.every(term=>Number.isFinite(termMatch(row.doc,term,allowFuzzy)));
+  if(terms.length&&!rows.some(row=>matches(row,terms))){
+    const genres=[...new Set(rows.flatMap(row=>tags(row.station)))];
+    const corrected=terms.map(term=>protectedTerm(term)?term:correctGenre(term,genres)||term);
+    if(corrected.some((term,index)=>term!==terms[index])&&rows.some(row=>matches(row,corrected))){terms=corrected;correction=terms.join(' ');}
+    else fuzzy=true;
+  }
+  const fuzzyTerms=terms.map(term=>fuzzy&&!protectedTerm(term));
+  for(const row of rows){row.tf=terms.map((term,index)=>termFrequency(row.doc,term,fuzzyTerms[index]));row.tiers=terms.map((term,index)=>termMatch(row.doc,term,fuzzyTerms[index]));}
   const avgLength = rows.reduce((sum, row) => sum + row.doc.length, 0) / (rows.length || 1);
   const idf = terms.map((_, index) => Math.log(1 + (rows.length - rows.filter(row => row.tf[index] > 0).length + 0.5) / (rows.filter(row => row.tf[index] > 0).length + 0.5)));
-  const entries = rows.filter(row => row.tf.every(value => value > 0)).map(({ station, doc, tf, failure, similarity, endpoint }) => {
+  const entries = rows.filter(row => row.tiers.every(Number.isFinite)).map(({ station, doc, tf, tiers, failure, similarity, endpoint }) => {
     const quality = clamp(station.quality?.score), reasons = [];
     let score = quality * 0.55 + failure.estimate * 18;
+    score+=Math.min(12,Math.log1p(clamp(station.clickcount,1e9)));
     if (quality >= 70) reasons.push(`Directory quality ${Math.round(quality)}/100`);
     if (endpoint.startsWith('https:')) { score += 8; reasons.push('HTTPS stream'); }
     if (station.lastcheckok === true || station.lastcheckok === 1) { score += 5; reasons.push('Last directory check passed'); }
@@ -131,18 +151,25 @@ export function rankStations(stations, options = {}) {
     if (prefs.sort === 'similar') { score += similarity * 65; reasons.unshift(`${Math.round(similarity * 100)}% genre overlap`); }
     if (prefs.sort === 'bitrate') reasons.unshift(`${Math.round(clamp(station.bitrate, 1536))} kbps declared bitrate`);
     if (!reasons.length) reasons.push('Limited directory metadata');
-    return { station, score: Math.round(score * 100) / 100, reasons };
+    return { station, score: Math.round(score * 100) / 100, reasons, matchTier:Math.max(0,...tiers),matchTotal:tiers.reduce((sum,tier)=>sum+tier,0),...(correction?{correction}:{}) };
   });
   entries.sort((a, b) => {
     if (prefs.sort === 'name') return stable(a.station, b.station);
     if (prefs.sort === 'bitrate') return clamp(b.station.bitrate, 1536) - clamp(a.station.bitrate, 1536) || b.score - a.score || stable(a.station, b.station);
-    if(prefs.sort==='best'&&terms.length){const exactA=fold(a.station.name)===fold(prefs.query),exactB=fold(b.station.name)===fold(prefs.query);if(exactA!==exactB)return exactA?-1:1;}
+    if(prefs.sort==='best'&&terms.length){const exactA=fold(a.station.name)===fold(prefs.query),exactB=fold(b.station.name)===fold(prefs.query);if(exactA!==exactB)return exactA?-1:1;
+      if(a.matchTier!==b.matchTier)return a.matchTier-b.matchTier;if(a.matchTotal!==b.matchTotal)return a.matchTotal-b.matchTotal;}
     return b.score - a.score || stable(a.station, b.station);
   });
-  if (prefs.sort !== 'explore' || entries.length < 2) return entries;
+  if ((prefs.sort !== 'explore' && !(prefs.sort==='best'&&!terms.length)) || entries.length < 2) return entries;
   // Greedy maximal marginal relevance on at most 120 candidates; the remainder
   // retain their stable base order. Avoid quadratic work over the full catalog.
-  const pool = entries.slice(0, 120).map(entry => ({ entry, genres: tags(entry.station), redundancy: 0 })), selected = [];
+  const candidates=[],candidateIds=new Set(),countries=new Set();
+  const add=entry=>{if(!candidateIds.has(entry.station.stationuuid)){candidates.push(entry);candidateIds.add(entry.station.stationuuid);}};
+  // Seed country representatives from the entire catalog before filling the
+  // bounded MMR pool. A large same-network block cannot crowd every country out.
+  for(const entry of entries){const code=entry.station.countrycode;if(code&&!countries.has(code)){countries.add(code);add(entry);if(countries.size>=60)break;}}
+  for(const entry of entries){if(candidates.length>=120)break;add(entry);}
+  const pool = candidates.map(entry => ({ entry, genres: tags(entry.station), redundancy: 0 })), selected = [];
   while (pool.length) {
     let best = 0, bestValue = -Infinity;
     for (let i = 0; i < pool.length; i++) {
@@ -151,12 +178,13 @@ export function rankStations(stations, options = {}) {
     }
     const [chosen] = pool.splice(best, 1);
     for (const item of pool) {
-      item.redundancy = Math.max(item.redundancy, overlap(item.genres, chosen.genres) * 0.25 +
-        (item.entry.station.countrycode && item.entry.station.countrycode === chosen.entry.station.countrycode ? 0.18 : 0));
+      const sameCountry=item.entry.station.countrycode&&item.entry.station.countrycode===chosen.entry.station.countrycode;
+      const sameFamily=fold(item.entry.station.name).split(' ').slice(0,2).join(' ')===fold(chosen.entry.station.name).split(' ').slice(0,2).join(' ');
+      item.redundancy = Math.max(item.redundancy, overlap(item.genres, chosen.genres) * 0.1 + (sameCountry?0.24:0)+(sameFamily?0.65:0));
     }
     selected.push({ ...chosen.entry, reasons: [...chosen.entry.reasons, 'Balanced for genre and country variety'] });
   }
-  return [...selected, ...entries.slice(120)];
+  return [...selected, ...entries.filter(entry=>!candidateIds.has(entry.station.stationuuid))];
 }
 
 export function buildFacetOptions(stations,field){
@@ -165,7 +193,7 @@ export function buildFacetOptions(stations,field){
   for(const station of Array.isArray(stations)?stations:[]){
     if(!station||!streamIdentity(station))continue;
     const values=field==='genre'?tags(station):parts(station.language).map(canonicalLanguage);
-    for(const value of new Set(values))if(value&&value.length<=64)counts.set(value,(counts.get(value)||0)+1);
+    for(const value of new Set(values))if(value&&value.length<=64&&!(field==='genre'&&['radio','music','estacion','online','various'].includes(value)))counts.set(value,(counts.get(value)||0)+1);
   }
   return [...counts].map(([value,count])=>({value,label:facetLabel(value,field),count})).sort((a,b)=>b.count-a.count||compare(a.value,b.value));
 }

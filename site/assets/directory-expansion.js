@@ -1,4 +1,6 @@
 // Earth Radio directory expansion v1.0.0
+import {browserDirectoryHosts,createDirectoryHosts} from './directory-hosts.js?v=0.31.0';
+import {snapshotCountryStatus} from './directory-client.js?v=0.31.0';
 // The initial directory load is deliberately bounded (global top-click plus a handful of
 // featured countries) so boot stays fast. This overlay expands coverage on demand: when a
 // listener focuses a country (map popup "Explore", the country picker, or the country
@@ -12,11 +14,6 @@ const COUNTRY_INDEX_KEY = 'earth-radio-country-index-v1';
 const COUNTRY_INDEX_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 // The desktop proxy accepts at most 20 country codes; keep headroom for the defaults.
 const MAX_TOTAL_COUNTRY_CODES = 20;
-const COUNTRY_LIST_BASES = [
-  'https://all.api.radio-browser.info',
-  'https://de1.api.radio-browser.info',
-  'https://nl1.api.radio-browser.info'
-];
 
 // One serialized/coalescing refresh scheduler: new ISO codes join the config
 // immediately, and each refresh snapshots the latest persisted set just before it
@@ -96,11 +93,16 @@ export async function loadCountryIndex({ fetchImpl = fetch, timeoutMs = 8000 } =
     }
   } catch { /* refetch below */ }
 
-  for (const base of COUNTRY_LIST_BASES) {
+  const pool=fetchImpl===globalThis.fetch?browserDirectoryHosts:createDirectoryHosts({fetchImpl});
+  async function* endpoints(){
+    if(globalThis.window?.RADIO_CONFIG?.directorySnapshotUrl&&/^https?:$/.test(globalThis.location?.protocol||''))yield '/directory/countries';
+    for(const base of await pool.discover())yield base+'/json/countries';
+  }
+  for await (const endpoint of endpoints()) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
     try {
-      const response = await fetchImpl(`${base}/json/countries`, { signal: controller.signal, headers: { Accept: 'application/json' } });
+      const response = await fetchImpl(endpoint, { signal: controller.signal, headers: { Accept: 'application/json' } });
       if (!response.ok) continue;
       // The abort timer must survive until the body is parsed: a mirror that sends
       // headers and then stalls the JSON would otherwise hang this attempt forever.
@@ -163,10 +165,13 @@ async function expandCountry(countryName) {
   if (!entry) return { expanded: false, reason: 'country not in directory index' };
 
   const codes = currentCodes();
+  const config=radioConfig(),requested=Array.isArray(config.directoryRequestedCountries)?config.directoryRequestedCountries:[];
+  const targetSelected=Boolean(config.directorySnapshotUrl)&&!requested.includes(entry.code)&&!readPersistedCodes().includes(entry.code);
+  if(targetSelected)config.directoryRequestedCountries=[...requested,entry.code].slice(-20);
   if (codes.includes(entry.code)) {
     // In-memory unverified is empty after reload; persisted unverified (and the
     // stations.v3 catalog, when readable) are the source of truth across boots.
-    if (expansion.unverified.has(entry.code) || await countryCoverageMissing(entry.code)) {
+    if (targetSelected || expansion.unverified.has(entry.code) || await countryCoverageMissing(entry.code)) {
       expansion.unverified.add(entry.code);
       persistUnverified();
       scheduleRefresh();
@@ -249,7 +254,8 @@ async function recordCoverage(codes, outcome) {
   }
   const loaded = await readCachedCountryCodes();
   for (const code of codes) {
-    if (!loaded || loaded.has(code)) expansion.unverified.delete(code);
+    if(snapshotCountryStatus(code)==='failed')expansion.unverified.add(code);
+    else if (!loaded || loaded.has(code)) expansion.unverified.delete(code);
     else expansion.unverified.add(code);
   }
   persistUnverified();
@@ -291,7 +297,9 @@ function readCachedCountryCodes() {
       get.onsuccess = () => {
         const stations = Array.isArray(get.result?.stations) ? get.result.stations : null;
         resolve(stations
-          ? new Set(stations.map(station => String(station?.countrycode || '').toUpperCase()).filter(Boolean))
+          // Curated direct stations are useful playback fallbacks, not proof
+          // that a country's Radio Browser directory batch arrived.
+          ? new Set(stations.filter(station=>!String(station?.stationuuid||'').startsWith('earth-radio:')).map(station => String(station?.countrycode || '').toUpperCase()).filter(Boolean))
           : null);
       };
       transaction.oncomplete = () => database.close();

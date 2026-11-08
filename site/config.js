@@ -1,5 +1,5 @@
-import { AUTH_DEPLOYMENT, isWebAuthOrigin } from './assets/auth-deployment.js?v=0.30.0';
-import { isDesktopAuthAvailable } from './assets/desktop-auth.js?v=0.30.0';
+import { AUTH_DEPLOYMENT, isWebAuthOrigin } from './assets/auth-deployment.js?v=0.31.0';
+import { isDesktopAuthAvailable } from './assets/desktop-auth.js?v=0.31.0';
 // Runtime configuration, loaded as a same-origin script so a strict Content-Security-Policy
 // (script-src 'self') stays intact. Deployers edit this file; the `|| ` guard preserves any
 // value injected earlier (e.g. by tests or a server-rendered runtime).
@@ -9,10 +9,14 @@ const desktopProxyBaseUrl = window.earthRadio && window.earthRadio.isDesktop && 
 const authOriginAllowed = isWebAuthOrigin(window.location.origin);
 
 window.RADIO_CONFIG = window.RADIO_CONFIG || {
-  // Public Cloudflare Pages deployments use browser-direct mode, so this must remain empty.
+  // Public Cloudflare Pages use the finite same-origin directory snapshot, not
+  // the desktop proxy, so this must remain empty.
   // The authorized loopback value is injected only by the packaged Electron preload bridge.
   proxyBaseUrl: desktopProxyBaseUrl || '',
+  // Direct/desktop limit; the shared web snapshot is a fixed 10,000-row sample.
   stationLimit: 3000,
+  stationCacheTtlMs: 3600000,
+  directorySnapshotUrl: '/directory/snapshot',
   useFederatedIndex: true,
   enabledSources: ['radio-browser', 'icecast-yp'],
   // Radio Browser uses GB for the United Kingdom.
@@ -63,4 +67,4 @@ window.RADIO_CONFIG = window.RADIO_CONFIG || {
 };
 
 // Authentication is an additive overlay so the recovered application bundle remains immutable.
-void import('./assets/auth-ui.js?v=0.30.0').catch(error => console.warn('Earth Radio account UI:', error));
+void import('./assets/auth-ui.js?v=0.31.0').catch(error => console.warn('Earth Radio account UI:', error));

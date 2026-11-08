@@ -9,14 +9,13 @@ import { URL, pathToFileURL } from 'node:url';
 import { TextDecoder } from 'node:util';
 import { handleMetadataApi } from './metadata-api.mjs';
 import { createPinnedLookup, isRedirect, normalizeHostname, requestPublic, resolvePublicTarget } from './net-guard.mjs';
+import {createDirectoryHosts} from '../site/assets/directory-hosts.js';
 
 const USER_AGENT = 'EarthRadio/0.24.0 desktop-proxy (+https://github.com/Protonmatter/EarthRadio)';
-const RADIO_BROWSER_BASES = [
-  'https://all.api.radio-browser.info',
-  'https://de1.api.radio-browser.info',
-  'https://nl1.api.radio-browser.info',
-  'https://at1.api.radio-browser.info'
-];
+const directoryHosts=createDirectoryHosts({fetchImpl:async(url,options)=>{
+  const result=await requestPublic(url,{signal:options.signal,timeoutMs:4000,deadlineAt:Date.now()+4000,maxBytes:65536,headers:{Accept:'application/json','User-Agent':USER_AGENT}});
+  return new Response(result.body,{status:result.statusCode,headers:result.headers});
+}});
 const DIRECTORY_CACHE_TTL_MS = 10 * 60 * 1000;
 const STREAM_TIMEOUT_MS = 8000;
 const MAX_PLAYLIST_BYTES = 64 * 1024;
@@ -154,7 +153,7 @@ async function getStations(limit, countryCodes = FEATURED_COUNTRY_CODES, country
 
 async function fetchStationsUncached(limit, countryCodes, countryLimit, maxStations, cacheKey) {
   const errors = [];
-  for (const base of RADIO_BROWSER_BASES) {
+  for (const base of await directoryHosts.discover()) {
     try {
       const directory = await fetchRadioBrowserDirectory(base, limit, countryCodes, countryLimit);
       const stations = mergeStationRecords(directory.stations).slice(0, maxStations);
@@ -175,8 +174,10 @@ async function fetchStationsUncached(limit, countryCodes, countryLimit, maxStati
         stations
       };
       setDirectoryCache(cacheKey, payload);
+      directoryHosts.healthy(base);
       return payload;
     } catch (error) {
+      directoryHosts.failed(base);
       errors.push(`${base}: ${error?.message || error}`);
     }
   }
@@ -210,7 +211,9 @@ async function fetchRadioBrowserDirectory(base, limit, countryCodes, countryLimi
   ];
 
   const observedAt = new Date().toISOString();
-  const settled = await Promise.allSettled(endpoints.map(endpoint => fetchJson(endpoint.url, 60_000)));
+  // Fail a bad mirror after one request, before starting country fan-out.
+  const first=await fetchJson(endpoints[0].url,15000);
+  const settled = [{status:'fulfilled',value:first},...await Promise.allSettled(endpoints.slice(1).map(endpoint => fetchJson(endpoint.url, 15000)))];
   const stations = [];
   const endpointCounts = [];
   const errors = [];
@@ -340,7 +343,7 @@ function cleanStationText(value) {
 }
 
 async function recordClick(uuid) {
-  for (const base of RADIO_BROWSER_BASES) {
+  for (const base of await directoryHosts.discover()) {
     try {
       return await fetchJson(`${base}/json/url/${encodeURIComponent(uuid)}`, 5000);
     } catch {
@@ -499,13 +502,10 @@ export function decodeIcyMetadata(buffer) {
   return decoded.replace(/\0+$/g, '').trim();
 }
 
-async function fetchJson(url, timeoutMs = 8000) {
-  const response = await fetch(url, {
-    signal: AbortSignal.timeout(timeoutMs),
-    headers: { Accept: 'application/json', 'User-Agent': USER_AGENT }
-  });
-  if (!response.ok) throw new Error(`HTTP ${response.status}`);
-  return response.json();
+export async function fetchJson(url, timeoutMs = 8000, {requestImpl = requestPublic} = {}) {
+  const response = await requestImpl(url,{timeoutMs,deadlineAt:Date.now()+timeoutMs,maxBytes:16*1024*1024,headers:{Accept:'application/json','User-Agent':USER_AGENT}});
+  if(response.statusCode!==200)throw Error(`HTTP ${response.statusCode}`);
+  return JSON.parse(response.body.toString('utf8'));
 }
 
 async function fetchText(streamTarget, timeoutMs = 8000, headers = {}) {

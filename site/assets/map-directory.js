@@ -1,13 +1,14 @@
-import { coordinates, streamIdentity } from './discovery-core.js?v=0.30.0';
+import { coordinates, streamIdentity } from './discovery-core.js?v=0.31.0';
+import {browserDirectoryHosts} from './directory-hosts.js?v=0.31.0';
+import {stationLocation} from './station-location.js?v=0.31.0';
 
-const BASES = ['https://de1.api.radio-browser.info', 'https://all.api.radio-browser.info'];
 const LIMIT = 10000;
 const MAX_BYTES = 16 * 1024 * 1024;
 
 // Radio Browser exposes has_geo_info, not viewport bounds. Load one bounded
 // global mapped sample on demand, then apply the captured rectangle locally.
 // No stream URLs are fetched here. Successful results are reused for this tab.
-export function createMapDirectory({ fetchImpl = globalThis.fetch, timeoutMs = 20000, maxBytes = MAX_BYTES, limit = LIMIT } = {}) {
+export function createMapDirectory({ fetchImpl = globalThis.fetch, getHosts=()=>browserDirectoryHosts.discover(), timeoutMs = 20000, maxBytes = MAX_BYTES, limit = LIMIT } = {}) {
   if (!Number.isInteger(limit) || limit < 1 || limit > LIMIT ||
       !Number.isInteger(maxBytes) || maxBytes < 1 || maxBytes > MAX_BYTES ||
       !Number.isInteger(timeoutMs) || timeoutMs < 1 || timeoutMs > 20000) throw new Error('Invalid map directory limits');
@@ -18,8 +19,12 @@ export function createMapDirectory({ fetchImpl = globalThis.fetch, timeoutMs = 2
     const controller = new AbortController();
     active = controller;
     const timer = setTimeout(() => controller.abort(), timeoutMs);
+    let abortDiscovery;
     const task = (async () => {
-      for (const base of BASES) {
+      const mirrors=await Promise.race([getHosts(),new Promise((_resolve,reject)=>{
+        abortDiscovery=()=>reject(controller.signal.reason);controller.signal.addEventListener('abort',abortDiscovery,{once:true});
+      })]);
+      for (const base of mirrors) {
         controller.signal.throwIfAborted();
         try {
           const query = new URLSearchParams({ has_geo_info: 'true', hidebroken: 'true', order: 'clickcount', reverse: 'true', limit: String(limit) });
@@ -66,6 +71,7 @@ export function createMapDirectory({ fetchImpl = globalThis.fetch, timeoutMs = 2
       throw new Error('Mapped station directory unavailable');
     })().finally(() => {
       clearTimeout(timer);
+      controller.signal.removeEventListener('abort',abortDiscovery);
       if (pending === task) pending = null;
       if (active === controller) active = null;
     });
@@ -80,7 +86,7 @@ export function mergeMappedStations(base, mapped) {
   const merged = new Map(mapped.map(station => [station.stationuuid, station]));
   for (const station of base) {
     const located = merged.get(station.stationuuid);
-    merged.set(station.stationuuid, located && !coordinates(station)
+    merged.set(station.stationuuid, located && (!coordinates(station)||stationLocation(station)?.approximate)
       ? { ...station, geo_lat: located.geo_lat, geo_long: located.geo_long } : station);
   }
   return [...merged.values()];

@@ -1,10 +1,10 @@
-# Install Earth Radio v0.30.0
+# Install Earth Radio v0.31.0
 
 Website and downloads: **https://earthradio.stream/**
 
 Production web app: **https://app.earthradio.stream/**
 
-Desktop downloads: **https://github.com/Protonmatter/earth-radio/releases/tag/v0.30.0**
+Desktop downloads: **https://github.com/Protonmatter/earth-radio/releases/tag/v0.31.0**
 
 Download only the file for your computer, plus `SHA256SUMS.txt`. The release also
 includes `BUILD-PROVENANCE.json`, platform verification receipts and this guide as
@@ -92,8 +92,8 @@ reports incomplete removal, sync/linking stay paused: resolve storage access and
 
 ## Windows ARM64
 
-Use `EarthRadio-Setup-0.30.0-arm64.exe` for the installer or
-`EarthRadio-Portable-0.30.0-arm64.exe` for the portable app. These are for ARM64
+Use `EarthRadio-Setup-0.31.0-arm64.exe` for the installer or
+`EarthRadio-Portable-0.31.0-arm64.exe` for the portable app. These are for ARM64
 Windows; no Windows x64 package is included in this release.
 
 Download from the release page, verify its hash against `SHA256SUMS.txt`, then run
@@ -106,8 +106,8 @@ upgrade across every existing profile remains unqualified. Keep your export for 
 For a separate portable profile, run from the download folder in PowerShell:
 
 ```powershell
-$radioProfile = Join-Path $env:LOCALAPPDATA 'EarthRadio-Portable-0.30.0'
-& .\EarthRadio-Portable-0.30.0-arm64.exe "--user-data-dir=$radioProfile"
+$radioProfile = Join-Path $env:LOCALAPPDATA 'EarthRadio-Portable-0.31.0'
+& .\EarthRadio-Portable-0.31.0-arm64.exe "--user-data-dir=$radioProfile"
 ```
 
 These builds have local self-signed Authenticode signatures and DigiCert timestamps.
@@ -120,8 +120,8 @@ Choose the DMG matching **Apple menu → About This Mac**:
 
 | Mac | Release file |
 | --- | --- |
-| Apple Silicon (M-series chip) | `EarthRadio-0.30.0-macOS-arm64-unnotarized.dmg` |
-| Intel processor | `EarthRadio-0.30.0-macOS-x64-unnotarized.dmg` |
+| Apple Silicon (M-series chip) | `EarthRadio-0.31.0-macOS-arm64-unnotarized.dmg` |
+| Intel processor | `EarthRadio-0.31.0-macOS-x64-unnotarized.dmg` |
 
 1. Download and verify the appropriate DMG from the release page.
 2. Open the disk image and drag **Earth Radio** into **Applications**.
@@ -148,13 +148,13 @@ you do not need to download every platform's installer.
 Windows PowerShell:
 
 ```powershell
-Get-FileHash -LiteralPath .\EarthRadio-Setup-0.30.0-arm64.exe -Algorithm SHA256
+Get-FileHash -LiteralPath .\EarthRadio-Setup-0.31.0-arm64.exe -Algorithm SHA256
 ```
 
 macOS Terminal (replace the filename for Intel):
 
 ```sh
-shasum -a 256 EarthRadio-0.30.0-macOS-arm64-unnotarized.dmg
+shasum -a 256 EarthRadio-0.31.0-macOS-arm64-unnotarized.dmg
 ```
 
 The checksums prove file equality with this release's published values. They do not

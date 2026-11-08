@@ -39,8 +39,10 @@ than inventing coordinates. Unknown/ferry road classes are omitted.
 
 Every module stays below the 16 MiB curation cap. Detailed features are filtered to
 the viewport and source minimum zoom, then drawn on a noninteractive canvas. The
-initial overview uses SVG country polygons. The service worker caches these assets
-for offline geography; fresh directories, streams and sync still need internet.
+initial overview uses SVG country polygons. Large map modules now have content-hashed
+filenames and immutable cache rules. They load by zoom and cache after use; service
+worker installation caches only the small coastline fallback. Fresh directories,
+streams and sync still need internet.
 If a module cannot load, the overview/fallback remains usable, a status message
 explains the missing detail, and station loading/search remain available.
 
@@ -48,8 +50,11 @@ This is generalized geographic data, not a navigation product. Natural Earth doe
 not supply all local streets, building addresses, traffic or routing. Zoom is
 bounded to 1–10 and city labels are decluttered. Coastline precision and coverage
 vary with scale. Political boundaries follow Natural Earth's cartographic choices;
-they do not imply endorsement. Station locations remain directory-provided and
-missing/invalid station coordinates are never fabricated.
+they do not imply endorsement. Stations with plausible directory coordinates use
+those points. Missing or clearly inconsistent positions use a dashed, explicitly
+approximate country reference marker; no approximate coordinates are written into
+station records, account data or precise map-area filters. See
+[directory/search/map reliability](DISCOVERY_RELIABILITY.md) for derivation and limits.
 
 ## Rebuild and validation
 

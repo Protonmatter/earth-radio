@@ -140,7 +140,7 @@ export function normalizeStation(raw: any, badStations: Map<string, { failures: 
     url,
     url_resolved: urlResolved || url,
     homepage,
-    favicon: isHttpUrl(raw.favicon) ? cleanString(raw.favicon) : '',
+    favicon: isHttpUrl(raw.favicon) && cleanString(raw.favicon).startsWith('https:') ? cleanString(raw.favicon) : '',
     tags: tags.join(', '),
     tagList: tags,
     country,

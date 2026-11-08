@@ -553,7 +553,7 @@ test('same-station platform polls accept only the newest generation', async () =
 test('runtime source and installed bundle dispatch selections only on truthful playback results', async () => {
   const root = path.resolve(import.meta.dirname, '..');
   const source = await readFile(path.join(root, 'src-recovered', 'main.ts'), 'utf8');
-  const bundle = await readFile(path.join(root, 'site', 'assets', 'index-ed6560ef.js'), 'utf8');
+  const bundle = await readFile(path.join(root, 'site', 'assets', 'index-ff85fdd4.js'), 'utf8');
   for (const text of [source, bundle]) {
     assert.match(text, /earthradio:station-selected/);
     assert.match(text, /earthradio:stations-load-settled/);
@@ -705,9 +705,11 @@ test('provider outages never populate the negative identify cache', async () => 
 test('a mirror that stalls mid-body cannot hang the country index', async () => {
   const { loadCountryIndex } = await import('../site/assets/directory-expansion.js');
   const calls = [];
+  let countryAttempts=0;
   const fetchImpl = (url, { signal }) => {
     calls.push(String(url));
-    if (calls.length === 1) {
+    if(String(url).endsWith('/json/servers'))return Promise.resolve(Response.json([{name:'de1.api.radio-browser.info'},{name:'de2.api.radio-browser.info'}]));
+    if (++countryAttempts === 1) {
       // Headers arrive, then the JSON body black-holes; only the abort budget —
       // which must survive until the body is parsed — can end this attempt.
       return Promise.resolve({
@@ -723,6 +725,7 @@ test('a mirror that stalls mid-body cannot hang the country index', async () => 
   const list = await loadCountryIndex({ fetchImpl, timeoutMs: 150 });
   assert.ok(Date.now() - startedAt < 2000, 'the stalled mirror was abandoned inside the budget');
   assert.ok(calls.length >= 2, 'the next mirror was attempted');
+  assert.equal(countryAttempts,2,'the stalled country body, not discovery, must exercise failover');
   assert.equal(list[0]?.code, 'JP');
 });
 

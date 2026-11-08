@@ -1,59 +1,59 @@
-const CACHE_NAME = 'earth-radio-shell-v64-frictionless-search';
+const CACHE_NAME = 'earth-radio-shell-v65-directory-reliability';
 const SHELL_ASSETS = [
   './',
-  './index.html',
-  './config.js?v=0.30.0',
-  './assets/auth-deployment.js?v=0.30.0',
-  './assets/desktop-auth.js?v=0.30.0',
+  './config.js?v=0.31.0',
+  './assets/auth-deployment.js?v=0.31.0',
+  './assets/desktop-auth.js?v=0.31.0',
   './manifest.webmanifest',
   './branding/earth-radio-32-v2.png',
   './branding/earth-radio-180-v2.png',
   './branding/earth-radio-192-v2.png',
   './branding/earth-radio-512-v2.png',
   './assets/hls.light-Dr1Fv81C.js',
-  './assets/index-ed6560ef.js',
+  './assets/index-ff85fdd4.js',
   './assets/index-CSoL7F-Y.css',
-  './assets/storage-guard.js?v=0.30.0',
-  './assets/directory-expansion.js?v=0.30.0',
-  './assets/pinned-stations.js?v=0.30.0',
-  './assets/metadata-enrichment.js?v=0.30.0',
-  './assets/metadata-enrichment.css?v=0.30.0',
-  './assets/responsive-ui.css?v=0.30.0',
-  './assets/responsive-ui.js?v=0.30.0',
-  './assets/ui-refresh.css?v=0.30.0',
-  './assets/atlas-lock.css?v=0.30.0',
-  './assets/atlas-lock.js?v=0.30.0',
-  './assets/search-core.js?v=0.30.0',
-  './assets/facet-picker.js?v=0.30.0',
-  './assets/search-controls.js?v=0.30.0',
-  './assets/search-controls.css?v=0.30.0',
-  './assets/discovery-core.js?v=0.30.0',
-  './assets/map-directory.js?v=0.30.0',
-  './assets/discovery-ui.js?v=0.30.0',
-  './assets/discovery.css?v=0.30.0',
-  './assets/listening-room.css?v=0.30.0',
-  './assets/vector-atlas.js?v=0.30.0',
-  './assets/world-land.js?v=0.30.0',
-  './assets/map-core.js?v=0.30.0',
-  './assets/map-world.js',
-  './assets/map-detail.js',
-  './assets/map-terrain.js',
-  './assets/map-roads.js',
+  './assets/storage-guard.js?v=0.31.0',
+  './assets/directory-expansion.js?v=0.31.0',
+  './assets/pinned-stations.js?v=0.31.0',
+  './assets/metadata-enrichment.js?v=0.31.0',
+  './assets/metadata-enrichment.css?v=0.31.0',
+  './assets/responsive-ui.css?v=0.31.0',
+  './assets/responsive-ui.js?v=0.31.0',
+  './assets/ui-refresh.css?v=0.31.0',
+  './assets/atlas-lock.css?v=0.31.0',
+  './assets/atlas-lock.js?v=0.31.0',
+  './assets/search-core.js?v=0.31.0',
+  './assets/place-vocabulary.js?v=0.31.0',
+  './assets/country-locations.js?v=0.31.0',
+  './assets/station-location.js?v=0.31.0',
+  './assets/directory-client.js?v=0.31.0',
+  './assets/directory-hosts.js?v=0.31.0',
+  './assets/facet-picker.js?v=0.31.0',
+  './assets/search-controls.js?v=0.31.0',
+  './assets/search-controls.css?v=0.31.0',
+  './assets/discovery-core.js?v=0.31.0',
+  './assets/map-directory.js?v=0.31.0',
+  './assets/discovery-ui.js?v=0.31.0',
+  './assets/discovery.css?v=0.31.0',
+  './assets/listening-room.css?v=0.31.0',
+  './assets/vector-atlas.js?v=0.31.0',
+  './assets/world-land.js?v=0.31.0',
+  './assets/map-core.js?v=0.31.0',
   './map-data-notices.txt',
-  './assets/auth-core.js?v=0.30.0',
-  './assets/sync-core.js?v=0.30.0',
-  './assets/song-library-core.js?v=0.30.0',
-  './assets/song-library-store.js?v=0.30.0',
-  './assets/song-library-ui.js?v=0.30.0',
-  './assets/auth-ui.js?v=0.30.0',
-  './assets/auth-ui.css?v=0.30.0',
-  './i18n/index.js?v=0.30.0',
-  './i18n/en.js?v=0.30.0',
-  './i18n/es.js?v=0.30.0',
-  './i18n/ar.js?v=0.30.0',
-  './i18n/ko.js?v=0.30.0',
-  './i18n/zh-Hans.js?v=0.30.0',
-  './i18n/zh-Hant.js?v=0.30.0'
+  './assets/auth-core.js?v=0.31.0',
+  './assets/sync-core.js?v=0.31.0',
+  './assets/song-library-core.js?v=0.31.0',
+  './assets/song-library-store.js?v=0.31.0',
+  './assets/song-library-ui.js?v=0.31.0',
+  './assets/auth-ui.js?v=0.31.0',
+  './assets/auth-ui.css?v=0.31.0',
+  './i18n/index.js?v=0.31.0',
+  './i18n/en.js?v=0.31.0',
+  './i18n/es.js?v=0.31.0',
+  './i18n/ar.js?v=0.31.0',
+  './i18n/ko.js?v=0.31.0',
+  './i18n/zh-Hans.js?v=0.31.0',
+  './i18n/zh-Hant.js?v=0.31.0'
 ];
 
 self.addEventListener('install', event => {
@@ -77,19 +77,22 @@ self.addEventListener('activate', event => {
 });
 
 async function networkFirst(request) {
+  // The application routes through hashes. Query-bearing navigations can carry
+  // one-time sign-in data and must never become persistent cache keys/responses.
+  const cacheable = request.mode !== 'navigate' || !new URL(request.url).search;
   try {
     const response = await fetch(request);
-    if (response.ok) {
+    if (response.ok && cacheable) {
       const cache = await caches.open(CACHE_NAME);
       await cache.put(request, response.clone());
     }
     return response;
   } catch {
-    const cached = await caches.match(request);
+    const cached = cacheable ? await caches.match(request) : null;
     if (cached) return cached;
     // Only navigations may fall back to the shell document; serving HTML for a
     // script/style request breaks module MIME checks while offline.
-    if (request.mode === 'navigate') return (await caches.match('./index.html')) || Response.error();
+    if (request.mode === 'navigate') return (await caches.match('./')) || Response.error();
     return Response.error();
   }
 }
@@ -106,7 +109,7 @@ async function cacheFirst(request) {
 }
 
 function isImmutableAsset(pathname) {
-  return /index-ed6560ef|index-CSoL7F-Y|hls\.light-Dr1Fv81C/.test(pathname);
+  return /index-ff85fdd4|index-CSoL7F-Y|hls\.light-Dr1Fv81C|map-(?:world|detail|terrain|roads)-[a-f0-9]{8}\.js/.test(pathname);
 }
 
 self.addEventListener('fetch', event => {

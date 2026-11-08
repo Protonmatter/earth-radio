@@ -1,7 +1,9 @@
-import { buildFacetOptions, coordinates, pickStation, rankStations, sanitizePreferences } from './discovery-core.js?v=0.30.0';
-import { createMapDirectory, mergeMappedStations } from './map-directory.js?v=0.30.0';
-import { installSearchControls } from './search-controls.js?v=0.30.0';
-import { getLocale, t } from '../i18n/index.js?v=0.30.0';
+import { buildFacetOptions, pickStation, rankStations, sanitizePreferences } from './discovery-core.js?v=0.31.0';
+import { createMapDirectory, mergeMappedStations } from './map-directory.js?v=0.31.0';
+import { installSearchControls } from './search-controls.js?v=0.31.0';
+import { getLocale, t } from '../i18n/index.js?v=0.31.0';
+import {stationLocation,stationMapPoint} from './station-location.js?v=0.31.0';
+import {displayCountry} from './search-core.js?v=0.31.0';
 
 // A hidden-to-visible resize can leave Leaflet's animated bounds correction
 // running. Its moveend handler can start another correction while stop() fires.
@@ -123,7 +125,7 @@ export function installDiscovery(adapter) {
   });
   area.addEventListener('click', () => { clearArea(); refresh(); });
   document.getElementById('er-map-fit').addEventListener('click', () => {
-    const map = adapter.map(), points = adapter.visible().map(coordinates).filter(Boolean);
+    const map = adapter.map(), points = adapter.visible().map(stationMapPoint).filter(Boolean);
     if (!map) return;
     settledMapAction(map, () => {
       if (points.length) map.fitBounds(points, { padding: [48, 64], maxZoom: 6, animate: false });
@@ -131,8 +133,8 @@ export function installDiscovery(adapter) {
     });
   });
   focus.addEventListener('click', () => {
-    const point = coordinates(adapter.current());
-    if (point) adapter.map()?.setView(point, 5, { animate: !matchMedia('(prefers-reduced-motion: reduce)').matches });
+    const position = stationLocation(adapter.current());
+    if (position) adapter.map()?.setView(position.point, position.approximate?3:5, { animate: !matchMedia('(prefers-reduced-motion: reduce)').matches });
   });
   document.getElementById('er-discovery-pick').addEventListener('click', () => {
     const pick = pickStation(adapter.visible(), { ...context(), current: adapter.current(), secureOnly: location.protocol === 'https:' || prefs.secureOnly });
@@ -144,7 +146,7 @@ export function installDiscovery(adapter) {
     if (!entry) return;
     detailStation = entry.station;
     detailTitle.textContent = entry.station.name;
-    detailMeta.textContent = [entry.station.country, entry.station.language, entry.station.codec,
+    detailMeta.textContent = [displayCountry(entry.station,getLocale()), entry.station.language, entry.station.codec,
       entry.station.bitrate ? `${entry.station.bitrate} kbps` : 'Bitrate unknown'].filter(Boolean).join(' · ');
     detailReasons.replaceChildren(...entry.reasons.map(reason => { const li = document.createElement('li'); li.textContent = reason; return li; }));
     dialog.showModal();
@@ -154,7 +156,7 @@ export function installDiscovery(adapter) {
   function updatePlayingControls() {
     root.dataset.directoryAllowed = String(adapter.allowDirectory());
     root.querySelector('[data-search-country]').disabled = !adapter.allowDirectory();
-    focus.disabled = !coordinates(adapter.current());
+    focus.disabled = !stationMapPoint(adapter.current());
     root.querySelector('option[value="similar"]').disabled = !adapter.current();
     mapSearch.disabled = !adapter.allowDirectory() || mapState === 'loading';
   }
@@ -199,12 +201,14 @@ export function installDiscovery(adapter) {
       }
       entries = new Map(result.map(entry => [entry.station.stationuuid, entry]));
       const mode = prefs.sort === 'best' ? 'Best match' : prefs.sort === 'explore' ? 'Explore' : prefs.sort === 'reliable' ? 'Reliability' : prefs.sort === 'bitrate' ? 'Highest bitrate' : prefs.sort === 'similar' ? 'Similar genres' : 'A–Z';
-      status.textContent = `${result.length.toLocaleString()} matches · ${mode}${bounds ? ' · Map area' : ''}`;
-      const mapped = result.filter(entry => coordinates(entry.station)).length;
+      status.textContent = `${result.length.toLocaleString()} matches · ${mode}${bounds ? ' · Map area' : ''}${result[0]?.correction?' · '+t('discovery.corrected',{query:result[0].correction}):''}`;
+      const mapped = result.filter(entry => stationLocation(entry.station)&&!stationLocation(entry.station).approximate).length;
       if (mapState === 'loaded') mapNotice.textContent = mapped
         ? `${mapped.toLocaleString()} mapped ${mapped === 1 ? 'station matches' : 'stations match'}${bounds ? ' this area and your filters' : ''}.${mapSnapshot.limited ? ' Global sample: 10,000 stations.' : ''}`
         : 'No mapped stations match this area and your filters. Zoom out, reset filters or clear the map area.';
-      document.getElementById('er-map-count').textContent = `${mapped.toLocaleString()} located · ${result.length - mapped} without coordinates`;
+      const approximate=result.filter(entry=>stationLocation(entry.station)?.approximate).length;
+      const located=result.filter(entry=>stationLocation(entry.station)&&!stationLocation(entry.station).approximate).length;
+      document.getElementById('er-map-count').textContent = t('map.locationCounts',{located:located.toLocaleString(),approximate:approximate.toLocaleString(),missing:result.length-located-approximate});
       updatePlayingControls();
       controls.render(result.length);
       document.dispatchEvent(new CustomEvent('earthradio:discovery-changed', { detail: { query: prefs.query, filters: context().filters, view } }));

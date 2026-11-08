@@ -6,6 +6,13 @@ available. Use [domain setup, build settings, migration and rollback](DOMAINS.md
 the website; the application build/Functions instructions below remain specific to
 the existing `earth-radio` project.
 
+The 0.31.0 directory cache uses the existing Pages Functions deployment and Cache
+API without new bindings or paid resources. Verify `/directory/snapshot` cold/warm
+responses and conditional ETags on preview before publishing. The root shell stays
+below two MiB; large geography loads by zoom with immutable filenames and legacy
+URL redirects. See [directory, search and map operations](DISCOVERY_RELIABILITY.md)
+for finite routes, limits, data derivation, qualification boundaries and rollback.
+
 ## Build and validate
 
 Prerequisites are Git, Node.js 24.18.0, npm 11.16.0, and Windows PowerShell 5.1 only for the recovery-import smoke test.

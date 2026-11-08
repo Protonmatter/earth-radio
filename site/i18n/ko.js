@@ -1,5 +1,9 @@
 // Engineering-authored Korean catalog. Native editorial review has not occurred.
 export default {
+  "map.approximateCluster": "국가 기준 위치 {count}개 포함",
+  "discovery.corrected": "{query} 검색 결과를 표시합니다",
+  "map.approximateCountry": "국가 기준 대략적 위치",
+  "map.locationCounts": "좌표 있음 {located} · 국가 기준 약 {approximate} · 위치 없음 {missing}",
   "discovery.countryLoading": "국가를 불러오는 중…",
   "discovery.country": "국가",
   "discovery.allCountries": "모든 국가",

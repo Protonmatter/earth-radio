@@ -1,4 +1,5 @@
 import { readFile, readdir } from 'node:fs/promises';
+import {createHash} from 'node:crypto';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { validateMapData } from '../site/assets/map-core.js';
@@ -48,7 +49,7 @@ function headerPatternMatches(pattern, relative) {
 }
 
 function isCloudflareControlFile(relative) {
-  return relative === '_headers' || relative === '_redirects';
+  return relative === '_headers' || relative === '_redirects' || relative === '_routes.json';
 }
 
 function isFingerprintedAsset(relative) {
@@ -112,6 +113,11 @@ export async function validateSite(rootInput) {
   }
   if (errors.length) throw new Error(errors.join('\n'));
 
+  if(fileSet.has('_routes.json')){
+    const routes=JSON.parse(await readFile(path.join(root,'_routes.json'),'utf8'));
+    if(routes.version!==1||JSON.stringify(routes.include)!==JSON.stringify(['/api/*','/directory/*'])||!Array.isArray(routes.exclude)||routes.exclude.length)errors.push('Functions routes must cover only metadata APIs and the finite directory');
+  }
+
   const html = await readFile(path.join(root, 'index.html'), 'utf8');
   const assets = [];
   for (const match of html.matchAll(/(?:src|href)=["']([^"']+)["']/gi)) {
@@ -159,8 +165,11 @@ export async function validateSite(rootInput) {
       try { textForScan = atlasTextForScan(content); }
       catch (error) { errors.push(`Invalid atlas data in ${relative}: ${error.message}`); }
     }
-    const mapData = relative.match(/^assets\/map-(world|detail|terrain|roads)\.js$/);
+    const mapData = relative.match(/^assets\/map-(world|detail|terrain|roads)(?:-[a-f0-9]{8})?\.js$/);
+    if(!mapData&&/^assets\/map-(world|detail|terrain|roads)-.*\.js$/.test(relative))errors.push(`Invalid generated map filename: ${relative}`);
     if (mapData) {
+      const hash=relative.match(/-([a-f0-9]{8})\.js$/)?.[1];
+      if(hash&&createHash('sha256').update(content).digest('hex').slice(0,8)!==hash)errors.push(`Map filename hash mismatch: ${relative}`);
       try { textForScan = mapDataTextForScan(content, mapData[1]); }
       catch (error) { errors.push(`Invalid map data in ${relative}: ${error.message}`); }
     }

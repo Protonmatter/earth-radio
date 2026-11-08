@@ -51,7 +51,7 @@ test('decluttering is deterministic, respects zoom and keeps countries/cities in
 test('labels clip safely at viewport edges and use localized names as text', () => {
   const labels = [label('outside', 'city', -100, 50), label('edge', 'country', 0, 40),
     { ...label('Korea', 'country', 300, 150), names: { ko: '대한민국' } }];
-  assert.deepEqual(layoutMapLabels(labels, { ...options, locale: 'ko' }).map(x => x.name), ['대한민국']);
+  assert.deepEqual(layoutMapLabels(labels, { ...options, locale: 'ko' }).map(x => x.name), ['한국']);
   assert.equal(intersectsBounds([-10, -10, 10, 10], [10, 10, 20, 20]), true);
   assert.equal(intersectsBounds([-10, -10, 10, 10], [11, 11, 20, 20]), false);
 });
@@ -75,10 +75,10 @@ test('source simplification preserves endpoints, valid closed rings and determin
 
 for (const kind of ['world', 'detail', 'terrain', 'roads']) {
   test(`generated ${kind} map is data-only, bounded and contains real geography`, async () => {
-    const source = await readFile(path.join(root, `site/assets/map-${kind}.js`), 'utf8');
-    assert.ok(Buffer.byteLength(source) < 16 * 1024 * 1024);
     const provenance = JSON.parse(await readFile(path.join(root, 'docs/provenance/map-data.json'), 'utf8'));
-    const recorded = provenance.outputs.find(row => row.path === `site/assets/map-${kind}.js`);
+    const recorded = provenance.outputs.find(row => new RegExp(`/map-${kind}(?:-[a-f0-9]{8})?\\.js$`).test(row.path));
+    const source = await readFile(path.join(root, recorded.path), 'utf8');
+    assert.ok(Buffer.byteLength(source) < 16 * 1024 * 1024);
     assert.equal(recorded.bytes, Buffer.byteLength(source));
     assert.equal(recorded.sha256, createHash('sha256').update(source).digest('hex'));
     const scanned = mapDataTextForScan(source, kind);

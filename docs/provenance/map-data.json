@@ -56,7 +56,7 @@
   ],
   "outputs": [
     {
-      "path": "site/assets/map-world.js",
+      "path": "site/assets/map-world-b021d4b5.js",
       "bytes": 2774372,
       "sha256": "b021d4b516b305427c515128b556ceaea5ac7a4bee37358ca619a5f61171dabc",
       "countries": 242,
@@ -73,7 +73,7 @@
       "labels": 7600
     },
     {
-      "path": "site/assets/map-detail.js",
+      "path": "site/assets/map-detail-5d713b76.js",
       "bytes": 10588454,
       "sha256": "5d713b76949df7b1fb7453c5e85eacdc22d658cd2e00a091f33220f1a1225584",
       "countries": 258,
@@ -90,7 +90,7 @@
       "lines": 0
     },
     {
-      "path": "site/assets/map-terrain.js",
+      "path": "site/assets/map-terrain-c2f063b9.js",
       "bytes": 8829410,
       "sha256": "c2f063b976d58da973882e858463c4978950f5a4e96bed4bd0395fc8763a9474",
       "countries": 0,
@@ -107,7 +107,7 @@
       "lines": 11379
     },
     {
-      "path": "site/assets/map-roads.js",
+      "path": "site/assets/map-roads-d81fc5ea.js",
       "bytes": 9816217,
       "sha256": "d81fc5eac4cf6c61d08184e76c55b3b6a4f06adc7b30f00f6a7e9cfcf0305543",
       "countries": 0,

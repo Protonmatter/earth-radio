@@ -1,8 +1,8 @@
 # Release model
 
-Current source version: [0.30.0 release record](RELEASE-0.30.0.md), with Windows ARM64
+Current source version: [0.31.0 release record](RELEASE-0.31.0.md), with Windows ARM64
 installer/portable, Apple Silicon/Intel unnotarized DMGs, checksums and source
-provenance. The [GitHub release](https://github.com/Protonmatter/earth-radio/releases/tag/v0.30.0)
+provenance. The [GitHub release](https://github.com/Protonmatter/earth-radio/releases/tag/v0.31.0)
 is the publication authority for its tag and assets. Earlier 0.25.x release records
 remain historical evidence and their published tags/assets remain immutable.
 

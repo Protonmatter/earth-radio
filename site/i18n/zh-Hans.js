@@ -1,5 +1,9 @@
 // Engineering-authored Simplified Chinese catalog. Native editorial review has not occurred.
 export default {
+  "map.approximateCluster": "包含 {count} 个按国家估算的位置",
+  "discovery.corrected": "显示“{query}”的结果",
+  "map.approximateCountry": "按国家估算的位置",
+  "map.locationCounts": "已定位 {located} · 国家估算 {approximate} · 未定位 {missing}",
   "discovery.countryLoading": "正在加载国家…",
   "discovery.country": "国家",
   "discovery.allCountries": "所有国家",

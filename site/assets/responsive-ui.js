@@ -13,9 +13,9 @@
  * maintained catalogs, over a bounded list of known runtime-owned elements.
  */
 
-import { getCurrentSongSnapshot } from './metadata-enrichment.js?v=0.30.0';
-import { matchesCountry } from './search-core.js?v=0.30.0';
-import { countryIndex } from './directory-expansion.js?v=0.30.0';
+import { getCurrentSongSnapshot } from './metadata-enrichment.js?v=0.31.0';
+import { countryCode, countryWords, matchesCountry } from './search-core.js?v=0.31.0';
+import { countryIndex } from './directory-expansion.js?v=0.31.0';
 import {
   applyDeclarativeI18n,
   applyDocumentLocale,
@@ -26,7 +26,7 @@ import {
   DEFAULT_LOCALE,
   FONT_PROFILES,
   t
-} from '../i18n/index.js?v=0.30.0';
+} from '../i18n/index.js?v=0.31.0';
 
 export const UI_STORAGE_KEY = 'earthRadio.ui.v1';
 export const DEFAULT_SPLIT = 42;
@@ -146,10 +146,13 @@ export function filterCountryOptions(options, query) {
   const term = normalizeSearchTerm(query);
   if (!term) return [...(Array.isArray(options) ? options : [])];
   const canonical = COUNTRY_ALIASES[term] || term;
+  const exactCode = countryCode(canonical);
   return (Array.isArray(options) ? options : []).filter(option => {
+    if (exactCode) return matchesCountry({country: option?.name, countrycode: option?.code}, exactCode);
     const name = normalizeSearchTerm(option?.name);
     const code = normalizeSearchTerm(option?.code);
-    return name.includes(canonical) || code === term;
+    const aliases = normalizeSearchTerm(countryWords({country: option?.name, countrycode: option?.code}));
+    return name.includes(canonical) || code === term || aliases.includes(term);
   });
 }
 

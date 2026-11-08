@@ -63,6 +63,7 @@ export async function setupApp(page, { sameOriginNowPlaying = null, sameOriginFi
     }
     if (url.hostname.endsWith('api.radio-browser.info')) {
       const pathname = url.pathname;
+      if(pathname==='/json/servers')return route.fulfill({json:[{name:'de1.api.radio-browser.info'},{name:'de2.api.radio-browser.info'}]});
       if (pathname.includes('/json/stations/topclick')) return route.fulfill({ json: FIXTURE_STATIONS });
       if (pathname.includes('/json/stations/search')) {
         const countryCode = (url.searchParams.get('countrycode') || '').toUpperCase();
@@ -92,13 +93,20 @@ export async function setupApp(page, { sameOriginNowPlaying = null, sameOriginFi
     // Map tiles, other directories, favicons: fail fast and deterministically.
     return route.abort();
   });
+  // Register after the broad router: route.continue() otherwise bypasses this
+  // handler. Existing suites exercise direct fallback; the snapshot suite tests
+  // the unmodified production primary path in both engines.
+  await page.route('**/config.js*',async route=>{
+    const response=await route.fetch();
+    await route.fulfill({response,body:(await response.text()).replace("directorySnapshotUrl: '/directory/snapshot'","directorySnapshotUrl: ''")});
+  });
   if (enableAuth) {
     await page.route('**/config.js*', async route => {
       const response = await route.fetch();
       const body = (await response.text()).replace(
         'const authOriginAllowed = isWebAuthOrigin(window.location.origin);',
         'const authOriginAllowed = true;'
-      );
+      ).replace("directorySnapshotUrl: '/directory/snapshot'","directorySnapshotUrl: ''");
       await route.fulfill({
         status: 200,
         headers: {
@@ -115,11 +123,12 @@ export async function setupApp(page, { sameOriginNowPlaying = null, sameOriginFi
 }
 
 export function card(page, name) {
-  return page.locator('.station-card', { hasText: name }).first();
+  return page.locator('.station-card').filter({has:page.getByText(name,{exact:true})}).first();
 }
 
 export async function revealCard(page, name) {
   const target = card(page, name);
+  if(!await target.count())await page.locator('#station-grid').evaluate(grid=>{grid.scrollTop=0;});
   // The station list is virtualized: a card below the fold has no DOM node until the
   // grid scrolls near it, and scrollIntoViewIfNeeded on a nonexistent node waits
   // forever. Step the grid until the card materializes.

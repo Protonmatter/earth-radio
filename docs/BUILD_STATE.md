@@ -1,5 +1,21 @@
 # Build state
 
+## 0.31.0 directory reliability candidate
+
+This candidate adds a finite same-origin cached directory, dynamic mirror health,
+strict-before-fuzzy search, generated locale/place vocabulary, diverse opening
+results and explicit country-level approximate map positions. Large geography is
+lazy and immutable, with legacy URLs retained for already-open tabs. Shell precache
+is about 1.92 MB, down from 33.72 MB (94.3% less). Focused cache/search/map tests,
+one-request Chromium/WebKit boot, targeted-country retry, legacy loader and installed
+Chromium offline-shell checks passed during development. Final local gates passed
+494 tests (three skips), 149 browser cases, 42 rendered scenarios, seven standalone
+cases and Windows renderer/auth/lifecycle checks. Hosted/live preview and release
+qualification still gate publication. No new paid service
+or dependency is configured. See [release gates](RELEASE-0.31.0.md) and
+[technical operations](DISCOVERY_RELIABILITY.md); final delivery receipts belong in
+release provenance and Spaces.
+
 ## 0.30.0 station search
 
 Browse and Search share the maintained ranker, query and country scope. Searchable

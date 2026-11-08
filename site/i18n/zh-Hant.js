@@ -1,5 +1,9 @@
 // Engineering-authored Traditional Chinese catalog. Native editorial review has not occurred.
 export default {
+  "map.approximateCluster": "包含 {count} 個依國家估算的位置",
+  "discovery.corrected": "顯示「{query}」的結果",
+  "map.approximateCountry": "依國家估算的位置",
+  "map.locationCounts": "已定位 {located} · 國家估算 {approximate} · 未定位 {missing}",
   "discovery.countryLoading": "正在載入國家…",
   "discovery.country": "國家",
   "discovery.allCountries": "所有國家",

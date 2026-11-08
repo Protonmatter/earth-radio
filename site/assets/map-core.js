@@ -1,4 +1,5 @@
 // Pure geography presentation rules. No network, storage, DOM or playback state.
+import {displayCountry,countryCode} from './search-core.js?v=0.31.0';
 export const MAP_LABEL_STORAGE = 'earthRadio.mapLabels.v1';
 
 export function sanitizeMapLabels(value) {
@@ -15,6 +16,12 @@ export function intersectsBounds(a, b) {
 }
 
 export function labelName(label, locale = 'en') {
+  if(label.kind==='country'){
+    const name=label.names?.en||label.name;
+    // DisplayNames can normalize common country names without changing the
+    // pinned map-data schema. Unknown/disputed labels keep their source names.
+    const code=countryCode(name);if(code)return displayCountry({countrycode:code,country:name},locale);
+  }
   return label.names?.[locale] || label.name;
 }
 
