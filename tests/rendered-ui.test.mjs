@@ -54,7 +54,9 @@ test('responsive UI rendered matrix preserves layout, actions, and locale contra
   assert.equal(search.probe.destination, 'search');
   assert.equal(search.probe.searchPanel.visible, true);
   assert.equal(search.probe.activeElement.id, 'er-station-query');
-  assert.equal(search.imeDuringComposition, 0, 'IME input filtered before compositionend');
+  // The shared palette now presents the existing ranked pool on opening. IME
+  // must preserve those results and the committed query until compositionend.
+  assert.equal(search.imeResultsStable, true, 'IME input filtered before compositionend');
 
   const selectedSearch = byId(payload.results, 'mobile-search-select-390x844').probe;
   assert.equal(selectedSearch.destination, 'listen');
@@ -62,7 +64,7 @@ test('responsive UI rendered matrix preserves layout, actions, and locale contra
   assert.equal(selectedSearch.countryQuery.value, 'Canada');
   assert.equal(selectedSearch.activatedSearchName, 'Atlas Editorial FM');
   assert.equal(selectedSearch.settledSearchNames.length, 1);
-  assert.ok(selectedSearch.settledSearchNames.length < selectedSearch.stationCount);
+  assert.equal(selectedSearch.stationCount, 1, 'Browse must share the palette query and country scope');
   assert.equal(selectedSearch.settledSearchNames.every(name => /atlas/i.test(name)), true);
   const selectedSearchResult = byId(payload.results, 'mobile-search-select-390x844');
   assert.equal(selectedSearchResult.actionLog.find(entry => entry.action.type === 'pointer')?.result.trustedPointer?.received?.isTrusted, true);
@@ -88,7 +90,7 @@ test('responsive UI rendered matrix preserves layout, actions, and locale contra
 
   const keyboardCountrySearch = byId(payload.results, 'mobile-country-search-keyboard-390x844').probe;
   assert.equal(keyboardCountrySearch.countryQuery.value, 'Japan');
-  assert.deepEqual(keyboardCountrySearch.countrySelections, [{ country: 'Japan' }]);
+  assert.deepEqual(keyboardCountrySearch.countrySelections, [{ country: 'JP' }]);
 
   // The ui-refresh layer re-ramps the palette: mobile header/body take the
   // refresh surface and background, and the primary action takes --er2-action.

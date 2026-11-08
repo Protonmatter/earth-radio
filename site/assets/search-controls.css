@@ -1,0 +1,39 @@
+/* Search presentation shares the listening-room palette and existing row geometry. */
+html.er-root .er-discovery [hidden],html.er-root .er-search-active[hidden],html.er-root .er-facet-list[hidden]{display:none!important}
+html.er-root .er-discovery-search{min-height:48px;padding-inline:12px;gap:8px}
+html.er-root .er-discovery-search input{min-height:44px;font-size:14px}
+html.er-root .er-discovery-search input::-webkit-search-cancel-button{-webkit-appearance:none}
+html.er-root .er-discovery-search [data-discovery-clear-query]{flex:none;min-width:44px;min-height:44px;padding:0;border:0;background:transparent;font-size:22px}
+html.er-root .er-search-country{float:inline-end;max-width:calc(100% - 94px);min-height:44px;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;background:transparent;border-color:transparent;color:var(--er2-muted)}
+html.er-root .er-discovery-advanced>summary{display:list-item;width:max-content;max-width:90px;min-height:44px;padding:13px 2px 8px;margin-top:4px;font-size:12px;box-sizing:border-box}
+html.er-root .er-discovery-facets{clear:both;margin-top:6px;gap:8px}
+html.er-root .er-facet-field{display:flex;flex-direction:column;gap:5px;min-width:0;position:relative}
+html.er-root .er-facet-field::after{content:'⌄';position:absolute;inset-inline-end:10px;bottom:12px;pointer-events:none;color:var(--er2-muted,var(--text-muted));font-size:12px}
+html.er-root .er-facet-field .er-facet-input{padding-inline-end:26px}
+html.er-root .er-discovery-advanced>summary:not([data-filter-count="0"])::after{content:attr(data-filter-count);margin-inline-start:6px;font-size:10px;font-weight:600}
+html.er-root .er-discovery-facets .er-facet-field>label{display:block;font-size:11px;color:var(--er2-muted);line-height:1.4}
+html.er-root :is(.er-facet-input,.er-discovery-facets select){width:100%;min-width:0;min-height:44px;box-sizing:border-box;border:1px solid var(--er2-line,var(--border));border-radius:7px;padding:9px 10px;background:var(--er2-surface,var(--surface));color:var(--er2-ink,var(--text));font:inherit;font-size:12px}
+html.er-root .er-facet-input::placeholder{color:var(--er2-muted,var(--text-muted));opacity:1}
+html.er-root .er-facet-input:focus-visible{outline:2px solid var(--er2-action,var(--accent));outline-offset:2px}
+html.er-root select.er-facet-native{position:absolute!important;inset:0 auto auto 0!important;width:1px!important;height:1px!important;min-height:1px!important;padding:0!important;border:0!important;opacity:0!important;overflow:hidden!important;clip-path:inset(50%)}
+html.er-root .er-facet-list{position:fixed;z-index:5000;box-sizing:border-box;padding:6px;border:1px solid var(--er2-line,var(--border));border-radius:10px;overflow-y:auto;overscroll-behavior:contain;box-shadow:0 10px 35px #0002;background:var(--er2-surface,var(--surface));color:var(--er2-ink,var(--text));font-family:var(--er2-sans,'Segoe UI',sans-serif)}
+html.er-root .er-facet-caption{margin:4px 7px 6px;font-size:10px;line-height:1.5;color:var(--er2-muted,var(--text-muted))}
+html.er-root .er-facet-option{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;min-height:44px;border:0;border-radius:5px;padding:9px 10px;background:transparent;color:inherit;text-align:start;font:inherit;font-size:13px;cursor:pointer}
+html.er-root .er-facet-option>span{min-width:0;overflow-wrap:anywhere}
+html.er-root .er-facet-option small{color:var(--er2-muted,var(--text-muted));font-size:11px;flex:none}
+html.er-root .er-facet-option:is(:hover,.is-active){background:var(--er2-surface-soft,var(--surface-hover));outline:1px solid var(--er2-line,var(--border));outline-offset:-1px}
+html.er-root .er-facet-empty{padding:8px;font-size:12px;color:var(--er2-muted,var(--text-muted))}
+html.er-root .er-search-active{clear:both;display:flex;align-items:center;gap:6px;max-width:100%;margin-top:8px;min-height:44px}
+html.er-root .er-active-rail{display:flex;flex:1 1 auto;min-width:0;gap:5px;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:thin}
+html.er-root .er-active-chip{display:inline-flex;align-items:center;gap:10px;flex:none;min-height:44px;max-width:260px;border:1px solid var(--er2-line,var(--border));border-radius:7px;padding:8px 11px;background:var(--er2-surface-soft,var(--surface-hover));color:var(--er2-ink,var(--text));font:inherit;font-size:11px;cursor:pointer;white-space:nowrap}
+html.er-root .er-active-chip>span:first-child{overflow:hidden;text-overflow:ellipsis;min-width:0}
+html.er-root .er-active-chip>span:last-child{font-size:17px;flex:none}
+html.er-root .er-search-reset{flex:none;min-height:44px;padding:8px;background:transparent;border:0;color:var(--er2-muted,var(--text-muted));font:inherit;font-size:11px;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+html.er-root .er-search-recovery{clear:both;margin:12px 0 0;padding:14px;border:1px solid var(--er2-line,var(--border));border-radius:8px;background:var(--er2-surface,var(--surface))}
+html.er-root .er-search-recovery p{font-size:12px;line-height:1.6;margin:0 0 10px;color:var(--er2-muted,var(--text-muted))}
+html.er-root .er-search-recovery .er-search-recovery-title{font-size:15px;font-weight:600;color:var(--er2-ink,var(--text));margin-bottom:5px}
+html.er-root .er-search-recovery button{min-height:44px;margin-inline-end:6px;margin-bottom:4px}
+html.er-root .er-discovery.er-has-recovery~#empty-state{display:none!important}
+html.er-root #search-modal .er-search-active{padding-inline:8px;margin:0 0 6px}
+html.er-root .er-discovery-options{clear:both}
+@media(max-width:767px){html.er-root .er-discovery-facets{gap:8px}html.er-root .er-active-chip{max-width:190px}html.er-root .er-facet-input{font-size:16px}html.er-root .er-search-recovery{padding:11px}}

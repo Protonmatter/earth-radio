@@ -36,6 +36,20 @@ test('country option search accepts names, codes, and familiar aliases', () => {
   assert.deepEqual(filterCountryOptions(options, 'USA').map(option => option.name), ['United States']);
 });
 
+test('directory country names resolve to current ISO codes rather than retired Intl aliases', () => {
+  const options = responsive.buildCountryOptions([
+    {name:'France',count:3},{name:'Germany',count:2},
+    {name:'The United Kingdom Of Great Britain And Northern Ireland',count:4},
+    {name:'The Netherlands',count:5},{name:'Taiwan, Republic Of China',count:6}
+  ]);
+  assert.deepEqual(options.map(({name,code})=>({name,code})),[
+    {name:'France',code:'FR'},{name:'Germany',code:'DE'},
+    {name:'Netherlands',code:'NL'},{name:'Taiwan',code:'TW'},
+    {name:'United Kingdom',code:'GB'}
+  ]);
+  assert.deepEqual(responsive.buildCountryOptions(['Vanuatu','Vietnam','Zimbabwe'].map(name=>({name,count:1}))).map(option=>option.code),['VU','VN','ZW']);
+});
+
 test('country and station terms form one normalized runtime query', () => {
   const buildCountryStationQuery = requiredExport('buildCountryStationQuery');
   assert.equal(buildCountryStationQuery('South Korea', '  jazz  '), 'South Korea jazz');

@@ -4,14 +4,14 @@ The November 2026 candidate adds maintained discovery modules to the recovered a
 
 ## Listener controls
 
-- **Find a station:** inline search across station name, country, country code, genre tags, and language. All terms must match. Accents are normalized, non-Latin scripts are retained, and words of 5–32 characters allow one edit for spelling mistakes. Search is debounced by 140 ms and waits for IME composition to finish. Search never starts playback.
+- **Find a station:** inline search across station name, country/code aliases, directory city/region, genre/language aliases, codec and bitrate. All terms must match. Accents are normalized, non-Latin scripts are retained, and words of 5–32 characters allow one edit or adjacent transposition for spelling mistakes. Exact station names lead Best match. Search is debounced by 140 ms and waits for IME composition to finish. Search never starts playback.
 - **Filters:** exact genre and language facets, minimum declared bitrate, HTTPS-only selection, and a switch to hide stations that recently failed on this device. These are additional constraints on the existing country, favorites, recent, and genre-collection filters. The disclosure starts closed on phones.
 - **Selection method:** Best match, Reliability, Explore the world, Similar to playing, Highest bitrate, or Name A–Z. Similar is unavailable until there is a selected station. The default keeps Recent in chronological order and preserves the Similar view's ranking.
 - **Find my next station:** selects an alternative from the current visible pool. It excludes the current stream, duplicate stream endpoints, and stations within the failure cooldown. On HTTPS pages it only selects HTTPS streams. With no suitable alternative, it explains how to broaden discovery.
 - **Details:** opens an accessible station dialog with country/language/format and the factors that influenced ranking. Escape closes the dialog; the dialog's Play action selects that exact station. Merely opening details does not start playback.
 - **Atlas controls:** Search this area captures the current geographic rectangle and, on first use in the tab, loads a bounded world directory of mapped stations. It switches to All and clears conflicting country selections while retaining genre, language, query and quality constraints. Panning afterwards does not silently change the rectangle. Clear area is available on the map, including phones. Fit stations fits the current pool's valid locations. On air focuses the selected station. Missing locations are counted separately.
 
-Reset clears the new discovery controls and map rectangle. The existing empty-state Clear filters action clears both the new controls and the runtime's traditional filters.
+Browse and the Search palette share one query and ranked pool. Country scope applies before the palette limit and reuses bounded country expansion. Choosing a country clears the map rectangle; area search clears country scope. Genre/language menus support typing, Arrow keys, Enter, Escape and IME, with at most 24 suggestions and loaded-catalog counts. Selected values survive catalog refreshes even when no station still has that facet. Active chips expose all constraints, including legacy quality/genre/country filters and Favorites/Recent/Similar view scope. Clear search keeps filters; Reset filters keeps the query; Clear all resets query, filters, sort, area and view without changing saved data. Pending palette results are inert until matching settles, and Enter flushes pending input before selection.
 
 ## Approved listening-room presentation (November 7)
 
@@ -123,11 +123,11 @@ Similarity adds up to 65 points for normalized genre Jaccard overlap and exclude
 
 URLs must parse as credential-free HTTP(S) endpoints. HTTPS filtering checks the parsed protocol rather than trusting a directory flag. Unknown/empty/boolean/non-finite coordinates and the directory's (0,0) sentinel are not mapped. Genuine points on either zero axis work. Rectangle filtering handles the antimeridian and full/repeated world extents.
 
-Discovery controls and success counters are **tab-local** and are never synced or exported. The existing runtime continues to own persisted favorites, recents, preferences, and failure records. New copy currently uses English; the application's existing locale controls remain available, with existing translated chrome preserved.
+Discovery controls and success counters are **tab-local** and are never synced or exported. The existing runtime continues to own persisted favorites, recents, preferences, and failure records. The new search-control copy has all six maintained locale catalogs; existing discovery score explanations remain English. the application's existing locale controls remain available, with existing translated chrome preserved.
 
 ## Integration contract
 
-`installDiscovery(adapter)` consumes `context() -> {badStations}`, `map()`, `current()`, `visible()`, `refresh()`, and `play(station)`, plus `allowDirectory()` (radio domain only), `prepareArea()` (clear geographic/view conflicts), and `normalize(raw)` (existing runtime normalizer). It returns `augment(stations)`, `transform(stations, {all, view})`, `explainButton(station)`, `options()`, `observe(station, ok)`, and `clear()`.
+`installDiscovery(adapter)` consumes `context() -> {badStations, filters, view}`, `map()`, `current()`, `visible()`, `refresh()`, and `play(station)`, plus `allowDirectory()` (radio domain only), `prepareArea()` (clear geographic/view conflicts), `normalize(raw)` (existing runtime normalizer), `patchFilters(patch, emit)` and `showAll()` (existing view/filter owners). It returns `ownsSearch`, `augment(stations)`, `transform(stations, {all, view})`, `explainButton(station)`, `options()`, `observe(station, ok)`, and `clear()`.
 
 The recovered runtime imports the maintained modules and calls only these narrow integration points:
 
@@ -162,3 +162,24 @@ not add a hidden 30px scroll row that moves a station during pointer selection.
 Explicit Fit stations and area-search actions stop residual camera corrections,
 measure the map and restore the same drag limits in a finally path. This prevents
 a hidden-to-visible resize correction from overriding a newer fitted view.
+
+
+## Search presentation integration (0.30.0)
+
+`search-core.js` owns pure normalization, bounded vocabulary/suggestions and country matching.
+`facet-picker.js` enhances the named select without adding a second form authority.
+`search-controls.js` renders explicit constraints/recovery and routes changes through
+the discovery adapter. `earthradio:discovery-changed` mirrors query/scope into the
+palette; `earthradio:search-opened` flushes the shared input. Country events from
+Search include `source: search` and an ISO code when available; map callers retain
+the existing expansion event meaning. The runtime palette renders the already-ranked
+pool and keeps its existing activation indices. The old presentation-only query
+filter remains a fallback for shells without the discovery authority. The virtualizer
+observes its viewport and disconnects the observer on destruction. No synced search
+history or account preference is introduced.
+
+Country-picker focus reuses the existing cached, single-flight directory country
+index, so countries absent from the initial sample remain selectable. Its counts
+come from that index when available; genre/language counts describe loaded stations.
+Only explicit country selection expands station coverage. Offline index loading
+retains loaded-country choices and remains retryable on the next focus.

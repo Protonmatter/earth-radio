@@ -1,5 +1,15 @@
 # Build state
 
+## 0.30.0 station search
+
+Browse and Search share the maintained ranker, query and country scope. Searchable
+genre/language widgets, removable active constraints and query-preserving recovery
+make refinement explicit. Format/region/alias/transposition matching remains bounded
+and tab-local. Container resize observation keeps filtered station rows readable.
+Account/playback contracts and bounded directory loaders are preserved. See
+[release gates](RELEASE-0.30.0.md) and [qualification](QUALIFICATION-0.30.0.md).
+Final publication identities belong in release provenance and Spaces.
+
 ## 0.29.1 website and app domains
 
 The product website and downloads use `earthradio.stream`; listening and optional
