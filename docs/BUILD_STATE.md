@@ -4,7 +4,7 @@
 
 The approved desktop/mobile presentation uses compact, single-column station rows,
 Paper by default for new profiles, retained Night preferences, clearer navigation,
-and quieter bundled-map controls. Runtime `index-a673e435.js` and shell v58 carry
+and quieter bundled-map controls. Runtime `index-a673e435.js` and shell v59 carry
 version 0.27.0. Discovery and account behavior retain their existing contracts.
 The large-catalog regression covers finding an unrendered station, end-of-list
 selection, no-result reset and a cached directory reload while its source is down.

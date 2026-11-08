@@ -2,7 +2,32 @@
 // observer must honor the active preview, not revert it), and cancelling reverts.
 
 import { expect, test } from '@playwright/test';
-import { setupApp } from './helpers.mjs';
+import { setupApp, playFromList } from './helpers.mjs';
+
+test('playback labels follow audio state when animation frames are suspended', async ({ page }) => {
+  await setupApp(page);
+  await playFromList(page, 'E2E Berlin Techno');
+  await page.locator('#er-open-nowplaying').click();
+  const proxy = page.locator('#er-nowplaying [data-er-nowplaying-play]');
+  // Reproduce the observed generic-translation overwrite while a background
+  // desktop window cannot deliver the observer's pending animation frame.
+  await page.evaluate(() => {
+    window.__savedAnimationFrame = window.requestAnimationFrame;
+    window.requestAnimationFrame = () => 1;
+    const play = document.getElementById('btn-play');
+    play.setAttribute('data-i18n', 'player.play');
+    play.setAttribute('aria-label', 'Play');
+  });
+  await expect(page.locator('#btn-play')).toHaveAttribute('aria-label', 'Pause');
+  await expect(proxy).toHaveAttribute('aria-label', 'Pause');
+  await proxy.click();
+  await expect(page.locator('#audio-player')).toHaveJSProperty('paused', true);
+  await expect(proxy).toHaveAttribute('aria-label', 'Play');
+  await proxy.click();
+  await expect(page.locator('#player-bar')).toHaveClass(/is-playing/);
+  await expect(proxy).toHaveAttribute('aria-label', 'Pause');
+  await page.evaluate(() => { window.requestAnimationFrame = window.__savedAnimationFrame; });
+});
 
 test('an Arabic locale preview keeps lang/dir until the settings dialog closes', async ({ page }) => {
   await setupApp(page);

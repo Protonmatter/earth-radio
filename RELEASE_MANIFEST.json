@@ -46,7 +46,7 @@
     {
       "path": "docs/BUILD_STATE.md",
       "bytes": 22992,
-      "sha256": "31c6cfad096d82770f38a8f715b66026243e4f81bacc2fe2a13d1919f5f82680"
+      "sha256": "84481823a942193d464993eebdabe56490f43669b01a87fc89ee195b30813036"
     },
     {
       "path": "docs/CLOUDFLARE_DEPLOYMENT.md",
@@ -95,8 +95,8 @@
     },
     {
       "path": "docs/provenance/hardening-overlays.json",
-      "bytes": 12594,
-      "sha256": "d9924f7508c083710a1237356a37d4850e432fac39f4fca95424301924f5cac6"
+      "bytes": 12650,
+      "sha256": "6832b4ae250b63ac58bdee2b481f363c387948a076eeebb4291961ded04a897a"
     },
     {
       "path": "docs/provenance/recovery-manifest.json",
@@ -110,8 +110,8 @@
     },
     {
       "path": "docs/QUALIFICATION-0.27.0.md",
-      "bytes": 3009,
-      "sha256": "00377db4c0d9397e515d71f66299f94372cc168c34c4e0c01b49723c5c637dcc"
+      "bytes": 3571,
+      "sha256": "79ae714a32575065725e3e54b54a3c2c5692d56e34ba1a46356c1200f0b10100"
     },
     {
       "path": "docs/QUALIFICATION-2026-11-03.md",
@@ -160,8 +160,8 @@
     },
     {
       "path": "docs/RELEASE-0.27.0.md",
-      "bytes": 3665,
-      "sha256": "b664d43a7ae49f9cc98ded7f8ef9c5972e7120ab53988215dbef6771da1707a3"
+      "bytes": 3661,
+      "sha256": "66d3b943466824997c4718b7688ac33d8fcace10af9509b1b51d4615372e784e"
     },
     {
       "path": "docs/RELEASE.md",
@@ -525,8 +525,8 @@
     },
     {
       "path": "site/assets/responsive-ui.js",
-      "bytes": 71255,
-      "sha256": "4764499a4e09b3632fb24d3d93a5d9c652627cc2d8addbecb2a75c93916ed1a6"
+      "bytes": 72100,
+      "sha256": "6ee84a1b61c946a6966cf624863781ec4850f764f6768f34dcc75679d286028a"
     },
     {
       "path": "site/assets/storage-guard.js",
@@ -655,8 +655,8 @@
     },
     {
       "path": "site/sw.js",
-      "bytes": 3632,
-      "sha256": "d103f3716c308877e3736e84971eff30037aef2ab5f27cc56d787f18b67ea291"
+      "bytes": 3628,
+      "sha256": "c5c26ad6d19c94db6a71fbe33a1218db9abd60f84b8331479408cbe5bd2e57fc"
     },
     {
       "path": "src-recovered/core/config.ts",
@@ -975,8 +975,8 @@
     },
     {
       "path": "tests/e2e/app.spec.mjs",
-      "bytes": 7957,
-      "sha256": "0817653cd3ddbb1f41358ad6d7a11b13f3ff5d326009fe39c60e028bb2426b2a"
+      "bytes": 8305,
+      "sha256": "8e83a619b287c16ad26fcfd67cafee944c7baf108392d123ea6ee0215ecc6b04"
     },
     {
       "path": "tests/e2e/auth-ui.spec.mjs",
@@ -1030,8 +1030,8 @@
     },
     {
       "path": "tests/e2e/ui-state.spec.mjs",
-      "bytes": 5494,
-      "sha256": "1d7e8e3c05307d7b6d373dde06bce6c2241722232f3b031d5d102b03d09cd444"
+      "bytes": 6820,
+      "sha256": "63aa1a7f1389b1cb7c364548ad809f12cac3245658f8d496361c5163f0966b27"
     },
     {
       "path": "tests/e2e/web-nowplaying.spec.mjs",
@@ -1145,8 +1145,8 @@
     },
     {
       "path": "tests/service-worker.test.mjs",
-      "bytes": 7992,
-      "sha256": "caf55c60d8efb9c39549e7df1ff1a48447afc53e1d6e08001eeb61e13c223d33"
+      "bytes": 7988,
+      "sha256": "611329985720b6116bf25b725880be952b0d46a0c6a46e4ca952a7f11da473ec"
     },
     {
       "path": "tests/smoke-desktop-auth-lifecycle.mjs",

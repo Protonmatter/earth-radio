@@ -12,7 +12,7 @@ The [v0.27.0 release](https://github.com/Protonmatter/earth-radio/releases/tag/v
 is authoritative for publication status, tag, checksums and exact build provenance.
 Production is [Earth Radio](https://earth-radio.pages.dev/). The package version is
 0.27.0, Electron is locked to 43.8.7, runtime is `index-a673e435.js`, and shell cache
-is `earth-radio-shell-v58-listening-room-0-27-0`.
+is `earth-radio-shell-v59-state-sync-0-27-0`.
 
 | Platform | Asset |
 | --- | --- |
