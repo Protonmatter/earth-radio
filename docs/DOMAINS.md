@@ -48,6 +48,14 @@ existing pages.dev roots, and the native random-path loopback wildcard. Do not a
 an apex, preview, or wildcard subdomain Auth origin. Do not change SMTP or provider
 credentials. Source URL configuration is in `supabase/config.toml`.
 
+Configure the free zone Redirect Rule **Earth Radio www to apex** with expression
+`http.host eq "www.earthradio.stream"`, dynamic destination
+`concat("https://earthradio.stream", http.request.uri.path)`, status **301**, and
+**Preserve query string** enabled. It must not match the apex, app or sender hosts.
+Pages `_redirects` supports path sources only; an absolute hostname source is ignored.
+The website file records the external rule and the artifact validator rejects that
+unsupported syntax. Roll back only this named rule if its exact-host routing fails.
+
 ## Downloads and privacy
 
 Set zone **Caching → Configuration → Browser Cache TTL** to **Respect Existing

@@ -29,7 +29,9 @@ export async function validateWebsite(root){
   const headers=await readFile(path.join(root,'_headers'),'utf8');
   for(const required of ["frame-ancestors 'none'",'Strict-Transport-Security: max-age=31536000',"script-src 'self'",'https://api.github.com'])if(!headers.includes(required))throw new Error(`Missing website header: ${required}`);
   if(/immutable/i.test(headers))throw new Error('Unfingerprinted website assets must revalidate');
-  const redirects=await readFile(path.join(root,'_redirects'),'utf8');if(!redirects.includes('https://www.earthradio.stream/* https://earthradio.stream/:splat 301'))throw new Error('Missing canonical www redirect');
+  const redirects=await readFile(path.join(root,'_redirects'),'utf8');
+  if(redirects.split(/\r?\n/).some(line=>/^https?:\/\//i.test(line.trim())))throw new Error('Unsupported hostname source in Pages redirects; use the exact-host zone rule');
+  if(!redirects.includes('Earth Radio www to apex'))throw new Error('Missing documented canonical zone redirect');
   return {files:files.sort()};
 }
 if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url)){
