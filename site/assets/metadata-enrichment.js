@@ -7,7 +7,25 @@
 //   3. On-demand audio fingerprinting through the desktop proxy (ACRCloud/AudD), user-triggered.
 // The canonical source implementation is mirrored under recovered_src/ for the next full desktop build.
 
+import { normalizeSong } from './song-library-core.js?v=0.29.0';
+
 const VERSION = '0.25.0-metadata-overlay';
+let publishedSong = null;
+const songObservers = new Set();
+export const getCurrentSongSnapshot = () => publishedSong ? structuredClone(publishedSong) : null;
+export function subscribeCurrentSong(listener) {
+  songObservers.add(listener); listener(getCurrentSongSnapshot()); return () => songObservers.delete(listener);
+}
+function publishSong(identity) {
+  publishedSong = shouldPromoteNowcard(identity, config().minIdentifiedConfidence) && state.selectedStationUuid
+    ? normalizeSong({ ...identity, stationUuid: state.selectedStationUuid, stationName: byId('player-station')?.textContent,
+      catalogMatched: identity.state === 'Identified', observedAt: Date.now(),
+      links: { ...identity.links, spotify: identity.links?.spotify || identity.spotifyUrl,
+        appleMusic: identity.links?.appleMusic || identity.appleMusicUrl } }) : null;
+  for (const listener of songObservers) {
+    try { listener(getCurrentSongSnapshot()); } catch { console.warn('Earth Radio song view could not refresh.'); }
+  }
+}
 const CACHE_KEY = 'earth-radio-track-identity-cache-v1';
 const JUNK_TITLE = /^(unknown|n\/?a|advert(isement)?|commercial|station\s?id|live stream|loading\.{0,3}|no title|news|weather|traffic|[_./-]+)$/i;
 const COVER_OR_TRIBUTE = /\b(karaoke|tribute|cover version|instrumental version|originally performed by|as made famous by|remix tribute)\b/i;
@@ -637,6 +655,7 @@ function playerTrackLine() {
 }
 
 function renderPlayerTrack(identity) {
+  publishSong(identity);
   const line = playerTrackLine();
   if (!line) return;
   const cfg = config();
@@ -668,6 +687,7 @@ function renderStationOnly() {
 }
 
 function renderIdentifying(track) {
+  renderPlayerTrack(null);
   ensureMetadataUI();
   const stateEl = byId('metadata-state');
   const confidenceEl = byId('metadata-confidence');

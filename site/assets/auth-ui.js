@@ -1,9 +1,10 @@
-import { createAuthClient } from './auth-core.js';
-import { createDesktopAuthClient, isDesktopAuthAvailable } from './desktop-auth.js';
+import { createAuthClient } from './auth-core.js?v=0.29.0';
+import { createDesktopAuthClient, isDesktopAuthAvailable } from './desktop-auth.js?v=0.29.0';
+import { songLibraryStore, setSongLibraryAccount, pauseSongLibraryAccount } from './song-library-store.js?v=0.29.0';
 import {
   accountDataKey, accountLocalRecords, createSyncEngine, planLocalAccountTransition,
   shouldResetBrowserAccount, stableStringify, syncDocuments
-} from './sync-core.js';
+} from './sync-core.js?v=0.29.0';
 
 export function quiesceSignOut({ cancelReload, syncTimer, invalidateSync, clearIntervalImpl = clearInterval }) {
   invalidateSync();
@@ -174,6 +175,7 @@ async function boot() {
       const transition = await switchLocalAccount(activeUserId, null);
       localStorage.removeItem(ACTIVE_USER_KEY);
       if (activeUserId || transition.detached) location.reload();
+      else setSongLibraryAccount(null);
     } catch (error) {
       console.warn('Earth Radio account detach:', error);
     }
@@ -182,7 +184,7 @@ async function boot() {
 
   const stylesheet = document.createElement('link');
   stylesheet.rel = 'stylesheet';
-  stylesheet.href = './assets/auth-ui.css';
+  stylesheet.href = './assets/auth-ui.css?v=0.29.0';
   document.head.appendChild(stylesheet);
 
   const nativeAuth = isDesktopAuthAvailable(window.earthRadio, window.location);
@@ -262,6 +264,7 @@ async function boot() {
   async function resetSignedOutSession(userId) {
     if (resettingSession) return;
     resettingSession = true;
+    pauseSongLibraryAccount();
     syncGeneration += 1;
     cancelReload();
     if (syncTimer) clearInterval(syncTimer);
@@ -284,6 +287,7 @@ async function boot() {
       const activeUserId = localStorage.getItem(ACTIVE_USER_KEY);
       const tabUserId = session?.user?.id;
       if (shouldResetBrowserAccount(activeUserId, tabUserId, nextUserId, authInitialized)) {
+        pauseSongLibraryAccount();
         syncGeneration += 1;
         cancelReload();
         if (syncTimer) clearInterval(syncTimer);
@@ -301,6 +305,7 @@ async function boot() {
       }
     }
     session = nextSession;
+    if (authInitialized && !signingOut && !signOutFailed && !resettingSession) setSongLibraryAccount(session?.user?.id || null);
     render();
   });
 
@@ -322,34 +327,41 @@ async function boot() {
         await accountKv('get', ACTIVE_NAMESPACE_KEY, undefined, userId);
         assertActive();
       };
+      const songs = songLibraryStore();
+      let reloadRequired = false;
       const engine = createSyncEngine({
         readLocal: async key => {
           assertActive();
-          const value = await accountKv('get', key, undefined, userId);
+          const value = key === 'songs' ? await songs.readForAccount(userId) : await accountKv('get', key, undefined, userId);
           assertActive();
           return value;
         },
         writeLocal: async (key, value) => {
           assertActive();
-          const result = await accountKv('put', key, value, userId);
+          const result = key === 'songs' ? await songs.writeForAccount(userId, value) : await accountKv('put', key, value, userId);
           assertActive();
           return result;
         },
         writeLocalIfUnchanged: async (key, expected, value) => {
           assertActive();
-          const written = await accountKv('comparePut', key, { expected, next: value }, userId);
+          const written = key === 'songs' ? await songs.compareForAccount(userId, expected, value)
+            : await accountKv('comparePut', key, { expected, next: value }, userId);
           assertActive();
           return written;
         },
         readState: async key => {
           assertActive();
+          if (key === 'songs') { const state = await songs.readSyncState(userId); assertActive(); return state; }
           try { return JSON.parse(localStorage.getItem(syncStateKey(userId, key))); }
           catch { return null; }
         },
         writeState: async (key, value) => {
           assertActive();
-          localStorage.setItem(syncStateKey(userId, key), JSON.stringify(value));
+          if (key === 'songs') await songs.writeSyncState(userId, value);
+          else localStorage.setItem(syncStateKey(userId, key), JSON.stringify(value));
+          assertActive();
         },
+        onRemoteApplied: key => { if (key !== 'songs') reloadRequired = true; },
         fetchRemote: async () => {
           await assertActiveNamespace();
           const rows = await auth.rest(
@@ -372,8 +384,11 @@ async function boot() {
         }
       });
       const result = await engine.syncOnce();
+      assertActive();
+      if (result.conflicts === 0) await songs.ensureSyncBaseline(userId);
+      assertActive();
       syncStatus = result.conflicts ? 'Synced · conflicts merged' : 'Synced';
-      if (result.downloaded > 0) {
+      if (reloadRequired) {
         const reloadKey = `earthRadio.sync.reload.${userId}`;
         const lastReload = Number(sessionStorage.getItem(reloadKey) || 0);
         const reloadDelay = Math.max(0, 5000 - (Date.now() - lastReload));
@@ -547,6 +562,7 @@ async function boot() {
         if (signingOut) return;
         const userId = session?.user?.id;
         signingOut = true;
+        pauseSongLibraryAccount();
         signOutFailed = false;
         syncTimer = quiesceSignOut({
           cancelReload,
@@ -657,6 +673,7 @@ async function boot() {
         location.reload();
         return;
       }
+      setSongLibraryAccount(nextUserId);
       try { await refreshUser(); }
       catch (error) {
         if (resettingSession) return;
@@ -665,7 +682,7 @@ async function boot() {
         render();
       }
       if (session && !resettingSession) startSync();
-    }
+    } else setSongLibraryAccount(null);
     await providerDiscovery;
     render();
   } catch (error) {

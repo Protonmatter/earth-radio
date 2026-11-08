@@ -154,7 +154,7 @@ test('Now Playing history state is distinct from runtime hash writes', () => {
 
 test('responsive assets are referenced after the recovered runtime and staged as site files', async () => {
   const html = await readFile(path.join(root, 'site', 'index.html'), 'utf8');
-  const runtime = html.indexOf('index-fdff159e.js');
+  const runtime = html.indexOf('index-c40766e7.js');
   const layer = html.indexOf('responsive-ui.js');
   assert.ok(runtime >= 0 && layer > runtime);
   assert.match(html, /viewport-fit=cover/);
@@ -166,7 +166,8 @@ test('responsive assets are referenced after the recovered runtime and staged as
   assert.match(html, /data-i18n-attr="aria-label"/);
   assert.match(html, /er-icon-search/);
   assert.match(html, /id="er-nowplaying-metadata"/);
-  assert.match(html, /data-er-sleep-min="30"/);
+  assert.match(html, /id="er-nowplaying-timer"/);
+  assert.match(html, /option value="30" data-i18n="sleep.30"/);
 });
 
 test('overflow menu can become visible and search occupies the mobile workspace', async () => {

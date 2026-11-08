@@ -13,21 +13,22 @@
   <link rel="icon" type="image/png" sizes="32x32" href="./branding/earth-radio-32-v2.png" />
   <link rel="apple-touch-icon" sizes="180x180" href="./branding/earth-radio-180-v2.png" />
   <link rel="manifest" href="./manifest.webmanifest" />
-  <script type="module" src="./config.js"></script>
-  <script type="module" src="./assets/storage-guard.js"></script>
-  <script type="module" src="./assets/directory-expansion.js"></script>
-  <script type="module" src="./assets/pinned-stations.js"></script>
-  <script type="module" src="./assets/metadata-enrichment.js"></script>
-  <link rel="stylesheet" href="./assets/metadata-enrichment.css" />
-  <script type="module" crossorigin src="./assets/index-fdff159e.js"></script>
+  <script type="module" src="./config.js?v=0.29.0"></script>
+  <script type="module" src="./assets/storage-guard.js?v=0.29.0"></script>
+  <script type="module" src="./assets/directory-expansion.js?v=0.29.0"></script>
+  <script type="module" src="./assets/pinned-stations.js?v=0.29.0"></script>
+  <script type="module" src="./assets/metadata-enrichment.js?v=0.29.0"></script>
+  <link rel="stylesheet" href="./assets/metadata-enrichment.css?v=0.29.0" />
+  <script type="module" crossorigin src="./assets/index-c40766e7.js"></script>
   <link rel="stylesheet" crossorigin href="./assets/index-CSoL7F-Y.css">
-  <link rel="stylesheet" href="./assets/responsive-ui.css" />
-  <script type="module" src="./assets/responsive-ui.js"></script>
-  <script type="module" src="./assets/atlas-lock.js"></script>
-  <link rel="stylesheet" href="./assets/ui-refresh.css" />
-  <link rel="stylesheet" href="./assets/atlas-lock.css" />
-  <link rel="stylesheet" href="./assets/discovery.css" />
-  <link rel="stylesheet" href="./assets/listening-room.css" />
+  <link rel="stylesheet" href="./assets/responsive-ui.css?v=0.29.0" />
+  <script type="module" src="./assets/responsive-ui.js?v=0.29.0"></script>
+  <script type="module" src="./assets/song-library-ui.js?v=0.29.0"></script>
+  <script type="module" src="./assets/atlas-lock.js?v=0.29.0"></script>
+  <link rel="stylesheet" href="./assets/ui-refresh.css?v=0.29.0" />
+  <link rel="stylesheet" href="./assets/atlas-lock.css?v=0.29.0" />
+  <link rel="stylesheet" href="./assets/discovery.css?v=0.29.0" />
+  <link rel="stylesheet" href="./assets/listening-room.css?v=0.29.0" />
 </head>
 <body>
   <a class="er-skip" href="#grid-panel" data-i18n="app.skip">Skip to station list</a>
@@ -193,6 +194,23 @@
 
   <section id="er-you" class="er-you" hidden>
     <h2 data-i18n="you.title">You</h2>
+    <section class="er-song-library" aria-labelledby="er-song-library-title">
+      <div class="er-song-library-heading"><h3 id="er-song-library-title" data-i18n="music.library">Your music</h3><p id="er-song-library-status" role="status"></p></div>
+      <div class="er-song-tabs" role="group" data-i18n="music.feedLabel" data-i18n-attr="aria-label" aria-label="Song library views">
+        <button type="button" data-song-view="recent" aria-pressed="true" data-i18n="music.recent">Recently heard</button>
+        <button type="button" data-song-view="liked" aria-pressed="false" data-i18n="music.liked">Liked songs</button>
+      </div>
+      <div id="er-song-feed" class="er-song-feed"></div>
+      <button type="button" id="er-song-more" class="er-song-more" hidden data-i18n="music.more">Show more</button>
+      <div class="er-song-library-tools">
+        <label><input type="checkbox" id="er-song-history-enabled" checked /><span data-i18n="music.keepHistory">Keep listening history</span></label>
+        <button type="button" id="er-song-clear" data-i18n="music.clearRecent">Clear recent songs</button>
+        <button type="button" id="er-song-add-local" hidden data-i18n="music.addLocal">Add local songs</button>
+        <button type="button" id="er-song-export" data-i18n="music.export">Export songs</button>
+        <label class="er-song-import"><span data-i18n="music.import">Import songs</span><input type="file" id="er-song-import" accept="application/json,.json" /></label>
+      </div>
+      <p id="er-song-library-message" class="er-song-library-message" role="status" aria-live="polite"></p>
+    </section>
     <div class="er-you-block">
       <p class="er-you-label" data-i18n="you.palette">Palette</p>
       <div class="er-you-palettes" role="group" data-i18n="you.palette" data-i18n-attr="aria-label">
@@ -249,34 +267,43 @@
     <button type="button" data-er-dest="you" data-i18n="nav.you">Account</button>
   </nav>
 
+  <div id="er-nowplaying-backdrop" class="er-nowplaying-backdrop" aria-hidden="true"></div>
   <section id="er-nowplaying" class="er-nowplaying" hidden>
     <div class="er-nowplaying-head">
-      <button id="er-nowplaying-dismiss" class="er-nowplaying-dismiss" type="button" data-i18n="nowplaying.dismiss">Close Now Playing</button>
       <strong data-i18n="nowplaying.title">Now Playing</strong>
+      <button id="er-nowplaying-dismiss" class="er-nowplaying-dismiss" type="button" data-i18n="nowplaying.dismiss" data-i18n-attr="aria-label" aria-label="Close Now Playing">×</button>
     </div>
-    <div id="er-nowplaying-art" class="er-nowplaying-art" aria-hidden="true"></div>
-    <p id="er-nowplaying-live" data-i18n="nowplaying.live">Live station</p>
-    <h2 id="er-nowplaying-title">-</h2>
-    <p id="er-nowplaying-meta"></p>
-    <div class="er-nowplaying-actions">
+    <div class="er-nowplaying-identity">
+      <div id="er-nowplaying-art" class="er-nowplaying-art" aria-hidden="true"></div>
+      <p id="er-nowplaying-live">Live station</p>
+      <h2 id="er-nowplaying-title">-</h2>
+      <p id="er-nowplaying-meta"></p>
+      <p id="er-nowplaying-station" class="er-nowplaying-station"></p>
+    </div>
+    <div class="er-nowplaying-actions er-nowplaying-transport">
       <button type="button" data-click-id="btn-prev" data-i18n="player.prev">Previous station</button>
       <button type="button" data-click-id="btn-play" data-er-nowplaying-play data-i18n="player.play">Play</button>
       <button type="button" data-click-id="btn-next" data-i18n="player.next">Next station</button>
     </div>
-    <div class="er-nowplaying-actions">
-      <button type="button" data-click-id="btn-favorite" data-i18n="player.favorite">Favorite current station</button>
-      <button type="button" data-click-id="btn-similar" data-i18n="player.similar">Find similar stations</button>
-      <button type="button" data-er-dest="map" data-i18n="nowplaying.map">Show on map</button>
+    <div class="er-song-primary-actions">
+      <button type="button" id="er-song-like" aria-pressed="false" disabled data-i18n="music.likeSong">Like song</button>
+      <button type="button" data-song-details="current" data-i18n="music.details">Song details</button>
     </div>
-    <div class="er-nowplaying-sleep" role="group" data-i18n="player.sleep" data-i18n-attr="aria-label" aria-label="Sleep timer">
-      <strong data-i18n="player.sleep">Sleep timer</strong>
-      <button type="button" data-er-sleep-min="15" data-i18n="sleep.15">15 min</button>
-      <button type="button" data-er-sleep-min="30" data-i18n="sleep.30">30 min</button>
-      <button type="button" data-er-sleep-min="60" data-i18n="sleep.60">60 min</button>
-      <button type="button" data-er-sleep-min="0" data-i18n="sleep.off">Off</button>
+    <nav id="er-song-services" class="er-song-services" data-i18n="music.services" data-i18n-attr="aria-label" aria-label="Find this song on music services"></nav>
+    <div class="er-nowplaying-actions er-nowplaying-secondary">
+      <button type="button" data-click-id="btn-favorite" aria-pressed="false" data-i18n="music.saveStation">Save station</button>
+      <button type="button" data-click-id="btn-similar" data-i18n="music.similar">Similar</button>
+      <button type="button" data-er-dest="map" data-i18n="nav.map">Map</button>
     </div>
-    <section id="er-nowplaying-metadata" class="er-nowplaying-metadata" data-i18n="nowplaying.metadataLabel" data-i18n-attr="aria-label" aria-label="Track metadata confidence"></section>
+    <label class="er-nowplaying-timer"><span data-i18n="player.sleep">Sleep timer</span><select id="er-nowplaying-timer" data-i18n="player.sleep" data-i18n-attr="aria-label" aria-label="Sleep timer"><option value="0" data-i18n="sleep.off">Off</option><option value="15" data-i18n="sleep.15">15 min</option><option value="30" data-i18n="sleep.30">30 min</option><option value="60" data-i18n="sleep.60">60 min</option><option value="active" disabled hidden data-i18n="music.timerActive">Timer on</option></select></label>
+    <p id="er-song-now-message" class="er-song-now-message" role="status" aria-live="polite"></p>
   </section>
+  <dialog id="er-song-details" class="er-song-details" aria-labelledby="er-song-details-title">
+    <header><span data-i18n="music.details">Song details</span><button type="button" data-song-details-close aria-label="Close song details" data-i18n="music.closeDetails" data-i18n-attr="aria-label">×</button></header>
+    <div id="er-song-details-content"></div>
+    <div id="er-song-identify-row" class="er-song-identify-row" hidden><button type="button" id="er-song-identify" data-click-id="metadata-fingerprint-btn" data-i18n="music.identify">Identify song</button><span id="er-song-identify-status" role="status"></span></div>
+    <details class="er-song-broadcast-details"><summary data-i18n="music.broadcastDetails">Broadcast details</summary><section id="er-nowplaying-metadata" class="er-nowplaying-metadata" aria-label="Track metadata confidence" data-i18n="nowplaying.metadataLabel" data-i18n-attr="aria-label"></section></details>
+  </dialog>
 
   <div class="search-modal" id="search-modal" role="dialog" aria-modal="true" aria-labelledby="search-title" aria-hidden="true" hidden style="display:none;">
     <div class="search-backdrop"></div>

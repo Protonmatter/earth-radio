@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(23);
+select plan(31);
 
 select ok(
   to_regprocedure('public.rls_auto_enable()') is null
@@ -156,7 +156,7 @@ select throws_ok(
   $$ select * from public.upsert_user_config_document('unsupported', '{}'::jsonb, 0, false) $$,
   '23514',
   'unsupported document key',
-  'config RPC rejects keys outside the three synchronized documents'
+  'config RPC rejects keys outside the four synchronized documents'
 );
 
 select lives_ok(
@@ -181,6 +181,18 @@ select throws_ok(
 
 select set_config('request.jwt.claim.sub', '22222222-2222-4222-8222-222222222222', true);
 
+select is((select revision::integer from public.upsert_user_config_document('songs', '{"version":1,"tracks":{}}'::jsonb, 0, false)),
+  1, 'songs use the existing authenticated revision-checked document RPC');
+select is((select count(*)::integer from public.upsert_user_config_document('songs', '{"version":1}'::jsonb, 99, false)),
+  0, 'songs reject stale expected revisions');
+select throws_ok($$ select * from public.upsert_user_config_document('songs', jsonb_build_object('payload', repeat('x', 1048576)), 1, false) $$,
+  '23514', 'document exceeds supported size', 'songs are bounded to one MiB');
+select lives_ok($$ select * from public.upsert_user_config_document('songs', jsonb_build_object('payload', repeat('x', 70000)), 1, false) $$,
+  'songs may exceed the smaller preferences limit');
+select is((select count(*)::integer from public.upsert_user_config_document('songs', null, 2, true)), 1, 'songs support revision-checked deletion');
+select ok((select value is null and deleted_at is not null from public.user_config_documents where document_key = 'songs'),
+  'song deletion leaves a sync tombstone');
+
 select is(
   (select count(*)::integer from public.favorite_stations),
   0,
@@ -188,7 +200,7 @@ select is(
 );
 
 select is(
-  (select count(*)::integer from public.user_config_documents),
+  (select count(*)::integer from public.user_config_documents where document_key <> 'songs'),
   0,
   'another user cannot read the first user config documents'
 );
@@ -196,6 +208,11 @@ select is(
 delete from public.favorite_stations where station_id = 'station-a';
 
 select set_config('request.jwt.claim.sub', '11111111-1111-4111-8111-111111111111', true);
+
+select is((select count(*)::integer from public.user_config_documents where document_key = 'songs'), 0,
+  'a different account cannot read the song document');
+select is((select count(*)::integer from public.upsert_user_config_document('songs', '{"version":1}'::jsonb, 3, false)), 0,
+  'a different account cannot update the song document using its known revision');
 
 select is(
   (select count(*)::integer from public.favorite_stations),

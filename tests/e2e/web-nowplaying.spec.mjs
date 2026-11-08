@@ -177,7 +177,7 @@ test('HLS reconnect keeps the canonical identity after its active card is virtua
   await expect.poll(() => fingerprintRequests).toContain('https://streams.e2e.example/hls/master.m3u8');
 });
 
-test('the cloned Now Playing Identify action invokes and mirrors the canonical fingerprint action', async ({ page }) => {
+test('the song details Identify action invokes and mirrors the canonical fingerprint action', async ({ page }) => {
   const { fingerprintRequests } = await setupApp(page, {
     sameOriginNowPlaying: { found: false, reason: 'no track data' },
     sameOriginFingerprint: {
@@ -194,12 +194,15 @@ test('the cloned Now Playing Identify action invokes and mirrors the canonical f
   await expect(page.locator('#metadata-fingerprint-btn')).toBeEnabled({ timeout: 20_000 });
   await page.locator('#er-open-nowplaying').click();
 
-  const clonedButton = page.locator('#er-nowplaying [data-click-id="metadata-fingerprint-btn"]');
+  await page.locator('[data-song-details="current"]').click();
+  const clonedButton = page.locator('#er-song-identify');
   await expect(clonedButton).toBeEnabled();
   await clonedButton.click();
 
   await expect.poll(() => fingerprintRequests).toContain('https://streams.e2e.example/seoul.mp3');
   await expect(page.locator('#metadata-state')).toHaveText('Identified');
+  await expect(page.locator('#er-song-details-title')).toHaveText('Blueming');
+  await page.locator('.er-song-broadcast-details > summary').click();
   await expect(page.locator('#er-nowplaying-metadata')).toContainText('Blueming');
   await expect(page.locator('#er-nowplaying-metadata')).toContainText(/Matched by audio fingerprint/);
 });

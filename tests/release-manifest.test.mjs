@@ -11,6 +11,8 @@ test('release manifest is stable and uses the package version', async () => {
   await writeFile(path.join(root, 'site', 'index.html'), '<!doctype html>\n');
   await writeFile(path.join(root, 'package.json'), JSON.stringify({ name: 'earth-radio', version: '9.8.7' }));
   await writeFile(path.join(root, 'electron-builder.yml'), 'appId: example\n');
+  await mkdir(path.join(root, 'supabase', '.temp'), { recursive: true });
+  await writeFile(path.join(root, 'supabase', '.temp', 'cli-latest'), 'local CLI metadata');
 
   const first = await buildReleaseManifest(root);
   const second = await buildReleaseManifest(root);

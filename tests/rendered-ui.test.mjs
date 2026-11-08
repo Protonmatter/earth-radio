@@ -109,12 +109,9 @@ test('responsive UI rendered matrix preserves layout, actions, and locale contra
   assert.equal(nowPlaying.nowPlayingDismiss.actionable, true);
   assert.equal(nowPlaying.activeElement.id, 'er-nowplaying-dismiss');
   assert.notEqual(nowPlaying.nowPlayingTitle.text, 'Select a station');
-  assert.equal(nowPlaying.nowPlayingMetadata.visible, true);
-  assert.equal(nowPlaying.nowPlayingMetadata.ariaLabel, 'Track metadata confidence');
-  assert.match(nowPlaying.nowPlayingMetadata.text, /Station metadata only|Identifying|Identified|Raw ICY/i);
+  assert.equal(nowPlaying.nowPlayingDetails.actionable, true);
   assert.equal(nowPlaying.nowPlayingPlay.ariaLabel, nowPlaying.playerPlay.ariaLabel);
-  assert.ok(nowPlaying.nowPlayingSleepButtons.length >= 4);
-  assert.equal(nowPlaying.nowPlayingSleepButtons.every(item => item.actionable), true);
+  assert.equal(nowPlaying.nowPlayingTimer.actionable, true);
 
   const nowPlayingMap = byId(payload.results, 'mobile-nowplaying-map-390x844').probe;
   assert.equal(nowPlayingMap.destination, 'map');

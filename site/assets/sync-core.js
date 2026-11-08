@@ -1,3 +1,5 @@
+import { mergeSongLibraries, mergeSongLibrariesThreeWay } from './song-library-core.js?v=0.29.0';
+
 const DOCUMENTS = Object.freeze([
   {
     localKey: 'favorites', documentKey: 'favorites', merge: mergeFavorites,
@@ -13,7 +15,10 @@ const DOCUMENTS = Object.freeze([
     merge: mergePreferences,
     mergeConcurrent: mergePreferencesThreeWay,
     mergeInitial: (_local, remote) => remote
-  }
+  },
+  { localKey: 'songs', documentKey: 'songs', merge: mergeSongLibraries,
+    mergeConcurrent: mergeSongLibrariesThreeWay,
+    mergeInitial: (local, remote, context) => context?.remoteDeleted ? undefined : mergeSongLibraries(local, remote) }
 ]);
 
 const STORAGE_GENERATION_KEY = 'earth-radio-storage-generation-v2';
@@ -217,11 +222,13 @@ export function createSyncEngine({
   readState,
   writeState,
   fetchRemote,
-  upsertRemote
+  upsertRemote,
+  onRemoteApplied
 }) {
   for (const dependency of [readLocal, writeLocal, readState, writeState, fetchRemote, upsertRemote]) {
     if (typeof dependency !== 'function') throw new Error('Sync engine dependencies must be functions.');
   }
+  if (onRemoteApplied != null && typeof onRemoteApplied !== 'function') throw new Error('Sync notification must be a function.');
 
   async function remember(localKey, revision, value) {
     await writeState(localKey, { revision, hash: stableStringify(value), value });
@@ -229,11 +236,14 @@ export function createSyncEngine({
 
   async function replaceLocal(localKey, expected, value) {
     if (typeof writeLocalIfUnchanged === 'function') {
-      return writeLocalIfUnchanged(localKey, expected, value);
+      const written = await writeLocalIfUnchanged(localKey, expected, value);
+      if (written) onRemoteApplied?.(localKey);
+      return written;
     }
     const current = await readLocal(localKey);
     if (stableStringify(current) !== stableStringify(expected)) return false;
     await writeLocal(localKey, value);
+    onRemoteApplied?.(localKey);
     return true;
   }
 
@@ -284,7 +294,7 @@ export function createSyncEngine({
             result.downloaded += 1;
             continue;
           }
-          const merged = (document.mergeInitial || document.merge)(local, remoteValue);
+          const merged = (document.mergeInitial || document.merge)(local, remoteValue, { remoteDeleted: Boolean(remote?.deleted_at) });
           const mergedHash = stableStringify(merged);
           if (mergedHash !== localHash) {
             if (!await replaceLocal(document.localKey, local, merged)) {

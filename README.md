@@ -2,11 +2,11 @@
 
 Explore live radio stations around the world in a recovered, auditable web and Electron application.
 
-Release **0.28.0** adds a geographic atlas with country borders, lakes, rivers, roads and independent country/city label toggles, plus readable station tooltips. Map data is bundled from public-domain Natural Earth without provider keys, tile quotas or service subscriptions. The approved ivory, forest-green and copper interface and existing discovery, playback, sign-in and account sync contracts are retained. See [Discovery](docs/DISCOVERY.md), [Map data](docs/MAP_DATA.md), and the [0.28.0 release record](docs/RELEASE-0.28.0.md).
+Release **0.29.0** adds a compact Now Playing card, a separate song details dialog, and private Recently heard/Liked songs in Account. Music-service links distinguish verified tracks from searches. The geographic atlas, country/city labels and existing discovery/playback remain available. See [Songs](docs/SONG_LIBRARY.md), [Map data](docs/MAP_DATA.md), and the [0.29.0 release record](docs/RELEASE-0.29.0.md).
 
 Live production site: **https://earth-radio.pages.dev/**. Public repository: **https://github.com/Protonmatter/earth-radio**.
 
-See the [installation guide](docs/INSTALLATION.md) for Windows ARM64, macOS Apple Silicon/Intel, and Safari Home Screen installation on iPhone/iPad. Get desktop downloads, checksums and build provenance from the [v0.28.0 release page](https://github.com/Protonmatter/earth-radio/releases/tag/v0.28.0). Windows uses the accepted local signer; macOS builds are explicitly labeled unnotarized.
+See the [installation guide](docs/INSTALLATION.md) for Windows ARM64, macOS Apple Silicon/Intel, and Safari Home Screen installation on iPhone/iPad. Get desktop downloads, checksums and build provenance from the [v0.29.0 release page](https://github.com/Protonmatter/earth-radio/releases/tag/v0.29.0). Windows uses the accepted local signer; macOS builds are explicitly labeled unnotarized.
 
 This repository was reconstructed from the installed Earth Radio 0.24.0 application and two user-supplied archives. It is not a byte-for-byte reproduction of the original development repository. The newest runnable installed assets were selected where they differed from older archived source; those decisions are recorded in [docs/PROVENANCE.md](docs/PROVENANCE.md).
 
