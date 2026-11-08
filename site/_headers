@@ -9,7 +9,7 @@
 /assets/hls.light-Dr1Fv81C.js
   Cache-Control: public, max-age=31536000, immutable
 
-/assets/index-ed6560ef.js
+/assets/index-ff85fdd4.js
   Cache-Control: public, max-age=31536000, immutable
 
 /assets/index-CSoL7F-Y.css
@@ -101,3 +101,15 @@
 
 /assets/song-library-*.js
   Cache-Control: public, max-age=300, must-revalidate
+
+/assets/map-world-b021d4b5.js
+  Cache-Control: public, max-age=31536000, immutable
+
+/assets/map-detail-5d713b76.js
+  Cache-Control: public, max-age=31536000, immutable
+
+/assets/map-terrain-c2f063b9.js
+  Cache-Control: public, max-age=31536000, immutable
+
+/assets/map-roads-d81fc5ea.js
+  Cache-Control: public, max-age=31536000, immutable

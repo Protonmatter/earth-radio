@@ -39,7 +39,7 @@ test('clear all cancels a pending palette query instead of restoring it later',a
   await page.locator('#er-search-active').getByRole('button',{name:'Clear all',exact:true}).click();
   await expect(page.locator('#er-station-query')).toHaveValue('');
   await expect(page.locator('#er-discovery-query')).toHaveValue('');
-  await expect(page.locator('#search-results .search-result-item__name')).toContainText(['E2E Berlin Techno','E2E London Jazz','E2E Seoul Pop']);
+  await expect.poll(()=>page.locator('#search-results .search-result-item__name').allTextContents()).toEqual(expect.arrayContaining(['E2E Berlin Techno','E2E London Jazz','E2E Seoul Pop']));
   await expect(page.locator('#search-results')).not.toHaveAttribute('inert','');
 });
 test('facet menus are searchable with keyboard and removable without clearing the query',async({page})=>{
@@ -68,7 +68,7 @@ test('typos and connecting words work in the palette as they do inline',async({p
 });
 test('country selection scopes both presentations and is visible and reversible',async({page})=>{
   await setupApp(page);await page.getByRole('button',{name:'Choose country',exact:true}).click();
-  await page.locator('#er-country-query').fill('South Korea');await page.locator('#er-country-options [role="option"]').first().click();
+  await page.locator('#er-country-query').fill('대한민국');await page.locator('#er-country-options [role="option"]').first().click();
   await expect(page.locator('#search-results .search-result-item__meta').first()).toContainText('Korea');
   await expect(page.locator('#er-search-active')).toContainText('South Korea');
   await page.keyboard.press('Escape');await page.getByRole('button',{name:/Remove Country: South Korea/}).first().click();

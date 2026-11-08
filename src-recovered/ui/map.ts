@@ -1,4 +1,6 @@
 import { createVectorBasemap } from '../../site/assets/vector-atlas.js';
+import {stationMapPoint,stationLocation,stationMarkerStyle} from '../../site/assets/station-location.js';
+import {displayCountry} from '../../site/assets/search-core.js';
 // Leaflet map with clustered, incrementally-updated markers. CSS is bundled (not CDN) for
 // supply-chain control. Clusters and the "now playing" beacon use branded markup so the map
 // reads like a product surface, not a data-viz heat map.
@@ -38,7 +40,7 @@ export function initMap(containerId: string, stations: Station[], handlers: MapH
     zoom: 1,
     minZoom: 1,
     maxZoom: 7,
-    maxBounds: [[-85, -180], [85, 180]],
+    maxBounds: [[-60, -180], [85, 180]],
     maxBoundsViscosity: 1,
     zoomControl: true,
     attributionControl: true,
@@ -88,7 +90,8 @@ export function updateMapMarkers(stations: Station[]): void {
     }
     const coords = stationLatLng(station);
     if (!coords) continue;
-    const marker = L.circleMarker(coords, styleFor(station));
+    const marker = L.circleMarker(coords, stationMarkerStyle(station,styleFor(station)));
+    Object.assign(marker,{_erApproximate:stationLocation(station)?.approximate===true});
     marker.bindPopup(renderPopup(station));
     marker.on('click', () => onStationClick?.(station));
     markers.set(uuid, marker);
@@ -128,7 +131,7 @@ export function setPlayingStation(station: Station | null): void {
   });
   playingMarker.addTo(map);
 
-  const targetZoom = Math.max(map.getZoom(), 5);
+  const targetZoom = stationLocation(station)?.approximate ? 3 : Math.max(map.getZoom(), 5);
   // A Browse-only phone view has a zero-size map. Leaflet's animated flight
   // divides by that size and can corrupt its center with NaN coordinates.
   const container = map.getContainer();
@@ -155,10 +158,11 @@ export function setMapTheme(theme: 'light' | 'dark'): void {
 
 function createClusterIcon(clusterLayer: L.MarkerCluster): L.DivIcon {
   const count = clusterLayer.getChildCount();
+  const approximate=clusterLayer.getAllChildMarkers().filter(marker=>(marker as L.Marker&{_erApproximate?:boolean})._erApproximate===true).length;
   const bucket = count < 10 ? 's' : count < 100 ? 'm' : count < 1000 ? 'l' : 'xl';
   const size = count < 10 ? 34 : count < 100 ? 40 : count < 1000 ? 48 : 56;
   return L.divIcon({
-    html: `<div class="er-cluster er-cluster--${bucket}"><span>${formatCount(count)}</span></div>`,
+    html: `<div class="er-cluster er-cluster--${bucket}${approximate?' er-cluster--approximate':''}" title="${approximate?`${approximate} country-level locations`:''}"><span>${formatCount(count)}</span></div>`,
     className: 'er-cluster-icon',
     iconSize: L.point(size, size)
   });
@@ -184,9 +188,11 @@ function currentTheme(): 'light' | 'dark' {
 }
 
 function applyStyle(marker: L.CircleMarker, station: Station): void {
-  const style = styleFor(station);
+  const style = stationMarkerStyle(station,styleFor(station));
+    Object.assign(marker,{_erApproximate:stationLocation(station)?.approximate===true});
   marker.setStyle(style);
   marker.setRadius(style.radius);
+    marker.getElement()?.classList.toggle('er-map-approximate',stationLocation(station)?.approximate===true);
 }
 
 function wirePopupActions(event: L.PopupEvent): void {
@@ -204,7 +210,7 @@ function wirePopupActions(event: L.PopupEvent): void {
 }
 
 function renderPopup(station: Station): string {
-  const meta = [station.country, station.codec, station.bitrate ? `${station.bitrate} kbps` : '', station.quality?.label]
+  const meta = [displayCountry(station,document.documentElement.lang),stationLocation(station)?.approximate?'Approximate country location':'',station.codec, station.bitrate ? `${station.bitrate} kbps` : '', station.quality?.label]
     .filter(Boolean)
     .map(escapeHtml)
     .join(' · ');
@@ -242,10 +248,7 @@ function defaultMarkerStyle(station: Station): MarkerStyle {
 // Number(null) would coerce to 0) or literal 0/0, both of which map to the ocean off West
 // Africa — so we treat them as "no location" instead of plotting/flying there.
 function stationLatLng(station: Station): [number, number] | null {
-  if (station.geo_lat == null || station.geo_long == null) return null;
-  const lat = Number(station.geo_lat);
-  const lng = Number(station.geo_long);
-  return isValidLatLng(lat, lng) ? [lat, lng] : null;
+  return stationMapPoint(station);
 }
 
 function isValidLatLng(lat: number, lng: number): boolean {

@@ -63,7 +63,7 @@ test('the live immutable runtime filename is derived from its final content hash
 
 test('service worker registers even when async startup outlives window load', async () => {
   const source = await readFile(path.join(root, 'src-recovered', 'main.ts'), 'utf8');
-  const bundle = await readFile(path.join(root, 'site', 'assets', 'index-ed6560ef.js'), 'utf8');
+  const bundle = await readFile(path.join(root, 'site', 'assets', 'index-ff85fdd4.js'), 'utf8');
   assert.match(source, /document\.readyState === 'complete'/);
   assert.match(bundle, /document\.readyState===`complete`/);
 });
@@ -99,7 +99,7 @@ test('deployed pages send HSTS and revalidate the auth overlays', async () => {
 test('service worker precaches the auth, responsive, and i18n shell under a new cache version', async () => {
   const worker = await readFile(path.join(root, 'site', 'sw.js'), 'utf8');
   assert.match(worker, /cache: isImmutableAsset\(asset\) \? 'force-cache' : 'reload'/);
-  assert.match(worker, /earth-radio-shell-v64-frictionless-search/);
+  assert.match(worker, /earth-radio-shell-v65-directory-reliability/);
   for (const size of [32, 180, 192, 512]) assert.ok(worker.includes(`branding/earth-radio-${size}-v2.png`));
   for (const asset of ['discovery-core.js', 'discovery-ui.js', 'map-directory.js', 'discovery.css', 'listening-room.css', 'vector-atlas.js', 'world-land.js']) {
     assert.ok(worker.includes(`./assets/${asset}`), `Missing discovery shell asset ${asset}`);
@@ -128,8 +128,35 @@ test('service worker precaches the auth, responsive, and i18n shell under a new 
   assert.match(worker, /atlas-lock\.js/);
   assert.match(worker, /i18n\/zh-Hant\.js/);
   assert.match(worker, /i18n\/zh-Hans\.js/);
-  assert.match(worker, /\.\/index\.html/);
+  assert.doesNotMatch(worker, /['"]\.\/index\.html['"]/);
   assert.match(worker, /networkFirst/);
+});
+
+test('large map modules are lazy and offline navigation uses the canonical root shell',async()=>{
+  const worker=await readFile(path.join(root,'site/sw.js'),'utf8');
+  const precache=worker.slice(0,worker.indexOf("self.addEventListener('install'"));
+  assert.doesNotMatch(precache,/map-(?:world|detail|terrain|roads)/);
+  const handlers=new Map();let used;
+  vm.runInNewContext(worker,{self:{location:{origin:'https://radio.example'},addEventListener:(name,handler)=>handlers.set(name,handler)},URL,Request,Response,
+    fetch:async()=>{throw Error('offline');},caches:{match:async key=>{if(key==='./'){used=key;return new Response('offline canonical shell');}return undefined;}}});
+  let result;handlers.get('fetch')({request:{method:'GET',url:'https://radio.example/some-navigation',mode:'navigate'},respondWith:promise=>{result=promise;}});
+  assert.equal(await (await result).text(),'offline canonical shell');assert.equal(used,'./');
+});
+
+test('installation shell stays below two MiB while map detail remains opt-in',async()=>{
+  const worker=await readFile(path.join(root,'site/sw.js'),'utf8');
+  const assets=vm.runInNewContext(worker.match(/const SHELL_ASSETS = (\[[\s\S]*?\]);/)[1]);
+  let bytes=0;for(const asset of assets){const relative=asset==='./'?'index.html':asset.replace(/^\.\//,'').split('?')[0];bytes+=(await readFile(path.join(root,'site',relative))).length;}
+  assert.ok(bytes<2*1024*1024,`Shell is ${bytes} bytes`);
+});
+
+for(const offline of [false,true])test(`sign-in query navigations are never persisted${offline?' while offline':''}`,async()=>{
+  const worker=await readFile(path.join(root,'site/sw.js'),'utf8'),handlers=new Map(),writes=[],reads=[];
+  vm.runInNewContext(worker,{self:{location:{origin:'https://radio.example'},addEventListener:(name,handler)=>handlers.set(name,handler)},URL,Request,Response,
+    fetch:async()=>{if(offline)throw Error('offline');return new Response('network shell');},
+    caches:{open:async()=>({put:async request=>writes.push(request.url)}),match:async request=>{reads.push(request);return request==='./'?new Response('canonical shell'):undefined;}}});
+  let result;handlers.get('fetch')({request:{method:'GET',mode:'navigate',url:'https://radio.example/?code=fixture-only'},respondWith:promise=>{result=promise;}});
+  assert.equal(await(await result).text(),offline?'canonical shell':'network shell');assert.equal(writes.length,0);assert.ok(reads.every(request=>request==='./'));
 });
 
 test('service worker keeps the previous worker when reload precaching fails', async () => {

@@ -24,6 +24,10 @@ export default [
       'site/assets/map-detail.js',
       'site/assets/map-terrain.js',
       'site/assets/map-roads.js',
+      'site/assets/map-world-????????.js',
+      'site/assets/map-detail-????????.js',
+      'site/assets/map-terrain-????????.js',
+      'site/assets/map-roads-????????.js',
       // Evidence-only source snapshot (TypeScript, no toolchain in this repo).
       'src-recovered/**'
     ]

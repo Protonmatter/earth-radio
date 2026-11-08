@@ -16,6 +16,14 @@ The maintained `discovery-core.js` module performs pure, deterministic station r
 
 ## Public static web
 
+Version 0.31.0 adds a finite same-origin directory reader under `/directory/`,
+with demand-refreshed edge snapshots, ETags, stale fallback and validated mirror
+discovery. It accepts only the named provider paths, never arbitrary visitor URLs.
+Streaming avoids edge JSON normalization under the existing Free-plan CPU limit;
+client normalization and UUID identities remain authoritative. See
+[directory/search/map reliability](DISCOVERY_RELIABILITY.md). This does not publish
+the desktop proxy or change the independent metadata quota/auth boundaries.
+
 Area search now uses a maintained `map-directory.js` loader on explicit user
 action, adding a bounded global mapped sample before the existing catalog filters
 run. It reuses the runtime normalizer, retains richer existing source records,

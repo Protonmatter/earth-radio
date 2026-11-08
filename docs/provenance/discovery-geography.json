@@ -1,0 +1,24 @@
+{
+  "source": {
+    "path": "ne_10m_admin_0_countries",
+    "sha256": "239eec57ac17f100a11e2536cffc56752c318b50ae765b0918ff7aab4ce8f255"
+  },
+  "curatedSource": {
+    "path": "site/assets/map-world-b021d4b5.js",
+    "sha256": "b021d4b516b305427c515128b556ceaea5ac7a4bee37358ca619a5f61171dabc"
+  },
+  "countries": 239,
+  "places": 7084,
+  "outputs": [
+    {
+      "path": "site/assets/country-locations.js",
+      "bytes": 144780,
+      "sha256": "6edbbf24b984d6b5a862f41fbdf8fdf90d48cd6a64cfe2f2ebbf53c0e55848b4"
+    },
+    {
+      "path": "site/assets/place-vocabulary.js",
+      "bytes": 79010,
+      "sha256": "e3b7c4d5a054f38219f7e88f8934b8f791edabf3c11ad1be2c43b8ee681ed326"
+    }
+  ]
+}

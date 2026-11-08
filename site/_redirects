@@ -1,0 +1,5 @@
+# Preserve lazy imports from already-open pre-v65 documents after worker upgrade.
+/assets/map-world.js /assets/map-world-b021d4b5.js 302
+/assets/map-detail.js /assets/map-detail-5d713b76.js 302
+/assets/map-terrain.js /assets/map-terrain-c2f063b9.js 302
+/assets/map-roads.js /assets/map-roads-d81fc5ea.js 302

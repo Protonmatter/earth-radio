@@ -35,7 +35,7 @@ export default defineConfig({
       // These suites cover real WebKit search, responsive controls and account
       // presentation. Media fixtures remain in Chromium: Windows WebKit's media
       // loader does not reliably pass the audio URLs through page.route().
-      testMatch: /(?:search-experience|auth-ui|website)\.spec\.mjs/,
+      testMatch: /(?:search-experience|auth-ui|website|directory-snapshot)\.spec\.mjs/,
       use: {
         ...devices['Desktop Safari'],
         viewport: { width: 1360, height: 850 }

@@ -23,6 +23,11 @@ const types = new Map(Object.entries({
 createServer(async (req, res) => {
   try {
     const pathname = decodeURIComponent(new URL(req.url || '/', 'http://localhost').pathname);
+    if(pathname.startsWith('/assets/map-')){
+      const rules=await readFile(path.join(root,'_redirects'),'utf8');
+      const rule=rules.split(/\r?\n/).map(line=>line.trim().split(/\s+/)).find(parts=>parts[0]===pathname);
+      if(rule){res.writeHead(Number(rule[2]),{location:rule[1]}).end();return;}
+    }
     const website = pathname.startsWith('/__website/');
     const selectedRoot = website ? websiteRoot : root;
     let relative = (website ? pathname.slice('/__website'.length) : pathname).replace(/\/+$/, '') || '/';

@@ -1,5 +1,9 @@
 // Engineering-authored Spanish catalog. Native editorial review has not occurred.
 export default {
+  "map.approximateCluster": "Incluye {count} ubicaciones aproximadas por país",
+  "discovery.corrected": "Resultados para {query}",
+  "map.approximateCountry": "Ubicación aproximada por país",
+  "map.locationCounts": "{located} con coordenadas · {approximate} aproximadas (país) · {missing} sin ubicación",
   "discovery.countryLoading": "Cargando países…",
   "discovery.country": "País",
   "discovery.allCountries": "Todos los países",

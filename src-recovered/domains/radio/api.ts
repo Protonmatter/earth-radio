@@ -1,6 +1,7 @@
 // Radio data layer: resilient directory fetch (proxy federated endpoint or direct mirror
 // failover), IndexedDB cache with stale fallback, and best-effort click telemetry.
-import { DIRECT_RADIO_BROWSER_BASES, getRuntimeConfig, type RuntimeConfig } from '../../core/config';
+import { getRuntimeConfig, type RuntimeConfig } from '../../core/config';
+import {loadDirectorySnapshot,browserDirectoryHosts} from '../../../site/assets/directory-client.js';
 import { summarizeStationSources } from '../../core/sourceGraph.js';
 import { dbGet, dbSet } from '../../core/db';
 import { getBadStations } from '../../core/storage';
@@ -69,12 +70,14 @@ async function fetchStationsLive(config: RuntimeConfig): Promise<{ stations: Sta
   }
 
   const errors: string[] = [];
-  for (const base of DIRECT_RADIO_BROWSER_BASES) {
+  try {const snapshot=await loadDirectorySnapshot(config);if(snapshot)return normalizeStationPayload(snapshot,snapshot.source);}catch{/* Direct discovery remains a bounded fallback. */}
+  for (const base of await browserDirectoryHosts.discover()) {
     try {
       const url = `${base}/json/stations/topclick/${limit}?hidebroken=true`;
       const payload = await fetchJson(url, DIRECTORY_TIMEOUT_MS);
       return normalizeStationPayload(payload, base);
     } catch (error) {
+      browserDirectoryHosts.failed(base);
       errors.push(`${base}: ${(error as Error).message}`);
     }
   }
@@ -108,7 +111,7 @@ export async function recordStationClick(station: Station | null): Promise<unkno
   const config = getRuntimeConfig();
   const endpoints = config.proxyBaseUrl
     ? [`${trimTrailingSlash(config.proxyBaseUrl)}/api/stations/click/${encodeURIComponent(station.stationuuid)}`]
-    : DIRECT_RADIO_BROWSER_BASES.map(base => `${base}/json/url/${encodeURIComponent(station.stationuuid)}`);
+    : (await browserDirectoryHosts.discover()).map(base => `${base}/json/url/${encodeURIComponent(station.stationuuid)}`);
 
   for (const endpoint of endpoints) {
     try {

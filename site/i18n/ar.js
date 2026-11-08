@@ -1,5 +1,9 @@
 // Engineering-authored Arabic catalog. Native editorial review has not occurred.
 export default {
+  "map.approximateCluster": "يتضمن {count} موقعًا تقريبيًا على مستوى البلد",
+  "discovery.corrected": "عرض نتائج {query}",
+  "map.approximateCountry": "موقع تقريبي على مستوى البلد",
+  "map.locationCounts": "{located} بإحداثيات · {approximate} تقريبية (بلد) · {missing} بلا موقع",
   "discovery.countryLoading": "جارٍ تحميل البلدان…",
   "discovery.country": "البلد",
   "discovery.allCountries": "كل البلدان",

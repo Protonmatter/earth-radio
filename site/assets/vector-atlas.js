@@ -1,6 +1,6 @@
-import { WORLD_LAND } from './world-land.js?v=0.30.0';
-import { MAP_LABEL_STORAGE, sanitizeMapLabels, layoutMapLabels, intersectsBounds, resolveMapTheme } from './map-core.js?v=0.30.0';
-import { t, normalizeLocale } from '../i18n/index.js?v=0.30.0';
+import { WORLD_LAND } from './world-land.js?v=0.31.0';
+import { MAP_LABEL_STORAGE, sanitizeMapLabels, layoutMapLabels, intersectsBounds, resolveMapTheme } from './map-core.js?v=0.31.0';
+import { t, normalizeLocale } from '../i18n/index.js?v=0.31.0';
 
 // All geography ships with the app. No tile, geocoder or location service is
 // used. The runtime retains ownership of the Leaflet map and radio markers.
@@ -47,10 +47,10 @@ function installTooltipBounds(map) {
 function loadData(kind) {
   if (!dataPromises.has(kind)) {
     const loaders = {
-      world: () => import('./map-world.js').then(module => module.MAP_WORLD),
-      detail: () => import('./map-detail.js').then(module => module.MAP_DETAIL),
-      terrain: () => import('./map-terrain.js').then(module => module.MAP_TERRAIN),
-      roads: () => import('./map-roads.js').then(module => module.MAP_ROADS)
+      world: () => import('./map-world-b021d4b5.js').then(module => module.MAP_WORLD),
+      detail: () => import('./map-detail-5d713b76.js').then(module => module.MAP_DETAIL),
+      terrain: () => import('./map-terrain-c2f063b9.js').then(module => module.MAP_TERRAIN),
+      roads: () => import('./map-roads-d81fc5ea.js').then(module => module.MAP_ROADS)
     };
     dataPromises.set(kind, loaders[kind]());
   }

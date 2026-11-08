@@ -1,16 +1,49 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { coordinates, distanceKm, inBounds, pickStation, rankSimilar, rankStations, sanitizePreferences } from '../site/assets/discovery-core.js';
-import { createMapDirectory, mergeMappedStations } from '../site/assets/map-directory.js';
+import { createMapDirectory as createRemoteMapDirectory, mergeMappedStations } from '../site/assets/map-directory.js';
 import { installDirectoryFetchPatch } from '../site/assets/pinned-stations.js';
 
 const NOW = Date.UTC(2026, 10, 3);
+const createMapDirectory=options=>createRemoteMapDirectory({getHosts:async()=>['https://de1.api.radio-browser.info','https://all.api.radio-browser.info'],...options});
 function station(id, patch = {}) {
   return { stationuuid: id, name: id, country: 'France', countrycode: 'FR', language: 'French', tagList: ['jazz'],
     codec: 'MP3', bitrate: 128, quality: { score: 80 }, lastcheckok: true,
     url_resolved: `https://streams.example/${id}`, geo_lat: 48, geo_long: 2, ...patch };
 }
 const ids = entries => entries.map(entry => entry.station.stationuuid);
+
+test('exact place/name matches exclude fuzzy competitors regardless of quality', () => {
+  const exact=station('seoul',{name:'FEBC Seoul',country:'South Korea',countrycode:'KR',quality:{score:40}});
+  const fuzzy=station('soul',{name:'COOLFM Funky&Soul',country:'Hungary',countrycode:'HU',quality:{score:100}});
+  assert.deepEqual(ids(rankStations([fuzzy,exact],{query:'seoul'})),['seoul']);
+  assert.deepEqual(ids(rankStations([fuzzy],{query:'seoul'})),[], 'a known place must never become a fuzzy music term');
+});
+
+test('recognized genre words never become fuzzy station or country names',()=>{
+  assert.deepEqual(ids(rankStations([station('wrong',{name:'Classicl',tagList:['rock']})],{query:'classical'})),[]);
+  assert.deepEqual(ids(rankStations([station('france',{name:'French Rock',tagList:['rock']})],{query:'trance'})),[]);
+  const filtered=[station('known',{name:'Deep Signal',tagList:['progressive'],language:'English'}),station('near',{name:'Progressiv',tagList:['rock'],language:'French'})];
+  assert.deepEqual(ids(rankStations(filtered,{query:'progressive',language:'French'})),[]);
+});
+
+test('misspelled genres prefer genre vocabulary and disclose the correction', () => {
+  const pool=[station('rock',{name:'Classic Rock',tagList:['rock']}),station('classical',{name:'Concert FM',tagList:['classical']}),station('oldies',{name:'Oldies FM',tagList:['classics','classic']})];
+  const result=rankStations(pool,{query:'classicl'});
+  assert.deepEqual(ids(result),['classical']);assert.equal(result[0].correction,'classical');
+});
+
+test('localized country and language vocabulary covers more than the hand-curated aliases', () => {
+  assert.deepEqual(ids(rankStations([station('us',{country:'United States',countrycode:'US',tagList:['news']})],{query:'미국 뉴스',locale:'ko'})),['us']);
+  assert.deepEqual(ids(rankStations([station('pl',{country:'Poland',countrycode:'PL',language:'polish'})],{query:'폴란드 폴란드어',locale:'ko'})),['pl']);
+});
+
+test('empty best-match discovery mixes countries and station families deterministically', () => {
+  const pool=Array.from({length:150},(_,i)=>station('de'+i,{name:`- 0 N - ${i}`,country:'Germany',countrycode:'DE',quality:{score:100}}));
+  pool.push(station('jp',{name:'Tokyo Jazz',country:'Japan',countrycode:'JP',quality:{score:95}}),station('br',{name:'Brasil FM',country:'Brazil',countrycode:'BR',quality:{score:95}}));
+  const first=rankStations(pool).slice(0,3).map(r=>r.station.countrycode);
+  assert.equal(new Set(first).size,3);assert.deepEqual(ids(rankStations(pool)),ids(rankStations([...pool].reverse())));
+});
 
 test('mapped directory bounds remain valid when the installed pinned-station fetch overlay is active', async () => {
   const patchedFetch = installDirectoryFetchPatch(async () => Response.json([station('mapped')]));
@@ -75,16 +108,23 @@ test('map directory bounds a stalled request by one deadline', async () => {
 });
 
 test('cancelled map searches cannot cache stale data or clear a newer request', async () => {
-  let release, calls = 0;
+  let release, calls = 0,started;
+  const entered=new Promise(resolve=>{started=resolve;});
   const directory = createMapDirectory({ fetchImpl: async () => ++calls === 1
-    ? new Promise(resolve => { release = resolve; }) : Response.json([station('new')]) });
+    ? new Promise(resolve => { release = resolve;started(); }) : Response.json([station('new')]) });
   const old = directory.load();
+  await entered;
   directory.cancel();
   const next = directory.load();
   release(Response.json([station('old')]));
   await assert.rejects(old, { name: 'AbortError' });
   assert.equal((await next).stations[0].stationuuid, 'new');
   assert.equal((await directory.load()).stations[0].stationuuid, 'new');
+});
+
+test('map cancellation settles even while shared server discovery has not returned',async()=>{
+  const directory=createMapDirectory({getHosts:()=>new Promise(()=>{}),fetchImpl:async()=>{throw Error('must not fetch');}});
+  const result=directory.load();directory.cancel();await assert.rejects(result,{name:'AbortError'});
 });
 
 test('map sample limits are explicit and enriched merges retain existing source quality', async () => {
@@ -171,11 +211,17 @@ test('coordinates reject absent/invalid/Null Island data, while real zero-axis p
 
 test('bounds handle the antimeridian, repeated worlds, and invalid rectangles', () => {
   const bounds = { south: -20, north: 20, west: 170, east: -170 };
-  assert.equal(inBounds(station('a', { geo_lat: 1, geo_long: 179 }), bounds), true);
-  assert.equal(inBounds(station('a', { geo_lat: 1, geo_long: -179 }), bounds), true);
+  assert.equal(inBounds(station('a', { countrycode:'',geo_lat: 1, geo_long: 179 }), bounds), true);
+  assert.equal(inBounds(station('a', { countrycode:'',geo_lat: 1, geo_long: -179 }), bounds), true);
   assert.equal(inBounds(station('a', { geo_lat: 1, geo_long: 0 }), bounds), false);
   assert.equal(inBounds(station('a'), { south: 90, north: -90, west: -180, east: 180 }), false);
   assert.equal(inBounds(station('a'), { south: -85, north: 85, west: -540, east: 540 }), true);
+});
+
+test('approximate or country-inconsistent points cannot match a precise map rectangle',()=>{
+  const bad=station('ocean',{countrycode:'DE',geo_lat:-50,geo_long:-140});
+  assert.equal(inBounds(bad,{south:-55,north:-45,west:-145,east:-135}),false);
+  assert.equal(inBounds(station('missing',{geo_lat:null,geo_long:null}),{south:-90,north:90,west:-180,east:180}),false);
 });
 
 test('preference validation bounds input and rejects arbitrary sort/state data', () => {

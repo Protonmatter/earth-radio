@@ -147,6 +147,8 @@ test('HLS reconnect keeps the canonical identity after its active card is virtua
       state: 'Identified'
     }
   });
+  // Keep the virtualization scenario independent of the diverse default order.
+  await page.getByLabel('Selection method').selectOption('name');
   await playFromList(page, 'E2E HLS Source');
   await expect.poll(() => page.evaluate(() => document.getElementById('audio-player')?.currentSrc.startsWith('blob:'))).toBe(true);
   // The label and MediaSource URL precede actual playback. Reconnection applies

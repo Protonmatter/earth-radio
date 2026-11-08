@@ -1,5 +1,9 @@
 // English catalog. Canonical key set for Earth Radio chrome and known runtime labels.
 export default {
+  "map.approximateCluster": "Includes {count} country-level locations",
+  "discovery.corrected": "Showing results for {query}",
+  "map.approximateCountry": "Approximate country location",
+  "map.locationCounts": "{located} located · {approximate} approximate (country) · {missing} unlocated",
   "discovery.countryLoading": "Loading countries…",
   "discovery.country": "Country",
   "discovery.allCountries": "All countries",

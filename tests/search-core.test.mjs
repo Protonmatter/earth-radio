@@ -5,6 +5,12 @@ import {canonicalGenre,canonicalLanguage,filterFacetOptions,matchesCountry,searc
 const station=(id,extra={})=>({stationuuid:id,name:id,country:'France',countrycode:'FR',language:'english',tags:'jazz',bitrate:128,codec:'MP3',quality:{score:80},url_resolved:`https://example.org/${id}`, ...extra});
 const ids=rows=>rows.map(r=>r.station.stationuuid);
 
+test('common genre aliases share facet counts and generic directory tags stay out of the picker',()=>{
+  const result=buildFacetOptions([station('a',{tags:'80 s,80s,pop music,radio,music,estacion'}),station('b',{tags:'80s,pop'})],'genre');
+  assert.equal(result.find(row=>row.value==='80s').count,2);assert.equal(result.find(row=>row.value==='pop').count,2);
+  assert.ok(result.every(row=>!['radio','music','estacion'].includes(row.value)));
+});
+
 test('exact titles lead Best match regardless of unrelated directory quality',()=>{
   const exact=station('exact',{name:'Jazz Paris',quality:{score:0}}),other=station('other',{name:'World station',country:'Jazz Paris',quality:{score:100}});
   assert.equal(ids(rankStations([other,exact],{query:'Jazz Paris'}))[0],'exact');

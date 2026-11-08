@@ -1,9 +1,10 @@
-export const APP_VERSION = '0.25.1';
+export const APP_VERSION = '0.31.0';
 
 export interface RuntimeConfig {
   appName: string;
   proxyBaseUrl: string;
   stationLimit: number;
+  directorySnapshotUrl: string;
   stationCacheTtlMs: number;
   apiTimeoutMs: number;
   autoSkipOnPlaybackError: boolean;
@@ -18,7 +19,8 @@ export const DEFAULT_CONFIG: Readonly<RuntimeConfig> = Object.freeze({
   appName: 'Earth Radio',
   proxyBaseUrl: '',
   stationLimit: 4000,
-  stationCacheTtlMs: 6 * 60 * 60 * 1000,
+  directorySnapshotUrl: '/directory/snapshot',
+  stationCacheTtlMs: 60 * 60 * 1000,
   apiTimeoutMs: 8000,
   autoSkipOnPlaybackError: true,
   preferSecureStreams: true,
@@ -29,10 +31,9 @@ export const DEFAULT_CONFIG: Readonly<RuntimeConfig> = Object.freeze({
 });
 
 export const DIRECT_RADIO_BROWSER_BASES: readonly string[] = Object.freeze([
-  'https://all.api.radio-browser.info',
   'https://de1.api.radio-browser.info',
-  'https://nl1.api.radio-browser.info',
-  'https://at1.api.radio-browser.info'
+  'https://de2.api.radio-browser.info',
+  'https://all.api.radio-browser.info'
 ]);
 
 declare global {

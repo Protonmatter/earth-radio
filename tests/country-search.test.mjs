@@ -50,6 +50,24 @@ test('directory country names resolve to current ISO codes rather than retired I
   assert.deepEqual(responsive.buildCountryOptions(['Vanuatu','Vietnam','Zimbabwe'].map(name=>({name,count:1}))).map(option=>option.code),['VU','VN','ZW']);
 });
 
+test('country picker shares generated aliases across all six UI locales', () => {
+  const options = responsive.buildCountryOptions([
+    {name: 'United States', count: 1}, {name: 'Poland', count: 1},
+    {name: 'South Korea', count: 1}, {name: 'France', count: 1}
+  ]);
+  for (const [query, code] of [['미국','US'], ['波兰','PL'], ['波蘭','PL'], ['Corea del Sur','KR'], ['فرنسا','FR']]) {
+    assert.deepEqual(responsive.filterCountryOptions(options, query).map(option => option.code), [code], query);
+  }
+});
+
+test('recognized country codes and aliases cannot match substrings in other countries', () => {
+  const options = responsive.buildCountryOptions(['South Korea','Ukraine','United Kingdom','United States','Australia','Russia','Austria'].map(name=>({name,count:1})));
+  for(const [query,code] of [['KR','KR'],['uk','GB'],['US','US'],['usa','US'],['미국','US']]) {
+    assert.deepEqual(responsive.filterCountryOptions(options,query).map(option=>option.code),[code],query);
+  }
+  assert.deepEqual(responsive.filterCountryOptions(options,'austr').map(option=>option.code).sort(),['AT','AU']);
+});
+
 test('country and station terms form one normalized runtime query', () => {
   const buildCountryStationQuery = requiredExport('buildCountryStationQuery');
   assert.equal(buildCountryStationQuery('South Korea', '  jazz  '), 'South Korea jazz');

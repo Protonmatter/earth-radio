@@ -36,6 +36,7 @@ html.er-root #map .leaflet-pane > svg { max-width: none; }
 .er-atlas-caption > span { font: 9px var(--er2-mono, monospace); letter-spacing: .18em; color: #afc9be; }
 .er-atlas-caption strong { font: normal clamp(22px, 2.5vw, 38px)/1.08 Georgia, 'Times New Roman', serif; letter-spacing: -.03em; }
 .er-atlas-caption small { font: 10px var(--er2-mono, monospace); color: #afc9be; }
+.er-cluster--approximate { outline: 1px dashed currentColor; outline-offset: 3px; }
 html[data-er-palette="paper"] .er-atlas-caption { color: #183d38; text-shadow: 0 1px 8px #dfecea; }
 html[data-er-palette="paper"] .er-atlas-caption > span, html[data-er-palette="paper"] .er-atlas-caption small { color: #365f56; }
 .er-atlas-tools { position: absolute; z-index: 600; bottom: 34px; left: 16px; right: 16px; display: flex; justify-content: center; flex-wrap: wrap; gap: 6px; pointer-events: none; }

@@ -68,7 +68,7 @@ test('geographic labels and detail survive theme changes and phone layout', asyn
 
 test('missing map detail keeps a usable fallback and does not block station discovery', async ({ page }) => {
   await setupApp(page);
-  await page.route('**/assets/map-world.js', route => route.abort('failed'));
+  await page.route('**/assets/map-world*.js', route => route.abort('failed'));
   await page.reload();
   await expect(page.locator('#er-map-data-status')).toContainText('Map detail unavailable');
   await expect(page.locator('.er-vector-land').first()).toBeAttached();
