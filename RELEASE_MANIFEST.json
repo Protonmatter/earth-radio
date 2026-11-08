@@ -205,8 +205,8 @@
     },
     {
       "path": "docs/SUPABASE.md",
-      "bytes": 6622,
-      "sha256": "d050d1fb207e77f92814cc2b7485712e40e8ce5eb8aada5bc908b6fde2fb76d6"
+      "bytes": 7292,
+      "sha256": "5ac91af4741852b5fb2c109d32e35997ea7b9e557468ec131fff756b68462a66"
     },
     {
       "path": "docs/superpowers/plans/2026-08-21-earth-radio-public-cloudflare.md",
@@ -969,7 +969,7 @@
       "sha256": "62ac8e578ad37f7564430ef104d75feb8691d2e3c1fa7d842f2099dbb016cdde"
     },
     {
-      "path": "supabase/migrations/20261108035310_song_library.sql",
+      "path": "supabase/migrations/20261108055646_song_library.sql",
       "bytes": 3357,
       "sha256": "6e87c3bab452abbea17883e4feb730213c5d987c842713ad0f1c94e04d10a1ca"
     },

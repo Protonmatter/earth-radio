@@ -40,6 +40,15 @@ documented in [Song library](SONG_LIBRARY.md). Song-only downloads do not reload
 
 ## Apply and verify
 
+The existing hosted project's earlier schema was provisioned outside migration-history
+tracking. The song-library migration is recorded as `20261108055646_song_library`;
+its source filename matches the version assigned by the migration API. Before using
+CLI `db push` against that existing project, inspect `supabase migration list` and
+reconcile the historical baseline against the actual schema. Do not replay the older
+create-table migrations or mark them applied without verifying their effects.
+The release workflow applies reviewed incremental SQL through the migration API
+after its database/Auth CI jobs pass, then checks constraints, RLS, grants and advisors.
+
 Link a local Supabase CLI to project `ueomkorngpgvthqioqns`, then use the normal migration
 workflow:
 
