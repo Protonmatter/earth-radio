@@ -1,5 +1,7 @@
-import { coordinates, fold, pickStation, rankStations, sanitizePreferences } from './discovery-core.js?v=0.29.1';
-import { createMapDirectory, mergeMappedStations } from './map-directory.js?v=0.29.1';
+import { buildFacetOptions, coordinates, pickStation, rankStations, sanitizePreferences } from './discovery-core.js?v=0.30.0';
+import { createMapDirectory, mergeMappedStations } from './map-directory.js?v=0.30.0';
+import { installSearchControls } from './search-controls.js?v=0.30.0';
+import { getLocale, t } from '../i18n/index.js?v=0.30.0';
 
 // A hidden-to-visible resize can leave Leaflet's animated bounds correction
 // running. Its moveend handler can start another correction while stop() fires.
@@ -19,7 +21,8 @@ export function settledMapAction(map, action) {
 // discovery state, never playback, persisted account records, or runtime routes.
 export function installDiscovery(adapter) {
   const root = document.getElementById('er-discovery');
-  if (!root) return { augment: stations => stations, transform: stations => stations, options: () => ({}), observe() {}, clear() {}, explainButton: () => document.createTextNode('') };
+  if (!root) return { ownsSearch: false, augment: stations => stations, transform: stations => stations, options: () => ({}), observe() {}, clear() {}, explainButton: () => document.createTextNode('') };
+  root.dataset.searchAuthority = 'discovery';
   let prefs = sanitizePreferences(null), bounds = null, entries = new Map(), facetSource = null;
   let timer = 0, composing = false, refreshQueued = false;
   const health = new Map();
@@ -41,7 +44,18 @@ export function installDiscovery(adapter) {
   const detailReasons = dialog.querySelector('ul');
   const detailPlay = dialog.querySelector('[data-detail-play]');
   let detailStation = null;
-  const context = () => ({ ...prefs, bounds, health, ...adapter.context() });
+  const context = () => ({ ...prefs, bounds, health, ...adapter.context(), locale: getLocale() });
+  const controls = installSearchControls(root, {
+    preferences: () => prefs, context, readControls,
+    patchFilters: patch => adapter.patchFilters(patch),
+    showAll: () => adapter.showAll(),
+    hasArea: () => Boolean(bounds), clearArea: () => { clearArea(); refresh(); },
+    reset: () => {
+      clear();
+      adapter.patchFilters({ countries: [], tags: [], bitrates: [], secureOnly: false, minQuality: 0 }, false);
+      adapter.showAll();
+    }
+  });
 
   function refresh() { adapter.refresh(); }
   function queueRefresh() {
@@ -50,6 +64,7 @@ export function installDiscovery(adapter) {
     queueMicrotask(() => { refreshQueued = false; refresh(); });
   }
   function clear() {
+    document.dispatchEvent(new CustomEvent('earthradio:discovery-reset'));
     clearTimeout(timer); root.reset(); prefs = sanitizePreferences(null); clearArea();
   }
   function clearArea() {
@@ -65,10 +80,14 @@ export function installDiscovery(adapter) {
   query.addEventListener('compositionstart', () => { composing = true; clearTimeout(timer); });
   query.addEventListener('compositionend', () => { composing = false; schedule(); });
   query.addEventListener('input', () => { if (!composing) schedule(); });
-  root.addEventListener('change', event => { if (event.target !== query) { clearTimeout(timer); readControls(); } });
+  // Enhanced text inputs are presentation only. Their blur/change must not
+  // redraw (and remove) a chip between pointerdown and click.
+  root.addEventListener('change', event => { if (event.target !== query && event.target.name && root.elements.namedItem(event.target.name) === event.target) { clearTimeout(timer); readControls(); } });
   root.addEventListener('submit', event => { event.preventDefault(); clearTimeout(timer); readControls(); });
-  root.querySelector('[data-discovery-reset]').addEventListener('click', () => {
-    clear(); refresh(); query.focus();
+  document.addEventListener('earthradio:country-selected', event => {
+    if (event.detail?.source !== 'search') return;
+    clearArea();
+    adapter.patchFilters({ countries: event.detail.country ? [event.detail.country] : [] });
   });
   mapSearch.addEventListener('click', async () => {
     if (!adapter.allowDirectory()) { mapSearch.disabled = true; return; }
@@ -133,6 +152,8 @@ export function installDiscovery(adapter) {
   dialog.querySelector('[data-detail-close]').addEventListener('click', () => dialog.close());
   detailPlay.addEventListener('click', () => { if (detailStation) adapter.play(detailStation); dialog.close(); });
   function updatePlayingControls() {
+    root.dataset.directoryAllowed = String(adapter.allowDirectory());
+    root.querySelector('[data-search-country]').disabled = !adapter.allowDirectory();
     focus.disabled = !coordinates(adapter.current());
     root.querySelector('option[value="similar"]').disabled = !adapter.current();
     mapSearch.disabled = !adapter.allowDirectory() || mapState === 'loading';
@@ -149,20 +170,20 @@ export function installDiscovery(adapter) {
   function updateFacets(stations) {
     if (facetSource === stations) return;
     facetSource = stations;
-    for (const [name, allLabel, values] of [
-      ['genre', 'All genres', stations.flatMap(s => s.tagList ?? String(s.tags ?? '').split(','))],
-      ['language', 'All languages', stations.flatMap(s => String(s.language ?? '').split(/[,;]+/))]
-    ]) {
+    for (const name of ['genre', 'language']) {
       const select = root.elements.namedItem(name);
-      const unique = [...new Set(values.map(value => fold(value)).filter(Boolean))].sort();
+      const values = buildFacetOptions(stations, name);
       const selected = prefs[name];
-      if (selected && !unique.includes(selected)) unique.push(selected);
-      select.replaceChildren(...[['', allLabel], ...unique.map(value => [value, value])].map(([value, label]) => new Option(label, value)));
+      if (selected && !values.some(option => option.value === selected)) values.push({ value: selected, label: select.selectedOptions[0]?.textContent || selected, count: 0 });
+      select.replaceChildren(new Option(t(name === 'genre' ? 'discovery.allGenres' : 'discovery.allLanguages'), ''), ...values.map(({value, label, count}) => {
+        const option = new Option(label, value); option.dataset.count = String(count); return option;
+      }));
       select.value = selected;
     }
   }
 
   return {
+    ownsSearch: true,
     augment(stations) {
       if (!adapter.allowDirectory() || !mapStations.length || stations === augmented) return stations;
       augmented = mergeMappedStations(stations, mapStations);
@@ -185,6 +206,8 @@ export function installDiscovery(adapter) {
         : 'No mapped stations match this area and your filters. Zoom out, reset filters or clear the map area.';
       document.getElementById('er-map-count').textContent = `${mapped.toLocaleString()} located · ${result.length - mapped} without coordinates`;
       updatePlayingControls();
+      controls.render(result.length);
+      document.dispatchEvent(new CustomEvent('earthradio:discovery-changed', { detail: { query: prefs.query, filters: context().filters, view } }));
       return result.map(entry => entry.station);
     },
     explainButton(station) {

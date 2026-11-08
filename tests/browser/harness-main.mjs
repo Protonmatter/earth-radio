@@ -539,10 +539,14 @@ async function runAction(window_, action, tracker) {
       const node = document.querySelector(${JSON.stringify(action.selector)});
       if (!node) return false;
       node.focus();
+      const snapshot = () => JSON.stringify({query: document.querySelector('#search-input')?.value,
+        results: [...document.querySelectorAll('#search-results .search-result-item')].map(item => item.textContent)});
+      const before = snapshot();
       node.dispatchEvent(new CompositionEvent('compositionstart', { bubbles: true }));
       node.value = ${JSON.stringify(action.text)};
       node.dispatchEvent(new InputEvent('input', { bubbles: true, isComposing: true }));
       window.__erImeDuringComposition = document.querySelectorAll('#search-results .search-result-item').length;
+      window.__erImeResultsStable = snapshot() === before;
       node.dispatchEvent(new CompositionEvent('compositionend', { bubbles: true, data: ${JSON.stringify(action.text)} }));
       return true;
     })()`, true);
@@ -669,6 +673,7 @@ async function runScenario(scenario, baseUrl) {
 
     const probe = await contents.executeJavaScript(PROBE, true);
     const imeDuringComposition = await contents.executeJavaScript('window.__erImeDuringComposition ?? null', true);
+    const imeResultsStable = await contents.executeJavaScript('window.__erImeResultsStable ?? null', true);
     const image = await retryKnownCaptureError(() => contents.capturePage());
     const file = path.join(outputDirectory, `${scenario.id}.png`);
     await writeFile(file, image.toPNG());
@@ -685,6 +690,7 @@ async function runScenario(scenario, baseUrl) {
       ready,
       screenshot: path.relative(repositoryRoot, file).replaceAll(path.sep, '/'),
       imeDuringComposition,
+      imeResultsStable,
       actionLog,
       streamHosts: [...observedStreamHosts],
       consoleErrors: consoleMessages,

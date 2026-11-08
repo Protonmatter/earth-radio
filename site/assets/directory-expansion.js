@@ -125,7 +125,7 @@ export async function loadCountryIndex({ fetchImpl = fetch, timeoutMs = 8000 } =
   return [];
 }
 
-function countryIndex() {
+export function countryIndex() {
   if (!expansion.indexPromise) {
     expansion.indexPromise = loadCountryIndex().then(list => {
       // An empty result (offline boot, all mirrors down) must not be memoized

@@ -1,5 +1,5 @@
-import { AUTH_DEPLOYMENT, isWebAuthOrigin } from './assets/auth-deployment.js?v=0.29.1';
-import { isDesktopAuthAvailable } from './assets/desktop-auth.js?v=0.29.1';
+import { AUTH_DEPLOYMENT, isWebAuthOrigin } from './assets/auth-deployment.js?v=0.30.0';
+import { isDesktopAuthAvailable } from './assets/desktop-auth.js?v=0.30.0';
 // Runtime configuration, loaded as a same-origin script so a strict Content-Security-Policy
 // (script-src 'self') stays intact. Deployers edit this file; the `|| ` guard preserves any
 // value injected earlier (e.g. by tests or a server-rendered runtime).
@@ -63,4 +63,4 @@ window.RADIO_CONFIG = window.RADIO_CONFIG || {
 };
 
 // Authentication is an additive overlay so the recovered application bundle remains immutable.
-void import('./assets/auth-ui.js?v=0.29.1').catch(error => console.warn('Earth Radio account UI:', error));
+void import('./assets/auth-ui.js?v=0.30.0').catch(error => console.warn('Earth Radio account UI:', error));

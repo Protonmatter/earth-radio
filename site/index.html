@@ -13,22 +13,23 @@
   <link rel="icon" type="image/png" sizes="32x32" href="./branding/earth-radio-32-v2.png" />
   <link rel="apple-touch-icon" sizes="180x180" href="./branding/earth-radio-180-v2.png" />
   <link rel="manifest" href="./manifest.webmanifest" />
-  <script type="module" src="./config.js?v=0.29.1"></script>
-  <script type="module" src="./assets/storage-guard.js?v=0.29.1"></script>
-  <script type="module" src="./assets/directory-expansion.js?v=0.29.1"></script>
-  <script type="module" src="./assets/pinned-stations.js?v=0.29.1"></script>
-  <script type="module" src="./assets/metadata-enrichment.js?v=0.29.1"></script>
-  <link rel="stylesheet" href="./assets/metadata-enrichment.css?v=0.29.1" />
-  <script type="module" crossorigin src="./assets/index-b6ef62ee.js"></script>
+  <script type="module" src="./config.js?v=0.30.0"></script>
+  <script type="module" src="./assets/storage-guard.js?v=0.30.0"></script>
+  <script type="module" src="./assets/directory-expansion.js?v=0.30.0"></script>
+  <script type="module" src="./assets/pinned-stations.js?v=0.30.0"></script>
+  <script type="module" src="./assets/metadata-enrichment.js?v=0.30.0"></script>
+  <link rel="stylesheet" href="./assets/metadata-enrichment.css?v=0.30.0" />
+  <script type="module" crossorigin src="./assets/index-ed6560ef.js"></script>
   <link rel="stylesheet" crossorigin href="./assets/index-CSoL7F-Y.css">
-  <link rel="stylesheet" href="./assets/responsive-ui.css?v=0.29.1" />
-  <script type="module" src="./assets/responsive-ui.js?v=0.29.1"></script>
-  <script type="module" src="./assets/song-library-ui.js?v=0.29.1"></script>
-  <script type="module" src="./assets/atlas-lock.js?v=0.29.1"></script>
-  <link rel="stylesheet" href="./assets/ui-refresh.css?v=0.29.1" />
-  <link rel="stylesheet" href="./assets/atlas-lock.css?v=0.29.1" />
-  <link rel="stylesheet" href="./assets/discovery.css?v=0.29.1" />
-  <link rel="stylesheet" href="./assets/listening-room.css?v=0.29.1" />
+  <link rel="stylesheet" href="./assets/responsive-ui.css?v=0.30.0" />
+  <script type="module" src="./assets/responsive-ui.js?v=0.30.0"></script>
+  <script type="module" src="./assets/song-library-ui.js?v=0.30.0"></script>
+  <script type="module" src="./assets/atlas-lock.js?v=0.30.0"></script>
+  <link rel="stylesheet" href="./assets/ui-refresh.css?v=0.30.0" />
+  <link rel="stylesheet" href="./assets/atlas-lock.css?v=0.30.0" />
+  <link rel="stylesheet" href="./assets/discovery.css?v=0.30.0" />
+  <link rel="stylesheet" href="./assets/search-controls.css?v=0.30.0" />
+  <link rel="stylesheet" href="./assets/listening-room.css?v=0.30.0" />
 </head>
 <body>
   <a class="er-skip" href="#grid-panel" data-i18n="app.skip">Skip to station list</a>
@@ -120,12 +121,13 @@
           <label class="sr-only" for="er-discovery-query">Find a station</label>
           <span aria-hidden="true" class="er-discovery-search-icon">⌕</span>
           <input id="er-discovery-query" name="query" type="search" placeholder="Search stations, genres or places" maxlength="160" autocomplete="off" spellcheck="false" aria-describedby="er-discovery-status" />
-          <button type="button" data-discovery-reset aria-label="Reset discovery">Reset</button>
+          <button type="button" data-discovery-clear-query aria-label="Clear search" hidden>×</button>
         </div>
+        <button type="button" class="er-search-country" data-search-country data-er-open-search data-er-search-focus="country" aria-label="Choose country">All countries</button>
         <details class="er-discovery-advanced" open><summary>Filters</summary>
         <div class="er-discovery-facets">
-          <label>Genre<select name="genre" aria-label="Genre"><option value="">All genres</option></select></label>
-          <label>Language<select name="language" aria-label="Language"><option value="">All languages</option></select></label>
+          <div class="er-facet-field"><label for="er-genre-select" data-i18n="discovery.genre">Genre</label><select id="er-genre-select" name="genre" aria-label="Genre"><option value="">All genres</option></select></div>
+          <div class="er-facet-field"><label for="er-language-select" data-i18n="discovery.language">Language</label><select id="er-language-select" name="language" aria-label="Language"><option value="">All languages</option></select></div>
           <label>Selection<select name="sort" aria-label="Selection method">
             <option value="best">Best match</option><option value="reliable">Reliability</option><option value="explore">Explore the world</option>
             <option value="similar">Similar to playing</option><option value="bitrate">Highest bitrate</option><option value="name">Name A–Z</option>
@@ -138,7 +140,9 @@
           <button type="button" id="er-discovery-pick">Find my next station ↗</button>
         </div>
         </details>
+        <div id="er-discovery-active" class="er-search-active" role="group" aria-label="Active filters" hidden></div>
         <p id="er-discovery-status" role="status" aria-live="polite">Loading station discovery…</p>
+        <div id="er-search-recovery" class="er-search-recovery" hidden></div>
       </form>
       <div class="collections" id="collections" role="group" aria-label="Curated collections"></div>
       <div class="station-grid" id="station-grid"></div>
@@ -320,6 +324,7 @@
       <label class="sr-only" for="er-station-query" data-i18n="search.stationLabel">Station</label>
       <input type="search" class="search-input er-station-query" id="er-station-query" placeholder="Country or station" data-i18n-placeholder="search.stationPlaceholder" autocomplete="off" spellcheck="false" aria-controls="search-results" />
       <input type="text" class="er-search-engine" id="search-input" tabindex="-1" autocomplete="off" spellcheck="false" aria-hidden="true" />
+      <div id="er-search-active" class="er-search-active" role="group" aria-label="Active filters" hidden></div>
       <p id="er-country-summary" class="er-country-summary" aria-live="polite"></p>
       <div class="search-results" id="search-results" role="listbox" aria-label="Station search results"></div>
       <div class="search-footer">

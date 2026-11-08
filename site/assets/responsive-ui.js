@@ -13,7 +13,9 @@
  * maintained catalogs, over a bounded list of known runtime-owned elements.
  */
 
-import { getCurrentSongSnapshot } from './metadata-enrichment.js?v=0.29.1';
+import { getCurrentSongSnapshot } from './metadata-enrichment.js?v=0.30.0';
+import { matchesCountry } from './search-core.js?v=0.30.0';
+import { countryIndex } from './directory-expansion.js?v=0.30.0';
 import {
   applyDeclarativeI18n,
   applyDocumentLocale,
@@ -24,7 +26,7 @@ import {
   DEFAULT_LOCALE,
   FONT_PROFILES,
   t
-} from '../i18n/index.js?v=0.29.1';
+} from '../i18n/index.js?v=0.30.0';
 
 export const UI_STORAGE_KEY = 'earthRadio.ui.v1';
 export const DEFAULT_SPLIT = 42;
@@ -63,8 +65,19 @@ const COUNTRY_DISPLAY_NAMES = Object.freeze({
   'the united states of america': 'United States',
   'united states of america': 'United States',
   'the united kingdom': 'United Kingdom',
-  'united kingdom of great britain and northern ireland': 'United Kingdom'
+  'united kingdom of great britain and northern ireland': 'United Kingdom',
+  'the united kingdom of great britain and northern ireland': 'United Kingdom',
+  'the netherlands': 'Netherlands',
+  'the philippines': 'Philippines',
+  'the russian federation': 'Russia',
+  'taiwan republic of china': 'Taiwan'
 });
+const RETIRED_REGION_CODES = new Set(['AN', 'BU', 'CS', 'DD', 'FX', 'NH', 'NT', 'RH', 'SU', 'TP', 'UK', 'VD', 'YD', 'YU', 'ZR']);
+function isCurrentRegion(code) {
+  if (!/^[A-Z]{2}$/.test(code) || RETIRED_REGION_CODES.has(code)) return false;
+  try { return new Intl.Locale(`und-${code}`).region === code; }
+  catch { return true; } // Older WebViews retain the explicit alias exclusions.
+}
 
 function normalizeSearchTerm(value) {
   return String(value ?? '')
@@ -89,13 +102,17 @@ function displayCountryName(value) {
 
 const DISPLAY_REGION_CODES = (() => {
   const lookup = new Map(Object.entries(COUNTRY_CODES));
+  // Intl includes deprecated region aliases (e.g. FX -> France). They must
+  // never overwrite the current code used for directory expansion/filtering.
   try {
     const names = new Intl.DisplayNames(['en'], { type: 'region' });
     for (let first = 65; first <= 90; first += 1) {
       for (let second = 65; second <= 90; second += 1) {
         const code = String.fromCharCode(first, second);
+        if (!isCurrentRegion(code)) continue;
         const name = names.of(code);
-        if (name && name !== code) lookup.set(normalizeSearchTerm(name), code);
+        const key = normalizeSearchTerm(name);
+        if (name && name !== code && !lookup.has(key)) lookup.set(key, code);
       }
     }
   } catch {
@@ -112,12 +129,14 @@ export function buildCountryOptions(entries) {
     const key = normalizeSearchTerm(name);
     const count = Number.parseInt(String(entry?.count ?? 0).replace(/[^\d-]/g, ''), 10);
     const current = combined.get(key) || { name, count: 0 };
+    const code = String(entry.code || '').toUpperCase();
+    if (isCurrentRegion(code)) current.code = code;
     current.count += Number.isFinite(count) ? Math.max(0, count) : 0;
     combined.set(key, current);
   }
   return [...combined.entries()]
     .map(([key, value]) => {
-      const code = DISPLAY_REGION_CODES.get(key) || '';
+      const code = value.code || DISPLAY_REGION_CODES.get(key) || '';
       return { name: value.name, code, flag: countryFlag(code), count: value.count };
     })
     .sort((a, b) => a.name.localeCompare(b.name, 'en', { sensitivity: 'base' }));
@@ -861,9 +880,14 @@ function bindSearchIme() {
 }
 
 let countryOptions = [];
+let directoryCountries = [];
+let countryIndexLoading = false;
 let countryRuntimeNames = new Map();
 let selectedCountry = '';
 let stationQuery = '';
+let stationQueryTimer = 0;
+let requestedSearchFocus = 'station';
+const ownsSearch = () => byId('er-discovery')?.dataset.searchAuthority === 'discovery';
 let activeCountryIndex = -1;
 let countrySearchBound = false;
 let runtimeSearchStations = null;
@@ -894,15 +918,20 @@ function renderCountryOptions(query = '') {
   if (!list || !input) return;
   const filtered = filterCountryOptions(countryOptions, query);
   const visible = query ? filtered : [{ name: '', code: '', flag: '🌐', count: countryOptions.reduce((sum, option) => sum + option.count, 0) }, ...filtered];
-  activeCountryIndex = visible.length && activeCountryIndex >= 0
-    ? Math.min(activeCountryIndex, visible.length - 1)
-    : -1;
+  const activeName = list.querySelectorAll('[role="option"]')[activeCountryIndex]?.dataset.country;
+  activeCountryIndex = activeName === undefined ? -1 : visible.findIndex(option => option.name === activeName);
   list.replaceChildren();
+  list.setAttribute('aria-busy', String(countryIndexLoading));
+  if (countryIndexLoading) {
+    const loading = document.createElement('p'); loading.className = 'er-country-no-match';
+    loading.textContent = t('discovery.countryLoading'); list.append(loading);
+  }
 
   if (!visible.length) {
+    input.removeAttribute('aria-activedescendant');
     const empty = document.createElement('p');
     empty.className = 'er-country-no-match';
-    empty.textContent = t('search.countryNoMatch');
+    empty.textContent = countryIndexLoading ? '' : t('search.countryNoMatch');
     list.append(empty);
     return;
   }
@@ -932,6 +961,8 @@ function renderCountryOptions(query = '') {
     button.addEventListener('click', () => selectCountry(option.name));
     list.append(button);
   });
+  if (activeCountryIndex >= 0) input.setAttribute('aria-activedescendant', `er-country-option-${activeCountryIndex}`);
+  else input.removeAttribute('aria-activedescendant');
 }
 
 function updateCountryActive(delta) {
@@ -1029,6 +1060,7 @@ function stationResultMatches(result) {
 }
 
 function applySearchScope() {
+  if (ownsSearch()) { updateCountrySummary(); return; }
   for (const result of document.querySelectorAll('#search-results .search-result-item')) {
     const meta = result.querySelector('.search-result-item__meta')?.textContent || '';
     const shouldHide = result.classList.contains('search-result-item--empty')
@@ -1040,12 +1072,19 @@ function applySearchScope() {
 }
 
 function syncRuntimeSearch() {
+  clearTimeout(stationQueryTimer); stationQueryTimer = 0;
   const engine = byId('search-input');
   if (!engine) return;
-  engine.value = buildCountryStationQuery(countryRuntimeNames.get(selectedCountry) || selectedCountry, stationQuery);
+  if (ownsSearch()) {
+    const input = byId('er-discovery-query');
+    if (input) { input.value = stationQuery; input.form.requestSubmit(); }
+    engine.value = stationQuery;
+  } else engine.value = buildCountryStationQuery(countryRuntimeNames.get(selectedCountry) || selectedCountry, stationQuery);
   engine.dispatchEvent(new Event('input', { bubbles: true }));
+  const results = byId('search-results');
+  if (results) { results.inert = false; results.removeAttribute('aria-busy'); }
   queueMicrotask(applySearchScope);
-  void readRuntimeSearchStations().then(() => applySearchScope());
+  if (!ownsSearch()) void readRuntimeSearchStations().then(() => applySearchScope());
 }
 
 function visibleSearchResults() {
@@ -1078,10 +1117,10 @@ function navigateVisibleSearchResults(delta) {
 }
 
 function selectCountry(country) {
+  if (stationQueryTimer) syncRuntimeSearch();
   selectedCountry = String(country || '').trim();
-  if (selectedCountry) {
-    document.dispatchEvent(new CustomEvent('earthradio:country-selected', { detail: { country: selectedCountry } }));
-  }
+  const option = countryOptions.find(option => option.name === selectedCountry);
+  document.dispatchEvent(new CustomEvent('earthradio:country-selected', { detail: { country: option?.code || countryRuntimeNames.get(selectedCountry) || selectedCountry, source: 'search' } }));
   const input = byId('er-country-query');
   const clear = byId('er-country-clear');
   if (input) input.value = selectedCountry;
@@ -1124,8 +1163,15 @@ function bindCountrySearch() {
 
   const syncCountries = () => {
     const entries = countryFilterEntries();
-    countryRuntimeNames = new Map(entries.map(entry => [displayCountryName(entry.name), entry.name]));
-    countryOptions = buildCountryOptions(entries);
+    const names = [...entries, ...directoryCountries];
+    countryRuntimeNames = new Map(names.map(entry => [displayCountryName(entry.name), entry.name]));
+    // The directory index supplies all available countries, without loading their
+    // stations. Preserve loaded-only entries if an upstream index omits one.
+    const indexed = new Set(directoryCountries.map(entry => normalizeSearchTerm(displayCountryName(entry.name))));
+    countryOptions = buildCountryOptions([
+      ...entries.filter(entry => !indexed.has(normalizeSearchTerm(displayCountryName(entry.name)))),
+      ...directoryCountries.map(entry => ({name: entry.name, code: entry.code, count: entry.stationcount}))
+    ]);
     renderCountryOptions(country.value && country.value !== selectedCountry ? country.value : '');
   };
   syncCountries();
@@ -1142,7 +1188,13 @@ function bindCountrySearch() {
 
   const stationIsComposing = bindSettledInput(station, () => {
     stationQuery = station.value;
-    syncRuntimeSearch();
+    clearTimeout(stationQueryTimer);
+    byId('search-results').inert = true; byId('search-results').setAttribute('aria-busy', 'true');
+    stationQueryTimer = setTimeout(syncRuntimeSearch, 140);
+  });
+  station.addEventListener('compositionstart', () => {
+    clearTimeout(stationQueryTimer); stationQueryTimer = 0;
+    byId('search-results').inert = true; byId('search-results').setAttribute('aria-busy', 'true');
   });
   bindSettledInput(country, () => {
     if (country.value === selectedCountry) return;
@@ -1154,8 +1206,10 @@ function bindCountrySearch() {
   station.addEventListener('keydown', event => {
     if (stationIsComposing() || event.isComposing || event.keyCode === 229) return;
     if (!['ArrowDown', 'ArrowUp', 'Enter', 'Escape'].includes(event.key)) return;
+    if (stationQueryTimer) syncRuntimeSearch();
     if (event.key === 'Escape' && station.value) {
       event.preventDefault();
+      event.stopPropagation();
       station.value = '';
       stationQuery = '';
       syncRuntimeSearch();
@@ -1182,6 +1236,11 @@ function bindCountrySearch() {
   country.addEventListener('focus', () => {
     renderCountryOptions(country.value === selectedCountry ? '' : country.value);
     setCountryOptionsOpen(true);
+    if (byId('er-discovery')?.dataset.directoryAllowed !== 'false') {
+      countryIndexLoading = true;
+      renderCountryOptions(country.value === selectedCountry ? '' : country.value);
+      void countryIndex().then(list => { directoryCountries = list; }).finally(() => { countryIndexLoading = false; syncCountries(); });
+    }
   });
   country.addEventListener('keydown', event => {
     if (event.isComposing || event.keyCode === 229) return;
@@ -1204,6 +1263,40 @@ function bindCountrySearch() {
   });
 
   byId('er-country-clear')?.addEventListener('click', () => selectCountry(''));
+  const cancelPendingQuery = () => {
+    clearTimeout(stationQueryTimer); stationQueryTimer = 0;
+    const results = byId('search-results');
+    results.inert = false; results.removeAttribute('aria-busy');
+  };
+  document.addEventListener('earthradio:discovery-reset', () => {
+    cancelPendingQuery(); stationQuery = ''; station.value = ''; engine.value = '';
+  });
+  byId('er-discovery-query')?.addEventListener('input', event => {
+    cancelPendingQuery(); stationQuery = event.target.value; station.value = stationQuery;
+  });
+  document.addEventListener('earthradio:discovery-changed', event => {
+    if (!stationQueryTimer && !stationIsComposing()) {
+      stationQuery = event.detail.query || '';
+      if (station.value !== stationQuery) station.value = stationQuery;
+      engine.value = stationQuery;
+    }
+    const values = event.detail.filters?.countries || [];
+    const option = values.length === 1 ? countryOptions.find(option => matchesCountry({country: countryRuntimeNames.get(option.name) || option.name, countrycode: option.code}, values[0])) : null;
+    selectedCountry = option?.name || (values.length === 1 ? values[0] : '');
+    if (document.activeElement !== country) country.value = selectedCountry;
+    const clear = byId('er-country-clear'); if (clear) clear.hidden = !values.length;
+    updateCountrySummary();
+  });
+  document.addEventListener('earthradio:search-opened', () => {
+    stationQuery = byId('er-discovery-query')?.value || '';
+    station.value = stationQuery; syncRuntimeSearch();
+    const focusCountry = requestedSearchFocus === 'country';
+    requestAnimationFrame(() => requestAnimationFrame(() => byId(focusCountry ? 'er-country-query' : 'er-station-query')?.focus()));
+    requestedSearchFocus = 'station';
+  });
+  document.addEventListener('earthradio:discovery-browse', () => {
+    if (byId('search-modal')?.hidden) setDestination('listen', true);
+  });
   document.addEventListener('pointerdown', event => {
     if (!(event.target instanceof Element) || !event.target.closest('.er-country-picker')) setCountryOptionsOpen(false);
   });
@@ -1542,14 +1635,18 @@ function bindActions() {
     }
 
     if (target.closest('[data-er-open-search]')) {
+      requestedSearchFocus = target.closest('[data-er-open-search]').dataset.erSearchFocus || 'station';
       if (classifyViewport() === 'mobile') {
         setDestination('search', true);
+        stationQuery = byId('er-discovery-query')?.value || ''; byId('er-station-query').value = stationQuery; syncRuntimeSearch();
+        if (requestedSearchFocus === 'country') queueMicrotask(() => byId('er-country-query')?.focus());
+        requestedSearchFocus = 'station';
       } else {
         // Desktop keeps the runtime's command palette and its Ctrl/Cmd+K path. One
         // event only (both modifiers would open it twice), and focus after the
         // runtime's own requestAnimationFrame focus of the hidden engine input.
         document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true, bubbles: true }));
-        requestAnimationFrame(() => requestAnimationFrame(() => byId('er-station-query')?.focus()));
+        if (!ownsSearch()) requestAnimationFrame(() => requestAnimationFrame(() => byId('er-station-query')?.focus()));
       }
       return;
     }

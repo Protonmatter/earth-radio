@@ -11,10 +11,12 @@ test('inline discovery filters without autoplay, supports reset and survives rep
   await expect(page.locator('#audio-player')).toHaveJSProperty('paused', true);
   await query.fill('nothing-matches-this');
   await expect(page.locator('.station-card:visible')).toHaveCount(0);
-  await expect(page.locator('#empty-state')).toBeVisible();
+  await expect(page.locator('#er-search-recovery')).toBeVisible();
   await page.getByRole('button', { name: 'Reset discovery' }).click();
   await expect(page.locator('.station-card').first()).toBeVisible();
-  await page.getByLabel('Genre', { exact: true }).selectOption('jazz');
+  await page.getByRole('combobox', { name: 'Search genres' }).fill('jaz');
+  await page.getByRole('combobox', { name: 'Search genres' }).press('ArrowDown');
+  await page.getByRole('combobox', { name: 'Search genres' }).press('Enter');
   await expect(page.locator('.station-card__name')).toHaveText('E2E London Jazz');
 });
 
