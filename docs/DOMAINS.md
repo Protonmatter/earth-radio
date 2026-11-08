@@ -50,6 +50,18 @@ credentials. Source URL configuration is in `supabase/config.toml`.
 
 ## Downloads and privacy
 
+Set zone **Caching → Configuration → Browser Cache TTL** to **Respect Existing
+Headers**. The default four-hour setting overrides the app's `no-cache` worker and
+short-lived mutable modules on custom domains. Live readback must show `no-cache`
+for `/sw.js`, 300 seconds for versioned config and revalidation for the deployment
+module. Keep fingerprinted assets immutable. Do not enable Development Mode or
+disable zone-wide security to fix header delivery. The public privacy page uses
+`no-transform` to preserve its audited bytes and existing email links at both
+addresses; the small static website also prevents body rewrites. The setting and
+[origin header behavior](https://developers.cloudflare.com/cache/how-to/edge-browser-cache-ttl/set-browser-ttl/)
+are separate from Pages deployment success. Roll back an incorrect zone setting
+independently, but do not restore four-hour mutable caching as an application fix.
+
 The website uses public GitHub release metadata with a four-second/256-KiB limit.
 It accepts only complete stable releases from this repository with all four desktop
 artifacts, installation guide and checksums at exact repository URLs. If unavailable,
