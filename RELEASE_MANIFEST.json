@@ -60,8 +60,8 @@
     },
     {
       "path": "docs/DOMAINS.md",
-      "bytes": 4485,
-      "sha256": "a55ad9eaaee4fecc371947b0cb996c9e751164da15270acf4ffb2b090e60696d"
+      "bytes": 6337,
+      "sha256": "365274b222d06cf2fc24250124dd4391fc1d44e458c75ce6c215446f50d42919"
     },
     {
       "path": "docs/E2E_TESTING.md",
@@ -495,8 +495,8 @@
     },
     {
       "path": "site/_headers",
-      "bytes": 2897,
-      "sha256": "303cbfc66f3a99e484ee4a40cbdf4337ab9a5924abddae43c7cc0d4443ddb8e0"
+      "bytes": 3054,
+      "sha256": "ccd8178b8d0fdc7c1ac344d62db78f1c96b797795870e3410171a97bd731f7dc"
     },
     {
       "path": "site/assets/atlas-lock.css",
@@ -1370,8 +1370,8 @@
     },
     {
       "path": "tests/website.test.mjs",
-      "bytes": 3553,
-      "sha256": "baa0d7a390adcd67a9d3897c24e59cff1c9097610bce9da866a5e2c7e709ff5a"
+      "bytes": 4029,
+      "sha256": "af9a3a618a3135224cd225fb2e6bca622686862ee08c8f4d65dd0c4b7e6e5afa"
     },
     {
       "path": "tests/workflow.test.mjs",
@@ -1380,8 +1380,8 @@
     },
     {
       "path": "website/_headers",
-      "bytes": 538,
-      "sha256": "4d5589d95fe136b98b6ee4875e5ec248b9a1123c767799ed34201ad3760a1a3b"
+      "bytes": 552,
+      "sha256": "103069a961843482c38ce4a132e3fcf934cbeb6c5adc508eccdc01ccee8693f4"
     },
     {
       "path": "website/_redirects",

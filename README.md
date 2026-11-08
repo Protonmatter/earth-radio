@@ -6,7 +6,7 @@ Release **0.29.1** adds the public website and primary app domain while preservi
 
 Website and downloads: **https://earthradio.stream/**. Radio app: **https://app.earthradio.stream/**. The earlier **https://earth-radio.pages.dev/** app remains available for existing shortcuts and unsynced local collections. Public repository: **https://github.com/Protonmatter/earth-radio**.
 
-See the [installation guide](docs/INSTALLATION.md) for Windows ARM64, macOS Apple Silicon/Intel, and Safari Home Screen installation on iPhone/iPad. Get desktop downloads, checksums and build provenance from the [v0.29.0 release page](https://github.com/Protonmatter/earth-radio/releases/tag/v0.29.0). Windows uses the accepted local signer; macOS builds are explicitly labeled unnotarized.
+See the [installation guide](docs/INSTALLATION.md) for Windows ARM64, macOS Apple Silicon/Intel, and Safari Home Screen installation on iPhone/iPad. Get desktop downloads, checksums and build provenance from the [v0.29.1 release page](https://github.com/Protonmatter/earth-radio/releases/tag/v0.29.1). Windows uses the accepted local signer; macOS builds are explicitly labeled unnotarized.
 
 This repository was reconstructed from the installed Earth Radio 0.24.0 application and two user-supplied archives. It is not a byte-for-byte reproduction of the original development repository. The newest runnable installed assets were selected where they differed from older archived source; those decisions are recorded in [docs/PROVENANCE.md](docs/PROVENANCE.md).
 

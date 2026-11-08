@@ -12,6 +12,18 @@ Preserve its DKIM, sending CNAME and other mail records. This change uses existi
 Cloudflare Pages Free hosting and the existing Supabase project. It does not enable
 a paid Supabase custom domain, introduce an API key, or change provider grants.
 
+The November 8 hosted URL cutover changes Site URL from the earlier app address to
+`https://app.earthradio.stream` and adds its exact root and slash return URLs. It
+retains the pre-existing `https://earth-radio.pages.dev/**`, local development,
+custom-scheme and random-path native loopback returns. The new app domain does not
+use a wildcard. Source configuration uses exact legacy roots for local qualification;
+this does not authorize widening the new origin or removing existing hosted returns.
+Live GitHub return at the new origin reached Synced and loaded the existing liked
+Voices record and 74% preference without linking a new identity. The original account
+session remains at the earlier origin. Public DNS/TLS activation and a local resolver's
+cached negative response are distinct checks; allow the negative TTL to expire before
+assuming that a successful authoritative cutover is visible through every resolver.
+
 ## Build and deploy
 
 Both projects connect to `Protonmatter/earth-radio`, production branch `main`.
@@ -37,6 +49,18 @@ an apex, preview, or wildcard subdomain Auth origin. Do not change SMTP or provi
 credentials. Source URL configuration is in `supabase/config.toml`.
 
 ## Downloads and privacy
+
+Set zone **Caching → Configuration → Browser Cache TTL** to **Respect Existing
+Headers**. The default four-hour setting overrides the app's `no-cache` worker and
+short-lived mutable modules on custom domains. Live readback must show `no-cache`
+for `/sw.js`, 300 seconds for versioned config and revalidation for the deployment
+module. Keep fingerprinted assets immutable. Do not enable Development Mode or
+disable zone-wide security to fix header delivery. The public privacy page uses
+`no-transform` to preserve its audited bytes and existing email links at both
+addresses; the small static website also prevents body rewrites. The setting and
+[origin header behavior](https://developers.cloudflare.com/cache/how-to/edge-browser-cache-ttl/set-browser-ttl/)
+are separate from Pages deployment success. Roll back an incorrect zone setting
+independently, but do not restore four-hour mutable caching as an application fix.
 
 The website uses public GitHub release metadata with a four-second/256-KiB limit.
 It accepts only complete stable releases from this repository with all four desktop

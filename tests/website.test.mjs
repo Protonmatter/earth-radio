@@ -41,6 +41,11 @@ test('real website artifact has correct app, installation, origin-migration and 
   for(const label of ['Windows ARM64','Apple Silicon','Intel','Safari','Add to Home Screen','unnotarized'])assert.ok(html.includes(label),label);
   assert.doesNotMatch(html,/<iframe|<form|google-analytics|googletagmanager/i);
   const source=await readFile('website/wrangler.jsonc','utf8');assert.doesNotMatch(source,/METADATA_LIMITS|durable_objects|service_bindings/);
+  // Keep the already-public contact page byte-identical across Pages and zone
+  // delivery, without changing zone-wide security or rewriting email links.
+  assert.match(await readFile('website/_headers','utf8'),/Cache-Control:[^\n]*no-transform/);
+  const appHeaders=await readFile('site/_headers','utf8');
+  for(const endpoint of ['/privacy','/privacy.html'])assert.ok(appHeaders.includes(`${endpoint}\n  Cache-Control: public, max-age=0, must-revalidate, no-transform`));
   assert.equal(result.files.some(row=>/functions|auth-deployment|config\.js|\.node-version|wrangler/.test(row.path)),false);
   const forbidden=path.join(result.output,'_worker.js');await writeFile(forbidden,'// must not ship');
   await assert.rejects(validateWebsite(result.output),/unexpected|worker|static/i);
