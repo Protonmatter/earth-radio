@@ -5,8 +5,8 @@
   "files": [
     {
       "path": ".github/workflows/ci.yml",
-      "bytes": 4395,
-      "sha256": "a73577a810d1c698193ca11224af1fbc0cf548f5ef2c3275fffc6b96ba6d6fc5"
+      "bytes": 4413,
+      "sha256": "31fafdaff34ba5971e572dae8df226fb057e216f8c8599f309a85f5a763d5ae0"
     },
     {
       "path": ".github/workflows/macos-release.yml",
@@ -139,9 +139,14 @@
       "sha256": "37fa1a8155c5a07ee8d5612bad711b5c16ecc5452d22638c68b1fb5c71479c69"
     },
     {
+      "path": "docs/QUALIFICATION-0.30.0-LIVE.md",
+      "bytes": 8172,
+      "sha256": "189a88085e54b54a61890b207d6286adcd82de678be1ee9f43dd1baf3a26bb10"
+    },
+    {
       "path": "docs/QUALIFICATION-0.30.0.md",
-      "bytes": 2296,
-      "sha256": "7b9aacd34935023be250441de3e1a7096f0a9cc8664f0651fe31e1505d56cf6c"
+      "bytes": 2607,
+      "sha256": "d022248ff925d10103bb7ba98d450427f62f3b69c9f5a6251676b713032e34f7"
     },
     {
       "path": "docs/QUALIFICATION-2026-11-03.md",
@@ -1190,8 +1195,8 @@
     },
     {
       "path": "tests/e2e/playwright.config.mjs",
-      "bytes": 1329,
-      "sha256": "f53db749d1fe3bc4720565134426a1ac031fb8b2ea2fee1b4fd28b9576cf0acb"
+      "bytes": 1779,
+      "sha256": "e5fa5eeb954b1b0507f972c2a9f6cba0742bc278ab922fd5af504761a8bf391e"
     },
     {
       "path": "tests/e2e/reliability.spec.mjs",
@@ -1455,8 +1460,8 @@
     },
     {
       "path": "website/index.html",
-      "bytes": 9674,
-      "sha256": "ea269197ef59c1196d67d4de2297b00f518d26760a916501b1bfaed540ecb555"
+      "bytes": 9687,
+      "sha256": "29ac39b29f46334b8058a052935ca0024ffd478130d97e7b7823c457f535c4e5"
     },
     {
       "path": "website/release-core.js",

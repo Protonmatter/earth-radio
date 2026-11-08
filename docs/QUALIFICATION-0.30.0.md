@@ -1,5 +1,10 @@
 # Earth Radio 0.30.0 qualification
 
+See the [November 8 live Windows and WebKit follow-up](QUALIFICATION-0.30.0-LIVE.md)
+for native provider/sync/restart results, the website keyboard fix and the pending
+physical iPhone Home Screen checklist. These dated results extend the release
+checks below without replacing the immutable v0.30.0 artifacts.
+
 Required local gates: `npm run verify`, `npm run test:e2e`,
 `npm run test:rendered`, `npm run test:desktop-renderer`,
 `npm run test:desktop-auth` and `npm audit --audit-level=moderate`.
