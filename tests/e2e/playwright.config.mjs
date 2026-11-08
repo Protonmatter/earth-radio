@@ -32,7 +32,7 @@ export default defineConfig({
     }
   ],
   webServer: {
-    command: 'node tests/e2e/serve-site.mjs',
+    command: 'node scripts/stage-website.mjs && node tests/e2e/serve-site.mjs',
     cwd: '../..',
     port: PORT,
     reuseExistingServer: !process.env.CI

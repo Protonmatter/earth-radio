@@ -1,4 +1,4 @@
-import { coordinates, streamIdentity } from './discovery-core.js?v=0.29.0';
+import { coordinates, streamIdentity } from './discovery-core.js?v=0.29.1';
 
 const BASES = ['https://de1.api.radio-browser.info', 'https://all.api.radio-browser.info'];
 const LIMIT = 10000;

@@ -1,12 +1,12 @@
-import { AUTH_DEPLOYMENT } from './assets/auth-deployment.js?v=0.29.0';
-import { isDesktopAuthAvailable } from './assets/desktop-auth.js?v=0.29.0';
+import { AUTH_DEPLOYMENT, isWebAuthOrigin } from './assets/auth-deployment.js?v=0.29.1';
+import { isDesktopAuthAvailable } from './assets/desktop-auth.js?v=0.29.1';
 // Runtime configuration, loaded as a same-origin script so a strict Content-Security-Policy
 // (script-src 'self') stays intact. Deployers edit this file; the `|| ` guard preserves any
 // value injected earlier (e.g. by tests or a server-rendered runtime).
 const desktopProxyBaseUrl = window.earthRadio && window.earthRadio.isDesktop && typeof window.earthRadio.proxyBaseUrl === 'string'
   ? window.earthRadio.proxyBaseUrl
   : '';
-const authOriginAllowed = window.location.origin === 'https://earth-radio.pages.dev';
+const authOriginAllowed = isWebAuthOrigin(window.location.origin);
 
 window.RADIO_CONFIG = window.RADIO_CONFIG || {
   // Public Cloudflare Pages deployments use browser-direct mode, so this must remain empty.
@@ -63,4 +63,4 @@ window.RADIO_CONFIG = window.RADIO_CONFIG || {
 };
 
 // Authentication is an additive overlay so the recovered application bundle remains immutable.
-void import('./assets/auth-ui.js?v=0.29.0').catch(error => console.warn('Earth Radio account UI:', error));
+void import('./assets/auth-ui.js?v=0.29.1').catch(error => console.warn('Earth Radio account UI:', error));

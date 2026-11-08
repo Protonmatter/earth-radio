@@ -8,6 +8,7 @@ export default [
     ignores: [
       'node_modules/**',
       '.build/**',
+      'website/.build/**',
       '.recovery/**',
       'release/**',
       'playwright-report/**',
@@ -57,7 +58,7 @@ export default [
     languageOptions: { ecmaVersion: 2024, sourceType: 'commonjs', globals: { ...globals.node } }
   },
   {
-    files: ['site/**/*.js'],
+    files: ['site/**/*.js','website/**/*.js'],
     languageOptions: { ecmaVersion: 2024, sourceType: 'module', globals: { ...globals.browser } }
   },
   {

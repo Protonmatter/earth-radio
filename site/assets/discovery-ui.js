@@ -1,5 +1,5 @@
-import { coordinates, fold, pickStation, rankStations, sanitizePreferences } from './discovery-core.js?v=0.29.0';
-import { createMapDirectory, mergeMappedStations } from './map-directory.js?v=0.29.0';
+import { coordinates, fold, pickStation, rankStations, sanitizePreferences } from './discovery-core.js?v=0.29.1';
+import { createMapDirectory, mergeMappedStations } from './map-directory.js?v=0.29.1';
 
 // A hidden-to-visible resize can leave Leaflet's animated bounds correction
 // running. Its moveend handler can start another correction while stop() fires.
