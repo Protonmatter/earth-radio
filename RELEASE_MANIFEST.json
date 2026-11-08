@@ -60,8 +60,8 @@
     },
     {
       "path": "docs/DOMAINS.md",
-      "bytes": 4485,
-      "sha256": "a55ad9eaaee4fecc371947b0cb996c9e751164da15270acf4ffb2b090e60696d"
+      "bytes": 5411,
+      "sha256": "349e9fff3cd070f937cd5c4fd874df0762913711c3f1e1bc80ec4de724df6804"
     },
     {
       "path": "docs/E2E_TESTING.md",

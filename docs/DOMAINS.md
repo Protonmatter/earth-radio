@@ -12,6 +12,18 @@ Preserve its DKIM, sending CNAME and other mail records. This change uses existi
 Cloudflare Pages Free hosting and the existing Supabase project. It does not enable
 a paid Supabase custom domain, introduce an API key, or change provider grants.
 
+The November 8 hosted URL cutover changes Site URL from the earlier app address to
+`https://app.earthradio.stream` and adds its exact root and slash return URLs. It
+retains the pre-existing `https://earth-radio.pages.dev/**`, local development,
+custom-scheme and random-path native loopback returns. The new app domain does not
+use a wildcard. Source configuration uses exact legacy roots for local qualification;
+this does not authorize widening the new origin or removing existing hosted returns.
+Live GitHub return at the new origin reached Synced and loaded the existing liked
+Voices record and 74% preference without linking a new identity. The original account
+session remains at the earlier origin. Public DNS/TLS activation and a local resolver's
+cached negative response are distinct checks; allow the negative TTL to expire before
+assuming that a successful authoritative cutover is visible through every resolver.
+
 ## Build and deploy
 
 Both projects connect to `Protonmatter/earth-radio`, production branch `main`.
