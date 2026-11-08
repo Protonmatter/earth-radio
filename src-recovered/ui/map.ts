@@ -129,7 +129,12 @@ export function setPlayingStation(station: Station | null): void {
   playingMarker.addTo(map);
 
   const targetZoom = Math.max(map.getZoom(), 5);
-  map.flyTo([lat, lng], targetZoom, { animate: true, duration: 0.7 });
+  // A Browse-only phone view has a zero-size map. Leaflet's animated flight
+  // divides by that size and can corrupt its center with NaN coordinates.
+  const container = map.getContainer();
+  if (container.clientWidth > 0 && container.clientHeight > 0) {
+    map.flyTo([lat, lng], targetZoom, { animate: true, duration: 0.7 });
+  }
 }
 
 /** Pan to a station and open its popup (used for non-playback focus). */

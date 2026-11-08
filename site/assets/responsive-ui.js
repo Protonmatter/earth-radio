@@ -13,6 +13,7 @@
  * maintained catalogs, over a bounded list of known runtime-owned elements.
  */
 
+import { getCurrentSongSnapshot } from './metadata-enrichment.js?v=0.29.0';
 import {
   applyDeclarativeI18n,
   applyDocumentLocale,
@@ -23,7 +24,7 @@ import {
   DEFAULT_LOCALE,
   FONT_PROFILES,
   t
-} from '../i18n/index.js';
+} from '../i18n/index.js?v=0.29.0';
 
 export const UI_STORAGE_KEY = 'earthRadio.ui.v1';
 export const DEFAULT_SPLIT = 42;
@@ -1385,6 +1386,7 @@ function syncNowPlaying() {
   const meta = byId('er-nowplaying-meta');
   const live = byId('er-nowplaying-live');
   const art = byId('er-nowplaying-art');
+  const song = getCurrentSongSnapshot();
   const copy = nowPlayingSheetCopy({
     station: byId('player-station')?.textContent,
     facts: byId('player-meta')?.textContent,
@@ -1392,23 +1394,35 @@ function syncNowPlaying() {
     trackArtist: byId('nowcard-artist')?.textContent,
     playerTrack: byId('player-track')?.textContent
   });
-  if (title) title.textContent = copy.title || t('player.select');
-  if (meta) meta.textContent = copy.meta || '';
+  if (title) { title.textContent = song?.title || copy.title || t('player.select'); title.title = title.textContent; }
+  if (meta) meta.textContent = song?.artist || (copy.title === byId('player-station')?.textContent ? t('music.waiting') : copy.meta || '');
+  const station = byId('er-nowplaying-station');
+  if (station) { station.textContent = byId('player-station')?.textContent || ''; station.hidden = !song; }
   if (live) {
     const audio = byId('audio-player');
-    live.textContent = audio && !audio.paused ? t('nowplaying.live') : t('player.live');
+    live.textContent = audio && !audio.paused ? t('nowplaying.live') : t('music.paused');
+    live.dataset.playing = String(Boolean(audio && !audio.paused));
   }
-  const sourceArt = byId('nowcard-art');
-  if (art && sourceArt) art.replaceChildren(...[...sourceArt.cloneNode(true).childNodes]);
+  if (art) {
+    const image = song?.artworkUrl && document.createElement('img');
+    if (image) { image.src = song.artworkUrl; image.alt = ''; }
+    art.replaceChildren(...(image ? [image] : []));
+  }
   const favorite = byId('btn-favorite');
   const proxy = document.querySelector('#er-nowplaying [data-click-id="btn-favorite"]');
-  if (favorite && proxy) proxy.setAttribute('aria-pressed', favorite.getAttribute('aria-pressed') || 'false');
+  if (favorite && proxy) {
+    const pressed = favorite.getAttribute('aria-pressed') === 'true';
+    proxy.setAttribute('aria-pressed', String(pressed));
+    proxy.dataset.i18n = pressed ? 'music.stationSaved' : 'music.saveStation';
+    proxy.textContent = t(proxy.dataset.i18n);
+  }
   const play = byId('btn-play');
   const playProxy = document.querySelector('#er-nowplaying [data-er-nowplaying-play]');
   if (play && playProxy) {
     const label = play.getAttribute('aria-label') || t('player.play');
     playProxy.textContent = label;
     playProxy.setAttribute('aria-label', label);
+    playProxy.dataset.playing = String(byId('audio-player')?.paused === false);
   }
   syncNowPlayingMetadata();
 }
@@ -1435,6 +1449,7 @@ export function linkClonedFingerprintAction(clone) {
 }
 
 function syncNowPlayingMetadata() {
+  if (byId('er-song-details')?.dataset.songKind === 'history') return;
   const destination = byId('er-nowplaying-metadata');
   if (!destination) return;
   const card = byId('metadata-card');
@@ -1453,6 +1468,7 @@ function syncNowPlayingMetadata() {
 function trapNowPlayingFocus(event) {
   const panel = byId('er-nowplaying');
   if (event.key !== 'Tab' || !panel?.classList.contains('is-open')) return;
+  if (byId('er-song-details')?.open) return;
   if (panel.getAttribute('aria-modal') !== 'true') return;
   const focusable = [...panel.querySelectorAll(FOCUSABLE)].filter(element => element.offsetParent !== null);
   if (!focusable.length) return;
@@ -1561,6 +1577,10 @@ function bindActions() {
         if (transfersFocus) focusProxySurface(targetId);
       }
       queueMicrotask(syncNowPlaying);
+      if (targetId === 'btn-similar' && proxy.closest('#er-nowplaying')) {
+        if (parseNowPlayingHistory(history.state)) { pendingNowPlayingDestination = 'listen'; history.back(); }
+        else { closeNowPlaying(); setDestination('listen', true); }
+      }
       return;
     }
 
@@ -1591,7 +1611,7 @@ function bindActions() {
       return;
     }
 
-    if (target.closest('#er-nowplaying-dismiss')) {
+    if (target.closest('#er-nowplaying-dismiss, #er-nowplaying-backdrop')) {
       if (parseNowPlayingHistory(history.state)) history.back();
       else closeNowPlaying();
       return;
@@ -1652,6 +1672,7 @@ function bindActions() {
   window.matchMedia?.('(display-mode: standalone)')?.addEventListener?.('change', onResize);
 
   document.addEventListener('keydown', event => {
+    if (byId('er-song-details')?.open) return;
     if (event.key === 'Escape') {
       const settings = byId('settings-modal');
       if (settingsModalIsVisible(settings)) {

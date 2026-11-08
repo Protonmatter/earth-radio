@@ -9,7 +9,7 @@
 /assets/hls.light-Dr1Fv81C.js
   Cache-Control: public, max-age=31536000, immutable
 
-/assets/index-fdff159e.js
+/assets/index-c40766e7.js
   Cache-Control: public, max-age=31536000, immutable
 
 /assets/index-CSoL7F-Y.css
@@ -92,3 +92,6 @@
 
 /sw.js
   Cache-Control: no-cache
+
+/assets/song-library-*.js
+  Cache-Control: public, max-age=300, must-revalidate

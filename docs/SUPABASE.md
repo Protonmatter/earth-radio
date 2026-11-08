@@ -24,8 +24,8 @@ qualification boundaries, sender prerequisites and rollback.
 The migrations under `supabase/migrations` create private profile, preference, favorite,
 recent-station, country, and generic configuration tables. Every table has forced RLS.
 Authenticated users can access only rows whose `user_id` equals `auth.uid()`. Anonymous
-access is revoked. Configuration writes are restricted to the three synchronized document
-keys (`favorites`, `recents`, and `preferences`) and must use
+access is revoked. Configuration writes are restricted to the four synchronized document
+keys (`favorites`, `recents`, `preferences`, and `songs`) and must use
 `upsert_user_config_document`, which performs compare-and-swap revision checks and keeps
 deletion tombstones. Per-key size limits accommodate the recovered model's 1,000 full favorite
 summaries while keeping recents and preferences substantially smaller.
@@ -34,8 +34,20 @@ The web client syncs the existing IndexedDB `favorites`, `recents`, and `prefs` 
 the generic configuration documents `favorites`, `recents`, and `preferences`. First-device
 data is uploaded. Remote-only changes are downloaded. Concurrent favorites and recents are
 merged by station; concurrent preferences keep the current device's explicitly stored fields.
+The private song library uses separately namespaced local records and a one-MiB server
+document. Its logical clear/remove behavior and downgrade-safe account fencing are
+documented in [Song library](SONG_LIBRARY.md). Song-only downloads do not reload audio.
 
 ## Apply and verify
+
+The existing hosted project's earlier schema was provisioned outside migration-history
+tracking. The song-library migration is recorded as `20261108055646_song_library`;
+its source filename matches the version assigned by the migration API. Before using
+CLI `db push` against that existing project, inspect `supabase migration list` and
+reconcile the historical baseline against the actual schema. Do not replay the older
+create-table migrations or mark them applied without verifying their effects.
+The release workflow applies reviewed incremental SQL through the migration API
+after its database/Auth CI jobs pass, then checks constraints, RLS, grants and advisors.
 
 Link a local Supabase CLI to project `ueomkorngpgvthqioqns`, then use the normal migration
 workflow:
@@ -56,7 +68,7 @@ AUTH_INTEGRATION=1 node --test tests/auth-local-gotrue.test.mjs
 ```
 
 The SQL test suite is transaction-scoped and rolls back its two synthetic users. In the
-hosted SQL editor, run `supabase/tests/rls_policies.sql`; a clean run ends with `ok 23` and
+hosted SQL editor, run `supabase/tests/rls_policies.sql`; a clean run ends with `ok 31` and
 no pgTAP diagnostics. After any policy or function change, rerun the Supabase Security
 Advisor and confirm that no new errors appear.
 

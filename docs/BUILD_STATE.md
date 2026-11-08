@@ -1,5 +1,14 @@
 # Build state
 
+## 0.29.0 compact player and songs
+
+The compact Now Playing card keeps the feed and grouped controls together. Song
+details and broadcast provenance use a separate dialog. Private profile history and
+likes use a bounded fourth sync document, explicit guest import and account-fenced
+storage/backup recovery. See [feature and rollback](SONG_LIBRARY.md) and
+[publication gates](RELEASE-0.29.0.md). Final delivery identities are carried by the
+GitHub release provenance and the existing Spaces operations record.
+
 ## 0.28.0 geographic atlas
 
 This candidate adds bounded station tooltips and bundled Natural Earth country/city

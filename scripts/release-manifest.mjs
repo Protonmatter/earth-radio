@@ -19,7 +19,7 @@ async function collectFiles(root) {
     }
     entries.sort((a, b) => a.name.localeCompare(b.name, 'en'));
     for (const entry of entries) {
-      if (entry.isDirectory() && ['.build', '.wrangler', 'node_modules'].includes(entry.name)) continue;
+      if (entry.isDirectory() && ['.build', '.wrangler', '.temp', 'node_modules'].includes(entry.name)) continue;
       const relative = path.posix.join(relativeDirectory.replaceAll('\\', '/'), entry.name);
       if (entry.isDirectory()) await walk(relative);
       else if (entry.isFile()) files.push(relative);

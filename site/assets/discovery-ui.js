@@ -1,5 +1,5 @@
-import { coordinates, fold, pickStation, rankStations, sanitizePreferences } from './discovery-core.js';
-import { createMapDirectory, mergeMappedStations } from './map-directory.js';
+import { coordinates, fold, pickStation, rankStations, sanitizePreferences } from './discovery-core.js?v=0.29.0';
+import { createMapDirectory, mergeMappedStations } from './map-directory.js?v=0.29.0';
 
 // A hidden-to-visible resize can leave Leaflet's animated bounds correction
 // running. Its moveend handler can start another correction while stop() fires.
@@ -25,7 +25,7 @@ export function installDiscovery(adapter) {
   const health = new Map();
   const query = root.querySelector('[name="query"]');
   const advanced = root.querySelector('details');
-  const compact = matchMedia('(max-width: 767px)');
+  const compact = matchMedia('(max-width: 767px), (max-height: 600px)');
   advanced.open = !compact.matches;
   compact.addEventListener('change', event => { advanced.open = !event.matches; });
   const status = document.getElementById('er-discovery-status');

@@ -150,7 +150,7 @@ test('native sync preserves the existing large-favorites contract and enforces p
   } });
   assert.equal(result[0].revision, 1);
   assert.equal((await manager.execute('readDocuments', { expectedUserId: 'user-a' }))[0].value.station.summary.length, 1100000);
-  for (const key of ['recents', 'preferences']) await assert.rejects(manager.execute('upsertDocument', { expectedUserId: 'user-a', body: {
+  for (const key of ['recents', 'preferences', 'songs']) await assert.rejects(manager.execute('upsertDocument', { expectedUserId: 'user-a', body: {
     p_document_key: key, p_value: large, p_expected_revision: 0, p_delete: false
   } }), /invalid/i);
 });

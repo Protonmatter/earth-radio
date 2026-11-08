@@ -5,6 +5,12 @@ default system browser. Email uses a verified magic link. Favorites, recent stat
 and preferences use the existing per-user Supabase configuration documents and RLS.
 Listening does not require an account.
 
+Version 0.29.0 adds a bounded private `songs` document for likes and optional song
+history. Local songs enter the signed-in profile only through Add local songs.
+Song-only downloads update the profile without reloading playback. Existing
+provider grants and encrypted desktop-session ownership remain unchanged; see
+[song storage, merge behavior and privacy](SONG_LIBRARY.md).
+
 Native account support is enabled for Windows and macOS. Linux retains local-only
 behavior; its credential-provider combinations are outside this qualification.
 

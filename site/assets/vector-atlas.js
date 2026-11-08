@@ -1,6 +1,6 @@
-import { WORLD_LAND } from './world-land.js';
-import { MAP_LABEL_STORAGE, sanitizeMapLabels, layoutMapLabels, intersectsBounds, resolveMapTheme } from './map-core.js';
-import { t, normalizeLocale } from '../i18n/index.js';
+import { WORLD_LAND } from './world-land.js?v=0.29.0';
+import { MAP_LABEL_STORAGE, sanitizeMapLabels, layoutMapLabels, intersectsBounds, resolveMapTheme } from './map-core.js?v=0.29.0';
+import { t, normalizeLocale } from '../i18n/index.js?v=0.29.0';
 
 // All geography ships with the app. No tile, geocoder or location service is
 // used. The runtime retains ownership of the Leaflet map and radio markers.

@@ -287,6 +287,19 @@ test('local Auth issues unique-user JWTs that RLS accepts and fences', {
   assert.equal(own.status, 200, ownBody);
   assert.deepEqual(JSON.parse(ownBody), []);
 
+  const headers = { apikey: stack.apikey, Authorization: `Bearer ${token.access_token}`, 'Content-Type': 'application/json' };
+  const upsert = (value, revision) => fetch(new URL('/rest/v1/rpc/upsert_user_config_document', stack.url), {
+    method: 'POST', headers, body: JSON.stringify({ p_document_key: 'songs', p_value: value, p_expected_revision: revision, p_delete: false })
+  });
+  const songDocument = { version: 1, tracks: {}, historyEnabled: true };
+  assert.equal((await readOkJson(await upsert(songDocument, 0)))[0].revision, 1);
+  assert.deepEqual(await readOkJson(await upsert({ ...songDocument, historyEnabled: false }, 99)), []);
+  const visibleSongs = await readOkJson(await fetch(new URL('/rest/v1/user_config_documents?select=document_key,value&document_key=eq.songs', stack.url), { headers }));
+  assert.deepEqual(visibleSongs, [{ document_key: 'songs', value: songDocument }]);
+  const crossUser = await readOkJson(await fetch(new URL(`/rest/v1/user_config_documents?select=document_key&user_id=neq.${userId}`, stack.url), { headers }));
+  assert.deepEqual(crossUser, []);
+  assert.equal((await upsert({ payload: 'x'.repeat(1048576) }, 1)).status, 400);
+
   const anon = await fetch(new URL('/rest/v1/user_config_documents?select=document_key', stack.url), {
     headers: { apikey: stack.apikey }
   });

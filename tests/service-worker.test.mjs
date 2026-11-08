@@ -4,8 +4,30 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import test from 'node:test';
 import vm from 'node:vm';
+import { versionSiteModules } from '../scripts/version-site-modules.mjs';
 
 const root = path.resolve(import.meta.dirname, '..');
+
+test('release module URLs are coherent and an older cache cannot satisfy a newer import', async () => {
+  await versionSiteModules(root, { check: true });
+  const { version } = JSON.parse(await readFile(path.join(root, 'package.json'), 'utf8'));
+  const worker = await readFile(path.join(root, 'site/sw.js'), 'utf8');
+  for (const asset of ['song-library-core.js', 'song-library-store.js', 'song-library-ui.js', 'metadata-enrichment.js']) {
+    assert.ok(worker.includes(`./assets/${asset}?v=${version}`));
+  }
+  const handlers = new Map(); let fetched = '';
+  vm.runInNewContext(worker, {
+    self: { location: { origin: 'https://radio.example' }, addEventListener: (name, handler) => handlers.set(name, handler) },
+    URL, Request, Response,
+    fetch: async request => { fetched = request.url; return new Response('new module'); },
+    caches: { match: async request => request.url.endsWith('?v=0.28.0') ? new Response('old module') : undefined,
+      open: async () => ({ put: async () => {} }) }
+  });
+  let response;
+  const url = `https://radio.example/assets/metadata-enrichment.js?v=${version}`;
+  handlers.get('fetch')({ request: new Request(url), respondWith: promise => { response = promise; } });
+  assert.equal(await (await response).text(), 'new module'); assert.equal(fetched, url);
+});
 
 for (const relative of ['/branding/earth-radio-192-v2.png', '/manifest.webmanifest']) {
   test(`service worker serves cached ${relative} when the network is offline`, async () => {
@@ -41,7 +63,7 @@ test('the live immutable runtime filename is derived from its final content hash
 
 test('service worker registers even when async startup outlives window load', async () => {
   const source = await readFile(path.join(root, 'src-recovered', 'main.ts'), 'utf8');
-  const bundle = await readFile(path.join(root, 'site', 'assets', 'index-fdff159e.js'), 'utf8');
+  const bundle = await readFile(path.join(root, 'site', 'assets', 'index-c40766e7.js'), 'utf8');
   assert.match(source, /document\.readyState === 'complete'/);
   assert.match(bundle, /document\.readyState===`complete`/);
 });
@@ -77,7 +99,7 @@ test('deployed pages send HSTS and revalidate the auth overlays', async () => {
 test('service worker precaches the auth, responsive, and i18n shell under a new cache version', async () => {
   const worker = await readFile(path.join(root, 'site', 'sw.js'), 'utf8');
   assert.match(worker, /cache: isImmutableAsset\(asset\) \? 'force-cache' : 'reload'/);
-  assert.match(worker, /earth-radio-shell-v61-geographic-atlas/);
+  assert.match(worker, /earth-radio-shell-v62-song-library/);
   for (const size of [32, 180, 192, 512]) assert.ok(worker.includes(`branding/earth-radio-${size}-v2.png`));
   for (const asset of ['discovery-core.js', 'discovery-ui.js', 'map-directory.js', 'discovery.css', 'listening-room.css', 'vector-atlas.js', 'world-land.js']) {
     assert.ok(worker.includes(`./assets/${asset}`), `Missing discovery shell asset ${asset}`);

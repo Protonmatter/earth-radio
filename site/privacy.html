@@ -56,10 +56,10 @@
   <main>
     <p><a href="./">Earth Radio</a></p>
     <h1>Privacy policy</h1>
-    <p class="meta">Earth Radio is operated by Protonmatter. Last updated 7 November 2026.</p>
+    <p class="meta">Earth Radio is operated by Protonmatter. Last updated 8 November 2026.</p>
 
     <h2>What this app is</h2>
-    <p>Earth Radio is a public internet-radio browser. You can search and play stations without an account. An optional account lets you keep favorites, recents, and preferences across browsers.</p>
+    <p>Earth Radio is a public internet-radio browser. You can search and play stations without an account. An optional account lets you keep favorite stations, recent stations, preferences, liked songs and optional song history across browsers and desktop apps.</p>
 
     <h2>Sign-in</h2>
     <p>Sign-in is provided by Supabase Auth. You may use Google, GitHub, or an email magic link. When you choose Google or GitHub, that provider sends us the account email, and may send a display name and avatar. We do not receive your Google or GitHub password.</p>
@@ -67,13 +67,15 @@
     <h2>What we store</h2>
     <ul>
       <li>Account identity: provider user id, email, and optional name or avatar URL.</li>
-      <li>Your saved favorites, recently played stations, and preference document, keyed to your user id in our Supabase project.</li>
+      <li>Your saved favorite stations, recent stations, preferences, liked songs and optional recently heard songs, keyed to your user id in our Supabase project. Song records may include artist, title, available catalog details, station context and listening dates.</li>
       <li>Session tokens in the browser (local storage and cookies) so you stay signed in on this device.</li>
     </ul>
-    <p>Anonymous use keeps all of it in this browser only: favorites, recently played stations, the last station you played, stations marked unreachable after a failed connection, and preferences. That listening history stays on the device, including in the local backup copy the app keeps so a browser storage eviction does not lose it. Map country/city label switches are also saved only on this device. Map country/city label switches are also saved only on this device. Map country/city label switches are also saved only on this device. Map country/city label switches are also saved only on this device. Map country/city label switches are also saved only on this device. Map country/city label switches are also saved only on this device. Map country/city label switches are also saved only on this device. Map country/city label switches are also saved only on this device. None of it reaches us while you are signed out. We do not sell personal data or use it for advertising.</p>
+    <p>Anonymous use keeps favorites, recently played stations, the last station you played, stations marked unreachable after a failed connection, preferences and songs on this device, including account-namespaced local backup copies. Map label preferences are also local. Song history is optional and records a named artist/title after 15 seconds of advancing playback; it does not record audio. Signing in does not automatically add guest songs to your account: use Add local songs explicitly. We do not sell personal data or use it for advertising.</p>
+    <p>Account provides Recently heard and Liked songs, an option to stop recording song history, Clear recent (which preserves likes), individual removal, and song export/import. Recovery copies use generation and privacy checks so removed records cannot be restored from older backups. Local browser song storage is not encrypted; use separate OS accounts on shared devices. Clearing website data or uninstalling can remove unsynced data, so export it first.</p>
 
     <h2>Playback and metadata</h2>
     <p>Audio streams are requested from the station or its CDN, not from Protonmatter. Optional now-playing and fingerprint helpers may send a short stream sample or public metadata to identification services so the player can show the current track. Those requests are not tied to your sign-in email.</p>
+    <p>Music-service links open a matched track or a clearly labeled artist/title search on Spotify, Apple Music, Tidal or YouTube Music. The service receives the link or search and normal connection information when you open it. Available artwork loads from its catalog CDN. Earth Radio does not connect to or change your music-service library.</p>
 
     <h2>Cookies and similar storage</h2>
     <p>To prevent abuse, the hosted metadata endpoints use short-lived request counters keyed to a hashed network address. The counters contain request counts and timing, not the address itself, station names, or your sign-in identity. Counter rows expire after two minutes of inactivity. Cloudflare also processes connection information to provide hosting and network protection.</p>

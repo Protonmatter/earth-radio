@@ -1,8 +1,8 @@
-# Install Earth Radio v0.28.0
+# Install Earth Radio v0.29.0
 
 Production web app: **https://earth-radio.pages.dev/**
 
-Desktop downloads: **https://github.com/Protonmatter/earth-radio/releases/tag/v0.28.0**
+Desktop downloads: **https://github.com/Protonmatter/earth-radio/releases/tag/v0.29.0**
 
 Download only the file for your computer, plus `SHA256SUMS.txt`. The release also
 includes `BUILD-PROVENANCE.json`, platform verification receipts and this guide as
@@ -39,7 +39,8 @@ vary by OS version and Safari layout.
 - Close the production web app, reload the production site in Safari while online,
   then reopen the Home Screen app. An already open page can keep its previous runtime.
 - Before deleting a web app or clearing website data, export local favorites and
-  preferences with Earth Radio's Export action. Local data can be lost by removal or
+  preferences with Earth Radio's Export action, and songs with Account → Export songs.
+  Local data can be lost by removal or
   storage clearing; do not clear all Safari data as a first troubleshooting step.
 
 ### Audio, map and sign-in
@@ -78,8 +79,8 @@ reports incomplete removal, sync/linking stay paused: resolve storage access and
 
 ## Windows ARM64
 
-Use `EarthRadio-Setup-0.28.0-arm64.exe` for the installer or
-`EarthRadio-Portable-0.28.0-arm64.exe` for the portable app. These are for ARM64
+Use `EarthRadio-Setup-0.29.0-arm64.exe` for the installer or
+`EarthRadio-Portable-0.29.0-arm64.exe` for the portable app. These are for ARM64
 Windows; no Windows x64 package is included in this release.
 
 Download from the release page, verify its hash against `SHA256SUMS.txt`, then run
@@ -92,8 +93,8 @@ upgrade across every existing profile remains unqualified. Keep your export for 
 For a separate portable profile, run from the download folder in PowerShell:
 
 ```powershell
-$radioProfile = Join-Path $env:LOCALAPPDATA 'EarthRadio-Portable-0.28.0'
-& .\EarthRadio-Portable-0.28.0-arm64.exe "--user-data-dir=$radioProfile"
+$radioProfile = Join-Path $env:LOCALAPPDATA 'EarthRadio-Portable-0.29.0'
+& .\EarthRadio-Portable-0.29.0-arm64.exe "--user-data-dir=$radioProfile"
 ```
 
 These builds have local self-signed Authenticode signatures and DigiCert timestamps.
@@ -106,8 +107,8 @@ Choose the DMG matching **Apple menu → About This Mac**:
 
 | Mac | Release file |
 | --- | --- |
-| Apple Silicon (M-series chip) | `EarthRadio-0.28.0-macOS-arm64-unnotarized.dmg` |
-| Intel processor | `EarthRadio-0.28.0-macOS-x64-unnotarized.dmg` |
+| Apple Silicon (M-series chip) | `EarthRadio-0.29.0-macOS-arm64-unnotarized.dmg` |
+| Intel processor | `EarthRadio-0.29.0-macOS-x64-unnotarized.dmg` |
 
 1. Download and verify the appropriate DMG from the release page.
 2. Open the disk image and drag **Earth Radio** into **Applications**.
@@ -134,13 +135,13 @@ you do not need to download every platform's installer.
 Windows PowerShell:
 
 ```powershell
-Get-FileHash -LiteralPath .\EarthRadio-Setup-0.28.0-arm64.exe -Algorithm SHA256
+Get-FileHash -LiteralPath .\EarthRadio-Setup-0.29.0-arm64.exe -Algorithm SHA256
 ```
 
 macOS Terminal (replace the filename for Intel):
 
 ```sh
-shasum -a 256 EarthRadio-0.28.0-macOS-arm64-unnotarized.dmg
+shasum -a 256 EarthRadio-0.29.0-macOS-arm64-unnotarized.dmg
 ```
 
 The checksums prove file equality with this release's published values. They do not

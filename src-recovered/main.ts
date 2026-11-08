@@ -376,10 +376,10 @@ async function onStationClick(station: Station): Promise<void> {
     setLastPlayed(station);
     updatePlayerBar(station);
     highlightCard(station.stationuuid);
+    dispatchStationSelected(station);
     presentNowPlaying(station);
     setStatus(t('status.playing', { name: station.name }));
     syncRoute(getActiveFilters());
-    dispatchStationSelected(station);
   }
 }
 
@@ -635,6 +635,12 @@ function applyCountry(country: string): void {
 
 function setupPlayerEvents(): void {
   btnPlay?.addEventListener('click', async () => {
+    if (!getCurrentStation()) {
+      const last = getLastPlayed();
+      const selected = allStations.find(station => station.stationuuid === activeStationUuid)
+        || allStations.find(station => station.stationuuid === last?.stationuuid) || last;
+      if (selected) { await onStationClick(selected); updatePlayBtnState(); return; }
+    }
     const ok = await togglePlay();
     if (!ok && currentStations.length) await onStationClick(currentStations[0]);
     updatePlayBtnState();
@@ -685,8 +691,8 @@ async function afterNeighbor(station: Station): Promise<void> {
   setLastPlayed(station);
   updatePlayerBar(station);
   highlightCard(station.stationuuid);
-  presentNowPlaying(station);
   dispatchStationSelected(station);
+  presentNowPlaying(station);
 }
 
 function setupSleepTimer(): void {
