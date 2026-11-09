@@ -1,5 +1,5 @@
 import test from 'node:test';import assert from 'node:assert/strict';
-import {publishedStationRows} from '../server/desktop-proxy.mjs';
+import {publishedStationRows,mergeStationRecords} from '../server/desktop-proxy.mjs';
 import {serializeVariantGroups} from '../site/assets/station-variants.js';
 const station=(id,name,clickcount,countrycode='FR')=>({stationuuid:id,name,clickcount,countrycode,url:'https://radio.example/'+id,lastcheckok:1});
 const popular=station('popular','ZZZ Popular',10000),low=Array.from({length:25},(_,index)=>station('low-'+index,'AAA Station '+index,1));
@@ -9,6 +9,16 @@ test('native root and country record limits retain popular late-alphabet station
   const result=await publishedStationRows(async(_path,_representation,options)=>{deadlines.push(options.deadlineAt);return response([...low,popular]);},{limit:1,countryCodes:['FR'],countryLimit:25});
   assert.equal(result.stations[0].stationuuid,'popular');assert.equal(result.stations[1].stationuuid,'popular');assert.equal(result.stations.length,26);
   assert.equal(result.directorySnapshot.producerSourceSha,'a'.repeat(40));assert.equal(new Set(deadlines).size,1);
+  // Root and country publications overlap. Source claims are optional in the
+  // compact wire format; merging them must not throw and trigger live fallback.
+  const merged=mergeStationRecords(result.stations);assert.equal(merged.length,25);assert.equal(merged[0].stationuuid,'popular');
+});
+test('duplicate identities tolerate missing or malformed optional source claims',()=>{
+  for(const sourceClaims of [undefined,null,'bad',[null,'bad',{}]]){
+    const merged=mergeStationRecords([popular,{...popular,sourceClaims}]);assert.equal(merged.length,1);assert.deepEqual(merged[0].sourceClaims,[]);
+  }
+  const claim={source:'radio-browser',confidence:.85};
+  assert.deepEqual(mergeStationRecords([{...popular,sourceClaims:[claim]},popular])[0].sourceClaims,[claim]);
 });
 test('native partial country outage preserves root and discloses missing coverage',async()=>{
   const result=await publishedStationRows(async path=>{if(path.includes('/country/'))throw Error('country unavailable');return response([popular]);},{limit:1,countryCodes:['FR','JP'],countryLimit:25});

@@ -50,8 +50,8 @@
     },
     {
       "path": "docs/BUILD_STATE.md",
-      "bytes": 28247,
-      "sha256": "42ca373e9602b2d77a20d658325fa11d6b56c081bff7ac12cdd52b104f92ed5c"
+      "bytes": 28642,
+      "sha256": "1fb9800d09f8df730fd174a17a7cb77bb2d8e558a4585e2410c8a2521e7265ce"
     },
     {
       "path": "docs/CLOUDFLARE_DEPLOYMENT.md",
@@ -121,7 +121,7 @@
     {
       "path": "docs/provenance/hardening-overlays.json",
       "bytes": 14325,
-      "sha256": "2ed977f488f8474d8ea8416279b67c26caa46d955c223d19679532f63025b19b"
+      "sha256": "3f0cc243324bea92b6eab642da97c0c00677a3297dc6ff1fc125d421f2e628eb"
     },
     {
       "path": "docs/provenance/map-data.json",
@@ -535,8 +535,8 @@
     },
     {
       "path": "server/desktop-proxy.mjs",
-      "bytes": 24961,
-      "sha256": "84e98cbd12857a63aba625ea788a1c39354f4f787ee4cf97079dfe1fc0d76bd1"
+      "bytes": 25108,
+      "sha256": "ec52001706c30be053621a866b4780d3f843b0bca0f3cbf0d5785494667cd0c3"
     },
     {
       "path": "server/directory-normalize.mjs",
@@ -1495,8 +1495,8 @@
     },
     {
       "path": "tests/native-directory.test.mjs",
-      "bytes": 1913,
-      "sha256": "607b8005b1f6f02286d73d7e698ae20f82cfd2079438934c419a25220b49a961"
+      "bytes": 2700,
+      "sha256": "d41706dade7270d78624119e60b841038944cb28e59fd9ee7a8b0be278adc470"
     },
     {
       "path": "tests/net-guard.test.mjs",
