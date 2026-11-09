@@ -1,7 +1,7 @@
 // A view over stream identities. No UUID, favorite record or account document is
 // rewritten by grouping. The same pure model is used by the scheduled producer.
-import {fold} from './search-core.js?v=0.31.0';
-import {streamIdentity} from './discovery-core.js?v=0.31.0';
+import {fold} from './search-core.js?v=0.32.0';
+import {streamIdentity} from './discovery-core.js?v=0.32.0';
 
 const compare=(a,b)=>a<b?-1:a>b?1:0;
 const id=value=>typeof value==='string'&&value.trim()&&value.length<=160&&!['__proto__','prototype','constructor'].includes(value)?value.trim():'';
@@ -53,7 +53,9 @@ export function groupStationVariants(stations){
         return{url,ids,station:{...best,stationuuid:ids[0]}};
       }).sort((a,b)=>order(a.station,b.station)||compare(a.url,b.url));
       const names=[...new Set(members.map(row=>technicalAliases.get(row.stationuuid)?.name||displayName(row.name)))].sort((a,b)=>readable(b)-readable(a)||compare(a,b));
-      groups.push({key:`${family}|${region}`,name:names[0],station:{...variants[0].station,name:names[0]},variants,memberIds:members.map(row=>row.stationuuid).sort(compare)});
+      const tags=[...new Set(members.flatMap(row=>Array.isArray(row.tagList)?row.tagList:String(row.tags||'').split(',')).map(value=>String(value).trim()).filter(Boolean))].sort(compare).slice(0,24);
+      const language=[...new Set(members.flatMap(row=>String(row.language||'').split(',')).map(value=>value.trim()).filter(Boolean))].sort(compare).slice(0,12).join(',');
+      groups.push({key:`${family}|${region}`,name:names[0],station:{...variants[0].station,name:names[0],tags:tags.join(','),tagList:tags,language},variants,memberIds:members.map(row=>row.stationuuid).sort(compare)});
     }
   }
   return groups.sort((a,b)=>compare(a.key,b.key));

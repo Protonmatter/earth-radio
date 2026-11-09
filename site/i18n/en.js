@@ -1,5 +1,16 @@
 // English catalog. Canonical key set for Earth Radio chrome and known runtime labels.
 export default {
+  "discovery.streamQuality": "Stream quality for {name}",
+  "discovery.chooseStream": "Choose a stream, then press Play",
+  "discovery.httpStream": "HTTP stream",
+  "discovery.httpHint": "May be blocked in the web app. Try an HTTPS stream or the desktop app.",
+  "discovery.favoriteStation": "Favorite station: {name}",
+  "discovery.unfavoriteStation": "Unfavorite station: {name}",
+  "discovery.tryingStream": "Trying another stream for {name}",
+  "discovery.details": "Details",
+  "discovery.countryInferred": "Country inferred from matching directory records",
+  "discovery.snapshotStatus": "{count} stations · Snapshot {updated}",
+  "discovery.savedCopy": "Saved copy",
   "map.approximateCluster": "Includes {count} country-level locations",
   "discovery.corrected": "Showing results for {query}",
   "map.approximateCountry": "Approximate country location",

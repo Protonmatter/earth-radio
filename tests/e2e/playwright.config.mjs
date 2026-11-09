@@ -46,6 +46,6 @@ export default defineConfig({
     command: 'node scripts/stage-website.mjs && node tests/e2e/serve-site.mjs',
     cwd: '../..',
     port: PORT,
-    reuseExistingServer: !process.env.CI
+    reuseExistingServer: !process.env.CI && process.env.E2E_REUSE_SERVER !== '0'
   }
 });

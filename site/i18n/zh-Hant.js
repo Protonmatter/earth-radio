@@ -1,5 +1,16 @@
 // Engineering-authored Traditional Chinese catalog. Native editorial review has not occurred.
 export default {
+  "discovery.streamQuality": "{name} 的串流音質",
+  "discovery.chooseStream": "選擇串流，然後按播放",
+  "discovery.httpStream": "HTTP 串流",
+  "discovery.httpHint": "網頁應用程式可能會封鎖此串流。請嘗試 HTTPS 串流或桌面應用程式。",
+  "discovery.favoriteStation": "收藏電台：{name}",
+  "discovery.unfavoriteStation": "取消收藏電台：{name}",
+  "discovery.tryingStream": "正在嘗試 {name} 的其他串流",
+  "discovery.details": "詳細資訊",
+  "discovery.countryInferred": "根據相符的目錄記錄推斷國家",
+  "discovery.snapshotStatus": "{count} 個電台 · 目錄更新於 {updated}",
+  "discovery.savedCopy": "已儲存副本",
   "map.approximateCluster": "包含 {count} 個依國家估算的位置",
   "discovery.corrected": "顯示「{query}」的結果",
   "map.approximateCountry": "依國家估算的位置",

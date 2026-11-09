@@ -1,5 +1,16 @@
 // Engineering-authored Arabic catalog. Native editorial review has not occurred.
 export default {
+  "discovery.streamQuality": "جودة بث {name}",
+  "discovery.chooseStream": "اختر البث، ثم اضغط تشغيل",
+  "discovery.httpStream": "بث HTTP",
+  "discovery.httpHint": "قد يُحظر في تطبيق الويب. جرّب بث HTTPS أو تطبيق سطح المكتب.",
+  "discovery.favoriteStation": "إضافة المحطة للمفضلة: {name}",
+  "discovery.unfavoriteStation": "إزالة المحطة من المفضلة: {name}",
+  "discovery.tryingStream": "تجربة بث آخر لمحطة {name}",
+  "discovery.details": "التفاصيل",
+  "discovery.countryInferred": "استُنتج البلد من سجلات الدليل المتطابقة",
+  "discovery.snapshotStatus": "{count} محطة · لقطة الدليل {updated}",
+  "discovery.savedCopy": "نسخة محفوظة",
   "map.approximateCluster": "يتضمن {count} موقعًا تقريبيًا على مستوى البلد",
   "discovery.corrected": "عرض نتائج {query}",
   "map.approximateCountry": "موقع تقريبي على مستوى البلد",

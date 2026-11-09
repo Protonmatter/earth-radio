@@ -1,5 +1,16 @@
 // Engineering-authored Korean catalog. Native editorial review has not occurred.
 export default {
+  "discovery.streamQuality": "{name} 스트림 음질",
+  "discovery.chooseStream": "스트림을 선택한 다음 재생을 누르세요",
+  "discovery.httpStream": "HTTP 스트림",
+  "discovery.httpHint": "웹 앱에서 차단될 수 있습니다. HTTPS 스트림이나 데스크톱 앱을 사용하세요.",
+  "discovery.favoriteStation": "방송국 즐겨찾기: {name}",
+  "discovery.unfavoriteStation": "방송국 즐겨찾기 해제: {name}",
+  "discovery.tryingStream": "{name}의 다른 스트림을 시도하는 중",
+  "discovery.details": "자세히",
+  "discovery.countryInferred": "일치하는 디렉터리 정보로 추정한 국가",
+  "discovery.snapshotStatus": "방송국 {count}개 · 목록 업데이트 {updated}",
+  "discovery.savedCopy": "저장된 사본",
   "map.approximateCluster": "국가 기준 위치 {count}개 포함",
   "discovery.corrected": "{query} 검색 결과를 표시합니다",
   "map.approximateCountry": "국가 기준 대략적 위치",

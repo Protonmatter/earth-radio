@@ -1,15 +1,18 @@
-import { buildFacetOptions, pickStation, rankStations, sanitizePreferences } from './discovery-core.js?v=0.31.0';
-import { createMapDirectory, mergeMappedStations } from './map-directory.js?v=0.31.0';
-import { installSearchControls } from './search-controls.js?v=0.31.0';
-import { getLocale, t } from '../i18n/index.js?v=0.31.0';
-import {stationLocation,stationMapPoint} from './station-location.js?v=0.31.0';
-import {displayCountry} from './search-core.js?v=0.31.0';
+import { buildFacetOptions, pickStation, rankStations, sanitizePreferences } from './discovery-core.js?v=0.32.0';
+import { createMapDirectory, mergeMappedStations } from './map-directory.js?v=0.32.0';
+import { installSearchControls } from './search-controls.js?v=0.32.0';
+import { getLocale, t } from '../i18n/index.js?v=0.32.0';
+import {stationLocation,stationMapPoint} from './station-location.js?v=0.32.0';
+import {displayCountry} from './search-core.js?v=0.32.0';
+import {groupStationVariants,projectVariantResults,expandFavoriteIds,chooseGroupStation} from './station-variants.js?v=0.32.0';
+import {atlasViewAction} from './map-viewport.js?v=0.32.0';
 
 // A hidden-to-visible resize can leave Leaflet's animated bounds correction
 // running. Its moveend handler can start another correction while stop() fires.
 // Suspend that handler through the public bounds API for this synchronous action,
 // then restore the same bounds against the final view. No drag limits are lost.
 export function settledMapAction(map, action) {
+  return atlasViewAction(map,()=>{
   const bounds = map.options.maxBounds;
   map.setMaxBounds(null);
   try {
@@ -17,17 +20,27 @@ export function settledMapAction(map, action) {
     map.invalidateSize({ pan: false });
     return action();
   } finally { map.setMaxBounds(bounds); }
+  });
 }
 
 // Adapter contract is documented in docs/DISCOVERY.md. This module owns only
 // discovery state, never playback, persisted account records, or runtime routes.
 export function installDiscovery(adapter) {
   const root = document.getElementById('er-discovery');
-  if (!root) return { ownsSearch: false, augment: stations => stations, transform: stations => stations, options: () => ({}), observe() {}, clear() {}, explainButton: () => document.createTextNode('') };
+  if (!root) return { ownsSearch: false, augment: stations => stations, transform: stations => stations, options: () => ({}), observe() {}, clear() {}, explainButton: () => document.createTextNode(''), variantControl:()=>document.createTextNode(''),favoriteIds:(_all,ids)=>ids,isFavorite:(station,ids)=>ids.has(station.stationuuid),favoriteTargets:station=>[station],begin(){},selectedStation:()=>null,recover:()=>false };
   root.dataset.searchAuthority = 'discovery';
   let prefs = sanitizePreferences(null), bounds = null, entries = new Map(), facetSource = null;
   let timer = 0, composing = false, refreshQueued = false;
   const health = new Map();
+  let groupSource=null,groups=[],byId=new Map();
+  const selections=new Map(),attempts=new Set();
+  function catalog(all){
+    if(all===groupSource)return;
+    groupSource=all;groups=groupStationVariants(all);byId=new Map();
+    for(const group of groups)for(const uuid of group.memberIds)byId.set(uuid,group);
+    for(const key of selections.keys())if(!groups.some(group=>group.key===key))selections.delete(key);
+  }
+  const favorites=()=>adapter.favorites?.()||new Set();
   const query = root.querySelector('[name="query"]');
   const advanced = root.querySelector('details');
   const compact = matchMedia('(max-width: 767px), (max-height: 600px)');
@@ -133,8 +146,8 @@ export function installDiscovery(adapter) {
     });
   });
   focus.addEventListener('click', () => {
-    const position = stationLocation(adapter.current());
-    if (position) adapter.map()?.setView(position.point, position.approximate?3:5, { animate: !matchMedia('(prefers-reduced-motion: reduce)').matches });
+    const position = stationLocation(adapter.current()),map=adapter.map();
+    if (position&&map) settledMapAction(map,()=>map.setView(position.point, position.approximate?3:5, { animate:false }));
   });
   document.getElementById('er-discovery-pick').addEventListener('click', () => {
     const pick = pickStation(adapter.visible(), { ...context(), current: adapter.current(), secureOnly: location.protocol === 'https:' || prefs.secureOnly });
@@ -148,7 +161,9 @@ export function installDiscovery(adapter) {
     detailTitle.textContent = entry.station.name;
     detailMeta.textContent = [displayCountry(entry.station,getLocale()), entry.station.language, entry.station.codec,
       entry.station.bitrate ? `${entry.station.bitrate} kbps` : 'Bitrate unknown'].filter(Boolean).join(' · ');
-    detailReasons.replaceChildren(...entry.reasons.map(reason => { const li = document.createElement('li'); li.textContent = reason; return li; }));
+    const reasons=[...entry.reasons];
+    if(entry.station.countryProvenance&&!['directory-code','unknown'].includes(entry.station.countryProvenance))reasons.push(t('discovery.countryInferred'));
+    detailReasons.replaceChildren(...reasons.map(reason => { const li = document.createElement('li'); li.textContent = reason; return li; }));
     dialog.showModal();
   }
   dialog.querySelector('[data-detail-close]').addEventListener('click', () => dialog.close());
@@ -193,12 +208,15 @@ export function installDiscovery(adapter) {
     },
     transform(stations, { all, view }) {
       updateFacets(all);
-      const result = rankStations(stations, { ...context(), current: adapter.current() });
+      catalog(all);
+      let result = rankStations(stations, { ...context(), current: adapter.current() });
       // Recent is a chronology; default discovery must not silently reorder it.
       if ((view === 'recent' || view === 'similar') && prefs.sort === 'best' && !prefs.query) {
         const order = new Map(stations.map((station, index) => [station.stationuuid, index]));
         result.sort((a, b) => order.get(a.station.stationuuid) - order.get(b.station.stationuuid));
       }
+      result=projectVariantResults(result,groups,{selections,selectedId:adapter.selected?.(),currentId:adapter.current()?.stationuuid,favoriteIds:favorites(),securePreferred:true});
+      for(const entry of result)if(selections.has(entry.groupKey)&&!entry.variants.some(variant=>variant.ids.includes(selections.get(entry.groupKey))))selections.delete(entry.groupKey);
       entries = new Map(result.map(entry => [entry.station.stationuuid, entry]));
       const mode = prefs.sort === 'best' ? 'Best match' : prefs.sort === 'explore' ? 'Explore' : prefs.sort === 'reliable' ? 'Reliability' : prefs.sort === 'bitrate' ? 'Highest bitrate' : prefs.sort === 'similar' ? 'Similar genres' : 'A–Z';
       status.textContent = `${result.length.toLocaleString()} matches · ${mode}${bounds ? ' · Map area' : ''}${result[0]?.correction?' · '+t('discovery.corrected',{query:result[0].correction}):''}`;
@@ -218,9 +236,54 @@ export function installDiscovery(adapter) {
       const button = document.createElement('button');
       button.type = 'button'; button.className = 'er-discovery-why';
       button.dataset.discoveryWhy = station.stationuuid;
-      button.textContent = 'Details ↗'; button.setAttribute('aria-label', `Why this station: ${station.name}`);
+      button.textContent = t('discovery.details'); button.setAttribute('aria-label', `Why this station: ${station.name}`);
       button.addEventListener('click', event => { event.stopPropagation(); showDetails(station.stationuuid); });
       return button;
+    },
+    favoriteIds(all,ids){catalog(all);return expandFavoriteIds(groups,ids);},
+    isFavorite(station,ids){return(byId.get(station.stationuuid)?.memberIds||[station.stationuuid]).some(uuid=>ids.has(uuid));},
+    favoriteTargets(station,ids){
+      const members=byId.get(station.stationuuid)?.memberIds||[station.stationuuid],saved=members.filter(uuid=>ids.has(uuid));
+      return saved.length?saved.map(stationuuid=>({...station,stationuuid})):[station];
+    },
+    variantControl(station){
+      const entry=entries.get(station.stationuuid),wrapper=document.createElement('span');wrapper.className='er-stream-control';
+      const variants=entry?.variants||[];
+      if(variants.length>1){
+        const select=document.createElement('select');select.dataset.streamGroup=entry.groupKey;
+        select.setAttribute('aria-label',t('discovery.streamQuality',{name:station.name}));select.title=t('discovery.chooseStream');
+        variants.forEach((variant,index)=>{
+          const row=variant.station,option=new Option([row.codec||'Stream',row.bitrate?`${row.bitrate} kbps`:'',variant.url.startsWith('http:')?'HTTP':'',`· ${index+1}`].filter(Boolean).join(' '),variant.ids.includes(station.stationuuid)?station.stationuuid:variant.ids[0]);
+          select.append(option);
+        });
+        select.value=station.stationuuid;
+        for(const type of ['click','pointerdown','keydown'])select.addEventListener(type,event=>event.stopPropagation());
+        select.addEventListener('change',()=>{
+          selections.set(entry.groupKey,select.value);refresh();
+          queueMicrotask(()=>document.querySelector(`[data-stream-group="${CSS.escape(entry.groupKey)}"]`)?.focus({preventScroll:true}));
+        });
+        wrapper.append(select);
+      }
+      if(/^http:/i.test(station.url_resolved||station.url||'')){
+        const badge=document.createElement('span');badge.className='er-http-badge';badge.textContent=t('discovery.httpStream');
+        badge.title=t('discovery.httpHint');wrapper.append(badge);
+      }
+      return wrapper;
+    },
+    selectedStation(station){
+      const group=byId.get(station?.stationuuid),selectedId=group&&selections.get(group.key);
+      if(!selectedId||!group.variants.some(variant=>variant.ids.includes(selectedId)))return null;
+      const selected=chooseGroupStation(group,{selectedId});
+      return selected&&(selected.url_resolved||selected.url)!==(station.url_resolved||station.url)?selected:null;
+    },
+    begin(station,{recovery=false}={}){if(!recovery)attempts.clear();if(station)attempts.add(station.url_resolved||station.url);},
+    recover(station){
+      const group=byId.get(station?.stationuuid);if(!group||attempts.size>=3)return false;
+      attempts.add(station.url_resolved||station.url);
+      const variants=group.variants.filter(variant=>!attempts.has(variant.url)&&(location.protocol!=='https:'||variant.url.startsWith('https:')));
+      const next=chooseGroupStation({...group,variants});if(!next)return false;
+      attempts.add(next.url_resolved||next.url);selections.set(group.key,next.stationuuid);
+      adapter.notify?.(t('discovery.tryingStream',{name:group.name}));queueMicrotask(()=>adapter.play(next,{recovery:true}));return true;
     },
     options: context,
     clear,

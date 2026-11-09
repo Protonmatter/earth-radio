@@ -1,5 +1,16 @@
 // Engineering-authored Simplified Chinese catalog. Native editorial review has not occurred.
 export default {
+  "discovery.streamQuality": "{name} 的流音质",
+  "discovery.chooseStream": "选择音频流，然后按播放",
+  "discovery.httpStream": "HTTP 音频流",
+  "discovery.httpHint": "网页应用可能会阻止此音频流。请尝试 HTTPS 音频流或桌面应用。",
+  "discovery.favoriteStation": "收藏电台：{name}",
+  "discovery.unfavoriteStation": "取消收藏电台：{name}",
+  "discovery.tryingStream": "正在尝试 {name} 的其他音频流",
+  "discovery.details": "详情",
+  "discovery.countryInferred": "根据匹配的目录记录推断国家",
+  "discovery.snapshotStatus": "{count} 个电台 · 目录更新于 {updated}",
+  "discovery.savedCopy": "已保存副本",
   "map.approximateCluster": "包含 {count} 个按国家估算的位置",
   "discovery.corrected": "显示“{query}”的结果",
   "map.approximateCountry": "按国家估算的位置",

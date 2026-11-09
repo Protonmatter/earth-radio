@@ -13,3 +13,9 @@ test('plausibility rejects Null Island, Antarctica and distant ocean points for 
   const france=stationLocation({countrycode:'FR'});assert.ok(france.point[0]>40&&france.point[0]<52,'an overseas territory must not replace the main country reference point');
   assert.deepEqual(stationLocation({geo_lat:0,geo_long:12}),{point:[0,12],approximate:false});
 });
+
+test('country fallback never creates a point outside the supported atlas latitude range',()=>{
+  for(const station of [{countrycode:'AQ'},{countrycode:'AQ',geo_lat:-77,geo_long:35},{geo_lat:-80,geo_long:10}]){
+    const before=structuredClone(station);assert.equal(stationLocation(station),null);assert.deepEqual(station,before);
+  }
+});

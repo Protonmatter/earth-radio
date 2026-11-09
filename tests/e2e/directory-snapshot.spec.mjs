@@ -1,5 +1,51 @@
 import {test,expect} from '@playwright/test';
 import {FIXTURE_STATIONS} from './fixtures/stations.mjs';
+import {serializeVariantGroups} from '../../site/assets/station-variants.js';
+
+test('grouped wire results expose one keyboard-accessible quality picker without autoplay',async({page})=>{
+  await page.setViewportSize({width:390,height:844});
+  const rows=[128,320].map(bitrate=>({...FIXTURE_STATIONS[0],name:'Grouped News',stationuuid:'grouped-'+bitrate,bitrate,url:'https://streams.e2e.example/'+bitrate,url_resolved:'https://streams.e2e.example/'+bitrate}));
+  await page.route('**/*',route=>{const url=new URL(route.request().url());if(url.pathname==='/directory/snapshot')return route.fulfill({json:{schemaVersion:2,groups:serializeVariantGroups(rows)}});return url.hostname==='127.0.0.1'?route.continue():route.abort();});
+  await page.goto('/');await page.getByRole('searchbox',{name:'Find a station'}).fill('Grouped News');
+  await expect(page.locator('.station-card__name')).toHaveText(['Grouped News']);
+  const picker=page.getByRole('combobox',{name:'Stream quality for Grouped News'});await picker.selectOption('grouped-128');await expect(picker).toBeFocused();
+  await expect(page.locator('#audio-player')).toHaveJSProperty('paused',true);
+  await expect(page.getByRole('button',{name:'Favorite station: Grouped News',exact:true})).toHaveAttribute('aria-pressed','false');
+  expect(await page.locator('.station-card__favorite svg').evaluate(element=>getComputedStyle(element).fill)).toBe('none');
+});
+
+for(const width of [390,1440])test(`catalog status does not become a control-covering toast at ${width}px`,async({page})=>{
+  await page.setViewportSize({width,height:844});
+  await page.addInitScript(()=>{
+    window.__e2eCatalogToasts=[];
+    new MutationObserver(records=>{for(const record of records)for(const node of record.addedNodes){
+      if(node.nodeType===1&&node.closest?.('#toast-container'))window.__e2eCatalogToasts.push(node.textContent);
+    }}).observe(document,{childList:true,subtree:true});
+  });
+  await page.route('**/*',route=>{const url=new URL(route.request().url());if(url.pathname==='/directory/snapshot')return route.fulfill({json:FIXTURE_STATIONS});return url.hostname==='127.0.0.1'?route.continue():route.abort();});
+  await page.goto('/');await expect(page.locator('.station-card').first()).toBeVisible();
+  expect(await page.evaluate(()=>window.__e2eCatalogToasts)).not.toEqual(expect.arrayContaining([expect.stringMatching(/stations loaded/i)]));
+  await page.locator('.station-card__favorite').first().click();await expect(page.locator('#toast-container .toast--visible')).toHaveCount(1);
+  const geometry=await page.evaluate(()=>{
+    const toast=document.querySelector('#toast-container').getBoundingClientRect(),player=document.querySelector('#player-bar').getBoundingClientRect();
+    const button=document.querySelector('.station-card__play'),box=button.getBoundingClientRect();
+    return{toastBottom:toast.bottom,playerTop:player.top,hit:document.elementFromPoint(box.x+box.width/2,box.y+box.height/2)?.closest('button')===button};
+  });
+  expect(geometry.toastBottom).toBeLessThanOrEqual(geometry.playerTop);expect(geometry.hit).toBe(true);
+});
+
+for(const width of [390,1440])test(`atlas latitude bounds exclude Antarctic fallback and remain cropped after resize at ${width}px`,async({page})=>{
+  await page.setViewportSize({width,height:844});
+  await page.addInitScript(()=>{window.__e2eAtlasViews=[];document.addEventListener('earthradio:map-viewport',event=>window.__e2eAtlasViews.push(event.detail));});
+  const rows=[FIXTURE_STATIONS[0],...Array.from({length:8},(_,i)=>({...FIXTURE_STATIONS[0],stationuuid:'aq-'+i,name:'AQ station '+i,country:'Antarctica',countrycode:'AQ',geo_lat:null,geo_long:null}))];
+  await page.route('**/*',route=>{const url=new URL(route.request().url());if(url.pathname==='/directory/snapshot')return route.fulfill({json:rows});return url.hostname==='127.0.0.1'?route.continue():route.abort();});
+  await page.goto('/');await expect(page.locator('.station-card').first()).toBeVisible();
+  if(width<768)await page.getByRole('button',{name:'Map',exact:true}).click();
+  const valid=()=>page.evaluate(()=>{const view=window.__e2eAtlasViews.at(-1);return Boolean(view&&view.south>=-60.00001&&view.north<=85.00001);});
+  await expect.poll(valid).toBe(true);await expect(page.locator('#er-map-count')).toContainText('8 unlocated');
+  const before=await page.evaluate(()=>window.__e2eAtlasViews.length);await page.setViewportSize({width,height:1100});
+  await expect.poll(()=>page.evaluate(()=>window.__e2eAtlasViews.length)).toBeGreaterThan(before);await expect.poll(valid).toBe(true);
+});
 
 for(const width of [390,1440])test(`cold boot uses one same-origin snapshot and no mirror fan-out at ${width}px`,async({page})=>{
   await page.setViewportSize({width,height:900});const calls=[];

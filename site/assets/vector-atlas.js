@@ -1,6 +1,7 @@
-import { WORLD_LAND } from './world-land.js?v=0.31.0';
-import { MAP_LABEL_STORAGE, sanitizeMapLabels, layoutMapLabels, intersectsBounds, resolveMapTheme } from './map-core.js?v=0.31.0';
-import { t, normalizeLocale } from '../i18n/index.js?v=0.31.0';
+import { WORLD_LAND } from './world-land.js?v=0.32.0';
+import { MAP_LABEL_STORAGE, sanitizeMapLabels, layoutMapLabels, intersectsBounds, resolveMapTheme } from './map-core.js?v=0.32.0';
+import { t, normalizeLocale } from '../i18n/index.js?v=0.32.0';
+import {installMapViewport} from './map-viewport.js?v=0.32.0';
 
 // All geography ships with the app. No tile, geocoder or location service is
 // used. The runtime retains ownership of the Leaflet map and radio markers.
@@ -108,6 +109,7 @@ function viewBoxes(map) {
 }
 
 export function createVectorBasemap(L, map, theme = 'dark') {
+  installMapViewport(map);
   installTooltipBounds(map);
   const group = L.layerGroup(), palettes = {
     dark: { water: '#193c39', land: '#34594c', border: '#779785', river: '#699b99', road: '#af956a', region: '#6a8a7c' },

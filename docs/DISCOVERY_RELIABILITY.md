@@ -7,67 +7,79 @@ It retains the existing playback, station UUID, favorites, account and sync cont
 
 ## Directory boundary and refresh
 
-Production web configuration selects `/directory/snapshot`. The Pages Function
-serves a shared, same-origin Radio Browser snapshot with an ETag. Cold browser boot
-uses one snapshot request; previously selected additional countries may add bounded
-country requests. The snapshot contains at most 10,000 upstream records; it is a
-sample, not an exhaustive global index. The live November 8 probe measured about
-11.9 MB raw. HTTP compression reduces transfer size; that is not the decoded size.
-Normalization and UUID deduplication remain in the client. The response is streamed
-at the edge to avoid a multi-MB JSON parse/stringify under the Free-plan CPU budget.
-It is not a precomputed search index or a geocoded authoritative database.
+Version 0.32 serves scheduled, normalized public metadata through the existing
+same-origin Pages Function. The hourly producer and atomic GitHub Pages artifact,
+limits, integrity checks, permissions and rollback are documented in
+[DIRECTORY_PUBLICATION.md](DIRECTORY_PUBLICATION.md). The browser still makes one
+root snapshot request on a cold boot; selected additional countries add bounded
+requests. The global sample contains at most 10,000 original UUIDs, grouped into
+logical stations. It is not an exhaustive global index or authoritative transmitter
+database. The November 9 initial publication was about 6.17 MB decoded / 1.18 MB
+gzip for the grouped view. Transfer, decoded and service-worker-cache bytes are
+different measurements.
 
-`functions/directory/[[path]].js` exposes only these finite paths:
+The finite paths remain /directory/snapshot, /directory/countries,
+/directory/servers and /directory/country/XX (uppercase ISO, at most 1,000 IDs).
+Query strings, arbitrary targets and write methods are rejected. The new client
+explicitly requests application/vnd.earthradio.catalog.v2+json; old application/json
+root clients and default-Accept country clients retain flat arrays. Cache keys and
+strong content ETags distinguish those representations. A manifest carries source
+SHA, generation time and exact payload hashes; request clocks never define content
+identity. A cached manifest pointing at a removed old blob triggers one forced
+manifest refresh under the original deadline.
 
-- `/directory/snapshot`: global top-click sample, limit 10,000.
-- `/directory/countries`: country index.
-- `/directory/servers`: mirror names.
-- `/directory/country/XX`: a two-letter uppercase country, limit 1,000.
+The edge only fetches a fixed HTTPS project-site origin and validated hash paths,
+refuses redirects, verifies decoded byte counts and SHA-256, and never parses the
+multi-MB catalog JSON. The 16 MiB response cap, 128 KiB manifest cap and 15-second
+absolute network deadline apply. Cached last-good responses live at most seven
+days without replacement. After five minutes, background refresh checks publication;
+failure retains the old response and starts a one-minute retry cooldown. Cold misses
+coalesce, with at most four distinct refreshing keys per isolate. Cache operations
+are independently bounded and best effort. Generation age over two hours is marked
+stale. Cache eviction remains possible; the static publication is the source,
+independent of current Radio Browser availability. The reader makes no provider call.
 
-Query strings, arbitrary destinations, other paths and write methods are rejected.
-Every destination is HTTPS under a strictly validated Radio Browser API hostname;
-redirects are refused. The existing `global_fetch_strictly_public` flag remains
-mandatory. This is a provider-specific directory reader, not an exposed desktop
-proxy. Metadata quotas, credentials, SMTP and account configuration are unchanged.
-Discovery and snapshot fetches use `redirect: 'manual'` and reject non-success
-responses. Workers does not implement Fetch's `error` redirect mode: that mode
-caused an immediate 503 in the first live preview before any provider request.
-The preview gate caught it before production; explicit compatibility and redirect
-rejection regressions now cover both fetch paths.
+The desktop uses the same verified publication through the existing DNS/IP-pinned
+network guard, keeping its existing record limits and country targeting. Partial
+country failure does not discard a valid root catalog. Validated dynamic mirrors
+and IndexedDB remain last-resort fallback paths. Direct browser fallback is exposed
+to provider CORS/outages and is labeled as live data. No metadata quotas, auth schema,
+provider, SMTP, vault, CSP trust source or user account state is changed.
 
-The Cache API retains snapshots up to seven days. After one hour, a request returns
-the old snapshot while starting a shared background refresh. A failed refresh keeps
-the old value and starts a one-minute retry cooldown. Cold misses coalesce by key;
-at most four distinct keys refresh concurrently per isolate. Responses have a
-five-minute browser cache lifetime and an ETag. Network/body work has a deadline
-and a 16 MiB decoded byte cap. No per-request user identity or activity is stored.
-Cache eviction is possible: this is not durable snapshot storage or a scheduled
-hourly job. Freshness depends on demand; stale state is identified to clients.
-Cache contents are local to each Cloudflare data center; a warm response in one
-region does not establish a warm cache elsewhere. The explicit `_routes.json`
-invokes Functions only for `/api/*` and `/directory/*`, keeping static assets on
-the existing static delivery path. The default client country limit remains 150
-even though a targeted country endpoint can return up to 1,000 records.
-Cache reads/writes are best effort and bounded. Writes get the full remaining
-body-transfer deadline plus a cache margin, so a healthy slow snapshot can warm
-the cache. Failed or stalled cache operations do not hide a valid fresh response.
-On a cold cache, a provider body reset/size failure retries another healthy mirror
-before starting the outage cooldown. At most three body attempts share one absolute
-network deadline; retries do not reset that budget. Desktop guarded JSON requests
-also pass the caller's absolute deadline through DNS, redirect and body phases.
+Normalization cleans metadata before publication, preserves original UUID aliases,
+rejects invalid/credential-bearing/private-literal stream URLs and records HTTP
+transport. Country inference uses nonconflicting directory-name, stream, homepage
+or same-name country-provider evidence; it remains a derivation, not verified
+location. Unknown countries stay unknown. A country-owned provider domain can
+corroborate a sibling only when its ccTLD agrees with the known country. Generic
+shared stream hosting does not establish country. Invalid coordinates are removed;
+approximate country positions exist only in the presentation layer.
 
-Discovery uses `/json/servers`, deduplicates validated hostnames, caches the healthy
-set, and temporarily deprioritizes failed hosts. Three bootstrap names remain
-necessary to discover the provider in the first place. Retired nl1/at1 defaults are
-removed. On November 8 those two names did not resolve; de1, de2 and all resolved
-to one IP, so different names did not establish independent redundancy. Direct
-fallback and desktop directory loading now fail a mirror's global request before
-starting its country fan-out. The existing local IndexedDB stale fallback remains.
+Cards, palette and map project matching streams into one program/country/region
+result after relevance ranking. Separate programs, countries and conflicting cities
+or states remain separate. Stream aliases retain UUID lookup, account favorites and
+old links. Favorites expand only in the view; no cloud document is migrated.
+The accessible quality selector prepares the next explicit Play action during idle,
+playing and paused states. It never starts audio by itself. Failure can try up to
+three distinct sibling streams before the existing bounded station recovery; HTTPS
+pages do not automatically fall back to HTTP. HTTP choices carry a limitation badge.
+Declared codec/bitrate and directory health are not audio-fidelity measurements.
 
-This uses the existing Pages/Workers Free plan and adds no R2/KV binding, new Worker,
-credential, dependency, subscription or paid resource. It shares the existing free
-request/CPU limits; it does not offer unlimited hosting. Durable hourly collection
-would require a separately reviewed storage/scheduler design and cost decision.
+The successful catalog count appears in status with its snapshot timestamp, not a
+blocking toast. Other toasts sit above the player/nav and ignore pointer input.
+The atlas excludes presentation points outside -60..85 latitude, including the AQ
+fallback that produced the Antarctic cluster. Height-aware Mercator limits constrain
+the actual view after resize and map actions. Stations outside the atlas stay in
+the list. Root HTML has no-transform to prevent Cloudflare automatic beacon
+injection while retaining the self-only script CSP; verify both headers and browser
+security logs after deployment.
+
+The publisher never writes source Git history and uses no saved deployment key.
+No R2/KV binding, paid resource or dependency was added. Hosting is subject to the
+existing free service limits, not unlimited use. Static geography remains locally
+served with its existing free/open data notices. Navigation consolidation, CSS
+bundle consolidation, sync polling replacement, live-region consolidation and
+Remote Playback are outside this release's four-priority scope.
 
 ## Search and opening results
 

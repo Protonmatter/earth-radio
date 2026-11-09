@@ -1,5 +1,31 @@
 # Build state
 
+## 0.32.0 normalized directory and grouped streams candidate
+
+The producer prerequisite was merged as PR #33 after all ten exact-head checks.
+Its first GitHub Pages publication (run 42559123011, source 09e553c) completed and
+the public manifest/payload hashes plus live reader 200/304 were verified. It adds
+no paid service, saved key, source-history writes or dependency. The hourly workflow
+is enabled; scheduled execution remains best effort.
+
+The candidate reader verifies published hashes, preserves old array clients and
+serves explicit grouped data with content ETags and generation status. Browse/map/
+search group program streams while retaining UUIDs, saved aliases and deep links.
+The quality picker prepares explicit Play; footer Play and bounded sibling recovery
+use that choice. Native/browser truncation preserves popularity ordering. HTTP
+choices are disclosed; country inference and coordinates remain conservative.
+
+Catalog success no longer creates a covering toast. Atlas fallback/view bounds
+exclude Antarctica while keeping those stations listed. The viewport establishes
+its view before raising minimum zoom, avoiding a Leaflet animation that ignored
+mobile Fit. Root no-transform prevents automatic beacon injection without expanding
+CSP trust. Local verification currently passes 550 tests with three existing skips;
+five tooltip/Fit and four grouped playback/identity cases pass. Final frozen browser,
+rendered/native, hosted, exact-head CI and release qualification still gate delivery.
+See [release gates](RELEASE-0.32.0.md) and [publication runbook](DIRECTORY_PUBLICATION.md).
+Final identities and physical qualification boundaries belong in release provenance
+and Spaces. No account/provider/schema, SMTP, vault or signing-trust change is made.
+
 ## 0.31.0 directory reliability candidate
 
 This candidate adds a finite same-origin cached directory, dynamic mirror health,

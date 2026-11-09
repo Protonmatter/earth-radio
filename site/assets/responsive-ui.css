@@ -779,14 +779,18 @@ html.er-mobile .search-modal.er-search-destination .search-container {
 /* Recovered toasts sit at top-right with z-index 10000, covering Sign in,
  * Now Playing dismiss, and the tablet Map control. Park them under the
  * measured header (or above the mobile player) and below overlay sheets. */
+#toast-container,
 html.er-root #toast-container {
-  top: calc(var(--er-header-depth) + var(--er-safe-top) + 8px);
+  top: auto;
   right: calc(12px + var(--er-safe-end));
   left: auto;
-  bottom: auto;
+  bottom: calc(var(--er-player, 84px) + var(--er-nav, 0px) + var(--er-safe-bottom, 0px) + 8px);
   z-index: 450;
   max-width: min(360px, calc(100vw - 24px));
+  pointer-events: none;
 }
+
+#toast-container > * { pointer-events: none; }
 
 html.er-mobile #toast-container,
 html.er-tablet #toast-container {

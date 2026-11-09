@@ -6,12 +6,13 @@ available. Use [domain setup, build settings, migration and rollback](DOMAINS.md
 the website; the application build/Functions instructions below remain specific to
 the existing `earth-radio` project.
 
-The 0.31.0 directory cache uses the existing Pages Functions deployment and Cache
-API without new bindings or paid resources. Verify `/directory/snapshot` cold/warm
-responses and conditional ETags on preview before publishing. The root shell stays
-below two MiB; large geography loads by zoom with immutable filenames and legacy
-URL redirects. See [directory, search and map operations](DISCOVERY_RELIABILITY.md)
-for finite routes, limits, data derivation, qualification boundaries and rollback.
+The 0.32.0 directory uses an hourly normalized static publication, hash-verified
+same-origin reader and last-good edge cache. No paid binding or saved deployment
+key was added. See [publication operations](DIRECTORY_PUBLICATION.md) and
+[directory/search/map behavior](DISCOVERY_RELIABILITY.md). Validate fresh/cached/stale
+responses, stable ETags, generation timestamps and both legacy/grouped clients on
+preview. Check the Directory snapshot schedule remains enabled. Root HTML must
+carry no-transform and the browser must have no injected-beacon CSP violation.
 
 ## Build and validate
 
@@ -31,6 +32,11 @@ Cache policy is part of the deployment boundary. Only filenames carrying an eigh
 ## Local smoke
 
 The discovery candidate also requires `npm run test:e2e -- --workers=3` and `npm run test:rendered` before release. The rendered matrix writes temporary evidence under `.build/evidence/responsive-ui` so validation does not overwrite historical tracked captures. Empty unavailable-renderer reasons are converted to `false`; genuine rendered failures must fail the command instead of being counted as skipped.
+
+For an isolated local browser run, set `E2E_PORT` to an unused loopback port and
+`E2E_REUSE_SERVER=0`. This starts the repository's redirect-aware fixture server and
+fails if another process owns the port, instead of silently testing an older server.
+Do not run multiple browser suites against a shared server whose owner can exit.
 
 For discovery smoke, enter a multiword name/place query, a non-Latin query, and a misspelled genre; check no autoplay occurs. Exercise genre/language/bitrate and HTTPS filters, reset, recent ordering, Similar, and a no-results case. Open Details using the keyboard and dismiss with Escape; play from it and check the selected station matches the disclosed name. On a phone viewport expand/collapse Refine selection and confirm the station list remains usable.
 

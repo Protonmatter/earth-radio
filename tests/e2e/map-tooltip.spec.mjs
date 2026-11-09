@@ -11,6 +11,8 @@ for (const { width, palette, longName = false } of [
   test(`map tooltip keeps readable lines at ${width}px in ${palette}`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
     await page.addInitScript(palette => {
+      window.__e2eMapViews=[];
+      document.addEventListener('earthradio:map-viewport',event=>window.__e2eMapViews.push(event.detail));
       localStorage.setItem('earthRadio.ui.v1', JSON.stringify({ palette, locale: 'en' }));
     }, palette);
     await setupApp(page, { sameOriginNowPlaying: { found: false } });
@@ -37,7 +39,8 @@ for (const { width, palette, longName = false } of [
       await page.getByRole('button', { name: 'Fit stations', exact: true }).click();
       // Finish the zoom-specific geographic layout before parking the pointer.
       // A tooltip can legitimately close while the map is being resized.
-      await expect(page.locator('#map')).toHaveAttribute('data-er-map-detail', 'detail', { timeout: 20000 });
+      try{await expect(page.locator('#map')).toHaveAttribute('data-er-map-detail', 'detail', { timeout: 20000 });}
+      catch(error){await test.info().attach('map-view-transitions',{body:JSON.stringify(await page.evaluate(()=>({views:window.__e2eMapViews,count:document.querySelector('#er-map-count').textContent,box:document.querySelector('#map').getBoundingClientRect().toJSON()}))),contentType:'application/json'});throw error;}
       await expect(page.locator('#er-map-data-status')).toBeHidden({ timeout: 20000 });
       await page.locator('#map path.leaflet-interactive:visible').first().hover();
       const tooltip = page.locator('.er-station-tooltip');
