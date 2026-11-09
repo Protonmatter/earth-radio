@@ -7,8 +7,10 @@ this artifact. The application license is unchanged.
 ## Build and publication
 
 `.github/workflows/directory-snapshot.yml` runs hourly at minute 17 and supports
-manual dispatch. GitHub schedules are best effort and can be delayed; public
-repositories can have schedules disabled after 60 days without repository activity.
+manual dispatch. The deploy job and existing github-pages environment both permit
+only `main`. Manual feature-branch runs can validate/build artifacts, but cannot
+publish them. GitHub schedules are best effort and can be delayed; public repositories
+can have schedules disabled after 60 days without repository activity.
 The producer uses the exact checked-out source SHA, bounded provider-host discovery,
 10,000-row pages, at most three mirrors and a shared 120-second deadline. Repeated
 pages, incomplete pulls, invalid data, fewer than 1,000 valid rows or fewer than

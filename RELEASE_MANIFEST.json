@@ -10,8 +10,8 @@
     },
     {
       "path": ".github/workflows/directory-snapshot.yml",
-      "bytes": 1686,
-      "sha256": "bdb202b6caf3ca62e1c189408c4bf7c341998a54364233f32503e914e822e965"
+      "bytes": 1726,
+      "sha256": "9b143311cebe23cd0cb7025c7a8bd5f01a03b9fb8c1b7aea8fa0469491ef83c5"
     },
     {
       "path": ".github/workflows/macos-release.yml",
@@ -60,8 +60,8 @@
     },
     {
       "path": "docs/DIRECTORY_PUBLICATION.md",
-      "bytes": 5207,
-      "sha256": "1365f11590a372d0b577acefc7bbe4f2ad274efd91734224826a4a6017125a26"
+      "bytes": 5367,
+      "sha256": "30ee963608287b7842cecffdfb3d1aae468992402fa4459354029817cae83039"
     },
     {
       "path": "docs/DISCOVERY_RELIABILITY.md",
@@ -1295,8 +1295,8 @@
     },
     {
       "path": "tests/directory-publication.test.mjs",
-      "bytes": 3076,
-      "sha256": "83da31505ceb357d2d88974792bcee3124b4fd114e80eda1da092e8e0dbf2d1b"
+      "bytes": 3149,
+      "sha256": "3804197445599b1cf8826cd798bdf51dd3b9d6c41e329817a918020ac3229e34"
     },
     {
       "path": "tests/directory-snapshot.test.mjs",
