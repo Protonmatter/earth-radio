@@ -265,7 +265,7 @@ export function installDiscovery(adapter) {
         wrapper.append(select);
       }
       if(/^http:/i.test(station.url_resolved||station.url||'')){
-        const badge=document.createElement('span');badge.className='er-http-badge';badge.textContent=t('discovery.httpStream');
+        const badge=document.createElement('span');badge.className='er-http-badge';badge.textContent='HTTP';badge.setAttribute('role','img');badge.setAttribute('aria-label',t('discovery.httpStream'));
         badge.title=t('discovery.httpHint');wrapper.append(badge);
       }
       return wrapper;

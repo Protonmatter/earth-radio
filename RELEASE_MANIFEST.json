@@ -5,8 +5,8 @@
   "files": [
     {
       "path": ".github/workflows/ci.yml",
-      "bytes": 4413,
-      "sha256": "31fafdaff34ba5971e572dae8df226fb057e216f8c8599f309a85f5a763d5ae0"
+      "bytes": 4546,
+      "sha256": "7cca6fb764a425625b29a6f81b40584eb76c76ca374c0a667c255442839f0bd4"
     },
     {
       "path": ".github/workflows/directory-snapshot.yml",
@@ -50,8 +50,8 @@
     },
     {
       "path": "docs/BUILD_STATE.md",
-      "bytes": 28642,
-      "sha256": "1fb9800d09f8df730fd174a17a7cb77bb2d8e558a4585e2410c8a2521e7265ce"
+      "bytes": 28896,
+      "sha256": "d093355cd8491f4eac83be5f970b0d129b90364286b6536a74902f6c8a929cd8"
     },
     {
       "path": "docs/CLOUDFLARE_DEPLOYMENT.md",
@@ -105,8 +105,8 @@
     },
     {
       "path": "docs/OPERATIONS.md",
-      "bytes": 10642,
-      "sha256": "3d016e36f1d44642b9ce4b42cdcd67184c69cf968ddb0babd4f5d1e519be900a"
+      "bytes": 11216,
+      "sha256": "e4d9aa237f76406876277d205706a945a6d040d9ef8865440b4cea9963ac642f"
     },
     {
       "path": "docs/PROVENANCE.md",
@@ -121,7 +121,7 @@
     {
       "path": "docs/provenance/hardening-overlays.json",
       "bytes": 14325,
-      "sha256": "3f0cc243324bea92b6eab642da97c0c00677a3297dc6ff1fc125d421f2e628eb"
+      "sha256": "24f3a68345cf298899596316ab7b7fa799197b59f7cf75ce6595ae12623de8af"
     },
     {
       "path": "docs/provenance/map-data.json",
@@ -250,8 +250,8 @@
     },
     {
       "path": "docs/RELEASE-0.32.0.md",
-      "bytes": 2778,
-      "sha256": "d052bfb7292145da1725218ccb4e6a529b8360e83f3a668c498da94c3bbd56d2"
+      "bytes": 2864,
+      "sha256": "b2b6ec4d7fd7e4c88aad4878427877308b175451ab5aed0de3a66763f9dc26b3"
     },
     {
       "path": "docs/RELEASE.md",
@@ -435,8 +435,8 @@
     },
     {
       "path": "package.json",
-      "bytes": 4802,
-      "sha256": "9a9dee39733aed58a275087b142fd2888dd2b467bedd44a691837873ab39270f"
+      "bytes": 4834,
+      "sha256": "3d1411799e3d723719872069d50de76100dba210a2f0962574e3cb3f53ac6fb0"
     },
     {
       "path": "scripts/build-directory-snapshot.mjs",
@@ -457,6 +457,11 @@
       "path": "scripts/desktop-package-compat.mjs",
       "bytes": 419,
       "sha256": "807fd9520efba03152efd4295d17e4eae5ecafaa8ac95915e0a9ad7b89bdb0ca"
+    },
+    {
+      "path": "scripts/ensure-electron-runtime.mjs",
+      "bytes": 1999,
+      "sha256": "9c809da01ced5235a34754d0264ae193cbb104629bc75ab8e31b7f514d1b5f3f"
     },
     {
       "path": "scripts/fingerprint-map-data.mjs",
@@ -685,8 +690,8 @@
     },
     {
       "path": "site/assets/discovery-ui.js",
-      "bytes": 18620,
-      "sha256": "db807b565e372dd0d9830d50f1b091c588910232e448a283b1a022cc1c78e3dc"
+      "bytes": 18693,
+      "sha256": "0487f94948e84d03ee065369713b02df78f1d93279ac2528753ef6914df394a4"
     },
     {
       "path": "site/assets/discovery.css",
@@ -715,8 +720,8 @@
     },
     {
       "path": "site/assets/listening-room.css",
-      "bytes": 37208,
-      "sha256": "22351b79ceca0b525e6c25520650061927378c2e98e67eee877eb8f630af4aae"
+      "bytes": 37433,
+      "sha256": "7512c6ab4afeb81395c3f6fb3b54b009611dfe96c3bdb4ddc9c304076d210271"
     },
     {
       "path": "site/assets/map-core.js",
@@ -965,8 +970,8 @@
     },
     {
       "path": "site/sw.js",
-      "bytes": 4948,
-      "sha256": "eb4374aaa3d8ed48a089332cd70864dad027e1f9a49662785be64670c661bbe8"
+      "bytes": 4945,
+      "sha256": "4ff3d42a71bc835ffa470ecfa5fa618ded2c871e0e752cb4cfc610f5b304c1b2"
     },
     {
       "path": "src-recovered/core/config.ts",
@@ -1330,8 +1335,8 @@
     },
     {
       "path": "tests/e2e/directory-snapshot.spec.mjs",
-      "bytes": 11050,
-      "sha256": "55b9ec5ed707fa3d9dd2a8664e7379013a1bc7e4a125d74b8545f13e1fca1c3e"
+      "bytes": 12002,
+      "sha256": "a435d076a07c034806d26e8e534c62a643aba0c01a77ee344921fca9b6b793d7"
     },
     {
       "path": "tests/e2e/discovery.spec.mjs",
@@ -1410,8 +1415,8 @@
     },
     {
       "path": "tests/e2e/station-variants.spec.mjs",
-      "bytes": 5321,
-      "sha256": "0e0efb1f80b0209cec97c770c3fd617c027e8e113bc5fb7698330e921ee0bc68"
+      "bytes": 5930,
+      "sha256": "5d6dece8f56c6a94b7483111d5f793d695c58e3ad6022b98efe2feeb36b3f4eb"
     },
     {
       "path": "tests/e2e/ui-state.spec.mjs",
@@ -1432,6 +1437,11 @@
       "path": "tests/edge-rate-limit.test.mjs",
       "bytes": 8323,
       "sha256": "1543e11579ea18cb92015a65aa3a26b1a2f7a9bf9398ad7c6fb2142f6a9465f2"
+    },
+    {
+      "path": "tests/electron-runtime.test.mjs",
+      "bytes": 2548,
+      "sha256": "a609439c59c4abfc03b86f0465bcdd24c2ccd4e1e938b1b84754447c02ede27a"
     },
     {
       "path": "tests/fingerprint-deadline.test.mjs",
@@ -1560,8 +1570,8 @@
     },
     {
       "path": "tests/service-worker.test.mjs",
-      "bytes": 11836,
-      "sha256": "8b04b0f98f52b2a6d22d50b1a13dcf201cbcb91824c24897fcf6c4f725ff786c"
+      "bytes": 11833,
+      "sha256": "a09d27c5c9c535090c13308e57d669c1e14932f8f5ec4c98ccfae5be2fd3f6a8"
     },
     {
       "path": "tests/smoke-desktop-auth-lifecycle.mjs",

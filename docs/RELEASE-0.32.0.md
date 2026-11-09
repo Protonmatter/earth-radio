@@ -19,7 +19,8 @@ and saved alias favorites remain usable. Up to three distinct siblings can be tr
 on failure before existing station recovery. HTTP-only streams are disclosed.
 Catalog success is persistent status; action/error toasts remain above player/nav.
 The actual map viewport stays within -60..85 latitude after resizing and map actions.
-The v66 shell retains lazy immutable map data and coherent 0.32.0 module URLs.
+The v67 shell retains lazy immutable map data and coherent 0.32.0 module URLs.
+Stream controls shrink within compact rows while their HTTP disclosure stays visible.
 
 Public Windows publisher trust and Apple notarization are unchanged: Windows builds
 use the accepted local signer; Mac installers are ad-hoc signed and explicitly

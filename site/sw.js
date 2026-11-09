@@ -1,4 +1,4 @@
-const CACHE_NAME = 'earth-radio-shell-v66-normalized-directory';
+const CACHE_NAME = 'earth-radio-shell-v67-stream-disclosure';
 const SHELL_ASSETS = [
   './',
   './config.js?v=0.32.0',
