@@ -4,7 +4,7 @@ import {tmpdir} from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
 import {FALLBACK_RELEASE,normalizePublicRelease} from '../website/release-core.js';
-import {stageWebsite} from '../scripts/stage-website.mjs';
+import {BRAND_ASSETS,stageWebsite} from '../scripts/stage-website.mjs';
 import {validateWebsite} from '../scripts/validate-website.mjs';
 
 const fixture=(tag='v0.29.1')=>({tag_name:tag,draft:false,prerelease:false,html_url:`https://github.com/Protonmatter/earth-radio/releases/tag/${tag}`,assets:[
@@ -53,4 +53,20 @@ test('real website artifact has correct app, installation, origin-migration and 
   await writeFile(redirects,validRedirects);
   const forbidden=path.join(result.output,'_worker.js');await writeFile(forbidden,'// must not ship');
   await assert.rejects(validateWebsite(result.output),/unexpected|worker|static/i);
+});
+
+test('website carries the precision identity from site/branding with a 1200x630 social card',async()=>{
+  const result=await stageWebsite();const html=await readFile(path.join(result.output,'index.html'),'utf8');
+  for(const href of ['./images/earth-radio-favicon-16.png','./images/earth-radio-favicon-32.png','./images/earth-radio-favicon.svg','./images/earth-radio-apple-touch-icon-180.png'])assert.ok(html.includes(`href="${href}"`),href);
+  assert.match(html,/<meta property="og:image" content="https:\/\/earthradio\.stream\/images\/earth-radio-og\.png" \/>/);
+  assert.match(html,/<meta property="og:image:width" content="1200" \/>/);assert.match(html,/<meta property="og:image:height" content="630" \/>/);
+  assert.match(html,/<meta name="twitter:card" content="summary_large_image" \/>/);
+  assert.equal((html.match(/class="brand-lockup" src="\.\/images\/earth-radio-logo\.svg"[^>]*alt="Earth Radio"/g)||[]).length,2);
+  assert.doesNotMatch(html,/earth-radio-(?:32|512)\.png|-v2\.png/);
+  // Staged brand files are byte-identical to the app's approved masters.
+  for(const [from,to] of BRAND_ASSETS)assert.deepEqual(await readFile(path.join(result.output,'images',to)),await readFile(path.join('site/branding',from)),to);
+  const og=await readFile(path.join(result.output,'images/earth-radio-og.png'));
+  assert.equal(og.toString('ascii',1,4),'PNG');assert.equal(og.readUInt32BE(16),1200);assert.equal(og.readUInt32BE(20),630);
+  const privacy=await readFile(path.join(result.output,'privacy.html'),'utf8');
+  assert.match(privacy,/href="\.\/images\/earth-radio-favicon-32\.png"/);
 });

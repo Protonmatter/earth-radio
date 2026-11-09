@@ -130,10 +130,10 @@
         "sha256": "c007984ee6349eaee532c1b3e2297e7fdac81610d4fae167c7595e127cef2d42"
       },
       "current": {
-        "bytes": 32370,
-        "sha256": "980655fb499ff750e08304747f782ce3fb1c5cfe65c72828cee2a60623e8d7d6"
+        "bytes": 41571,
+        "sha256": "85cc6d3858f294c21ef4394ef20370f7fda9e10f87b6345ec2848828c46e362c"
       },
-      "reason": "Move frame-ancestors enforcement to the deployable response header policy, then add responsive landmarks, iOS viewport/audio attributes, mobile destinations, compact header icons, additive responsive assets, country and station search controls, complete Now Playing metadata and sleep actions, the additive UI refresh stylesheet, and header actions ordered in the rail's reading sequence so keyboard focus follows the visual order. Reference the deployed runtime through its content-addressed filename. Load the git-catalogued LISTEN.moe station overlay before the recovered bundle, and admit wss://listen.moe in the in-page connect-src policy. Atlas lock: Night/Paper You panel, four phone tabs (Atlas/Browse/Kept/You), place-first search, and atlas-lock.css/js. November 2026: add the station discovery controls/details dialog and vector-atlas controls; load and coherently precache the maintained discovery/map assets under worker generation v47. Approved listening-room presentation and shell cache update (2026-11-07). Geographic atlas release: independent localized country/city label controls and detail-loading status."
+      "reason": "Move frame-ancestors enforcement to the deployable response header policy, then add responsive landmarks, iOS viewport/audio attributes, mobile destinations, compact header icons, additive responsive assets, country and station search controls, complete Now Playing metadata and sleep actions, the additive UI refresh stylesheet, and header actions ordered in the rail's reading sequence so keyboard focus follows the visual order. Reference the deployed runtime through its content-addressed filename. Load the git-catalogued LISTEN.moe station overlay before the recovered bundle, and admit wss://listen.moe in the in-page connect-src policy. Atlas lock: Night/Paper You panel, four phone tabs (Atlas/Browse/Kept/You), place-first search, and atlas-lock.css/js. November 2026: add the station discovery controls/details dialog and vector-atlas controls; load and coherently precache the maintained discovery/map assets under worker generation v47. Approved listening-room presentation and shell cache update (2026-11-07). Geographic atlas release: independent localized country/city label controls and detail-loading status. Precision identity: inline the approved outlined five-wave lockup, select OS-specific static favicon URLs through an external same-origin module, and load the scoped reduced-motion-aware brand stylesheet."
     },
     {
       "path": "site/manifest.webmanifest",
@@ -142,10 +142,10 @@
         "sha256": "23085fdaf6fbe198ca5c7589a47fc35e48dae97df08e8464e7e9795f3401ade9"
       },
       "current": {
-        "bytes": 477,
-        "sha256": "03c5618d097002f540fc12f6f469a25c82c71a17f28606ea8efc07858454aca7"
+        "bytes": 737,
+        "sha256": "82d56c20a9dfd9e9b49a7b119449bbfa125178512ba89df102f8480fdf32459f"
       },
-      "reason": "Align PWA theme and background colors with the Atlas Editorial tokens. Approved listening-room presentation and shell cache update (2026-11-07)."
+      "reason": "Align PWA theme and background colors with the Atlas Editorial tokens. Approved listening-room presentation and shell cache update (2026-11-07). Precision identity: keep install identity and start URL, set the approved pine theme, and use separate rounded any-purpose and opaque maskable icon assets."
     },
     {
       "path": "site/sw.js",
@@ -154,10 +154,10 @@
         "sha256": "b09e3207532fe7f47d14e9c53804d7e8caf31cad2fcb2c652b728a93871ea094"
       },
       "current": {
-        "bytes": 4945,
-        "sha256": "4ff3d42a71bc835ffa470ecfa5fa618ded2c871e0e752cb4cfc610f5b304c1b2"
+        "bytes": 5412,
+        "sha256": "58b0bbfc5182d9362843ca8902c55d5d745f52b67a4f14c666a263f85a2cf4d9"
       },
-      "reason": "Use network-first navigation/configuration updates, keep hashed recovered assets cache-first, reload overlay installation requests so stale browser HTTP entries cannot seed the new service-worker cache, force-cache the hashed runtime bundles, keep the previous worker when reload precaching fails, and precache the UI refresh stylesheet. Precache pinned-stations.js for LISTEN.moe catalog pinning. Precache atlas-lock.css/js and bump the shell cache generation to v46 so clients pick up Night/Paper, glass-on-log, and the four-tab phone chrome. November 2026: add the station discovery controls/details dialog and vector-atlas controls; load and coherently precache the maintained discovery/map assets under worker generation v47. Cache the generated icon PNGs and serve branding/manifest requests from the shell while offline. Native account integration and shared public deployment configuration (2026-11-04). Approved listening-room presentation and shell cache update (2026-11-07). Bump to v59 for dynamic playback-label synchronization. Advance to v60 so the tooltip-width stylesheet is refreshed on deployment. Supersede the local v60 candidate with v61 geographic atlas, coherently precaching its data modules, rules and notices."
+      "reason": "Use network-first navigation/configuration updates, keep hashed recovered assets cache-first, reload overlay installation requests so stale browser HTTP entries cannot seed the new service-worker cache, force-cache the hashed runtime bundles, keep the previous worker when reload precaching fails, and precache the UI refresh stylesheet. Precache pinned-stations.js for LISTEN.moe catalog pinning. Precache atlas-lock.css/js and bump the shell cache generation to v46 so clients pick up Night/Paper, glass-on-log, and the four-tab phone chrome. November 2026: add the station discovery controls/details dialog and vector-atlas controls; load and coherently precache the maintained discovery/map assets under worker generation v47. Cache the generated icon PNGs and serve branding/manifest requests from the shell while offline. Native account integration and shared public deployment configuration (2026-11-04). Approved listening-room presentation and shell cache update (2026-11-07). Bump to v59 for dynamic playback-label synchronization. Advance to v60 so the tooltip-width stylesheet is refreshed on deployment. Supersede the local v60 candidate with v61 geographic atlas, coherently precaching its data modules, rules and notices. Stream disclosure layout used v67. Precision identity: advance to v68 and precache both favicon palettes, dedicated platform icons, and the external brand controller/styles for offline operation."
     },
     {
       "path": "electron/preload.cjs",
@@ -170,6 +170,18 @@
         "sha256": "edf144882e80e5be31fdf3268d6e3a4f56259364c94cbb2309bf895a052973f6"
       },
       "reason": "Expose only token-free account operations and sanitized auth events through the sandboxed context bridge; update desktop version to 0.26.0."
+    },
+    {
+      "path": "site/favicon.svg",
+      "intake": {
+        "bytes": 9523,
+        "sha256": "ceeac38434be7a3b4d0f68b8cd8aa2b9ae78c260d6343087c6e095f8031ce4ff"
+      },
+      "current": {
+        "bytes": 1702,
+        "sha256": "00c6940cc04dd460e8c65f4b4430ac903b42a70444399a7c9db3d4a7fac804ae"
+      },
+      "reason": "Replace the legacy root favicon with the approved precision pine globe while retaining its existing public URL."
     }
   ]
 }
