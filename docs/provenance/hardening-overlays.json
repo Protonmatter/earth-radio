@@ -154,8 +154,8 @@
         "sha256": "b09e3207532fe7f47d14e9c53804d7e8caf31cad2fcb2c652b728a93871ea094"
       },
       "current": {
-        "bytes": 4948,
-        "sha256": "eb4374aaa3d8ed48a089332cd70864dad027e1f9a49662785be64670c661bbe8"
+        "bytes": 4945,
+        "sha256": "4ff3d42a71bc835ffa470ecfa5fa618ded2c871e0e752cb4cfc610f5b304c1b2"
       },
       "reason": "Use network-first navigation/configuration updates, keep hashed recovered assets cache-first, reload overlay installation requests so stale browser HTTP entries cannot seed the new service-worker cache, force-cache the hashed runtime bundles, keep the previous worker when reload precaching fails, and precache the UI refresh stylesheet. Precache pinned-stations.js for LISTEN.moe catalog pinning. Precache atlas-lock.css/js and bump the shell cache generation to v46 so clients pick up Night/Paper, glass-on-log, and the four-tab phone chrome. November 2026: add the station discovery controls/details dialog and vector-atlas controls; load and coherently precache the maintained discovery/map assets under worker generation v47. Cache the generated icon PNGs and serve branding/manifest requests from the shell while offline. Native account integration and shared public deployment configuration (2026-11-04). Approved listening-room presentation and shell cache update (2026-11-07). Bump to v59 for dynamic playback-label synchronization. Advance to v60 so the tooltip-width stylesheet is refreshed on deployment. Supersede the local v60 candidate with v61 geographic atlas, coherently precaching its data modules, rules and notices."
     },

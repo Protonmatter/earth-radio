@@ -1,17 +1,23 @@
 import {test,expect} from '@playwright/test';
 import {FIXTURE_STATIONS} from './fixtures/stations.mjs';
 import {serializeVariantGroups} from '../../site/assets/station-variants.js';
+import {CATALOGS} from '../../site/i18n/index.js';
 
-test('grouped wire results expose one keyboard-accessible quality picker without autoplay',async({page})=>{
-  await page.setViewportSize({width:390,height:844});
-  const rows=[128,320].map(bitrate=>({...FIXTURE_STATIONS[0],name:'Grouped News',stationuuid:'grouped-'+bitrate,bitrate,url:'https://streams.e2e.example/'+bitrate,url_resolved:'https://streams.e2e.example/'+bitrate}));
+for(const locale of ['en','es','ar','ko','zh-Hans','zh-Hant'])test(`grouped wire results expose a bounded quality picker without autoplay in ${locale}`,async({page})=>{
+  await page.setViewportSize({width:320,height:844});
+  await page.addInitScript(locale=>localStorage.setItem('earthRadio.ui.v1',JSON.stringify({locale,palette:'paper'})),locale);
+  const rows=[128,320].map(bitrate=>({...FIXTURE_STATIONS[0],name:'Grouped News',stationuuid:'grouped-'+bitrate,bitrate,url:'http://streams.e2e.example/'+bitrate,url_resolved:'http://streams.e2e.example/'+bitrate}));
   await page.route('**/*',route=>{const url=new URL(route.request().url());if(url.pathname==='/directory/snapshot')return route.fulfill({json:{schemaVersion:2,groups:serializeVariantGroups(rows)}});return url.hostname==='127.0.0.1'?route.continue():route.abort();});
-  await page.goto('/');await page.getByRole('searchbox',{name:'Find a station'}).fill('Grouped News');
+  await page.goto('/');await page.locator('#er-discovery-query').fill('Grouped News');
   await expect(page.locator('.station-card__name')).toHaveText(['Grouped News']);
-  const picker=page.getByRole('combobox',{name:'Stream quality for Grouped News'});await picker.selectOption('grouped-128');await expect(picker).toBeFocused();
+  const picker=page.getByRole('combobox',{name:CATALOGS[locale]['discovery.streamQuality'].replace('{name}','Grouped News'),exact:true});await picker.selectOption('grouped-128');await expect(picker).toBeFocused();
+  await expect(page.getByRole('img',{name:CATALOGS[locale]['discovery.httpStream'],exact:true})).toBeVisible();
   await expect(page.locator('#audio-player')).toHaveJSProperty('paused',true);
-  await expect(page.getByRole('button',{name:'Favorite station: Grouped News',exact:true})).toHaveAttribute('aria-pressed','false');
+  await expect(page.locator('.station-card__favorite')).toHaveAttribute('aria-pressed','false');
   expect(await page.locator('.station-card__favorite svg').evaluate(element=>getComputedStyle(element).fill)).toBe('none');
+  const controls=await page.locator('.er-stream-control').evaluate(node=>{const boxes=[node,...node.children].map(item=>item.getBoundingClientRect()),meta=node.closest('.station-card__meta').getBoundingClientRect();return{left:Math.min(...boxes.map(box=>box.left)),right:Math.max(...boxes.map(box=>box.right)),selectWidth:node.querySelector('select').getBoundingClientRect().width,meta:meta.toJSON()};});
+  expect(controls.left).toBeGreaterThanOrEqual(controls.meta.left-.5);expect(controls.right).toBeLessThanOrEqual(controls.meta.right+.5);
+  expect(controls.selectWidth).toBeGreaterThanOrEqual(44);
 });
 
 for(const width of [390,1440])test(`catalog status does not become a control-covering toast at ${width}px`,async({page})=>{

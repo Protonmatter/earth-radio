@@ -121,7 +121,7 @@
     {
       "path": "docs/provenance/hardening-overlays.json",
       "bytes": 14325,
-      "sha256": "3f0cc243324bea92b6eab642da97c0c00677a3297dc6ff1fc125d421f2e628eb"
+      "sha256": "24f3a68345cf298899596316ab7b7fa799197b59f7cf75ce6595ae12623de8af"
     },
     {
       "path": "docs/provenance/map-data.json",
@@ -250,8 +250,8 @@
     },
     {
       "path": "docs/RELEASE-0.32.0.md",
-      "bytes": 2778,
-      "sha256": "d052bfb7292145da1725218ccb4e6a529b8360e83f3a668c498da94c3bbd56d2"
+      "bytes": 2864,
+      "sha256": "b2b6ec4d7fd7e4c88aad4878427877308b175451ab5aed0de3a66763f9dc26b3"
     },
     {
       "path": "docs/RELEASE.md",
@@ -685,8 +685,8 @@
     },
     {
       "path": "site/assets/discovery-ui.js",
-      "bytes": 18620,
-      "sha256": "db807b565e372dd0d9830d50f1b091c588910232e448a283b1a022cc1c78e3dc"
+      "bytes": 18693,
+      "sha256": "0487f94948e84d03ee065369713b02df78f1d93279ac2528753ef6914df394a4"
     },
     {
       "path": "site/assets/discovery.css",
@@ -715,8 +715,8 @@
     },
     {
       "path": "site/assets/listening-room.css",
-      "bytes": 37208,
-      "sha256": "22351b79ceca0b525e6c25520650061927378c2e98e67eee877eb8f630af4aae"
+      "bytes": 37433,
+      "sha256": "7512c6ab4afeb81395c3f6fb3b54b009611dfe96c3bdb4ddc9c304076d210271"
     },
     {
       "path": "site/assets/map-core.js",
@@ -965,8 +965,8 @@
     },
     {
       "path": "site/sw.js",
-      "bytes": 4948,
-      "sha256": "eb4374aaa3d8ed48a089332cd70864dad027e1f9a49662785be64670c661bbe8"
+      "bytes": 4945,
+      "sha256": "4ff3d42a71bc835ffa470ecfa5fa618ded2c871e0e752cb4cfc610f5b304c1b2"
     },
     {
       "path": "src-recovered/core/config.ts",
@@ -1330,8 +1330,8 @@
     },
     {
       "path": "tests/e2e/directory-snapshot.spec.mjs",
-      "bytes": 11050,
-      "sha256": "55b9ec5ed707fa3d9dd2a8664e7379013a1bc7e4a125d74b8545f13e1fca1c3e"
+      "bytes": 12002,
+      "sha256": "a435d076a07c034806d26e8e534c62a643aba0c01a77ee344921fca9b6b793d7"
     },
     {
       "path": "tests/e2e/discovery.spec.mjs",
@@ -1410,8 +1410,8 @@
     },
     {
       "path": "tests/e2e/station-variants.spec.mjs",
-      "bytes": 5321,
-      "sha256": "0e0efb1f80b0209cec97c770c3fd617c027e8e113bc5fb7698330e921ee0bc68"
+      "bytes": 5930,
+      "sha256": "5d6dece8f56c6a94b7483111d5f793d695c58e3ad6022b98efe2feeb36b3f4eb"
     },
     {
       "path": "tests/e2e/ui-state.spec.mjs",
@@ -1560,8 +1560,8 @@
     },
     {
       "path": "tests/service-worker.test.mjs",
-      "bytes": 11836,
-      "sha256": "8b04b0f98f52b2a6d22d50b1a13dcf201cbcb91824c24897fcf6c4f725ff786c"
+      "bytes": 11833,
+      "sha256": "a09d27c5c9c535090c13308e57d669c1e14932f8f5ec4c98ccfae5be2fd3f6a8"
     },
     {
       "path": "tests/smoke-desktop-auth-lifecycle.mjs",
