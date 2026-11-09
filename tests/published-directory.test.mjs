@@ -73,8 +73,10 @@ test('stalled fetch/body obey the shared absolute timeout',async()=>{
   }
 });
 test('a caller deadline bounds a multi-read native batch without a new request after expiry',async()=>{
-  let calls=0;const read=createPublishedCatalog({fetchImpl:async()=>{calls++;return new Promise(()=>{});},timeoutMs:15000});
-  const deadlineAt=Date.now()+20;await assert.rejects(read('/directory/snapshot','catalog',{deadlineAt}),/deadline/);
+  // Timer expiry and a Date.now tick need not coincide on Linux. Assert the
+  // absolute-clock boundary deterministically, without a one-millisecond race.
+  let calls=0,clock=0;const read=createPublishedCatalog({now:()=>clock,fetchImpl:async()=>{calls++;return new Promise(()=>{});},timeoutMs:15000});
+  const deadlineAt=20;await assert.rejects(read('/directory/snapshot','catalog',{deadlineAt}),/deadline/);clock=deadlineAt;
   await assert.rejects(read('/directory/country/GB','catalog',{deadlineAt}),/deadline/);assert.equal(calls,1);
 });
 test('country routes default to legacy arrays, explicit v2 expands separately and unknown country is stable empty',async()=>{

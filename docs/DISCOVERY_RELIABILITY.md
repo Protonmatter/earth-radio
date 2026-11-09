@@ -23,7 +23,11 @@ The finite paths remain /directory/snapshot, /directory/countries,
 Query strings, arbitrary targets and write methods are rejected. The new client
 explicitly requests application/vnd.earthradio.catalog.v2+json; old application/json
 root clients and default-Accept country clients retain flat arrays. Cache keys and
-strong content ETags distinguish those representations. A manifest carries source
+content-hash ETags distinguish those representations. Cloudflare may prefix the
+served tag with `W/` when compressing the response; conditional matching accepts
+both forms and the decoded payload is independently checked against its hash.
+See [Cloudflare ETag behavior](https://developers.cloudflare.com/cache/reference/etag-headers/).
+A manifest carries source
 SHA, generation time and exact payload hashes; request clocks never define content
 identity. A cached manifest pointing at a removed old blob triggers one forced
 manifest refresh under the original deadline.

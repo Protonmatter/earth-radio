@@ -65,8 +65,8 @@
     },
     {
       "path": "docs/DISCOVERY_RELIABILITY.md",
-      "bytes": 11407,
-      "sha256": "5844eee5d7efdc7f0904849d84b39e760fe659b1688e71de83526b3f4d8e0228"
+      "bytes": 11687,
+      "sha256": "90180ccb804ee4b819d623dfe4e77e6c930dea8ea4104c02930ce3a476c0a4ef"
     },
     {
       "path": "docs/DISCOVERY.md",
@@ -1525,8 +1525,8 @@
     },
     {
       "path": "tests/published-directory.test.mjs",
-      "bytes": 8328,
-      "sha256": "dbd14530afc7474eee9852fd7e645440e8fa29a4231b3bb87a3b62f8a5b186d6"
+      "bytes": 8513,
+      "sha256": "b25a757d14dea766ddd5d4a3b31d396c37ecb56486a33832a55bcb13812e48ea"
     },
     {
       "path": "tests/recovery-inventory.test.mjs",
