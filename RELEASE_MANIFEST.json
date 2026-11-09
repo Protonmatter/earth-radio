@@ -9,6 +9,11 @@
       "sha256": "31fafdaff34ba5971e572dae8df226fb057e216f8c8599f309a85f5a763d5ae0"
     },
     {
+      "path": ".github/workflows/directory-snapshot.yml",
+      "bytes": 1686,
+      "sha256": "bdb202b6caf3ca62e1c189408c4bf7c341998a54364233f32503e914e822e965"
+    },
+    {
       "path": ".github/workflows/macos-release.yml",
       "bytes": 2869,
       "sha256": "9b80b0354ac128bfc38b53c3af1ee43397de9e12037fc21a7f00e04208544875"
@@ -52,6 +57,11 @@
       "path": "docs/CLOUDFLARE_DEPLOYMENT.md",
       "bytes": 10561,
       "sha256": "c8c31986d3929fe6213a7bd0095e551fa2269db6355f99fba81d23f2265f5ed7"
+    },
+    {
+      "path": "docs/DIRECTORY_PUBLICATION.md",
+      "bytes": 5207,
+      "sha256": "1365f11590a372d0b577acefc7bbe4f2ad274efd91734224826a4a6017125a26"
     },
     {
       "path": "docs/DISCOVERY_RELIABILITY.md",
@@ -410,8 +420,13 @@
     },
     {
       "path": "package.json",
-      "bytes": 4501,
-      "sha256": "68feb99538741b9c13ef07d14a660f6cc1aa38bace21d18cc963d9fda1177cb9"
+      "bytes": 4675,
+      "sha256": "28224c630ebbb341d04e15d1dc7fe6c2be0dc823a834e1788d4c2da64cfefc96"
+    },
+    {
+      "path": "scripts/build-directory-snapshot.mjs",
+      "bytes": 7553,
+      "sha256": "8dbbfa3082d207ce95a83d4241586a4a6a091528ef58faef8d95759b7c36df49"
     },
     {
       "path": "scripts/build-discovery-geography.mjs",
@@ -469,6 +484,11 @@
       "sha256": "950969e11c60d1c437aea8c6d72ee6725d498c76082688490645994ce239bcf6"
     },
     {
+      "path": "scripts/stage-directory-snapshot.mjs",
+      "bytes": 2783,
+      "sha256": "2da5fd69e7024602eaf6026afa453b9b5906f415ff5907ebc8e12650abb6ac7a"
+    },
+    {
       "path": "scripts/stage-site.mjs",
       "bytes": 2960,
       "sha256": "4004402b37a45f576afc2767721897254a6783b5269495a89057980ac0fe30d7"
@@ -502,6 +522,11 @@
       "path": "server/desktop-proxy.mjs",
       "bytes": 22480,
       "sha256": "462a9257b2ebb9b54be91b17bbde54314f87390737430c05c603356abd53de1b"
+    },
+    {
+      "path": "server/directory-normalize.mjs",
+      "bytes": 5101,
+      "sha256": "b91307147dbdd8be43deb116ec488cb5ffe437fca4e085d50f5a67ac1a11aa10"
     },
     {
       "path": "server/example-proxy.mjs",
@@ -602,6 +627,11 @@
       "path": "site/assets/auth-ui.js",
       "bytes": 29229,
       "sha256": "4f5e11f3016beed831352f432b4d8729b58b6d2a1e81d0a3a4c4262233509b8c"
+    },
+    {
+      "path": "site/assets/catalog-fields.js",
+      "bytes": 2926,
+      "sha256": "f49df1f3413200539fb993d27f32c14227f703c0ef53a42107cd5da05e114db5"
     },
     {
       "path": "site/assets/country-locations.js",
@@ -744,6 +774,11 @@
       "sha256": "c8b389fec87488d94326c86d1825d1daa8833f257c84483bcb6092bbb6bf34c4"
     },
     {
+      "path": "site/assets/snapshot-protocol.js",
+      "bytes": 3725,
+      "sha256": "dabd778a7056c8fee7f96dafffdfe08cb7f9323593a38685482edf6f2ab3974d"
+    },
+    {
       "path": "site/assets/song-library-core.js",
       "bytes": 20905,
       "sha256": "28cacd94fa9c3569c732ff052265b32560b4b7f21317486602ccd4811dae5646"
@@ -762,6 +797,11 @@
       "path": "site/assets/station-location.js",
       "bytes": 1433,
       "sha256": "28220760a2b103f52c8bd3ca1c4789e7eb291c883342d6fc8b7db3d450949bee"
+    },
+    {
+      "path": "site/assets/station-variants.js",
+      "bytes": 8009,
+      "sha256": "dedf270434f22d45454d521d20c6346e159c24e0731465f86983a6af746ab617"
     },
     {
       "path": "site/assets/storage-guard.js",
@@ -1209,6 +1249,26 @@
       "sha256": "88c2b702f8cf82b7d99a1f46db8f32506f11101bfa5f60b171ccec7ac82653c4"
     },
     {
+      "path": "tests/directory-generation.test.mjs",
+      "bytes": 4420,
+      "sha256": "cb28d1db93d4bed1d8bade097fc06a6fba20169cd4cee8e401782acfcfd5229c"
+    },
+    {
+      "path": "tests/directory-normalize.test.mjs",
+      "bytes": 5567,
+      "sha256": "b75503a15f25dd0d2ed821a7f6201d4922edad56904de247a63a47896e3b9837"
+    },
+    {
+      "path": "tests/directory-producer.test.mjs",
+      "bytes": 2298,
+      "sha256": "1041afd9a301f09d6a516fc467f6f78bdfc19679a0747b34986314ea2bf32329"
+    },
+    {
+      "path": "tests/directory-publication.test.mjs",
+      "bytes": 3076,
+      "sha256": "83da31505ceb357d2d88974792bcee3124b4fd114e80eda1da092e8e0dbf2d1b"
+    },
+    {
       "path": "tests/directory-snapshot.test.mjs",
       "bytes": 13545,
       "sha256": "6841a1b78b42a7a4ba95b448b59b7dbe997700eeb353fd5bd99d869e1b452dd8"
@@ -1497,6 +1557,11 @@
       "path": "tests/station-location.test.mjs",
       "bytes": 1405,
       "sha256": "bf8bdfa16426c7f424b56f7c04c54334433d99d342735653f31f0d72c8d2ad35"
+    },
+    {
+      "path": "tests/station-variants.test.mjs",
+      "bytes": 6185,
+      "sha256": "472e158c2b8fffd0617dded90fa7a4165ff9671c916edda73694d2b12b52d218"
     },
     {
       "path": "tests/storage-guard.test.mjs",
