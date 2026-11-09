@@ -1,6 +1,6 @@
-import {installFacetPicker} from './facet-picker.js?v=0.32.0';
-import {matchesCountry} from './search-core.js?v=0.32.0';
-import {getLocale,t} from '../i18n/index.js?v=0.32.0';
+import {installFacetPicker} from './facet-picker.js?v=0.32.1';
+import {matchesCountry} from './search-core.js?v=0.32.1';
+import {getLocale,t} from '../i18n/index.js?v=0.32.1';
 
 export function installSearchControls(root,adapter){
   const query=root.elements.namedItem('query'),clear=root.querySelector('[data-discovery-clear-query]'),country=root.querySelector('[data-search-country]');

@@ -34,8 +34,8 @@ for (const relative of [
   '/branding/earth-radio-favicon-pine.svg',
   '/branding/earth-radio-favicon-obsidian.svg',
   '/branding/earth-radio-favicon-obsidian-32.png',
-  '/assets/brand-identity.js?v=0.32.0',
-  '/assets/brand-identity.css?v=0.32.0',
+  '/assets/brand-identity.js?v=0.32.1',
+  '/assets/brand-identity.css?v=0.32.1',
   '/manifest.webmanifest'
 ]) {
   test(`service worker serves cached ${relative} when the network is offline`, async () => {
@@ -71,7 +71,7 @@ test('the live immutable runtime filename is derived from its final content hash
 
 test('service worker registers even when async startup outlives window load', async () => {
   const source = await readFile(path.join(root, 'src-recovered', 'main.ts'), 'utf8');
-  const bundle = await readFile(path.join(root, 'site', 'assets', 'index-7562b0d8.js'), 'utf8');
+  const bundle = await readFile(path.join(root, 'site', 'assets', 'index-54500e78.js'), 'utf8');
   assert.match(source, /document\.readyState === 'complete'/);
   assert.match(bundle, /document\.readyState===`complete`/);
 });
@@ -107,7 +107,7 @@ test('deployed pages send HSTS and revalidate the auth overlays', async () => {
 test('service worker precaches the auth, responsive, and i18n shell under a new cache version', async () => {
   const worker = await readFile(path.join(root, 'site', 'sw.js'), 'utf8');
   assert.match(worker, /cache: isImmutableAsset\(asset\) \? 'force-cache' : 'reload'/);
-  assert.match(worker, /earth-radio-shell-v68-precision-identity/);
+  assert.match(worker, /earth-radio-shell-v69-brand-release/);
   for (const palette of ['pine', 'obsidian']) {
     for (const suffix of ['.svg', '-16.png', '-32.png']) {
       assert.ok(worker.includes(`branding/earth-radio-favicon-${palette}${suffix}`));

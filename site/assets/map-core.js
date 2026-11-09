@@ -1,5 +1,5 @@
 // Pure geography presentation rules. No network, storage, DOM or playback state.
-import {displayCountry,countryCode} from './search-core.js?v=0.32.0';
+import {displayCountry,countryCode} from './search-core.js?v=0.32.1';
 export const MAP_LABEL_STORAGE = 'earthRadio.mapLabels.v1';
 
 export function sanitizeMapLabels(value) {

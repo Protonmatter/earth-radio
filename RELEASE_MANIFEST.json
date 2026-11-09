@@ -1,6 +1,6 @@
 {
   "name": "Earth Radio",
-  "version": "0.32.0",
+  "version": "0.32.1",
   "artifactType": "recovered-source-and-static-site",
   "files": [
     {
@@ -40,8 +40,8 @@
     },
     {
       "path": "docs/BRAND_INTEGRATION.md",
-      "bytes": 10381,
-      "sha256": "12b094a9ff6d1daa9a6b72665e0ec4b4657bc8093ed38705585f44a0bc9750a3"
+      "bytes": 11076,
+      "sha256": "f54fd87c3ea7fe97acf761b52d514a27ed9ffcf7f09c05e62730dda8b8faaebf"
     },
     {
       "path": "docs/branding/earth-radio-icon-master.png",
@@ -55,8 +55,8 @@
     },
     {
       "path": "docs/BUILD_STATE.md",
-      "bytes": 28896,
-      "sha256": "d093355cd8491f4eac83be5f970b0d129b90364286b6536a74902f6c8a929cd8"
+      "bytes": 29421,
+      "sha256": "f12a8c83910c161fdc95062f88dbc118072e4712c091658e8e10c51ce88487c2"
     },
     {
       "path": "docs/CLOUDFLARE_DEPLOYMENT.md",
@@ -95,8 +95,8 @@
     },
     {
       "path": "docs/INSTALLATION.md",
-      "bytes": 9271,
-      "sha256": "3e32cd967f30fc4d915dfb4847f1cee3892f808df2829c7229fee8399b0a4647"
+      "bytes": 9489,
+      "sha256": "3508658a3b74830b5e23798d3c0494ffe4ed2ac1ef951c5210f8deec2fe9ad08"
     },
     {
       "path": "docs/LIVE_METADATA.md",
@@ -125,8 +125,8 @@
     },
     {
       "path": "docs/provenance/hardening-overlays.json",
-      "bytes": 15330,
-      "sha256": "1d6c59ea844c87dc360b428f35e4d955145de60dd0893e2017fd81ab464b6902"
+      "bytes": 16212,
+      "sha256": "8a8bb861dff80ca5e61ed77120857a0ece92366c9f2d742ec91c496ae3d29bca"
     },
     {
       "path": "docs/provenance/map-data.json",
@@ -259,6 +259,11 @@
       "sha256": "b2b6ec4d7fd7e4c88aad4878427877308b175451ab5aed0de3a66763f9dc26b3"
     },
     {
+      "path": "docs/RELEASE-0.32.1.md",
+      "bytes": 2052,
+      "sha256": "9e1062690637a1494cc3041e0831026a9db111b3d03c381d7f50bec853f99883"
+    },
+    {
       "path": "docs/RELEASE.md",
       "bytes": 1961,
       "sha256": "e9e57aa12c4cf47827a04ee792ee9646f0ba1b0b118ea999de998faf0b2f78ba"
@@ -350,8 +355,8 @@
     },
     {
       "path": "electron-builder.yml",
-      "bytes": 1086,
-      "sha256": "012413604d872b03edf96700eac92f14103518a42d50afa10e2a47db8658c44d"
+      "bytes": 1091,
+      "sha256": "5465aab07ef46f3dada0901ba3b0258b06fb88f4fa1f3a3d6f7210a4ebdd4548"
     },
     {
       "path": "electron/auth-callback.mjs",
@@ -380,8 +385,8 @@
     },
     {
       "path": "electron/main.mjs",
-      "bytes": 6576,
-      "sha256": "945c03ca0a61eb89519e80ed94d744d90345e2c3eba9ade49d60e3fea77d91fb"
+      "bytes": 6587,
+      "sha256": "01155538e126121edb8f0980c3dbe0d2e822ebe9dea775ce04e5fbe0ead1f898"
     },
     {
       "path": "electron/preload.cjs",
@@ -436,12 +441,17 @@
     {
       "path": "package-lock.json",
       "bytes": 165688,
-      "sha256": "6b8289f91470abb8b5f2f080bbe0247332a151cb269cbd1dbe5af26ff376a068"
+      "sha256": "1db2831e182523bc7350663670c422ea5f0a626f20438a258b15039c62b77de5"
     },
     {
       "path": "package.json",
       "bytes": 4864,
-      "sha256": "257e0c6fe48ee1f5c240ae75467998d139e07a247662b93b3feba1a5fd652578"
+      "sha256": "b5da0c2a4478eea45e591345817b0421b488006f6dda6e6987f733d6b16699c0"
+    },
+    {
+      "path": "scripts/build-desktop-icon.mjs",
+      "bytes": 978,
+      "sha256": "563e50b1ea9e9d73f40c321142d2b5fdc5a8b8b2668f767478f87f898d3ccda5"
     },
     {
       "path": "scripts/build-directory-snapshot.mjs",
@@ -485,8 +495,8 @@
     },
     {
       "path": "scripts/macos-release.mjs",
-      "bytes": 10066,
-      "sha256": "a16fab7af91bd2b86a3cb8ff2e533127a691bcde6317edd9acc14f8a14ee28ca"
+      "bytes": 10560,
+      "sha256": "badcd58a4315de1c1f5fd3f9fe567becdbda756f3489470b517b9aff3515eb4c"
     },
     {
       "path": "scripts/qualify-edge-runtime.mjs",
@@ -611,7 +621,7 @@
     {
       "path": "site/_headers",
       "bytes": 3787,
-      "sha256": "974a62a63dc6ac77fa5a28dd7df487d3fb65a2e4ae0cef484961a0659a85e773"
+      "sha256": "112a9b9a3eb72356db18aa59e7c22054f61eef378fb28081dca9b1d008e5e8c5"
     },
     {
       "path": "site/_redirects",
@@ -631,7 +641,7 @@
     {
       "path": "site/assets/atlas-lock.js",
       "bytes": 5497,
-      "sha256": "cfb5161103996fdcf4aef1aa2eea442faff2a64da5f5f699f53c8b7a3f31d53c"
+      "sha256": "7fd67c39d5aa9b94576d8fb5887967b83af49284d3f51dce9510ad5a8f051f7e"
     },
     {
       "path": "site/assets/auth-core.js",
@@ -651,7 +661,7 @@
     {
       "path": "site/assets/auth-ui.js",
       "bytes": 29229,
-      "sha256": "40982f04f9f4e7dc75df72f2bf27b43d8c06544a8e0917092c6be22d2ebf2a30"
+      "sha256": "c97f25856bf74380862ddffa9829674d84489aa558fe48e992f80aed9253074d"
     },
     {
       "path": "site/assets/brand-identity.css",
@@ -666,7 +676,7 @@
     {
       "path": "site/assets/catalog-fields.js",
       "bytes": 3965,
-      "sha256": "e8faa5c6fe5416e85f52cca71768f9ec994bf79b32865b1a6e2b034731a6a6a2"
+      "sha256": "1ba9c7a4f0d98e173b68020637438670faaabed8ddec7ec2c2fa6e9346498868"
     },
     {
       "path": "site/assets/country-locations.js",
@@ -681,12 +691,12 @@
     {
       "path": "site/assets/directory-client.js",
       "bytes": 3727,
-      "sha256": "7de93cd671368118a6ddc1d83b29fd7ebcff7090ca20ba2f1399f073d6b1c3db"
+      "sha256": "3206d59078cc2bac4df64898d111098dbb28662895ce24fa5cfc596763af406f"
     },
     {
       "path": "site/assets/directory-expansion.js",
       "bytes": 14958,
-      "sha256": "c81aeec0a3c53e23b1712cf3fed7a4566b61ec5f92ccd1b31333097e1b8d1f42"
+      "sha256": "d109c9191977cad29d37a015c4934189d5b9aa7df93784b083286aa21266c8bc"
     },
     {
       "path": "site/assets/directory-hosts.js",
@@ -696,17 +706,17 @@
     {
       "path": "site/assets/directory-status.js",
       "bytes": 819,
-      "sha256": "c3b9a4b144fb1f88281f09548cbb0cb1c81d793c1b98c924929382ba38847c1f"
+      "sha256": "5c18bba56456194292c4189e092fe8abdaa8b439f2ce07722ca887a714d0b427"
     },
     {
       "path": "site/assets/discovery-core.js",
       "bytes": 15194,
-      "sha256": "12840550ab726ab7c3db3509c7732e86ed62131778c7b919a9a74e0e00096b1c"
+      "sha256": "ceee8fb65d41be3070273d2b8c2b3e0a18d2023ef244449044bca8f04e072a34"
     },
     {
       "path": "site/assets/discovery-ui.js",
       "bytes": 18693,
-      "sha256": "0487f94948e84d03ee065369713b02df78f1d93279ac2528753ef6914df394a4"
+      "sha256": "753beb8827e3e2bae650d70d37bf8041afb7ffbb487b1d908b13b2d53b7d61d8"
     },
     {
       "path": "site/assets/discovery.css",
@@ -716,7 +726,7 @@
     {
       "path": "site/assets/facet-picker.js",
       "bytes": 7134,
-      "sha256": "4412a17c62caa43e3742861934ae66fb0e6a35794789d766f1883f10e7b1d30f"
+      "sha256": "fde14637a13bd630a2daa3d8365a40361bc19002fcdccdafb543a0d3e3238e74"
     },
     {
       "path": "site/assets/hls.light-Dr1Fv81C.js",
@@ -724,9 +734,9 @@
       "sha256": "6560373fba977682d3acc4290af72029fb722879a2edce30504f8a93caec069c"
     },
     {
-      "path": "site/assets/index-7562b0d8.js",
+      "path": "site/assets/index-54500e78.js",
       "bytes": 279238,
-      "sha256": "7562b0d8f910e605057ca07843dc0ae510205b11da8a2f38e890eb7e53a99fd7"
+      "sha256": "54500e7858a69b4761e9f058a6e7a0dea3e6b760dfcbf2f9734bd5a37c19de77"
     },
     {
       "path": "site/assets/index-CSoL7F-Y.css",
@@ -741,7 +751,7 @@
     {
       "path": "site/assets/map-core.js",
       "bytes": 8126,
-      "sha256": "0837b5db6dd24224957daf9c4c260bba4dcf36d6d062d07d9d9da0a5629fa06d"
+      "sha256": "5f79c5b5badcb332953656558fbf6dd9bc7b36546005111b3ff227859cfa04cb"
     },
     {
       "path": "site/assets/map-detail-5d713b76.js",
@@ -751,7 +761,7 @@
     {
       "path": "site/assets/map-directory.js",
       "bytes": 4949,
-      "sha256": "c12f97f3fe756617d9a7ede2d651853e2f4f3e824b3a478f443b0bd3cc775d46"
+      "sha256": "aba1a743cb6253fb3fb3913259f961fdcc1246e3d849945271750f1a9564c564"
     },
     {
       "path": "site/assets/map-roads-d81fc5ea.js",
@@ -766,7 +776,7 @@
     {
       "path": "site/assets/map-viewport.js",
       "bytes": 3442,
-      "sha256": "e6095160808d627a041c8d91548f38784fd3b3af42adfbbd947a0d9715e07d5c"
+      "sha256": "da7725b7f9e4bfafb6efb1f670de3406a1341a9e3896e7835ecb8baf079ce8c7"
     },
     {
       "path": "site/assets/map-world-b021d4b5.js",
@@ -781,7 +791,7 @@
     {
       "path": "site/assets/metadata-enrichment.js",
       "bytes": 74008,
-      "sha256": "24da45a46af31a86f73061e3717722edead82820fe421b629f25d1515a247e39"
+      "sha256": "2ac8066f6187cd7f38d87f027e151ce47243565bbc63cf586cf640504ca70dff"
     },
     {
       "path": "site/assets/pinned-stations.js",
@@ -796,7 +806,7 @@
     {
       "path": "site/assets/published-catalog.js",
       "bytes": 4258,
-      "sha256": "3d7e0979e9abffe324b9fc95386fd1cb645f076814351d684469a13fdc566e96"
+      "sha256": "c02f7f648559204599cdafcfc7303b86c5e6a44c564c147689bea7f01d23b212"
     },
     {
       "path": "site/assets/responsive-ui.css",
@@ -806,7 +816,7 @@
     {
       "path": "site/assets/responsive-ui.js",
       "bytes": 79871,
-      "sha256": "f76e19b8518b51cd1fff05524acb2fe9a36b0e33cb8c65f616d4b2ec5804306a"
+      "sha256": "f981908d8820141744908391fca6c1559a9a976e4e7c1c7499a5d5ac001f512f"
     },
     {
       "path": "site/assets/search-controls.css",
@@ -816,12 +826,12 @@
     {
       "path": "site/assets/search-controls.js",
       "bytes": 6484,
-      "sha256": "9378bcc36c6c12d9f4d98001c59a95fa7268751dbe021de454dfa496ceff8ebe"
+      "sha256": "a67cd9a93fcaf0c854d869128e2a50052cafe7a1dcfe018ab028a5dfb27ce250"
     },
     {
       "path": "site/assets/search-core.js",
       "bytes": 8877,
-      "sha256": "fa7822e3ee0c24d5fdc37b56dac240648ab9ad72b46c6503bb998596eae473fc"
+      "sha256": "873fc00813647f0887e44d3bebce975fb84dd3081773ad43a6aa5142f88f31e0"
     },
     {
       "path": "site/assets/snapshot-protocol.js",
@@ -836,22 +846,22 @@
     {
       "path": "site/assets/song-library-store.js",
       "bytes": 17683,
-      "sha256": "383ba0d94f65b0bdc7ed62626b957eb8e6c04de9f0d83136da608c0999fc0349"
+      "sha256": "bf0dcf1c7fe489e7f1944da754fe53d7d9510cdfb21592f2ae603ff45c73506e"
     },
     {
       "path": "site/assets/song-library-ui.js",
       "bytes": 22113,
-      "sha256": "b1038c212a9c0e6620a835a2682f69c2cd27677e960ee140a39a5b208c1d02c3"
+      "sha256": "dbe3111db3101880222201cfd0f1c5df021636c7b39b16d9bca7e4cd44482021"
     },
     {
       "path": "site/assets/station-location.js",
       "bytes": 1640,
-      "sha256": "5fbdafa85c60eb630708030a1adfe221f90e9af2d662703f385a591c0afda23e"
+      "sha256": "c060d50506708c8323fd67bd31c841720f7e056d1406960c07b6b37ffe3f8b78"
     },
     {
       "path": "site/assets/station-variants.js",
       "bytes": 8422,
-      "sha256": "c5d6ad13ea41d2b28f71fadec26481c7b5ab4193fbbcfa30a284c6ab7d9a3d32"
+      "sha256": "3100f3cb20ca904a13127543fd24100c6fcb5f1dd431c11b76c48f89eddc342c"
     },
     {
       "path": "site/assets/storage-guard.js",
@@ -861,7 +871,7 @@
     {
       "path": "site/assets/sync-core.js",
       "bytes": 13810,
-      "sha256": "1cdac5fd83379c29f89cbcd8494d66331fa17fc4ed06e641807ce305cc105ab3"
+      "sha256": "8fb081e75caac05c5926af3736aba627a59b6396c2f60492215a2b08f48d4b9d"
     },
     {
       "path": "site/assets/ui-refresh.css",
@@ -871,7 +881,7 @@
     {
       "path": "site/assets/vector-atlas.js",
       "bytes": 12644,
-      "sha256": "c30fe1191e7586a62f5604cc60f58bd2d99e478aa607ac523e5e957f6448e438"
+      "sha256": "51881786597c2b9db3341740f6fec8a36adb9e8732806a8a80531ef0deb4ead8"
     },
     {
       "path": "site/assets/world-land.js",
@@ -912,6 +922,11 @@
       "path": "site/branding/earth-radio-apple-touch-icon-180.png",
       "bytes": 5821,
       "sha256": "2b9b234b70f80c427f6db63e9b4cb06e9ac0bbc54a129727b02f4ed7e4514bd3"
+    },
+    {
+      "path": "site/branding/earth-radio-desktop.ico",
+      "bytes": 43763,
+      "sha256": "cfb83d754efe35caff26cf3f51db987649b438f083d60b4946f059506525e944"
     },
     {
       "path": "site/branding/earth-radio-favicon-obsidian-16.png",
@@ -996,7 +1011,7 @@
     {
       "path": "site/config.js",
       "bytes": 3338,
-      "sha256": "3681a5fdb39ed3ea2c5846a999de216fc4ebeeb6aabc88bba9705852f119c716"
+      "sha256": "9e00c0c2faf28f50cbc0b17978e150254aaf89426c3072e17fbe9d851d72bc5e"
     },
     {
       "path": "site/favicon.svg",
@@ -1021,7 +1036,7 @@
     {
       "path": "site/i18n/index.js",
       "bytes": 6474,
-      "sha256": "517d89b173ecf11878224c65d75b7276cf5bba35c41ba6212919f1f79cc82953"
+      "sha256": "cc37297f3ff39926f9c08fedc316cb9173c39e6baa836928d595c4d9b41c7bd2"
     },
     {
       "path": "site/i18n/ko.js",
@@ -1056,7 +1071,7 @@
     {
       "path": "site/index.html",
       "bytes": 41571,
-      "sha256": "85cc6d3858f294c21ef4394ef20370f7fda9e10f87b6345ec2848828c46e362c"
+      "sha256": "fbca2ebdf5595362ab204c238fa9371596338b22fc911af3d39d184e64b8864b"
     },
     {
       "path": "site/manifest.webmanifest",
@@ -1075,13 +1090,13 @@
     },
     {
       "path": "site/sw.js",
-      "bytes": 5412,
-      "sha256": "58b0bbfc5182d9362843ca8902c55d5d745f52b67a4f14c666a263f85a2cf4d9"
+      "bytes": 5407,
+      "sha256": "d1e0f72c5a5594fe204761e8a0227b4402d04ab1e7677962e4fe8d8dcc48e134"
     },
     {
       "path": "src-recovered/core/config.ts",
       "bytes": 2819,
-      "sha256": "30a25de1e4e6cb3b1d700b4ca7b0fd801373975b48c0e9ffc38e25fc449a2fb6"
+      "sha256": "5e60be8b0d87985f562e5137357763529fc0c24d3235e00e250c91b03408795d"
     },
     {
       "path": "src-recovered/core/db.ts",
@@ -1330,8 +1345,8 @@
     },
     {
       "path": "tests/brand-identity.test.mjs",
-      "bytes": 5862,
-      "sha256": "f3a39df05959dfe887237d543f9e633c2929a24c3bf4e115befea7a535922016"
+      "bytes": 7689,
+      "sha256": "9ece6eb749b1a214b00826118da5e50b1976267f5fab69f7cad3fe5169b7e095"
     },
     {
       "path": "tests/browser/fixtures/stations.mjs",
@@ -1596,7 +1611,7 @@
     {
       "path": "tests/live-metadata.test.mjs",
       "bytes": 42643,
-      "sha256": "92dacc388a18f282ae1f7be43d6d1cc5304beafb7942da2ad3692fac6587e388"
+      "sha256": "69e4c062094c360c5e7c0a9c24dbdec9cf0ca60b4565ab1e66c039a95a0a0e64"
     },
     {
       "path": "tests/macos-release.test.mjs",
@@ -1671,7 +1686,7 @@
     {
       "path": "tests/responsive-ui.test.mjs",
       "bytes": 13511,
-      "sha256": "930a69703e2ee5e8c8a16716bd3780abdee436a9136fc65a3367dceb622e7261"
+      "sha256": "807a7584cdbf73a0cb334637e3ff2ce5a418c1c2322411c95d0af5d150d5a8f5"
     },
     {
       "path": "tests/search-core.test.mjs",
@@ -1680,8 +1695,8 @@
     },
     {
       "path": "tests/service-worker.test.mjs",
-      "bytes": 12486,
-      "sha256": "bf2522d424a78e918cd680bc8691177f657369c94ff986217c72860e2b1c96a5"
+      "bytes": 12481,
+      "sha256": "157f719ab3a62a3926b8a3554dd8cd821e86ef1aa25b3dc67190d10116f42dc3"
     },
     {
       "path": "tests/smoke-desktop-auth-lifecycle.mjs",
@@ -1706,7 +1721,7 @@
     {
       "path": "tests/smoke-metadata.mjs",
       "bytes": 7009,
-      "sha256": "d5d714719840901eb627c03ffec4625fd6e54aa770a2a9e809851e060073a8fb"
+      "sha256": "b77bf038f4c8ee031489181e4255422d7a2845b76188b15059b3e542a74624ef"
     },
     {
       "path": "tests/smoke-recovery-import.ps1",

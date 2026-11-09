@@ -1,6 +1,34 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { readFile } from 'node:fs/promises';
 import { initBrandIdentity } from '../site/assets/brand-identity.js';
+
+test('Windows native identity contains bounded 32-bit PNG entries through 256 pixels', async () => {
+  const bytes = await readFile(new URL('../site/branding/earth-radio-desktop.ico', import.meta.url));
+  assert.equal(bytes.readUInt16LE(0), 0); assert.equal(bytes.readUInt16LE(2), 1);
+  const count = bytes.readUInt16LE(4), sizes = []; let end = 6 + count * 16;
+  assert.ok(count > 0 && count <= 16);
+  for (let i = 0; i < count; i++) {
+    const header = 6 + i * 16, width = bytes[header] || 256, height = bytes[header + 1] || 256;
+    const length = bytes.readUInt32LE(header + 8), offset = bytes.readUInt32LE(header + 12);
+    assert.equal(width, height); assert.equal(bytes.readUInt16LE(header + 6), 32);
+    assert.ok(offset >= end && length >= 24 && offset + length <= bytes.length);
+    assert.equal(bytes.subarray(offset, offset + 8).toString('hex'), '89504e470d0a1a0a');
+    assert.equal(bytes.readUInt32BE(offset + 16), width); assert.equal(bytes.readUInt32BE(offset + 20), height);
+    sizes.push(width); end = offset + length;
+  }
+  assert.equal(end, bytes.length); assert.ok(sizes.includes(16) && sizes.includes(32) && sizes.includes(256));
+});
+
+test('native packaging and window icons use the approved precision identity', async () => {
+  const text = async relative => readFile(new URL(relative, import.meta.url), 'utf8');
+  assert.match(await text('../electron-builder.yml'), /icon: site\/branding\/earth-radio-desktop\.ico/);
+  const shell = await text('../electron/main.mjs');
+  assert.match(shell, /earth-radio-desktop\.ico/); assert.match(shell, /earth-radio-app-icon-512\.png/);
+  const mac = await text('../scripts/macos-release.mjs');
+  assert.match(mac, /'site', 'branding', 'earth-radio-app-icon-512\.png'/);
+  assert.match(mac, /packagedIconSha256/);
+});
 
 function fixture({ audio = true, brand = true, icons = true } = {}) {
   const classes = new Set(['earth-radio-brand']);
