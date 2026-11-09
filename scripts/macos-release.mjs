@@ -96,7 +96,7 @@ export async function buildMacRelease(sourceInput, arch, environment = process.e
   const iconset = path.join(work, 'earth-radio.iconset');
   await mkdir(iconset, { recursive: true });
   await mkdir(output, { recursive: true });
-  const master = path.join(source, 'docs', 'branding', 'earth-radio-icon-master.png');
+  const master = path.join(source, 'site', 'branding', 'earth-radio-app-icon-512.png');
   for (const size of [16, 32, 128, 256, 512]) {
     for (const scale of [1, 2]) run('sips', ['-z', String(size * scale), String(size * scale), master, '--out', path.join(iconset, `icon_${size}x${size}${scale === 2 ? '@2x' : ''}.png`)]);
   }
@@ -135,6 +135,10 @@ export async function buildMacRelease(sourceInput, arch, environment = process.e
     const signature = spawnSync('codesign', ['-d', '--verbose=4', app], { encoding: 'utf8' });
     assert.equal(signature.status, 0, 'Could not inspect the app signature');
     assert.match(signature.stderr, /Signature=adhoc/, 'Expected the explicitly labeled ad-hoc signature');
+    const iconName = property('CFBundleIconFile');
+    assert.equal(path.basename(iconName), iconName, 'Unexpected packaged icon path');
+    const packagedIconSha256 = digest(await readFile(path.join(contents, 'Resources', iconName)));
+    assert.equal(packagedIconSha256, digest(await readFile(icon)), 'Packaged ICNS differs from generated identity');
     const archive = path.join(contents, 'Resources', 'app.asar');
     let matchedFiles = 0;
     for (const directory of ['site', 'electron', 'server']) {
@@ -149,7 +153,9 @@ export async function buildMacRelease(sourceInput, arch, environment = process.e
     const bytes = await readFile(dmg);
     report = { ...identity, bytes: bytes.length, sha256: digest(bytes), minimumMacOS: property('LSMinimumSystemVersion'),
       adHocSigned: true, notarized: false, dmgVerified: true, mountedReadOnly: true, matchedFiles, startup,
-      iconSha256: digest(await readFile(icon)), workflowCommit: environment.GITHUB_SHA || '' };
+      iconSha256: digest(await readFile(icon)), packagedIconSha256,
+      iconSource: 'site/branding/earth-radio-app-icon-512.png', iconSourceSha256: digest(await readFile(master)),
+      workflowCommit: environment.GITHUB_SHA || '' };
   } finally {
     if (attached) run('hdiutil', ['detach', mount]);
     await rm(mount, { recursive: true, force: true });

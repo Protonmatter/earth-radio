@@ -1,5 +1,14 @@
 # Build state
 
+## 0.32.1 precision identity delivery
+
+PR #36 merged approved identity source de0e621 into main as 1d95684. This patch
+advances the immutable desktop version and coherent module/cache generation, and
+uses the approved artwork for native Windows/Mac icons. Final source, CI, served
+parity and package/download qualification are recorded in release provenance and
+Spaces after the source freezes; this note alone does not assert those gates.
+See [release boundaries](RELEASE-0.32.1.md). Physical-device behavior remains open.
+
 ## 0.32.0 normalized directory and grouped streams candidate
 
 The producer prerequisite was merged as PR #33 after all ten exact-head checks.

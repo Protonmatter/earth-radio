@@ -14,7 +14,7 @@ asarUnpack:
 directories:
   output: release
 win:
-  icon: site/branding/earth-radio-v2.ico
+  icon: site/branding/earth-radio-desktop.ico
   target:
     - nsis
     - portable

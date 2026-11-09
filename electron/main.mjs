@@ -39,7 +39,7 @@ async function createMainWindow(proxyBaseUrl) {
     minWidth: 1080,
     minHeight: 720,
     title: 'Earth Radio',
-    icon: resolveAsset('site', 'branding', process.platform === 'win32' ? 'earth-radio-v2.ico' : 'earth-radio-512-v2.png'),
+    icon: resolveAsset('site', 'branding', process.platform === 'win32' ? 'earth-radio-desktop.ico' : 'earth-radio-app-icon-512.png'),
     backgroundColor: '#0a1020',
     show: false,
     webPreferences: {

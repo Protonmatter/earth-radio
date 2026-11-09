@@ -1,4 +1,4 @@
-import {SNAPSHOT_ROOT,SNAPSHOT_MAX_BYTES,validateSnapshotManifest,snapshotDescriptor,snapshotEtag} from './snapshot-protocol.js?v=0.32.0';
+import {SNAPSHOT_ROOT,SNAPSHOT_MAX_BYTES,validateSnapshotManifest,snapshotDescriptor,snapshotEtag} from './snapshot-protocol.js?v=0.32.1';
 
 export async function boundedSnapshotBytes(response,maxBytes,signal){
   if(!response.ok||!response.headers.get('content-type')?.includes('application/json')||Number(response.headers.get('content-length'))>maxBytes){void response.body?.cancel().catch(()=>{});throw Error('Published directory unavailable');}
