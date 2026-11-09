@@ -40,6 +40,9 @@ jobs:
           cache: npm
       - name: Install locked dependencies
         run: npm ci
+      - name: Prepare pinned Electron runtime
+        if: runner.os == 'macOS'
+        run: node scripts/ensure-electron-runtime.mjs
       - name: Exercise native sandbox, auth IPC and OS credential vault
         run: npm run test:desktop-auth
       - name: Build and qualify unnotarized macOS candidate

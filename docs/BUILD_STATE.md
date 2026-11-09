@@ -24,12 +24,15 @@ Catalog success no longer creates a covering toast. Atlas fallback/view bounds
 exclude Antarctica while keeping those stations listed. The viewport establishes
 its view before raising minimum zoom, avoiding a Leaflet animation that ignored
 mobile Fit. Root no-transform prevents automatic beacon injection without expanding
-CSP trust. Local verification passes 551 tests with three existing skips;
+CSP trust. Local verification passes 557 tests with three existing skips;
 five tooltip/Fit and four grouped playback/identity cases pass. Final frozen browser,
 rendered/native, hosted, exact-head CI and release qualification still gate delivery.
 See [release gates](RELEASE-0.32.0.md) and [publication runbook](DIRECTORY_PUBLICATION.md).
 Final identities and physical qualification boundaries belong in release provenance
 and Spaces. No account/provider/schema, SMTP, vault or signing-trust change is made.
+Final compact-control geometry and accessible names pass 174 browser cases, including
+all six locales. Mac CI prepares the pinned Electron runtime with bounded official-
+installer retries and bundled checksums before running unchanged application tests.
 
 ## 0.31.0 directory reliability candidate
 

@@ -109,6 +109,14 @@ deployment procedure lives in `docs/CLOUDFLARE_DEPLOYMENT.md`.
 
 ## CI inspection
 
+Mac native jobs prepare the exact pinned Electron runtime before tests using
+`node scripts/ensure-electron-runtime.mjs`. Only acquisition is retried: at most
+three official-installer attempts, each bounded to 180 seconds, with one/two-second
+backoff. The installer keeps the checksum list bundled in the locked npm package.
+Permanent download or integrity failure fails CI; application tests run once and
+retain their existing assertions. No alternate mirror, dependency or credential is
+introduced. This addresses observed upstream HTTP 504s during release qualification.
+
 GitHub Actions is defined in `.github/workflows/ci.yml` with read-only contents permission and immutable action commit pins. When a repository exists, inspect both Linux and Windows jobs for the exact commit. A green local run does not substitute for remote CI.
 
 `.github/workflows/supabase.yml` starts a local Supabase stack on every pull request: pgTAP RLS tests against `supabase db start`, then the production PKCE client against local GoTrue and Mailpit. That workflow is also read-only and does not use hosted project secrets.
