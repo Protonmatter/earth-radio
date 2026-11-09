@@ -29,7 +29,15 @@ test('release module URLs are coherent and an older cache cannot satisfy a newer
   assert.equal(await (await response).text(), 'new module'); assert.equal(fetched, url);
 });
 
-for (const relative of ['/branding/earth-radio-192-v2.png', '/manifest.webmanifest']) {
+for (const relative of [
+  '/branding/earth-radio-app-icon-192.png',
+  '/branding/earth-radio-favicon-pine.svg',
+  '/branding/earth-radio-favicon-obsidian.svg',
+  '/branding/earth-radio-favicon-obsidian-32.png',
+  '/assets/brand-identity.js?v=0.32.0',
+  '/assets/brand-identity.css?v=0.32.0',
+  '/manifest.webmanifest'
+]) {
   test(`service worker serves cached ${relative} when the network is offline`, async () => {
     const worker = await readFile(path.join(root, 'site', 'sw.js'), 'utf8');
     const handlers = new Map();
@@ -99,8 +107,18 @@ test('deployed pages send HSTS and revalidate the auth overlays', async () => {
 test('service worker precaches the auth, responsive, and i18n shell under a new cache version', async () => {
   const worker = await readFile(path.join(root, 'site', 'sw.js'), 'utf8');
   assert.match(worker, /cache: isImmutableAsset\(asset\) \? 'force-cache' : 'reload'/);
-  assert.match(worker, /earth-radio-shell-v67-stream-disclosure/);
-  for (const size of [32, 180, 192, 512]) assert.ok(worker.includes(`branding/earth-radio-${size}-v2.png`));
+  assert.match(worker, /earth-radio-shell-v68-precision-identity/);
+  for (const palette of ['pine', 'obsidian']) {
+    for (const suffix of ['.svg', '-16.png', '-32.png']) {
+      assert.ok(worker.includes(`branding/earth-radio-favicon-${palette}${suffix}`));
+    }
+  }
+  for (const icon of ['apple-touch-icon-180', 'app-icon-192', 'app-icon-512', 'maskable-icon-512', 'maskable-icon-1024']) {
+    assert.ok(worker.includes(`branding/earth-radio-${icon}.png`));
+  }
+  for (const asset of ['brand-identity.js', 'brand-identity.css']) {
+    assert.ok(worker.includes(`./assets/${asset}`));
+  }
   for (const asset of ['discovery-core.js', 'discovery-ui.js', 'map-directory.js', 'discovery.css', 'listening-room.css', 'vector-atlas.js', 'world-land.js']) {
     assert.ok(worker.includes(`./assets/${asset}`), `Missing discovery shell asset ${asset}`);
   }

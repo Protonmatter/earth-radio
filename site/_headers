@@ -63,6 +63,12 @@
 /assets/listening-room.css
   Cache-Control: public, max-age=300, must-revalidate
 
+/assets/brand-identity.css
+  Cache-Control: public, max-age=300, must-revalidate
+
+/assets/brand-identity.js
+  Cache-Control: public, max-age=300, must-revalidate
+
 /assets/vector-atlas.js
   Cache-Control: public, max-age=300, must-revalidate
 

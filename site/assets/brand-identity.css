@@ -1,0 +1,85 @@
+/* The approved outlined lockup retains its original paths and 12-degree tilt. */
+.earth-radio-brand {
+  --earth-radio-mark: #1e3a2f;
+  --earth-radio-wordmark: #161614;
+  --earth-radio-accent: #c85a32;
+}
+
+html[data-theme="dark"] .earth-radio-brand,
+html[data-er-palette="night"] .earth-radio-brand {
+  --earth-radio-mark: #f6f4f0;
+  --earth-radio-wordmark: #f6f4f0;
+}
+
+/* The app's explicit Paper/Night choice wins during theme reconciliation. */
+html[data-er-palette="paper"] .earth-radio-brand {
+  --earth-radio-mark: #1e3a2f;
+  --earth-radio-wordmark: #161614;
+}
+
+html .header .logo.earth-radio-brand {
+  display: inline-flex;
+  flex: 0 1 auto;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0;
+  width: 160px;
+  max-width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0;
+  overflow: visible;
+  line-height: 1;
+}
+
+.earth-radio-brand__lockup {
+  display: block;
+  flex: 0 0 auto;
+  width: 100%;
+  height: auto;
+}
+
+.earth-radio-brand__mark {
+  fill: none;
+  stroke: var(--earth-radio-mark);
+}
+
+.earth-radio-brand__wordmark {
+  fill: var(--earth-radio-wordmark);
+}
+
+.earth-radio-brand__period {
+  fill: var(--earth-radio-accent);
+}
+
+.earth-radio-brand__bar {
+  /* Wrappers sit inside the SVG rotation; only their local Y axis scales. */
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+@media (min-width: 1100px) {
+  /* The desktop header remains pine in both app palettes. */
+  html .header .logo.earth-radio-brand {
+    --earth-radio-mark: #f6f4f0;
+    --earth-radio-wordmark: #f6f4f0;
+    width: 164px;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .earth-radio-brand.is-playing .earth-radio-brand__bar {
+    animation: earth-radio-wave 1.8s ease-in-out infinite;
+  }
+
+  .earth-radio-brand.is-playing .bar-2 { animation-delay: -0.36s; }
+  .earth-radio-brand.is-playing .bar-3 { animation-delay: -0.72s; }
+  .earth-radio-brand.is-playing .bar-4 { animation-delay: -0.18s; }
+  .earth-radio-brand.is-playing .bar-5 { animation-delay: -0.54s; }
+}
+
+@keyframes earth-radio-wave {
+  0%, 100% { transform: scaleY(1); }
+  50% { transform: scaleY(0.94); }
+}

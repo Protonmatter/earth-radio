@@ -39,6 +39,11 @@
       "sha256": "a4b0884831b1d597bfd4ff88dac250ca8ef818af0995da4f2c86a1ddcfe91582"
     },
     {
+      "path": "docs/BRAND_INTEGRATION.md",
+      "bytes": 8779,
+      "sha256": "70d81b53f8df3cbcca795193d38aca043f8cd393f97d7d7a6a93b523104493f0"
+    },
+    {
       "path": "docs/branding/earth-radio-icon-master.png",
       "bytes": 1302715,
       "sha256": "5f52da24e5ada7a246f956ae05ac8c87f4571d30e1408c5ad068777375b97147"
@@ -120,8 +125,8 @@
     },
     {
       "path": "docs/provenance/hardening-overlays.json",
-      "bytes": 14325,
-      "sha256": "24f3a68345cf298899596316ab7b7fa799197b59f7cf75ce6595ae12623de8af"
+      "bytes": 15330,
+      "sha256": "1d6c59ea844c87dc360b428f35e4d955145de60dd0893e2017fd81ab464b6902"
     },
     {
       "path": "docs/provenance/map-data.json",
@@ -435,8 +440,8 @@
     },
     {
       "path": "package.json",
-      "bytes": 4834,
-      "sha256": "3d1411799e3d723719872069d50de76100dba210a2f0962574e3cb3f53ac6fb0"
+      "bytes": 4864,
+      "sha256": "257e0c6fe48ee1f5c240ae75467998d139e07a247662b93b3feba1a5fd652578"
     },
     {
       "path": "scripts/build-directory-snapshot.mjs",
@@ -605,8 +610,8 @@
     },
     {
       "path": "site/_headers",
-      "bytes": 3624,
-      "sha256": "4a50685dc07695727fe78cc9de711c6e23ca47727c4434b576ac02237c896573"
+      "bytes": 3787,
+      "sha256": "974a62a63dc6ac77fa5a28dd7df487d3fb65a2e4ae0cef484961a0659a85e773"
     },
     {
       "path": "site/_redirects",
@@ -647,6 +652,16 @@
       "path": "site/assets/auth-ui.js",
       "bytes": 29229,
       "sha256": "40982f04f9f4e7dc75df72f2bf27b43d8c06544a8e0917092c6be22d2ebf2a30"
+    },
+    {
+      "path": "site/assets/brand-identity.css",
+      "bytes": 2117,
+      "sha256": "fb90b3fe49cc9217b572f4568f6f591a5d154463c0fe1642a7077f9342d1cd6b"
+    },
+    {
+      "path": "site/assets/brand-identity.js",
+      "bytes": 2087,
+      "sha256": "7943f00adb584e7d7c7ad571d17bc0b30db4def42efe32b07bddcfcdb651f0b8"
     },
     {
       "path": "site/assets/catalog-fields.js",
@@ -884,9 +899,99 @@
       "sha256": "5ffc5be339d86ccc36b415d841edc94c314ca0f7a2909c086589cf4f098d119c"
     },
     {
+      "path": "site/branding/earth-radio-app-icon-192.png",
+      "bytes": 9060,
+      "sha256": "9723d58f0acaebaccd968243545023f19a8d1da69754c1f40599c9940b0aec32"
+    },
+    {
+      "path": "site/branding/earth-radio-app-icon-512.png",
+      "bytes": 26809,
+      "sha256": "b687268c98bf4100aa2fa7c33f09123fa5f6950e9d6df2ee9966d357505f9957"
+    },
+    {
+      "path": "site/branding/earth-radio-apple-touch-icon-180.png",
+      "bytes": 5821,
+      "sha256": "2b9b234b70f80c427f6db63e9b4cb06e9ac0bbc54a129727b02f4ed7e4514bd3"
+    },
+    {
+      "path": "site/branding/earth-radio-favicon-obsidian-16.png",
+      "bytes": 704,
+      "sha256": "e8718c97d931f083254380254a4628e5ce381533b36e75119c4f5b31cef0abdd"
+    },
+    {
+      "path": "site/branding/earth-radio-favicon-obsidian-32.png",
+      "bytes": 1461,
+      "sha256": "c1900f8a5926716b1ddcb13b739ec105ab59797a276a1636ec25bae5f74204dc"
+    },
+    {
+      "path": "site/branding/earth-radio-favicon-obsidian.svg",
+      "bytes": 1702,
+      "sha256": "05d17dceed9f06193877c5b6ce26e170e3c9cb4e56a66bdcb9e06fcce7e8381d"
+    },
+    {
+      "path": "site/branding/earth-radio-favicon-pine-16.png",
+      "bytes": 722,
+      "sha256": "ac5cfb51d444998c8a30e29880fdd57b98b1f82a27c6c945d8485e25e426ed52"
+    },
+    {
+      "path": "site/branding/earth-radio-favicon-pine-32.png",
+      "bytes": 1479,
+      "sha256": "d323fcc4ba6ab918f9485f1659088f659c530278da320b89a1cce8e1311e9791"
+    },
+    {
+      "path": "site/branding/earth-radio-favicon-pine.svg",
+      "bytes": 1702,
+      "sha256": "00c6940cc04dd460e8c65f4b4430ac903b42a70444399a7c9db3d4a7fac804ae"
+    },
+    {
+      "path": "site/branding/earth-radio-icon-obsidian.svg",
+      "bytes": 1763,
+      "sha256": "e3bba1d916bab5ad793fc73eaad9511d5d07796fafccff66b7ff6d50c69261bf"
+    },
+    {
+      "path": "site/branding/earth-radio-icon-pine-fullbleed.svg",
+      "bytes": 1688,
+      "sha256": "9ca320acfeb4b6fa2beb9f804496728cd88e491977f58758ca848614e6949862"
+    },
+    {
+      "path": "site/branding/earth-radio-icon-pine.svg",
+      "bytes": 1763,
+      "sha256": "0f7e3e2012430ff5a1d9a473aced6f1ed69ae6087a00af8b80fd426cfbbfa8e3"
+    },
+    {
+      "path": "site/branding/earth-radio-logo-reversed.svg",
+      "bytes": 7903,
+      "sha256": "64bf35a7864331a00760efe3fcd07c6f9c7f1686e255ae70ecd969a12e313477"
+    },
+    {
+      "path": "site/branding/earth-radio-logo.svg",
+      "bytes": 7903,
+      "sha256": "5c468d1dc6da14f7d4d048a8ddf3dd74c02661275eaa144a2fe32a693b9185c8"
+    },
+    {
+      "path": "site/branding/earth-radio-mark.svg",
+      "bytes": 1683,
+      "sha256": "86190aff83a274274ec40abae0c7f6f0e90ed25e0ba1438d45cbad1f8657edf4"
+    },
+    {
+      "path": "site/branding/earth-radio-maskable-icon-1024.png",
+      "bytes": 42849,
+      "sha256": "195d220e7077fa14a25165719f20b83adf0bc4122ff740aabc948b5d5c8ff81b"
+    },
+    {
+      "path": "site/branding/earth-radio-maskable-icon-512.png",
+      "bytes": 18929,
+      "sha256": "72ca351ade28e493ece11014b9892330e72dd790ffa7bf7c0c16ab9e87193a49"
+    },
+    {
       "path": "site/branding/earth-radio-v2.ico",
       "bytes": 94480,
       "sha256": "ebc7702291080d513f0e47a93bfd968d869f74aa1c3562b93d7d9c7f2cb0cf58"
+    },
+    {
+      "path": "site/branding/OFL-InstrumentSerif.txt",
+      "bytes": 4405,
+      "sha256": "129ed7618959716959f2941fdd5b49e0ad6e6c1d78726761786a00253d865521"
     },
     {
       "path": "site/config.js",
@@ -895,8 +1000,8 @@
     },
     {
       "path": "site/favicon.svg",
-      "bytes": 9523,
-      "sha256": "ceeac38434be7a3b4d0f68b8cd8aa2b9ae78c260d6343087c6e095f8031ce4ff"
+      "bytes": 1702,
+      "sha256": "00c6940cc04dd460e8c65f4b4430ac903b42a70444399a7c9db3d4a7fac804ae"
     },
     {
       "path": "site/i18n/ar.js",
@@ -950,13 +1055,13 @@
     },
     {
       "path": "site/index.html",
-      "bytes": 32370,
-      "sha256": "980655fb499ff750e08304747f782ce3fb1c5cfe65c72828cee2a60623e8d7d6"
+      "bytes": 41571,
+      "sha256": "85cc6d3858f294c21ef4394ef20370f7fda9e10f87b6345ec2848828c46e362c"
     },
     {
       "path": "site/manifest.webmanifest",
-      "bytes": 477,
-      "sha256": "03c5618d097002f540fc12f6f469a25c82c71a17f28606ea8efc07858454aca7"
+      "bytes": 737,
+      "sha256": "82d56c20a9dfd9e9b49a7b119449bbfa125178512ba89df102f8480fdf32459f"
     },
     {
       "path": "site/map-data-notices.txt",
@@ -970,8 +1075,8 @@
     },
     {
       "path": "site/sw.js",
-      "bytes": 4945,
-      "sha256": "4ff3d42a71bc835ffa470ecfa5fa618ded2c871e0e752cb4cfc610f5b304c1b2"
+      "bytes": 5412,
+      "sha256": "58b0bbfc5182d9362843ca8902c55d5d745f52b67a4f14c666a263f85a2cf4d9"
     },
     {
       "path": "src-recovered/core/config.ts",
@@ -1222,6 +1327,11 @@
       "path": "tests/auth-sync.test.mjs",
       "bytes": 55765,
       "sha256": "54c84af092c493f1dd7b04dd0db5e5f99c1b42aca145e991b4b900ddd69ebc54"
+    },
+    {
+      "path": "tests/brand-identity.test.mjs",
+      "bytes": 5862,
+      "sha256": "f3a39df05959dfe887237d543f9e633c2929a24c3bf4e115befea7a535922016"
     },
     {
       "path": "tests/browser/fixtures/stations.mjs",
@@ -1570,8 +1680,8 @@
     },
     {
       "path": "tests/service-worker.test.mjs",
-      "bytes": 11833,
-      "sha256": "a09d27c5c9c535090c13308e57d669c1e14932f8f5ec4c98ccfae5be2fd3f6a8"
+      "bytes": 12486,
+      "sha256": "bf2522d424a78e918cd680bc8691177f657369c94ff986217c72860e2b1c96a5"
     },
     {
       "path": "tests/smoke-desktop-auth-lifecycle.mjs",
