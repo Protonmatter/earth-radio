@@ -14,12 +14,17 @@ search group program streams while retaining UUIDs, saved aliases and deep links
 The quality picker prepares explicit Play; footer Play and bounded sibling recovery
 use that choice. Native/browser truncation preserves popularity ordering. HTTP
 choices are disclosed; country inference and coordinates remain conservative.
+Actual Windows qualification caught a native merge that assumed optional source
+claims existed on overlapping root/country records. The guarded merge and overlap
+regression now preserve the normalized snapshot path; a real Electron HTTP route
+returned the snapshot source and generation metadata after the correction. Final
+packages must show that path, rather than merely proving live fallback can load.
 
 Catalog success no longer creates a covering toast. Atlas fallback/view bounds
 exclude Antarctica while keeping those stations listed. The viewport establishes
 its view before raising minimum zoom, avoiding a Leaflet animation that ignored
 mobile Fit. Root no-transform prevents automatic beacon injection without expanding
-CSP trust. Local verification currently passes 550 tests with three existing skips;
+CSP trust. Local verification passes 551 tests with three existing skips;
 five tooltip/Fit and four grouped playback/identity cases pass. Final frozen browser,
 rendered/native, hosted, exact-head CI and release qualification still gate delivery.
 See [release gates](RELEASE-0.32.0.md) and [publication runbook](DIRECTORY_PUBLICATION.md).

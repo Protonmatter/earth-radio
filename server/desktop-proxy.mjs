@@ -290,7 +290,7 @@ function addRadioBrowserSourceClaim(station, endpoint, observedAt) {
   };
 }
 
-function mergeStationRecords(stations) {
+export function mergeStationRecords(stations) {
   const byId = new Map();
   for (const station of stations) {
     const key = stationRecordKey(station);
@@ -335,7 +335,8 @@ function compareStationRecords(a, b) {
 
 function mergeSourceClaims(existing, additions) {
   const out = Array.isArray(existing) ? [...existing] : [];
-  for (const claim of additions) {
+  for (const claim of Array.isArray(additions) ? additions : []) {
+    if (!claim || typeof claim !== 'object' || typeof claim.source !== 'string' || !claim.source) continue;
     if (!out.some(item => String(item?.source || '') === claim.source)) out.push(claim);
   }
   return out;
