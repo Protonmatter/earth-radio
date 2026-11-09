@@ -4,7 +4,14 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {validateWebsite} from './validate-website.mjs';
 
-export const WEBSITE_FILES=Object.freeze(['index.html','styles.css','website.js','release-core.js','_headers','_redirects','robots.txt','sitemap.xml','images/radio-player.png','images/listening-map.png']);
+export const WEBSITE_FILES=Object.freeze(['index.html','styles.css','website.js','release-core.js','_headers','_redirects','robots.txt','sitemap.xml','images/radio-player.png','images/listening-map.png','images/earth-radio-og.png']);
+export const BRAND_ASSETS=Object.freeze([
+  ['earth-radio-favicon-pine-16.png','earth-radio-favicon-16.png'],
+  ['earth-radio-favicon-pine-32.png','earth-radio-favicon-32.png'],
+  ['earth-radio-favicon-pine.svg','earth-radio-favicon.svg'],
+  ['earth-radio-apple-touch-icon-180.png','earth-radio-apple-touch-icon-180.png'],
+  ['earth-radio-logo.svg','earth-radio-logo.svg']
+]);
 const defaultRoot=path.resolve(import.meta.dirname,'..');
 function childOf(parent,child){const relative=path.relative(parent,child);return relative!==''&&!path.isAbsolute(relative)&&relative!=='..'&&!relative.startsWith(`..${path.sep}`);}
 async function regular(file,bound){const metadata=await lstat(file);if(metadata.isSymbolicLink()||!metadata.isFile()||!childOf(await realpath(bound),await realpath(file)))throw new Error(`Expected a regular source file within its public source directory: ${path.basename(file)}`);}
@@ -20,7 +27,9 @@ export async function stageWebsite({root=defaultRoot,output,cloudflare=false}={}
   }
   const inputs=[...WEBSITE_FILES.map(relative=>({source:path.join(source,relative),bound:source,path:relative})),
     {source:path.join(root,'site/privacy.html'),bound:path.join(root,'site'),path:'privacy.html'},
-    ...[32,512].map(size=>({source:path.join(root,`site/branding/earth-radio-${size}-v2.png`),bound:path.join(root,'site/branding'),path:`images/earth-radio-${size}.png`}))];
+    // Brand assets have one source of truth in site/branding; the website receives the pine
+    // (light) palette only, so favicon selection needs no script on this static site.
+    ...BRAND_ASSETS.map(([from,to])=>({source:path.join(root,'site/branding',from),bound:path.join(root,'site/branding'),path:`images/${to}`}))];
   for(const input of inputs){if(!childOf(await realpath(root),await realpath(input.bound)))throw new Error('Public source resolves outside the repository');await regular(input.source,input.bound);}
   await mkdir(parent,{recursive:true});const resolvedParent=await realpath(parent),resolvedRoot=await realpath(root);
   if(!childOf(resolvedRoot,resolvedParent))throw new Error('Website build parent resolves outside the repository');
@@ -32,7 +41,7 @@ export async function stageWebsite({root=defaultRoot,output,cloudflare=false}={}
     const target=path.join(output,input.path);await mkdir(path.dirname(target),{recursive:true});await copyFile(input.source,target);
     if(input.path==='privacy.html'){
       const privacy=await readFile(target,'utf8');
-      await writeFile(target,privacy.replaceAll('href="./icon-192.png"','href="./images/earth-radio-32.png"').replaceAll('https://earth-radio.pages.dev/','https://app.earthradio.stream/'));
+      await writeFile(target,privacy.replaceAll('href="./icon-192.png"','href="./images/earth-radio-favicon-32.png"').replaceAll('https://earth-radio.pages.dev/','https://app.earthradio.stream/'));
     }
     const bytes=await readFile(target);files.push({path:input.path,bytes:bytes.length,sha256:createHash('sha256').update(bytes).digest('hex')});
   }

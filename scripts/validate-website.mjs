@@ -1,7 +1,7 @@
 import {readFile,readdir} from 'node:fs/promises';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
-const EXPECTED=new Set(['index.html','styles.css','website.js','release-core.js','_headers','_redirects','robots.txt','sitemap.xml','images/radio-player.png','images/listening-map.png','privacy.html','images/earth-radio-32.png','images/earth-radio-512.png','asset-manifest.json']);
+const EXPECTED=new Set(['index.html','styles.css','website.js','release-core.js','_headers','_redirects','robots.txt','sitemap.xml','images/radio-player.png','images/listening-map.png','privacy.html','images/earth-radio-og.png','images/earth-radio-favicon-16.png','images/earth-radio-favicon-32.png','images/earth-radio-favicon.svg','images/earth-radio-apple-touch-icon-180.png','images/earth-radio-logo.svg','asset-manifest.json']);
 async function walk(root,prefix=''){
   const files=[];for(const entry of await readdir(path.join(root,prefix),{withFileTypes:true})){
     if(entry.isSymbolicLink())throw new Error('Website artifact contains a symbolic link');const relative=path.posix.join(prefix,entry.name);
@@ -26,6 +26,8 @@ export async function validateWebsite(root){
       if(!set.has(relative))throw new Error(`Missing website reference: ${relative}`);
     }
   }
+  if(!/<meta property="og:image" content="https:\/\/earthradio\.stream\/images\/earth-radio-og\.png"/.test(html))throw new Error('Website social preview must use the 1200x630 brand card');
+  if(!/<link rel="icon" type="image\/svg\+xml"/.test(html)||!/<link rel="apple-touch-icon"/.test(html))throw new Error('Website must declare SVG and Apple touch icons');
   const headers=await readFile(path.join(root,'_headers'),'utf8');
   for(const required of ["frame-ancestors 'none'",'Strict-Transport-Security: max-age=31536000',"script-src 'self'",'https://api.github.com'])if(!headers.includes(required))throw new Error(`Missing website header: ${required}`);
   if(/immutable/i.test(headers))throw new Error('Unfingerprinted website assets must revalidate');

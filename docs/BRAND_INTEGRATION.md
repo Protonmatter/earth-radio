@@ -80,3 +80,20 @@ The Instrument Serif license notice is included as `site/branding/OFL-Instrument
 - [MDN: playing event](https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/playing_event)
 - [MDN: waiting event](https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/waiting_event)
 - [MDN: reduced-motion preference](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/At-rules/@media/prefers-reduced-motion)
+
+## Public website (earthradio.stream)
+
+The static website in `website/` carries the same identity. `scripts/stage-website.mjs` copies the approved masters from `site/branding/` at build time (`BRAND_ASSETS`), so the website never holds a second copy that can drift:
+
+| Website artifact | Source master |
+| --- | --- |
+| `images/earth-radio-favicon-16.png`, `-32.png` | `earth-radio-favicon-pine-16.png`, `-32.png` |
+| `images/earth-radio-favicon.svg` | `earth-radio-favicon-pine.svg` |
+| `images/earth-radio-apple-touch-icon-180.png` | `earth-radio-apple-touch-icon-180.png` |
+| `images/earth-radio-logo.svg` | `earth-radio-logo.svg` |
+
+The website uses the pine palette only. It has no audio and no favicon script, which keeps it fully static under its existing `script-src 'self'` policy. The header and footer use the lockup as an image (184 CSS px in the desktop header, 140 on small screens, 124 in the footer) with the alternative text "Earth Radio".
+
+`website/images/earth-radio-og.png` is a 1200 x 630 social card (lockup and the "The world is on air." line on pine). It replaces the old square 512 px app icon as `og:image`, with explicit dimensions, alternative text and `twitter:card` set to `summary_large_image`. The tagline was rendered with Instrument Serif (SIL OFL 1.1, see `site/branding/OFL-InstrumentSerif.txt`); the font file itself is not shipped.
+
+The old `images/earth-radio-32.png` and `images/earth-radio-512.png` artifacts are no longer published. `tests/website.test.mjs` checks that every staged brand file is byte-identical to its master and that the card is 1200 x 630.

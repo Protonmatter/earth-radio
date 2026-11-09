@@ -40,8 +40,8 @@
     },
     {
       "path": "docs/BRAND_INTEGRATION.md",
-      "bytes": 8779,
-      "sha256": "70d81b53f8df3cbcca795193d38aca043f8cd393f97d7d7a6a93b523104493f0"
+      "bytes": 10381,
+      "sha256": "12b094a9ff6d1daa9a6b72665e0ec4b4657bc8093ed38705585f44a0bc9750a3"
     },
     {
       "path": "docs/branding/earth-radio-icon-master.png",
@@ -520,8 +520,8 @@
     },
     {
       "path": "scripts/stage-website.mjs",
-      "bytes": 4178,
-      "sha256": "0a91e13a9d75016106fae2005fb832ae9ba33a7a867b180f16e389152642ff04"
+      "bytes": 4742,
+      "sha256": "fd47fcd85661edfca0bcf3a2504f72a6b4de8328bf532696e7002474ae44bcdf"
     },
     {
       "path": "scripts/validate-repository.mjs",
@@ -535,8 +535,8 @@
     },
     {
       "path": "scripts/validate-website.mjs",
-      "bytes": 3369,
-      "sha256": "3f2f1dba6f80705394fcbfe6c7dba3d93d20efc0ced617ac4067a626b89900be"
+      "bytes": 3880,
+      "sha256": "8aea8cfe2db291e960d446bb53d1e40662408cffe5dbefa56e3f46f2cf21b2b8"
     },
     {
       "path": "scripts/version-site-modules.mjs",
@@ -1760,8 +1760,8 @@
     },
     {
       "path": "tests/website.test.mjs",
-      "bytes": 4377,
-      "sha256": "da7ae203155749a950f07934283e7fba2f6edd6437e615812ffa755a58b46475"
+      "bytes": 5984,
+      "sha256": "46899bfea0aae625792fab580bd64b753bcf07dbd8bea17fb48f7449f033e2c0"
     },
     {
       "path": "tests/workflow.test.mjs",
@@ -1784,6 +1784,11 @@
       "sha256": "55075b5ec4e8b31936cbbc282b8829116d1fd48f2f2f1856dee592a6650700ce"
     },
     {
+      "path": "website/images/earth-radio-og.png",
+      "bytes": 58265,
+      "sha256": "f2316c6edf3826c3268627d401185e7ce5335961b49ffd53864cd40d3175bf11"
+    },
+    {
       "path": "website/images/listening-map.png",
       "bytes": 300337,
       "sha256": "fe1baf711a60012e0e29adf5ac3c6bd567c9ccc433cc10cb7bd9cb30f2bc93f4"
@@ -1795,8 +1800,8 @@
     },
     {
       "path": "website/index.html",
-      "bytes": 9687,
-      "sha256": "29ac39b29f46334b8058a052935ca0024ffd478130d97e7b7823c457f535c4e5"
+      "bytes": 10397,
+      "sha256": "a3271bdbe681c41fd5adef901153bed98037023113178077f3c8a54254f6fc0b"
     },
     {
       "path": "website/release-core.js",
@@ -1815,8 +1820,8 @@
     },
     {
       "path": "website/styles.css",
-      "bytes": 9855,
-      "sha256": "a617a05c0c8020dfbc8e2467aeb4e8248be9e0753fdf4b08d06b9b2175472e40"
+      "bytes": 9872,
+      "sha256": "ac2713277e8ff5c91bb9e0effd92fc2e96094c6b9e8f83cb56663facfd227208"
     },
     {
       "path": "website/website.js",
