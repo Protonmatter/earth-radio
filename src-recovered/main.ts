@@ -1,6 +1,7 @@
 import './style.css';
 // Maintained modules are shared with the shipped runtime; this evidence snapshot still has no rebuild toolchain.
 import { installDiscovery } from '../site/assets/discovery-ui.js';
+import { directorySnapshotStatus } from '../site/assets/directory-status.js';
 import './domains/radio/index';
 import './domains/sdr/index';
 
@@ -126,7 +127,10 @@ const discovery = installDiscovery({
   current: getCurrentStation,
   visible: () => currentStations,
   refresh: () => { if (featureModulesReady) applyFilters(); },
-  play: (station: Station) => { void onStationClick(station); }
+  favorites: getFavorites,
+  selected: () => activeStationUuid,
+  notify: showToast,
+  play: (station: Station, options = {}) => { void onStationClick(station, options); }
 });
 
 // ---- Card rendering ----
@@ -158,6 +162,7 @@ function renderStationCard(station: Station): HTMLElement {
     tags.appendChild(createEl('span', 'tag-pill', tag));
   }
 
+  meta.replaceChildren(createEl('span', 'er-station-meta-text', buildMetaLine(station)), discovery.variantControl(station));
   body.append(name, meta, pills, tags);
 
   const play = createEl('button', 'station-card__play');
@@ -168,9 +173,9 @@ function renderStationCard(station: Station): HTMLElement {
   const favorite = createEl('button', 'station-card__favorite');
   favorite.type = 'button';
   favorite.append(icon('heart'));
-  favorite.classList.toggle('station-card__favorite--active', isFavorite(station.stationuuid));
-  favorite.setAttribute('aria-label', t('player.favorite') + ': ' + station.name);
-  favorite.setAttribute('aria-pressed', String(isFavorite(station.stationuuid)));
+  favorite.classList.toggle('station-card__favorite--active', discovery.isFavorite(station, getFavorites()));
+  favorite.setAttribute('aria-label', (discovery.isFavorite(station, getFavorites()) ? 'Unfavorite station: ' : 'Favorite station: ') + station.name);
+  favorite.setAttribute('aria-pressed', String(discovery.isFavorite(station, getFavorites())));
 
   card.append(media, body, play, favorite, discovery.explainButton(station));
 
@@ -181,7 +186,7 @@ function renderStationCard(station: Station): HTMLElement {
       onFavoriteStation(station);
       return;
     }
-    if (target.closest('.quality-pill')) return; // handled by its own listener
+    if (target.closest('.quality-pill,.er-stream-control')) return; // handled by its own listener
     void onStationClick(station);
   });
 
@@ -331,7 +336,7 @@ function applyFilters(): void {
   currentStations = filterStations(base, {
     ...filters,
     favoritesOnly: view === 'favorites',
-    favoriteUuids: getFavorites()
+    favoriteUuids: discovery.favoriteIds(allStations, getFavorites())
   });
 
   currentStations = discovery.transform(currentStations, { all: allStations, view });
@@ -365,7 +370,8 @@ function updateGridTitle(filters: ReturnType<typeof getActiveFilters>): void {
   else gridTitleEl.textContent = hasFilters ? t('grid.filtered') : t('grid.all');
 }
 
-async function onStationClick(station: Station): Promise<void> {
+async function onStationClick(station: Station, options = {}): Promise<void> {
+  discovery.begin(station, options);
   if (!station) return;
   setStatus(t('status.loadingStation', { name: station.name }));
   // Telemetry is best-effort and must never delay playback starting.
@@ -430,7 +436,8 @@ function beginNowPlaying(station: Station): void {
 }
 
 function onFavoriteStation(station: Station): void {
-  const isFav = toggleFavorite(station.stationuuid, station);
+  const isFav = !discovery.isFavorite(station, getFavorites());
+  for (const member of discovery.favoriteTargets(station, getFavorites())) toggleFavorite(member.stationuuid, member);
   updateFavoriteBtnState();
   updateFavoritesCount();
   showToast(isFav ? t('toast.added') : t('toast.removed'));
@@ -562,7 +569,9 @@ async function performStationLoad({ forceRefresh, loadId }: { forceRefresh: bool
   let ok = true;
   try {
     const result = await activePack.loadEntities({ forceRefresh });
+    const routeBeforeControls = readRoute();
     allStations = result.stations;
+    if (routeBeforeControls.station && allStations.some(station => station.stationuuid === routeBeforeControls.station)) activeStationUuid = routeBeforeControls.station;
 
     if (!featureModulesReady) {
       const prefs = getPreferences();
@@ -601,8 +610,8 @@ async function performStationLoad({ forceRefresh, loadId }: { forceRefresh: bool
 
     const mode = result.cached ? (result.stale ? 'stale cache' : 'cache') : 'live';
     const sourceLabel = result.sourceSummary?.label || result.source || 'unknown source';
-    setStatus(t('status.loaded', { count: currentStations.length, mode, source: sourceLabel }));
-    showToast(result.stale ? t('toast.staleCache') : t('toast.loaded', { count: currentStations.length }));
+    setStatus(directorySnapshotStatus(result, currentStations.length) || t('status.loaded', { count: currentStations.length, mode, source: sourceLabel }));
+      if (result.stale) showToast(t('discovery.savedCopy'));
     void runHealthProbe(currentStations, { onUpdate: () => grid?.refresh() });
   } catch (error) {
     console.error('Failed to load stations:', error);
@@ -635,6 +644,8 @@ function applyCountry(country: string): void {
 
 function setupPlayerEvents(): void {
   btnPlay?.addEventListener('click', async () => {
+    const chosen = discovery.selectedStation(getCurrentStation());
+    if (!isPlayingNow() && chosen) { await onStationClick(chosen); updatePlayBtnState(); return; }
     if (!getCurrentStation()) {
       const last = getLastPlayed();
       const selected = allStations.find(station => station.stationuuid === activeStationUuid)
@@ -907,6 +918,7 @@ function setupAudioErrorHandling(): void {
     onError: (station, error) => {
       discovery.observe(station, false);
       if (station) markStationPlaybackFailure(station.stationuuid, error?.message || 'playback-error');
+      if (discovery.recover(station)) return;
       stopNowPlaying();
       updatePlayBtnState();
 

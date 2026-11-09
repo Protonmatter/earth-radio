@@ -1,6 +1,6 @@
 // Earth Radio directory expansion v1.0.0
-import {browserDirectoryHosts,createDirectoryHosts} from './directory-hosts.js?v=0.31.0';
-import {snapshotCountryStatus} from './directory-client.js?v=0.31.0';
+import {browserDirectoryHosts,createDirectoryHosts} from './directory-hosts.js?v=0.32.0';
+import {snapshotCountryStatus} from './directory-client.js?v=0.32.0';
 // The initial directory load is deliberately bounded (global top-click plus a handful of
 // featured countries) so boot stays fast. This overlay expands coverage on demand: when a
 // listener focuses a country (map popup "Explore", the country picker, or the country

@@ -10,6 +10,9 @@ import { TextDecoder } from 'node:util';
 import { handleMetadataApi } from './metadata-api.mjs';
 import { createPinnedLookup, isRedirect, normalizeHostname, requestPublic, resolvePublicTarget } from './net-guard.mjs';
 import {createDirectoryHosts} from '../site/assets/directory-hosts.js';
+import {createPublishedCatalog} from '../site/assets/published-catalog.js';
+import {snapshotRows} from '../site/assets/directory-client.js';
+import {normalizeDirectory} from './directory-normalize.mjs';
 
 const USER_AGENT = 'EarthRadio/0.24.0 desktop-proxy (+https://github.com/Protonmatter/EarthRadio)';
 const directoryHosts=createDirectoryHosts({fetchImpl:async(url,options)=>{
@@ -30,6 +33,10 @@ const WINDOWS_1252_METADATA_DECODER = new TextDecoder('windows-1252');
 
 const directoryCache = new Map();
 const directoryInFlight = new Map();
+const publishedDirectory=createPublishedCatalog({fetchImpl:async(url,options)=>{
+  const result=await requestPublic(url,{signal:options.signal,timeoutMs:15000,deadlineAt:Date.now()+15000,maxBytes:16*1024*1024,maxRedirects:0,headers:{Accept:'application/json','User-Agent':USER_AGENT}});
+  return new Response(result.body,{status:result.statusCode,headers:result.headers});
+}});
 
 export async function createDesktopProxy({ port = 0, host = '127.0.0.1', accessToken = randomBytes(32).toString('base64url') } = {}) {
   if (!/^[A-Za-z0-9_-]{32,}$/.test(accessToken)) throw new Error('desktop proxy access token is invalid');
@@ -153,10 +160,16 @@ async function getStations(limit, countryCodes = FEATURED_COUNTRY_CODES, country
 
 async function fetchStationsUncached(limit, countryCodes, countryLimit, maxStations, cacheKey) {
   const errors = [];
+  try{
+    const result=await publishedStationRows(publishedDirectory,{limit,countryCodes,countryLimit});
+    const merged=mergeStationRecords(result.stations).slice(0,maxStations);if(!merged.length)throw Error('Empty published directory');
+    const payload={...result,source:'desktop-proxy:normalized-snapshot',mode:'scheduled-directory',countryCodes,countryLimit,stations:merged};
+    setDirectoryCache(cacheKey,payload);return payload;
+  }catch{/* Guarded direct mirrors remain a last-resort native fallback. */}
   for (const base of await directoryHosts.discover()) {
     try {
       const directory = await fetchRadioBrowserDirectory(base, limit, countryCodes, countryLimit);
-      const stations = mergeStationRecords(directory.stations).slice(0, maxStations);
+      const stations = mergeStationRecords(normalizeDirectory(directory.stations).stations).slice(0, maxStations);
       if (!stations.length) throw new Error('empty station response');
       const payload = {
         source: 'desktop-proxy:federated',
@@ -182,6 +195,20 @@ async function fetchStationsUncached(limit, countryCodes, countryLimit, maxStati
     }
   }
   throw new Error(`station directory unavailable: ${errors.join(' | ')}`);
+}
+
+// The native record cap applies after restoring producer click priority from the
+// family-ordered wire format. Country failures preserve a usable root catalog.
+export async function publishedStationRows(read,{limit,countryCodes,countryLimit}){
+  if(!Number.isInteger(limit)||limit<1||limit>6500||!Number.isInteger(countryLimit)||countryLimit<1||countryLimit>1000||!Array.isArray(countryCodes)||countryCodes.length>20||countryCodes.some(code=>!(/^[A-Z]{2}$/).test(code)))throw Error('Invalid published native limits');
+  const deadlineAt=Date.now()+20000,response=await read('/directory/snapshot','catalog',{deadlineAt}),root=snapshotRows(await response.json());
+  const stations=root.slice(0,limit),missingCountries=[];let cursor=0;
+  await Promise.all(Array.from({length:Math.min(2,countryCodes.length)},async()=>{while(cursor<countryCodes.length){
+    const code=countryCodes[cursor++];
+    try{const country=await read('/directory/country/'+code,'catalog',{deadlineAt});stations.push(...snapshotRows(await country.json(),1000).slice(0,countryLimit));}
+    catch{missingCountries.push(code);}
+  }}));
+  return{stations,missingCountries,directorySnapshot:{generatedAt:response.headers.get('x-directory-generated-at'),producerSourceSha:response.headers.get('x-directory-producer-sha')},generatedAt:response.headers.get('x-directory-generated-at')};
 }
 
 function setDirectoryCache(cacheKey, payload) {

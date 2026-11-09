@@ -22,6 +22,11 @@ test('conflicting sibling countries remain unknown instead of being guessed',()=
   const data=normalizeDirectory([row('fr'),row('be',{country:'Belgium',countrycode:'BE'}),row('unknown',{country:'',countrycode:''})]);
   assert.equal(data.stations.find(r=>r.stationuuid==='unknown').countrycode,'');
 });
+test('same-name station on a country-owned provider domain has corroborated country evidence',()=>{
+  const data=normalizeDirectory([row('known',{name:'FIP',homepage:'https://www.radiofrance.fr',url:'https://stream.radiofrance.fr/fip'}),row('missing',{name:'FIP',country:'',countrycode:'',homepage:'https://www.fip.fr',url:'https://icecast.radiofrance.fr/fip'}),row('generic',{name:'FIP',country:'',countrycode:'',homepage:'',url:'https://stream.zeno.fm/fip'})]);
+  assert.equal(data.stations.find(row=>row.stationuuid==='missing').countrycode,'FR');
+  assert.equal(data.stations.find(row=>row.stationuuid==='generic').countrycode,'');
+});
 
 test('HTTP streams are retained with explicit transport rather than silently upgraded',()=>{
   const data=normalizeDirectory([row('http',{url:'http://radio.example/live'})]);

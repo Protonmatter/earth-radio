@@ -72,6 +72,10 @@ test('wire grouping round-trip retains all UUIDs and stream identities without r
   for(const row of rows)assert.equal(expanded.find(item=>item.stationuuid===row.stationuuid).url,row.url);
   assert.equal(wire[0].variants[0].country,undefined);assert.equal(wire[0].variants[0].name,undefined);
 });
+test('shared wire tags and languages retain the union of matching program metadata',()=>{
+  const wire=serializeVariantGroups([station('a',{tags:'jazz,news',language:'english'}),station('b',{tags:'classical,jazz',language:'french'})]);
+  assert.equal(wire[0].tags,'classical,jazz,news');assert.equal(wire[0].language,'english,french');
+});
 
 test('malformed grouped data fails closed instead of overwriting unrelated IDs',()=>{
   for(const groups of [null,[{key:'x',name:'x',variants:[]}],[{key:'x',name:'x',variants:[{stationuuid:'a',url:'javascript:alert(1)'}]}],[{key:'x',name:'x',variants:[{stationuuid:'a',url:'https://radio.example/a',aliases:[' a ']}]}]])assert.throws(()=>expandVariantGroups(groups));

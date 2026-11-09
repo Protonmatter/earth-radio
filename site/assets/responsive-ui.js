@@ -13,9 +13,9 @@
  * maintained catalogs, over a bounded list of known runtime-owned elements.
  */
 
-import { getCurrentSongSnapshot } from './metadata-enrichment.js?v=0.31.0';
-import { countryCode, countryWords, matchesCountry } from './search-core.js?v=0.31.0';
-import { countryIndex } from './directory-expansion.js?v=0.31.0';
+import { getCurrentSongSnapshot } from './metadata-enrichment.js?v=0.32.0';
+import { countryCode, countryWords, matchesCountry } from './search-core.js?v=0.32.0';
+import { countryIndex } from './directory-expansion.js?v=0.32.0';
 import {
   applyDeclarativeI18n,
   applyDocumentLocale,
@@ -26,7 +26,7 @@ import {
   DEFAULT_LOCALE,
   FONT_PROFILES,
   t
-} from '../i18n/index.js?v=0.31.0';
+} from '../i18n/index.js?v=0.32.0';
 
 export const UI_STORAGE_KEY = 'earthRadio.ui.v1';
 export const DEFAULT_SPLIT = 42;

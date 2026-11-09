@@ -1,5 +1,16 @@
 // Engineering-authored Spanish catalog. Native editorial review has not occurred.
 export default {
+  "discovery.streamQuality": "Calidad de transmisión de {name}",
+  "discovery.chooseStream": "Elige una transmisión y pulsa Reproducir",
+  "discovery.httpStream": "Transmisión HTTP",
+  "discovery.httpHint": "La web puede bloquearla. Prueba una transmisión HTTPS o la aplicación de escritorio.",
+  "discovery.favoriteStation": "Añadir estación a favoritos: {name}",
+  "discovery.unfavoriteStation": "Quitar estación de favoritos: {name}",
+  "discovery.tryingStream": "Probando otra transmisión de {name}",
+  "discovery.details": "Detalles",
+  "discovery.countryInferred": "País deducido de registros coincidentes del directorio",
+  "discovery.snapshotStatus": "{count} estaciones · Catálogo del {updated}",
+  "discovery.savedCopy": "Copia guardada",
   "map.approximateCluster": "Incluye {count} ubicaciones aproximadas por país",
   "discovery.corrected": "Resultados para {query}",
   "map.approximateCountry": "Ubicación aproximada por país",

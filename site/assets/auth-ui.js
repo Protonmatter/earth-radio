@@ -1,10 +1,10 @@
-import { createAuthClient } from './auth-core.js?v=0.31.0';
-import { createDesktopAuthClient, isDesktopAuthAvailable } from './desktop-auth.js?v=0.31.0';
-import { songLibraryStore, setSongLibraryAccount, pauseSongLibraryAccount } from './song-library-store.js?v=0.31.0';
+import { createAuthClient } from './auth-core.js?v=0.32.0';
+import { createDesktopAuthClient, isDesktopAuthAvailable } from './desktop-auth.js?v=0.32.0';
+import { songLibraryStore, setSongLibraryAccount, pauseSongLibraryAccount } from './song-library-store.js?v=0.32.0';
 import {
   accountDataKey, accountLocalRecords, createSyncEngine, planLocalAccountTransition,
   shouldResetBrowserAccount, stableStringify, syncDocuments
-} from './sync-core.js?v=0.31.0';
+} from './sync-core.js?v=0.32.0';
 
 export function quiesceSignOut({ cancelReload, syncTimer, invalidateSync, clearIntervalImpl = clearInterval }) {
   invalidateSync();
@@ -184,7 +184,7 @@ async function boot() {
 
   const stylesheet = document.createElement('link');
   stylesheet.rel = 'stylesheet';
-  stylesheet.href = './assets/auth-ui.css?v=0.31.0';
+  stylesheet.href = './assets/auth-ui.css?v=0.32.0';
   document.head.appendChild(stylesheet);
 
   const nativeAuth = isDesktopAuthAvailable(window.earthRadio, window.location);

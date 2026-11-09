@@ -16,3 +16,12 @@ test('hosted source redirect configuration retains legacy and native returns',as
   assert.ok(config.includes('http://127.0.0.1:*/earth-radio-auth/callback/*'));
   assert.doesNotMatch(config,/https:\/\/\*\.earthradio\.stream/);
 });
+
+test('application documents prevent CDN script injection while keeping the self-only CSP',async()=>{
+  const headers=await readFile('site/_headers','utf8');
+  for(const route of ['/','/index.html']){
+    const block=headers.split(/\r?\n\r?\n/).find(value=>value.split(/\r?\n/)[0]===route);
+    assert.ok(block,`Missing document policy for ${route}`);assert.match(block,/Cache-Control:.*\bno-transform\b/);
+  }
+  assert.match(headers,/script-src 'self';/);assert.doesNotMatch(headers,/static\.cloudflareinsights\.com/);
+});

@@ -6,10 +6,16 @@
   Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
   Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; media-src https: http: blob:; connect-src 'self' https: http: wss://listen.moe; font-src 'self'; worker-src 'self' blob:; manifest-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
 
+/
+  Cache-Control: public, max-age=0, must-revalidate, no-transform
+
+/index.html
+  Cache-Control: public, max-age=0, must-revalidate, no-transform
+
 /assets/hls.light-Dr1Fv81C.js
   Cache-Control: public, max-age=31536000, immutable
 
-/assets/index-ff85fdd4.js
+/assets/index-7562b0d8.js
   Cache-Control: public, max-age=31536000, immutable
 
 /assets/index-CSoL7F-Y.css

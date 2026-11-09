@@ -37,5 +37,6 @@ test('workflow has bounded free-runner publication with no source write grant',a
   const text=await readFile('.github/workflows/directory-snapshot.yml','utf8');
   assert.match(text,/schedule:[\s\S]*17 \* \* \* \*/);assert.match(text,/cancel-in-progress: false/);
   assert.match(text,/pages: write/);assert.match(text,/id-token: write/);assert.doesNotMatch(text,/contents: write|secrets\.|npm install|git push/);
+  assert.match(text,/deploy:\s+if: github\.ref == 'refs\/heads\/main'/);
   for(const line of text.split('\n').filter(line=>line.includes('uses:')))assert.match(line,/@[a-f0-9]{40}$/);
 });
