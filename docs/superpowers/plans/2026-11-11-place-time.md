@@ -44,11 +44,11 @@
 
 **Interfaces:** `stationPlace(station, places = CURATED_PLACES)` returns qualified city, supplied-coordinate, known-country or absent data as specified. `formatPlaceTime(place, instant, locale = 'en')` returns a local time string or null, with no implicit current time or device zone. Imports use existing coherent module URLs.
 
-- [ ] Write tests for valid Seoul, wrong/missing country, country-only point, absent/blank/boolean/out-of-range coordinates, 0,0, exact point without city evidence, token boundaries, conflicting city evidence, London/Melbourne country mismatch, and ambiguous Springfield/San Jose fixtures. Assert no input mutation.
-- [ ] Write time tests for Seoul, London/New York winter/summer, Kathmandu fractional offset and invalid/missing zone, instant, locale or offset-free text. No host-local time fallback.
-- [ ] Run `node --test tests/place-core.test.mjs`; expected RED for missing model.
-- [ ] Implement the smallest pure model using existing stationLocation/fold and explicit IANA formatting, with documented 25 km candidate gate and supplied-coordinate confidence semantics.
-- [ ] Run focused tests and `npm run verify` after regenerating manifests; expected GREEN. Commit the task's allowlisted source/test/test-list/manifests.
+- [x] Write tests for valid Seoul, wrong/missing country, country-only point, absent/blank/boolean/out-of-range coordinates, 0,0, exact point without city evidence, token boundaries, conflicting city evidence, London/Melbourne country mismatch, and ambiguous Springfield/San Jose fixtures. Assert no input mutation.
+- [x] Write time tests for Seoul, London/New York winter/summer, Kathmandu fractional offset and invalid/missing zone, instant, locale or offset-free text. No host-local time fallback.
+- [x] Run `node --test tests/place-core.test.mjs`; expected RED for missing model.
+- [x] Implement the smallest pure model using existing stationLocation/fold and explicit IANA formatting, with documented 25 km candidate gate and supplied-coordinate confidence semantics.
+- [x] Run focused tests and `npm run verify` after regenerating manifests; expected GREEN. Commit the task's allowlisted source/test/test-list/manifests.
 
 ## Task 3: Coverage qualification and maintenance documentation
 

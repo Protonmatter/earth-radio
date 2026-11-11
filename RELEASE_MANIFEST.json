@@ -341,7 +341,7 @@
     {
       "path": "docs/superpowers/plans/2026-11-11-place-time.md",
       "bytes": 6628,
-      "sha256": "ffe98d9c8d832a0adf10e20cfa10d01f8d0e563d832c66d92919e556b48bca9a"
+      "sha256": "48ffe667e97c56820c42b542ade21bd687f381b045aade31a4ba950ce31e1e0d"
     },
     {
       "path": "docs/superpowers/specs/2026-08-21-earth-radio-public-cloudflare-design.md",
@@ -475,8 +475,8 @@
     },
     {
       "path": "package.json",
-      "bytes": 5169,
-      "sha256": "78520c4a8759dc9c9d5000f4a71479f5aec710ff9c33a4e8ae7e4ff1ffb01420"
+      "bytes": 5195,
+      "sha256": "2b1f4bdd49942fb35b06ccfe99c9e312d28d1fc5550c14b04934c170a6dce509"
     },
     {
       "path": "scripts/build-desktop-icon.mjs",
@@ -862,6 +862,11 @@
       "path": "site/assets/pinned-stations.js",
       "bytes": 5877,
       "sha256": "8513aab94b50a3fffb5ab6fa55bbcefb9e2a541e265d7c924e76ddd9a50359de"
+    },
+    {
+      "path": "site/assets/place-core.js",
+      "bytes": 5301,
+      "sha256": "9a112dd0de0dcea449e1ac430f0785f06f912748aec9da6d5714f563f667ad75"
     },
     {
       "path": "site/assets/place-vocabulary.js",
@@ -1762,6 +1767,11 @@
       "path": "tests/pinned-stations.test.mjs",
       "bytes": 3895,
       "sha256": "174ac3acf13fe3ad9dcef945013d98c9150d477cf3c3f82956b08251b629de1f"
+    },
+    {
+      "path": "tests/place-core.test.mjs",
+      "bytes": 8105,
+      "sha256": "ed141ec2865fd31f6000cbcc41e66abbe1217bb80d4df2e9ff998488f7008f8e"
     },
     {
       "path": "tests/place-data.test.mjs",
