@@ -6,6 +6,8 @@ import test from 'node:test';
 import {FALLBACK_RELEASE,normalizePublicRelease} from '../website/release-core.js';
 import {BRAND_ASSETS,stageWebsite} from '../scripts/stage-website.mjs';
 import {validateWebsite} from '../scripts/validate-website.mjs';
+import {validateRouteResponses} from '../scripts/public-route-contract.mjs';
+import {createSiteServer} from './e2e/serve-site.mjs';
 
 const fixture=(tag='v0.29.1')=>({tag_name:tag,draft:false,prerelease:false,html_url:`https://github.com/Protonmatter/earth-radio/releases/tag/${tag}`,assets:[
   `EarthRadio-Setup-${tag.slice(1)}-arm64.exe`,`EarthRadio-Portable-${tag.slice(1)}-arm64.exe`,
@@ -69,4 +71,30 @@ test('website carries the precision identity from site/branding with a 1200x630 
   assert.equal(og.toString('ascii',1,4),'PNG');assert.equal(og.readUInt32BE(16),1200);assert.equal(og.readUInt32BE(20),630);
   const privacy=await readFile(path.join(result.output,'privacy.html'),'utf8');
   assert.match(privacy,/href="\.\/images\/earth-radio-favicon-32\.png"/);
+});
+
+test('both public artifacts include a branded top-level 404 and an explicit crawler contract',async()=>{
+  const result=await stageWebsite();
+  for(const root of ['site',result.output]){
+    const missing=await readFile(path.join(root,'404.html'),'utf8');
+    assert.match(missing,/data-earth-radio-not-found/);assert.match(missing,/href="\/"/);assert.match(missing,/noindex/);
+    const robots=await readFile(path.join(root,'robots.txt'),'utf8');assert.match(robots,/User-agent: \*/);assert.doesNotMatch(robots,/<html/i);
+  }
+  const app=await readFile('site/index.html','utf8');assert.match(app,/<link rel="canonical" href="https:\/\/app\.earthradio\.stream\/"/);
+  assert.match(app,/<meta name="robots" content="noindex, follow"/);
+  const marketing=await readFile(path.join(result.output,'index.html'),'utf8');assert.doesNotMatch(marketing,/<meta name="robots"[^>]*noindex/);
+});
+
+test('real staged app and marketing HTTP routes return 404, correct MIME and canonical policies',async()=>{
+  const marketing=await stageWebsite();
+  for(const [kind,appRoot] of [['app',path.resolve('site')],['marketing',marketing.output]]){
+    const server=createSiteServer({appRoot});await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+    try{
+      const origin=`http://127.0.0.1:${server.address().port}`;
+      const report=await validateRouteResponses(origin,{kind});
+      assert.equal(report.routes[1].status,404);assert.equal(report.routes[2].status,404);assert.match(report.routes[3].type,/^text\/plain/);
+      const privacy=await fetch(origin+'/privacy');assert.equal(privacy.status,200);assert.match(await privacy.text(),/Earth Radio privacy policy/);
+      const signIn=await fetch(origin+'/?code=route-probe-only');assert.equal(signIn.status,200);
+    }finally{server.closeAllConnections();await new Promise(resolve=>server.close(resolve));}
+  }
 });

@@ -56,6 +56,83 @@ Pages `_redirects` supports path sources only; an absolute hostname source is ig
 The website file records the external rule and the artifact validator rejects that
 unsupported syntax. Roll back only this named rule if its exact-host routing fails.
 
+## Public routes and crawler qualification
+
+The app supports its root, root query-based authentication returns, existing
+`#station=UUID` links and `/privacy`. Pages redirects matching `.html` filenames
+to their extensionless URLs. `/api/*` and `/directory/*` retain their existing
+Functions boundary. Unknown static paths return the branded top-level `404.html`
+with HTTP 404; no catch-all rewrite serves the app shell. `/s/UUID` path links are
+not introduced by this phase and need explicit routing/asset-base qualification
+when ER-09 lands. The old hash links remain supported.
+
+The app declares its primary `https://app.earthradio.stream/` canonical URL and
+`noindex, follow`; the legacy app origin uses that same canonical. Its robots
+file is plain text and permits crawling so crawlers can read the noindex rule.
+The marketing homepage remains indexable with its own canonical. App
+`/sitemap.xml` returns a 301 to the marketing site's XML sitemap. No hosted Auth
+allowlist, provider, SMTP, DNS or account setting changes are needed.
+
+Offline navigation is explicit too: root navigation uses the cached app shell,
+privacy uses the cached canonical `/privacy` policy, and an unknown URL uses the branded cached 404
+with status 404. Unknown routes never reuse an old cached soft-404 shell.
+Query-bearing sign-in navigations are not persisted. Root-based error-page
+assets work at nested URLs; the error stylesheet and precache share a release
+query, and the version updater maintains both together. The new shell generation
+is `v72-route-contract`.
+
+Stage and validate both artifacts before publication:
+
+```powershell
+npm run build:web
+npm run verify:site
+npm run build:website
+npm run verify:website
+node --test tests/public-route-contract.test.mjs tests/website.test.mjs tests/service-worker.test.mjs
+npm run test:e2e -- website.spec.mjs offline-shell.spec.mjs
+```
+
+Static checks establish the required Pages inputs, not the deployed HTTP status.
+Run the explicit read-only HTTP gate against the observed preview URL using
+`--preview`. Replace these two example origins with the URLs from the exact
+commit's Cloudflare checks:
+
+```powershell
+node scripts/validate-site.mjs .build/site --origin https://observed-app-preview.earth-radio.pages.dev --preview
+node scripts/validate-website.mjs .build/website --origin https://observed-website-preview.earth-radio-website.pages.dev --preview
+```
+
+Marketing previews must retain Cloudflare's `X-Robots-Tag: noindex` protection;
+their source HTML still uses the marketing canonical. Production mode rejects
+that header for the marketing homepage. The receipt records the selected mode.
+After preview acceptance and production rollout, omit `--preview`:
+
+```powershell
+node scripts/validate-site.mjs .build/site --origin https://app.earthradio.stream
+node scripts/validate-site.mjs .build/site --origin https://earth-radio.pages.dev
+node scripts/validate-website.mjs .build/website --origin https://earthradio.stream
+```
+
+Each optional `--origin` run makes five bounded GETs: home, two unknown paths,
+robots and sitemap. It omits credentials, follows no redirect, caps each body at
+256 KiB and each request at ten seconds, and prints only status/MIME/location
+receipts. It returns 0 on acceptance or 1 on failure. Without `--origin`, the
+validators perform local artifact checks only. HTTP loopback origins are allowed
+for the owned test server; production and preview probes use HTTPS. These probes
+do not sign in, mutate collections, request audio or increment station counters.
+
+The maintained local server models Pages' custom-404 behavior and supports
+isolated HTTP tests. The `/__website` prefix is a test namespace, with root-based
+404 links mapped into that namespace; real marketing deployment is at `/`.
+Hosted readback remains required because a local server cannot qualify Cloudflare.
+
+Rollback restores the preceding complete app/website deployments together, or
+reverts this routing change and publishes a fresh worker generation. Preserve
+the immutable runtime/map bytes and existing identity settings. Reverting to the
+prior SPA fallback also restores its known soft-404 limitation; document that
+temporary limitation rather than declaring the route gate passed. Pages behavior
+is documented in [Serving Pages](https://developers.cloudflare.com/pages/configuration/serving-pages/).
+
 ## Downloads and privacy
 
 Set zone **Caching → Configuration → Browser Cache TTL** to **Respect Existing

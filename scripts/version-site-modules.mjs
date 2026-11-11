@@ -7,16 +7,20 @@ import { fileURLToPath } from 'node:url';
 export async function versionSiteModules(root, { check = false } = {}) {
   const { version } = JSON.parse(await readFile(path.join(root, 'package.json'), 'utf8'));
   if (!/^\d+\.\d+\.\d+$/.test(version)) throw new Error('Expected a stable release version');
-  const files = ['site/index.html', 'site/config.js', 'site/sw.js'];
+  const files = ['site/index.html', 'site/404.html', 'site/config.js', 'site/sw.js'];
   for (const directory of ['site/assets', 'site/i18n']) for (const entry of await readdir(path.join(root, directory))) {
     if (/\.(js|css)$/.test(entry) && !/^map-(world|detail|terrain|roads)(?:-[a-f0-9]{8})?\.js$/.test(entry)) files.push(`${directory}/${entry}`);
   }
   const changed = [];
   for (const relative of files) {
     const target = path.join(root, relative), before = await readFile(target, 'utf8');
-    const after = before.replace(/(["'`])(\.{1,2}\/[^"'`\s?#]+\.(?:js|css))(?:\?v=\d+\.\d+\.\d+)?\1/g,
+    let after = before.replace(/(["'`])(\.{1,2}\/[^"'`\s?#]+\.(?:js|css))(?:\?v=\d+\.\d+\.\d+)?\1/g,
       (match, quote, asset) => /(?:index-[\w-]{8}|hls\.light-[\w-]{8}|map-(?:world|detail|terrain|roads)(?:-[a-f0-9]{8})?)\.(?:js|css)$/.test(asset) || asset === './sw.js'
         ? match : `${quote}${asset}?v=${version}${quote}`);
+    // The error page needs root-based assets at arbitrary nested URLs. Limit
+    // this absolute-URL rule to HTML; pathname comparisons in the worker are
+    // deliberately versionless.
+    if(relative==='site/404.html')after=after.replace(/(["'])(\/not-found\.css)(?:\?v=\d+\.\d+\.\d+)?\1/g,(_match,quote,asset)=>`${quote}${asset}?v=${version}${quote}`);
     if (after !== before) { changed.push(relative); if (!check) await writeFile(target, after); }
   }
   if (check && changed.length) throw new Error(`Module release URLs are stale: ${changed.join(', ')}`);

@@ -107,7 +107,7 @@ test('deployed pages send HSTS and revalidate the auth overlays', async () => {
 test('service worker precaches the auth, responsive, and i18n shell under a new cache version', async () => {
   const worker = await readFile(path.join(root, 'site', 'sw.js'), 'utf8');
   assert.match(worker, /cache: isImmutableAsset\(asset\) \? 'force-cache' : 'reload'/);
-  assert.match(worker, /earth-radio-shell-v71-confirmed-play/);
+  assert.match(worker, /earth-radio-shell-v72-route-contract/);
   for (const palette of ['pine', 'obsidian']) {
     for (const suffix of ['.svg', '-16.png', '-32.png']) {
       assert.ok(worker.includes(`branding/earth-radio-favicon-${palette}${suffix}`));
@@ -157,14 +157,35 @@ test('large map modules are lazy and offline navigation uses the canonical root 
   const handlers=new Map();let used;
   vm.runInNewContext(worker,{self:{location:{origin:'https://radio.example'},addEventListener:(name,handler)=>handlers.set(name,handler)},URL,Request,Response,
     fetch:async()=>{throw Error('offline');},caches:{match:async key=>{if(key==='./'){used=key;return new Response('offline canonical shell');}return undefined;}}});
-  let result;handlers.get('fetch')({request:{method:'GET',url:'https://radio.example/some-navigation',mode:'navigate'},respondWith:promise=>{result=promise;}});
+  let result;handlers.get('fetch')({request:{method:'GET',url:'https://radio.example/',mode:'navigate'},respondWith:promise=>{result=promise;}});
   assert.equal(await (await result).text(),'offline canonical shell');assert.equal(used,'./');
+});
+
+test('offline unknown paths stay 404 instead of returning a cached application shell',async()=>{
+  const worker=await readFile(path.join(root,'site/sw.js'),'utf8'),handlers=new Map();
+  vm.runInNewContext(worker,{self:{location:{origin:'https://radio.example'},addEventListener:(name,handler)=>handlers.set(name,handler)},URL,Request,Response,
+    fetch:async()=>{throw Error('offline');},caches:{match:async key=>{
+      if(key==='./404.html')return new Response('<main data-earth-radio-not-found>Return home</main>',{headers:{'content-type':'text/html'}});
+      return new Response('previous soft-404 application shell');
+    }}});
+  for(const pathname of ['/missing','/places/missing','/missing?code=fixture-only']){
+    let result;handlers.get('fetch')({request:{method:'GET',url:'https://radio.example'+pathname,mode:'navigate'},respondWith:promise=>{result=promise;}});
+    const response=await result;assert.equal(response.status,404);assert.match(await response.text(),/data-earth-radio-not-found/);
+  }
+});
+
+test('offline privacy navigation uses the privacy document',async()=>{
+  const worker=await readFile(path.join(root,'site/sw.js'),'utf8'),handlers=new Map();
+  vm.runInNewContext(worker,{self:{location:{origin:'https://radio.example'},addEventListener:(name,handler)=>handlers.set(name,handler)},URL,Request,Response,
+    fetch:async()=>{throw Error('offline');},caches:{match:async key=>key==='./privacy'?new Response('Privacy policy'):undefined}});
+  let result;handlers.get('fetch')({request:{method:'GET',url:'https://radio.example/privacy',mode:'navigate'},respondWith:promise=>{result=promise;}});
+  const response=await result;assert.equal(response.status,200);assert.equal(await response.text(),'Privacy policy');
 });
 
 test('installation shell stays below two MiB while map detail remains opt-in',async()=>{
   const worker=await readFile(path.join(root,'site/sw.js'),'utf8');
   const assets=vm.runInNewContext(worker.match(/const SHELL_ASSETS = (\[[\s\S]*?\]);/)[1]);
-  let bytes=0;for(const asset of assets){const relative=asset==='./'?'index.html':asset.replace(/^\.\//,'').split('?')[0];bytes+=(await readFile(path.join(root,'site',relative))).length;}
+  let bytes=0;for(const asset of assets){let relative=asset==='./'?'index.html':asset.replace(/^\.\//,'').split('?')[0];if(relative==='privacy')relative='privacy.html';bytes+=(await readFile(path.join(root,'site',relative))).length;}
   assert.ok(bytes<2*1024*1024,`Shell is ${bytes} bytes`);
 });
 

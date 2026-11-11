@@ -27,6 +27,7 @@ export async function stageWebsite({root=defaultRoot,output,cloudflare=false}={}
   }
   const inputs=[...WEBSITE_FILES.map(relative=>({source:path.join(source,relative),bound:source,path:relative})),
     {source:path.join(root,'site/privacy.html'),bound:path.join(root,'site'),path:'privacy.html'},
+    ...['404.html','not-found.css'].map(relative=>({source:path.join(root,'site',relative),bound:path.join(root,'site'),path:relative})),
     // Brand assets have one source of truth in site/branding; the website receives the pine
     // (light) palette only, so favicon selection needs no script on this static site.
     ...BRAND_ASSETS.map(([from,to])=>({source:path.join(root,'site/branding',from),bound:path.join(root,'site/branding'),path:`images/${to}`}))];
@@ -42,6 +43,10 @@ export async function stageWebsite({root=defaultRoot,output,cloudflare=false}={}
     if(input.path==='privacy.html'){
       const privacy=await readFile(target,'utf8');
       await writeFile(target,privacy.replaceAll('href="./icon-192.png"','href="./images/earth-radio-favicon-32.png"').replaceAll('https://earth-radio.pages.dev/','https://app.earthradio.stream/'));
+    }
+    if(input.path==='404.html'){
+      const missing=await readFile(target,'utf8');
+      await writeFile(target,missing.replaceAll('/branding/earth-radio-favicon-pine.svg','/images/earth-radio-favicon.svg').replaceAll('/branding/earth-radio-logo.svg','/images/earth-radio-logo.svg'));
     }
     const bytes=await readFile(target);files.push({path:input.path,bytes:bytes.length,sha256:createHash('sha256').update(bytes).digest('hex')});
   }

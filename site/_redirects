@@ -3,3 +3,5 @@
 /assets/map-detail.js /assets/map-detail-5d713b76.js 302
 /assets/map-terrain.js /assets/map-terrain-c2f063b9.js 302
 /assets/map-roads.js /assets/map-roads-d81fc5ea.js 302
+# Crawler discovery belongs to the indexable marketing site.
+/sitemap.xml https://earthradio.stream/sitemap.xml 301

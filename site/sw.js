@@ -1,6 +1,10 @@
-const CACHE_NAME = 'earth-radio-shell-v71-confirmed-play';
+const CACHE_NAME = 'earth-radio-shell-v72-route-contract';
 const SHELL_ASSETS = [
   './',
+  './404.html',
+  './not-found.css?v=0.32.1',
+  './privacy',
+  './branding/earth-radio-logo.svg',
   './config.js?v=0.32.1',
   './assets/auth-deployment.js?v=0.32.1',
   './assets/desktop-auth.js?v=0.32.1',
@@ -94,7 +98,10 @@ self.addEventListener('activate', event => {
 async function networkFirst(request) {
   // The application routes through hashes. Query-bearing navigations can carry
   // one-time sign-in data and must never become persistent cache keys/responses.
-  const cacheable = request.mode !== 'navigate' || !new URL(request.url).search;
+  const url = new URL(request.url);
+  const shell = url.pathname === '/' || url.pathname === '/index.html';
+  const privacy = url.pathname === '/privacy' || url.pathname === '/privacy.html';
+  const cacheable = request.mode !== 'navigate' || (!url.search && (shell || privacy));
   try {
     const response = await fetch(request);
     if (response.ok && cacheable) {
@@ -107,7 +114,13 @@ async function networkFirst(request) {
     if (cached) return cached;
     // Only navigations may fall back to the shell document; serving HTML for a
     // script/style request breaks module MIME checks while offline.
-    if (request.mode === 'navigate') return (await caches.match('./')) || Response.error();
+    if (request.mode === 'navigate') {
+      if (shell) return (await caches.match('./')) || Response.error();
+      if (privacy) return (await caches.match('./privacy')) || Response.error();
+      const missing = await caches.match('./404.html');
+      return new Response(missing?.body || 'Page not found', { status: 404, statusText: 'Not Found',
+        headers: missing?.headers || { 'content-type': 'text/plain; charset=utf-8' } });
+    }
     return Response.error();
   }
 }
@@ -133,7 +146,7 @@ self.addEventListener('fetch', event => {
   const url = new URL(request.url);
 
   if (url.origin !== self.location.origin) return;
-  if (request.mode === 'navigate' || url.pathname.endsWith('/config.js') || url.pathname.endsWith('/manifest.webmanifest') || url.pathname.includes('/branding/') || url.pathname.includes('/i18n/') || url.pathname.includes('responsive-ui') || url.pathname.includes('atlas-lock')) {
+  if (request.mode === 'navigate' || url.pathname === '/not-found.css' || url.pathname.endsWith('/config.js') || url.pathname.endsWith('/manifest.webmanifest') || url.pathname.includes('/branding/') || url.pathname.includes('/i18n/') || url.pathname.includes('responsive-ui') || url.pathname.includes('atlas-lock')) {
     event.respondWith(networkFirst(request));
   } else if (url.pathname.includes('/assets/') && isImmutableAsset(url.pathname)) {
     event.respondWith(cacheFirst(request));

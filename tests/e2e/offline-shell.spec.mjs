@@ -11,5 +11,14 @@ test('installed shell reloads offline without redirected index or eager map prec
     expect(cached).not.toContain('/index.html');expect(cached.some(name=>/map-(?:detail|terrain|roads)-/.test(name))).toBe(false);
     await context.setOffline(true);await page.reload();await expect(page.locator('.station-card').first()).toBeVisible();
     await expect(page.locator('#audio-player')).toHaveJSProperty('paused',true);
+    const unknown=await page.goto('/places/offline-route-fixture-missing');
+    expect(unknown.status()).toBe(404);await expect(page.locator('[data-earth-radio-not-found]')).toBeVisible();
+    await expect(page.locator('html')).toHaveCSS('background-color','rgb(245, 241, 233)');
+    await expect(page.getByRole('link',{name:'Return home'})).toBeVisible();
+    expect(await page.locator('img').evaluate(image=>image.complete&&image.naturalWidth>0)).toBe(true);
+    const privacy=await page.goto('/privacy');expect(privacy.status()).toBe(200);
+    await expect(page.getByRole('heading',{level:1})).toContainText(/privacy/i);
+    await page.goto('/?route=offline-fixture');await expect(page.locator('.station-card').first()).toBeVisible();
+    await expect(page.locator('#audio-player')).toHaveJSProperty('paused',true);
   }finally{await context.close();}
 });

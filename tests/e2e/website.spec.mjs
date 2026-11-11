@@ -1,4 +1,5 @@
 import {test,expect} from '@playwright/test';
+import {FIXTURE_STATIONS} from './fixtures/stations.mjs';
 
 const repository='https://github.com/Protonmatter/earth-radio';
 const api='https://api.github.com/repos/Protonmatter/earth-radio/releases/latest';
@@ -42,4 +43,20 @@ test('complete stable release updates every download together; keyboard and dire
   await expect(page.getByRole('link',{name:'Skip to content'})).toBeFocused();
   await page.keyboard.press('Enter');
   expect(await page.evaluate(()=>location.hash)).toBe('#main');
+});
+
+for(const width of [320,1440])for(const prefix of ['','/__website'])test(`branded unknown route at ${prefix||'app'} is usable at ${width}px`,async({page})=>{
+  await page.setViewportSize({width,height:844});
+  await page.route('https://**',route=>route.abort());
+  await page.route('**/directory/snapshot',route=>route.fulfill({json:FIXTURE_STATIONS}));
+  const response=await page.goto(prefix+'/places/route-fixture-missing');
+  expect(response.status()).toBe(404);
+  await expect(page.locator('[data-earth-radio-not-found]')).toBeVisible();
+  await expect(page.locator('img[alt="Earth Radio"]')).toHaveJSProperty('complete',true);
+  expect(await page.locator('img').evaluate(image=>image.naturalWidth)).toBeGreaterThan(0);
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+  const home=page.getByRole('link',{name:'Return home'}),box=await home.boundingBox();expect(box.height).toBeGreaterThanOrEqual(44);
+  await page.keyboard.press('Tab');await expect(home).toBeFocused();await page.keyboard.press('Enter');
+  if(prefix)await expect(page.getByRole('heading',{level:1})).toHaveText('The worldis on air.');
+  else await expect(page.locator('.station-card').first()).toBeVisible();
 });
