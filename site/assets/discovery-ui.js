@@ -179,6 +179,8 @@ export function installDiscovery(adapter) {
     else status.textContent = 'No alternative stations match. Reset discovery to broaden the selection.';
   });
   function renderDetails(entry) {
+    const focusedStream=detailStreams.querySelector('select');
+    const restoreStreamFocus=Boolean(focusedStream&&document.activeElement===focusedStream);
     detailStation = entry.station;
     detailTitle.textContent = entry.station.name;
     detailTitle.title=entry.station.name;
@@ -199,6 +201,7 @@ export function installDiscovery(adapter) {
     const reasons=[...entry.reasons];
     if(entry.station.countryProvenance&&!['directory-code','unknown'].includes(entry.station.countryProvenance))reasons.push(t('discovery.countryInferred'));
     detailReasons.replaceChildren(...reasons.map(reason => { const li = document.createElement('li'); li.textContent = reason; return li; }));
+    if(restoreStreamFocus)(detailStreams.querySelector('select')||detailPlay).focus({preventScroll:true});
   }
   function showDetails(id) {
     const entry = entries.get(id);

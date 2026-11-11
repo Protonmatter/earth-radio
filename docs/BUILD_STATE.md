@@ -8,9 +8,11 @@ original stream choice and diagnostics into Details and Settings. Candidate
 identity is coherent 0.34.0/v76-place-first. See [place presentation](PLACE_PRESENTATION.md)
 and [qualification](QA-0.34.0.md). No new dependency, service or boot fetch.
 The inactive core passed 658 tests and 430 hashes. Integration passes 665 tests
-with three existing Windows skips and 435 hashes, all 324 browser cases without
+with three existing Windows skips and 435 hashes, all 330 browser cases without
 retries, the 42-scenario rendered matrix and isolated Windows ARM64 renderer/auth/
-encrypted-restart checks. Review and hosted delivery remain pending. Production
+encrypted-restart checks. Fresh review found one P2 Details refresh-focus issue;
+it was reproduced in both engines and corrected with six focused checks and the
+full green post-correction suites. Hosted delivery remains pending. Production
 and desktop versions below remain the accepted delivered versions until then.
 
 ## 0.33.1 web delivery — verified

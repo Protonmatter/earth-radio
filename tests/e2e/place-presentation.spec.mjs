@@ -47,6 +47,17 @@ test('stream choices and technical facts live in Details and retain selection an
  await expect(page.locator('.station-card .er-discovery-why')).toBeFocused();
 });
 
+for(const focus of ['stream','close','play'])test(`a catalog refresh preserves Details ${focus} focus and selected stream without autoplay`,async({page})=>{
+ await setupToday(page,{variant:true});await page.goto('/#listen');await page.locator('#er-discovery-query').fill('Berlin Radio 1');
+ await expect(page.locator('.station-card__name')).toHaveText(['Berlin Radio 1']);
+ await page.getByRole('button',{name:'Station details: Berlin Radio 1',exact:true}).click();const dialog=page.locator('#er-station-detail');
+ const select=dialog.getByRole('combobox',{name:'Stream quality for Berlin Radio 1'}),chosen='00000000-0000-4000-8000-000000000999';
+ await select.selectOption(chosen);const target=focus==='stream'?select:dialog.locator(focus==='close'?'[data-detail-close]':'[data-detail-play]');
+ await target.focus();await expect(target).toBeFocused();await page.evaluate(()=>window.earthRadioRuntime.refreshStations());
+ await expect(dialog).toBeVisible();await expect(select).toHaveValue(chosen);await expect(target).toBeFocused();
+ await expect(page.locator('#audio-player')).toHaveJSProperty('paused',true);
+});
+
 test('directory diagnostics stay in Settings while map and home keep plain copy',async({page})=>{
  await setupToday(page);await page.goto('/');await expect(page.locator('#er-today-place [data-today-play]')).toBeEnabled();
  await expect(page.locator('#map-panel')).not.toContainText(/approximate|unlocated|snapshot|saved copy/i);

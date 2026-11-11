@@ -55,7 +55,7 @@
 
 **Files:** Update qualification, operations, installation/build-state/provenance records and maintain the decision ledger. Use existing release tooling and separate immutable artifacts.
 
-- [ ] Run the whole-regression acceptance and one fresh read-only whole-branch review; reproduce concrete Important/Critical findings before one covering fix pass, then require green gates.
+- [x] Run the whole-regression acceptance and one fresh read-only whole-branch review; reproduce concrete Important/Critical findings before one covering fix pass, then require green gates.
 - [ ] Commit/push/create/attach the PR; require ten exact-head checks and actual preview bytes/headers/routes/UI, then exact-head merge, final-main/production acceptance and guarded Spaces readback.
 - [ ] Build Windows ARM64/x64 installer/portable and native Mac ARM64/x64 DMGs from final phase3 source; qualify source/package/signatures/startup/restart, create checksums/provenance, verify every draft/public download and preserve prior assets.
 - [ ] Update installation/static release presentation only from verified complete published assets, requalify final main/served parity and Spaces, then continue the approved Passport/Media Session/share/install/data/performance/atlas/SEO sequence.

@@ -55,8 +55,8 @@
     },
     {
       "path": "docs/BUILD_STATE.md",
-      "bytes": 35343,
-      "sha256": "91ed4c0c420e1e235ae444a370574b11350ffca0efa6b64bc9cc36f6b3bfcb92"
+      "bytes": 35503,
+      "sha256": "b64c8adde6f07f5167886e7d1eb68a87b7223b5e87cc7fd06f3e1ec3788ed776"
     },
     {
       "path": "docs/CLOUDFLARE_DEPLOYMENT.md",
@@ -180,8 +180,8 @@
     },
     {
       "path": "docs/QA-0.34.0.md",
-      "bytes": 2572,
-      "sha256": "38e4550148b95a2a72ab11c34e891cee85bffa20aba9a23504bfd66494dff825"
+      "bytes": 3165,
+      "sha256": "7a99c5d47f9a0cb63aeef1d4728e65d1feda9445a23d021f30c7bfb84f7c42c7"
     },
     {
       "path": "docs/QUALIFICATION-0.26.0.md",
@@ -371,7 +371,7 @@
     {
       "path": "docs/superpowers/plans/2026-11-11-place-first.md",
       "bytes": 6234,
-      "sha256": "0aafc978b5e0fc00b906f823e24aae4671455fb651418666c6c91ebf839f5c9d"
+      "sha256": "7fd8617e46ecbe4509601d6690f2fefe9195f3e80f95386e2f70cf7998e8d4a8"
     },
     {
       "path": "docs/superpowers/plans/2026-11-11-place-time.md",
@@ -850,8 +850,8 @@
     },
     {
       "path": "site/assets/discovery-ui.js",
-      "bytes": 23720,
-      "sha256": "71bac3228bf9654ff3747171a510ddebbcaf1fb893a1b5377e16c808ecc91dec"
+      "bytes": 23983,
+      "sha256": "a44ad7b30361ef2ca3662792506d7ece00929a4c2d6120628a22716e1bbaacd4"
     },
     {
       "path": "site/assets/discovery.css",
@@ -1715,8 +1715,8 @@
     },
     {
       "path": "tests/e2e/place-presentation.spec.mjs",
-      "bytes": 8269,
-      "sha256": "d5b6de866a430e789c8fa4d1a586cd038bc8c0507c23aebed44d320a18170632"
+      "bytes": 9386,
+      "sha256": "dc87d51079ef6a931fad74a9c44c7841c4e01677a03285893360bf6bc839a6e5"
     },
     {
       "path": "tests/e2e/playback-trust.spec.mjs",

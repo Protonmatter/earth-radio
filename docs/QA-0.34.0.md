@@ -25,12 +25,21 @@ that every live stream or new directory publication is reachable.
 
 Local gates pass: the final `npm run verify` reports 665 passing tests, three
 existing Windows skips and 435 deterministic hashes, with lint/syntax and both
-staged artifacts validated. All 324 browser cases pass at three workers without
+staged artifacts validated. All 330 browser cases pass at three workers without
 retries. The 42-scenario rendered matrix and Windows ARM64 sandbox, synthetic
 provider PKCE/sync, encrypted restart, logout persistence and normal-quit checks
 pass in isolated profiles. Twenty-four worker checks include offline handling
-of both new facts modules. Independent review, exact-head CI, hosted previews,
+of both new facts modules. Exact-head CI, hosted previews,
 production readback and new desktop artifacts remain pending.
+
+The fresh whole-branch review found one P2 issue and no P0/P1 issues: a directory
+refresh replaced an open Details stream selector and lost its keyboard focus.
+The new regression failed in Chromium and WebKit. The renderer now restores
+focus only if the replaced selector owned it, with Play as the fallback when no
+selector remains. Six focused cases pass, preserving the chosen UUID, no-autoplay
+state and focus on Stream, Close or Play. The full post-correction verifier,
+330 browser cases without retries, 42-scenario rendered matrix and isolated
+native sandbox/authentication/restart lifecycle checks pass.
 Fresh OAuth/email delivery, physical iPhone/Android, VoiceOver, installed-PWA and
 Mac installation/upgrade acceptance remain distinct from automated fixtures.
 Existing public-signing/notarization limitations are retained by user choice.
