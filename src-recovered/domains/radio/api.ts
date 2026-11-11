@@ -2,6 +2,7 @@
 // failover), IndexedDB cache with stale fallback, and best-effort click telemetry.
 import { getRuntimeConfig, type RuntimeConfig } from '../../core/config';
 import {loadDirectorySnapshot,browserDirectoryHosts} from '../../../site/assets/directory-client.js';
+import {createStationClickReporter} from '../../../site/assets/station-clicks.js';
 import { summarizeStationSources } from '../../core/sourceGraph.js';
 import { dbGet, dbSet } from '../../core/db';
 import { getBadStations } from '../../core/storage';
@@ -106,22 +107,16 @@ function normalizeStationPayload(payload: any, source: string): { stations: Stat
 }
 
 export async function recordStationClick(station: Station | null): Promise<unknown> {
-  if (!station?.stationuuid) return null;
-
-  const config = getRuntimeConfig();
-  const endpoints = config.proxyBaseUrl
-    ? [`${trimTrailingSlash(config.proxyBaseUrl)}/api/stations/click/${encodeURIComponent(station.stationuuid)}`]
-    : (await browserDirectoryHosts.discover()).map(base => `${base}/json/url/${encodeURIComponent(station.stationuuid)}`);
-
-  for (const endpoint of endpoints) {
-    try {
-      return await fetchJson(endpoint, Math.min(config.apiTimeoutMs, 5000));
-    } catch {
-      // Best-effort telemetry; playback must never depend on it.
-    }
-  }
-  return null;
+  return reportConfirmedClick(station);
 }
+
+const reportConfirmedClick = createStationClickReporter(async (station: Station) => {
+  const config = getRuntimeConfig();
+  const base = config.proxyBaseUrl ? trimTrailingSlash(config.proxyBaseUrl) : (await browserDirectoryHosts.discover())[0];
+  if (!base) return null;
+  const endpoint = config.proxyBaseUrl ? `${base}/api/stations/click/${station.stationuuid}` : `${base}/json/url/${station.stationuuid}`;
+  return fetchJson(endpoint, Math.min(config.apiTimeoutMs, 5000));
+});
 
 async function fetchJson(url: string, timeoutMs: number): Promise<any> {
   const controller = new AbortController();

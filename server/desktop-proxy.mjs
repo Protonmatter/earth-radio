@@ -13,6 +13,7 @@ import {createDirectoryHosts} from '../site/assets/directory-hosts.js';
 import {createPublishedCatalog} from '../site/assets/published-catalog.js';
 import {snapshotRows} from '../site/assets/directory-client.js';
 import {normalizeDirectory} from './directory-normalize.mjs';
+import {isRadioBrowserUuid} from '../site/assets/station-clicks.js';
 
 const USER_AGENT = 'EarthRadio/0.24.0 desktop-proxy (+https://github.com/Protonmatter/EarthRadio)';
 const directoryHosts=createDirectoryHosts({fetchImpl:async(url,options)=>{
@@ -92,9 +93,10 @@ async function route(req, res, routePrefix) {
 
   const clickMatch = url.pathname.match(/^\/api\/stations\/click\/(.+)$/);
   if (clickMatch) {
-    const uuid = decodeURIComponent(clickMatch[1] || '').replace(/[^a-zA-Z0-9-]/g, '');
-    if (!uuid) return sendJson(res, 400, { error: 'missing station uuid' });
-    return sendJson(res, 200, await recordClick(uuid));
+    let uuid;
+    try { uuid = decodeURIComponent(clickMatch[1]); } catch { return sendJson(res, 400, { error: 'invalid station uuid' }); }
+    if (!isRadioBrowserUuid(uuid)) return sendJson(res, 400, { error: 'invalid station uuid' });
+    return sendJson(res, 200, await recordClick(uuid.toLowerCase()));
   }
 
   if (url.pathname === '/api/streams/resolve') {
@@ -371,13 +373,8 @@ function cleanStationText(value) {
 }
 
 async function recordClick(uuid) {
-  for (const base of await directoryHosts.discover()) {
-    try {
-      return await fetchJson(`${base}/json/url/${encodeURIComponent(uuid)}`, 5000);
-    } catch {
-      // keep trying mirrors
-    }
-  }
+  const [base] = await directoryHosts.discover();
+  if (base) try { return await fetchJson(`${base}/json/url/${encodeURIComponent(uuid)}`, 5000); } catch { /* Best effort; acceptance may precede a lost response. */ }
   return { ok: false, reason: 'click telemetry unavailable' };
 }
 

@@ -65,8 +65,8 @@
     },
     {
       "path": "docs/DAILY_RETURN_DELIVERY.md",
-      "bytes": 3171,
-      "sha256": "8fe34b3fc6a136f337a04e54dc5f109220a031e3923d7341a45af08d88881480"
+      "bytes": 4687,
+      "sha256": "a16bb2f1a57651fd2043c19e5cc1e22d9302ef185db914e7c825d3a54dfcadc5"
     },
     {
       "path": "docs/DIRECTORY_PUBLICATION.md",
@@ -130,8 +130,8 @@
     },
     {
       "path": "docs/provenance/hardening-overlays.json",
-      "bytes": 16665,
-      "sha256": "aacf43b1ca76550b012e3df73d8fa0bc7c2dc7eb04e9fdcc00a8ff29d6c71182"
+      "bytes": 17160,
+      "sha256": "6b2ae57f2fd58b82242d5f1194cf651825cf38803d16e4ddf965f1450c351500"
     },
     {
       "path": "docs/provenance/map-data.json",
@@ -450,8 +450,8 @@
     },
     {
       "path": "package.json",
-      "bytes": 4927,
-      "sha256": "c74312c64c08c776ea2839bf8d76f86e7b11e57af72758ed87e2c06c4ee701c6"
+      "bytes": 4991,
+      "sha256": "d7f35fbfbfb546c7ab0af83ff6fbf7abfc2de113f9b4e3a16e21eba9f3897899"
     },
     {
       "path": "scripts/build-desktop-icon.mjs",
@@ -560,8 +560,8 @@
     },
     {
       "path": "server/desktop-proxy.mjs",
-      "bytes": 25108,
-      "sha256": "ec52001706c30be053621a866b4780d3f843b0bca0f3cbf0d5785494667cd0c3"
+      "bytes": 25277,
+      "sha256": "1c93f2b51cd442c75b022a6e70be1bff3ff1eb51076af448c92af3d8c4fe2fcb"
     },
     {
       "path": "server/directory-normalize.mjs",
@@ -625,8 +625,8 @@
     },
     {
       "path": "site/_headers",
-      "bytes": 3869,
-      "sha256": "fb5b11c4c3541981df6fef8ca2f518e797bc7de5c5ec2f185a656c38e43efe78"
+      "bytes": 3950,
+      "sha256": "7efa20a0e090d6cfd88bad3d9c7dd8cd7eb88c29dcd6c0dfb1cddc2a75d2d495"
     },
     {
       "path": "site/_redirects",
@@ -739,14 +739,14 @@
       "sha256": "6560373fba977682d3acc4290af72029fb722879a2edce30504f8a93caec069c"
     },
     {
-      "path": "site/assets/index-1d06892a.js",
-      "bytes": 280337,
-      "sha256": "1d06892a1fd593b9b0c4b91c716fb5d522c6fc7ff36677f9e54f926d1a586634"
-    },
-    {
       "path": "site/assets/index-CSoL7F-Y.css",
       "bytes": 43016,
       "sha256": "60f44cedcfa837816c145a1b34cdf1b25c64b5530f84b0867016e6097bb27001"
+    },
+    {
+      "path": "site/assets/index-f6e2fe21.js",
+      "bytes": 280413,
+      "sha256": "f6e2fe21678b7b3fbb1e0b1369bf8f6a211e18271118656ac6e5c4ae8d73454d"
     },
     {
       "path": "site/assets/listening-room.css",
@@ -862,6 +862,11 @@
       "path": "site/assets/song-library-ui.js",
       "bytes": 22113,
       "sha256": "dbe3111db3101880222201cfd0f1c5df021636c7b39b16d9bca7e4cd44482021"
+    },
+    {
+      "path": "site/assets/station-clicks.js",
+      "bytes": 840,
+      "sha256": "4a090e237424fe495d40ca266d33b5261d1fbd4fbc1050f9b26e8372e705ddf3"
     },
     {
       "path": "site/assets/station-location.js",
@@ -1081,7 +1086,7 @@
     {
       "path": "site/index.html",
       "bytes": 41571,
-      "sha256": "e4671bbca798cfe4782facb88a845f7fbd1b0423f44f2460faca8f857bbf9f47"
+      "sha256": "dbf765f38011853a122ab17231ecef667936d1c350730578ef9ec30c7274d8c2"
     },
     {
       "path": "site/manifest.webmanifest",
@@ -1100,8 +1105,8 @@
     },
     {
       "path": "site/sw.js",
-      "bytes": 5451,
-      "sha256": "82742fb443aa37a1d7cbee3a74bfe36658a9c24992fd750e14ffb3ff9b4d1cd4"
+      "bytes": 5491,
+      "sha256": "15762dd0aec5bfd863992e6d19b63163476533b1be4e840dc1c9127aa9b6acb5"
     },
     {
       "path": "src-recovered/core/config.ts",
@@ -1155,8 +1160,8 @@
     },
     {
       "path": "src-recovered/core/player.ts",
-      "bytes": 15681,
-      "sha256": "9f5cc7b5c621cefa71aa35d45d82a7a52f79395664d7fbbc1b39a99bf7e393e8"
+      "bytes": 15906,
+      "sha256": "8dd5e70858bd07cfc6d5431edd7ac7789c91c7e5b055ed9dba2a46d187420cb4"
     },
     {
       "path": "src-recovered/core/playlist.js",
@@ -1205,8 +1210,8 @@
     },
     {
       "path": "src-recovered/domains/radio/api.ts",
-      "bytes": 6681,
-      "sha256": "e042ffc7f1e86d3fa7ce553bcffaec7f8fd265e1f723634125104ed2c85fb04e"
+      "bytes": 6698,
+      "sha256": "2236b164f906266df0094463b9efc9a1a6deecc57d5ff36a452d2a0cb14f91d6"
     },
     {
       "path": "src-recovered/domains/radio/index.ts",
@@ -1255,8 +1260,8 @@
     },
     {
       "path": "src-recovered/main.ts",
-      "bytes": 38163,
-      "sha256": "aefaf00ad41afbb7736176fd6bda1c25317c15ba7cbb73e75452e4b395d0350f"
+      "bytes": 38154,
+      "sha256": "f1a0ecfc78ec08f268f59e37a6648d8e4525da875dd9b85d792199a9f91b5bdd"
     },
     {
       "path": "src-recovered/server/metadata-api.mjs",
@@ -1549,6 +1554,11 @@
       "sha256": "3bf5fa68c247ca8a564d2176fb842e47de11ea0c5ef15e48dcb5a9bad29ec915"
     },
     {
+      "path": "tests/e2e/station-clicks.spec.mjs",
+      "bytes": 4325,
+      "sha256": "338094968a09258e0dc63f03701f2b3fd7d3ff0cf0b940b5ca2918c046cfab5b"
+    },
+    {
       "path": "tests/e2e/station-loading.spec.mjs",
       "bytes": 3157,
       "sha256": "cc3cfc405fc592b4d0f280e2318eea93fe902fb1de122acabb0329bf5c2bbdba"
@@ -1626,7 +1636,7 @@
     {
       "path": "tests/live-metadata.test.mjs",
       "bytes": 42675,
-      "sha256": "527ac6f187133f2c7109f962c47c79e46fac06b0a96499bfd518c21f80b444f9"
+      "sha256": "e3e9c96deb42b64cec5a08add4cec9b870c0a3b8918080711d64a74b4c3ce39c"
     },
     {
       "path": "tests/macos-release.test.mjs",
@@ -1642,6 +1652,11 @@
       "path": "tests/map-viewport.test.mjs",
       "bytes": 870,
       "sha256": "8ea81385ce6b57d2f9e9cec3d404a01267b9a85e3a281c2218a7d8e89e842340"
+    },
+    {
+      "path": "tests/native-click-route.test.mjs",
+      "bytes": 1985,
+      "sha256": "83884b02c3671c41a55bba26bfbad5c0469953731f3f6ca362dd67c3c48e4ce3"
     },
     {
       "path": "tests/native-directory.test.mjs",
@@ -1711,7 +1726,7 @@
     {
       "path": "tests/responsive-ui.test.mjs",
       "bytes": 13511,
-      "sha256": "38a1c51e153f59cd7672f8f3177c7bb023a920be4b85053e331cbbd7ba5f6f0a"
+      "sha256": "59a46151ab4c0e76a066abafc3e1fc2119b10a7ac4c47121277e37275a902d53"
     },
     {
       "path": "tests/search-core.test.mjs",
@@ -1720,8 +1735,8 @@
     },
     {
       "path": "tests/service-worker.test.mjs",
-      "bytes": 12505,
-      "sha256": "e400994a5fe4471f7245ff010e65aa94c09a8cff0fb65ed59cf4dcbc5383e05d"
+      "bytes": 12525,
+      "sha256": "ce7bf975274eabbe385566a2057375e912bba3556494ad8a4c019597ae680219"
     },
     {
       "path": "tests/smoke-desktop-auth-lifecycle.mjs",
@@ -1746,7 +1761,7 @@
     {
       "path": "tests/smoke-metadata.mjs",
       "bytes": 7009,
-      "sha256": "1e975c2d209602340f04880095ff4be4c63db4778a0ceeb2b297252a17f61376"
+      "sha256": "6c00bdb60a74d04331e01a25fa5e64d848f7ef1730252f29dbaa8bc79408171d"
     },
     {
       "path": "tests/smoke-recovery-import.ps1",
@@ -1767,6 +1782,11 @@
       "path": "tests/stage-site.test.mjs",
       "bytes": 2328,
       "sha256": "88b8b5c3d2863f697594ff4c3c213b07e94a976714b9d3b0f86219b349e5ac97"
+    },
+    {
+      "path": "tests/station-clicks.test.mjs",
+      "bytes": 1776,
+      "sha256": "f5737b9eb3183de2bc5eb227874ee6e5ae0441133c58387134ebe8b2faa9985b"
     },
     {
       "path": "tests/station-location.test.mjs",

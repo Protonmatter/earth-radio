@@ -15,7 +15,7 @@
 /assets/hls.light-Dr1Fv81C.js
   Cache-Control: public, max-age=31536000, immutable
 
-/assets/index-1d06892a.js
+/assets/index-f6e2fe21.js
   Cache-Control: public, max-age=31536000, immutable
 
 /assets/index-CSoL7F-Y.css
@@ -118,6 +118,9 @@
   Cache-Control: public, max-age=300, must-revalidate
 
 /assets/playback-intent.js
+  Cache-Control: public, max-age=300, must-revalidate
+
+/assets/station-clicks.js
   Cache-Control: public, max-age=300, must-revalidate
 
 /assets/map-world-b021d4b5.js

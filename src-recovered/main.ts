@@ -382,8 +382,6 @@ async function onStationClick(station: Station, options: { retry?: boolean; reco
   if (!options.recovery && !options.continuation) autoSkipCount = 0;
   highlightCard(station.stationuuid); syncRoute(getActiveFilters());
   setStatus(t('status.loadingStation', { name: station.name }));
-  // Telemetry is best-effort and must never delay playback starting.
-  void activePack.recordSelection(station);
   const ok = await playStation(station, { restart });
   if (ok && discovery.isCurrent(ticket) && discovery.playing(station)) {
     clearStationPlaybackFailure(station.stationuuid);
@@ -893,6 +891,7 @@ function setupAudioErrorHandling(): void {
   initPlayer({
     onStateChange: (state, station) => { updatePlayBtnState(); if (state === 'playing' && discovery.playing(station)) autoSkipCount = 0; },
     onStationChange: updatePlayerBar,
+    onPlaying: station => { if (discovery.playing(station)) void activePack.recordSelection(station); },
     onPause: () => discovery.cancel(),
     onPlay: () => void btnPlay?.click(),
     onPrev: () => void btnPrev?.click(),

@@ -11,6 +11,7 @@ export interface PlayerCallbacks {
   onStateChange?: (status: PlayerStatus, station: Station | null) => void;
   onStationChange?: (station: Station | null) => void;
   onCanPlay?: (station: Station | null) => void;
+  onPlaying?: (station: Station | null) => void;
   onError?: (station: Station | null, error: Error) => void;
   onEnded?: (station: Station | null) => void;
   onVolumeChange?: (volume: number) => void;
@@ -97,11 +98,14 @@ export function initPlayer(next: PlayerCallbacks = {}): void {
     clearConnectTimer();
     callbacks.onCanPlay?.(currentStation);
   });
-  audio.addEventListener('playing', () => {
+  audio.addEventListener('playing', event => {
+    if (!intendedPlaying) { audio?.pause(); return; }
+    if (!event.isTrusted || audio!.paused || audio!.readyState < 2) return;
     hasPlayedCurrent = true;
     clearStallTimer();
     clearConnectTimer();
     setStatus('playing');
+    callbacks.onPlaying?.(currentStation);
   });
   audio.addEventListener('pause', () => setStatus(audio?.ended ? 'ended' : intendedPlaying && !hasPlayedCurrent ? 'loading' : 'paused'));
   audio.addEventListener('ended', () => {
