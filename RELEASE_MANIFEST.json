@@ -65,8 +65,8 @@
     },
     {
       "path": "docs/DAILY_RETURN_DELIVERY.md",
-      "bytes": 4687,
-      "sha256": "a16bb2f1a57651fd2043c19e5cc1e22d9302ef185db914e7c825d3a54dfcadc5"
+      "bytes": 5173,
+      "sha256": "d8bbd425c4ace76e23dc205aff0930850c3fa322bbc4233e5f2a163b0206e593"
     },
     {
       "path": "docs/DIRECTORY_PUBLICATION.md",
@@ -1540,8 +1540,8 @@
     },
     {
       "path": "tests/e2e/search-experience.spec.mjs",
-      "bytes": 14640,
-      "sha256": "3c8e4b8cfbbd870c6c4ce82ace229b086c41acb5bcc2061524b2d4344c2151eb"
+      "bytes": 14874,
+      "sha256": "bc736e84851a149a585be3b4f0e45839b6e8c45abb0deeaad629c3f6568c9546"
     },
     {
       "path": "tests/e2e/serve-site.mjs",
