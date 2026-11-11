@@ -1,6 +1,6 @@
 import { mkdir } from 'node:fs/promises';
 import { test, expect } from '@playwright/test';
-import { setupApp } from './helpers.mjs';
+import { setupApp,openAtlasView } from './helpers.mjs';
 
 test('bundled geography shows country/city labels, independent toggles and remembered preferences', async ({ page }) => {
   const providers = [];
@@ -51,12 +51,12 @@ test('geographic labels and detail survive theme changes and phone layout', asyn
   await expect(page.locator('.station-card__name')).toHaveText(['E2E London Jazz']);
   await page.getByRole('button', { name: 'Fit stations', exact: true }).click();
   await expect(page.locator('.er-geo-city').filter({ hasText: 'London' }).first()).toBeVisible({ timeout: 20000 });
-  await page.locator('#theme-toggle').click();
+  await page.locator('#settings-toggle').click();await page.getByRole('button',{name:'Night',exact:true}).click();await page.locator('#settings-modal .settings-header [data-close-settings]').click();
   await expect(page.locator('#map')).toHaveAttribute('data-er-basemap', 'dark');
   await expect(page.locator('.er-geo-city').filter({ hasText: 'London' }).first()).toBeVisible();
   await expect.poll(() => page.locator('#map canvas').count()).toBeLessThanOrEqual(1);
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.getByRole('button', { name: 'Map', exact: true }).last().click();
+  await openAtlasView(page);
   await page.locator('#er-map-options summary').click();
   await expect(page.getByLabel('Country names', { exact: true })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBe(0);

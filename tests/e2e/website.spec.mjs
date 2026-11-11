@@ -62,7 +62,12 @@ for(const width of [320,1440])for(const prefix of ['','/__website'])test(`brande
   const home=page.getByRole('link',{name:'Return home'}),box=await home.boundingBox();expect(box.height).toBeGreaterThanOrEqual(44);
   await page.keyboard.press('Tab');await expect(home).toBeFocused();await page.keyboard.press('Enter');
   if(prefix)await expect(page.getByRole('heading',{level:1})).toHaveText('The worldis on air.');
-  else await expect(page.locator('.station-card').first()).toBeVisible();
+  else{
+    await expect(page.locator('#er-today')).toBeVisible();
+    await page.locator('.er-primary-nav [data-er-primary="search"]').click();
+    await expect(page.locator('.station-card').first()).toBeVisible();
+    await expect(page.locator('#audio-player')).toHaveJSProperty('paused',true);
+  }
 });
 
 test('without JavaScript the staged download links use the verified published release',async({browser})=>{

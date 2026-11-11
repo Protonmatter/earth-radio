@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { setupApp } from './helpers.mjs';
+import { setupApp,refreshDirectory } from './helpers.mjs';
 import { FIXTURE_STATIONS } from './fixtures/stations.mjs';
 
 test('large directory supports offscreen discovery, end-of-list selection and cached reload', async ({ page }) => {
@@ -18,8 +18,7 @@ test('large directory supports offscreen discovery, end-of-list selection and ca
   await page.route('**/json/stations/topclick/**', route => offline
     ? route.abort('failed') : route.fulfill({ json: stations }));
   // Explicit refresh exercises the network path rather than the existing cache.
-  await page.locator('#er-overflow-toggle').click();
-  await page.locator('#er-overflow [data-click-id="refresh-stations"]').click();
+  await refreshDirectory(page);
   await expect(page.locator('#grid-count')).toContainText(/50\d stations/);
   await expect(page.locator('.station-card[data-uuid="bulk-fixture-499"]')).toHaveCount(0);
   const search = page.getByRole('searchbox', { name: 'Find a station' });

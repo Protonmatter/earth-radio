@@ -1,7 +1,7 @@
 import {test,expect} from '@playwright/test';
 import {setupApp} from './helpers.mjs';
 import {FIXTURE_COUNTRIES,FIXTURE_STATIONS} from './fixtures/stations.mjs';
-const openSearch=async page=>{await page.getByRole('button',{name:'Search stations',exact:true}).first().click();await expect(page.locator('#er-station-query')).toBeVisible();};
+const openSearch=async page=>{await page.keyboard.press('Control+k');await expect(page.locator('#er-station-query')).toBeVisible();};
 async function genre(page,value='jaz'){
   const input=page.getByRole('combobox',{name:'Search genres',exact:true});
   if(!await input.isVisible())await page.locator('.er-discovery-advanced>summary').click();

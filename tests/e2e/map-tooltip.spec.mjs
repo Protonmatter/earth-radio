@@ -1,6 +1,6 @@
 import { mkdir } from 'node:fs/promises';
 import { test, expect } from '@playwright/test';
-import { setupApp } from './helpers.mjs';
+import { setupApp,refreshDirectory,openAtlasView } from './helpers.mjs';
 import { FIXTURE_STATIONS } from './fixtures/stations.mjs';
 
 for (const { width, palette, longName = false } of [
@@ -30,12 +30,11 @@ for (const { width, palette, longName = false } of [
       return route.fulfill({ json: { found: true, source: 'icy', artist: 'Test artist', title: 'A measured melody' } });
     });
     try {
-      await page.locator('#er-overflow-toggle').click();
-      await page.locator('#er-overflow [data-click-id="refresh-stations"]').click();
+      await refreshDirectory(page);
       const query = page.getByRole('searchbox', { name: 'Find a station' });
       await query.fill('CBS JOY4U');
       await expect(page.locator('.station-card__name')).toHaveText([station.name]);
-      if (width < 768) await page.getByRole('button', { name: 'Map', exact: true }).last().click();
+      if (width < 768) await openAtlasView(page);
       await page.getByRole('button', { name: 'Fit stations', exact: true }).click();
       // Finish the zoom-specific geographic layout before parking the pointer.
       // A tooltip can legitimately close while the map is being resized.

@@ -1,9 +1,52 @@
 # Today selection and launch
 
-The Today work is staged in bounded commits. This first commit supplies pure
-selection and the opt-in native catalog enrichment; the active browser launch,
-navigation and playback presentation remain unchanged until the UI integration.
+Candidate 0.33.0 integrates Today through a narrow adapter to the existing runtime.
+It is local feature work until exact-head review, CI and deployed acceptance pass;
+the previously published 0.32.2 desktop release is unchanged. The feature is staged
+in bounded core, UI and regression/delivery commits.
 The delivery specification is [Today home](superpowers/specs/2026-11-11-today-home-design.md).
+
+## Presentation and ownership
+
+An unqualified fresh root launch opens Today. Reload/back navigation retains the
+current destination so a cleared URL fragment cannot discard a search workflow.
+Explicit legacy destination/filter fragments, station links and saved-view links
+keep their original meaning. Stored language,
+palette, split, favorites, history and account data are retained. Atlas, Library
+and Search form the primary navigation; Library groups the existing station,
+song and account owners. Settings contains the existing transfer/preference
+actions. The original control IDs and delegated handlers remain authoritative.
+
+Today shows a separate Continue action when a current/last station exists, one
+named city recommendation and up to three other program components. Every play
+or retry calls the same station-intent owner with its existing 7.5-second sibling
+budget; World Scan remains a separately labeled explicit action. No render or
+clock tick can play, retarget audio, report a directory click or write history.
+The idle player offers the same named Continue/Today selection and disables its
+primary action when none is available. A blank Now Playing sheet cannot be opened.
+
+The date/clock updates at least once per minute and on foregrounding. Hero choice
+is fixed for a UTC date/catalog revision; playback failure alone cannot silently
+reroll it. On air excludes the entire hero program component, and stable button
+nodes preserve keyboard focus when the recommendation changes at midnight.
+The compact mobile map opens the same full atlas. Six locale catalogs, Paper/Night,
+44px new controls, keyboard skip navigation and responsive geometry have dedicated
+browser regressions; these are fixture-based checks, not physical-device acceptance.
+
+Library tabs remain out of Search. Short wide windows hide the duplicate list
+heading and genre shortcuts so a complete station row fits; Refine retains all
+genre filtering. Settings/player controls wait for their existing handlers or
+playable selection. Settings owns initial/return focus, and palette selection
+aligns its hidden existing theme field before Save.
+
+The recovered router suppresses feedback only for a real hash assignment.
+`history.replaceState` emits no hashchange event and must not consume the next
+user fragment. Same-document geography and quality links retain their meaning.
+
+The 0.33.0 module URLs and v74 worker include only the small active Today/place
+modules. Large map detail/terrain/roads remain outside the precache. The recovered
+runtime is fingerprinted after its recorded integration edit; the old TypeScript
+snapshot is still a reference and does not reproduce it through compilation.
 
 ## Selection contract
 

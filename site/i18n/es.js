@@ -55,7 +55,7 @@ export default {
   "map.loadingDetail": "Cargando detalles del mapa…",
   "map.detailUnavailable": "No se pudieron cargar los detalles. Se muestra el atlas básico.",
   'app.tagline': 'Radio global resiliente',
-  'app.skip': 'Saltar a la lista de emisoras',
+  "app.skip": "Saltar al contenido",
 
   'status.initializing': 'Inicializando…',
   'status.loading': 'Cargando directorio de emisoras…',
@@ -144,7 +144,7 @@ export default {
   'search.title': 'Buscar emisoras',
 
   'map.label': 'Mapa de emisoras',
-  'map.assistive': 'El mapa es una ayuda visual. Las emisoras equivalentes siguen disponibles en Escuchar y Buscar.',
+  "map.assistive": "El mapa es una ayuda visual. Busca y reproduce las mismas emisoras en Buscar.",
   'map.retry': 'Reintentar mapa',
   'map.unavailable': 'Los teselas del mapa no están disponibles. Explora emisoras en la lista.',
   'map.previewPlay': 'Reproducir',
@@ -331,5 +331,24 @@ export default {
   "music.accountChanged": "Tu cuenta ha cambiado. Vuelve a abrir la biblioteca.",
   "music.confirmClear": "¿Borrar el historial reciente? Tus Me gusta se conservarán.",
   "music.identify": "Identificar canción",
-  "music.identifying": "Identificando…"
+  "music.identifying": "Identificando…",
+  "today.title": "Hoy",
+  "today.place": "El lugar de hoy",
+  "today.cancel": "Cancelar la conexión a {station}",
+  "today.pause": "Pausar {station}",
+  "today.play": "Reproducir {station}",
+  "today.cancelShort": "Cancelar",
+  "today.noStation": "No hay emisoras disponibles",
+  "today.unavailableTitle": "Un lugar nuevo cada día",
+  "today.unavailable": "No hay emisoras compatibles de esta ciudad cargadas. Actualiza o explora el mapa.",
+  "today.explore": "Explorar el atlas",
+  "today.onair": "En directo",
+  "today.airEmpty": "Carga emisoras para encontrar algo que escuchar.",
+  "today.library": "Biblioteca",
+  "today.accountHelp": "Mantén tus emisoras y canciones juntas en todos tus dispositivos.",
+  "today.emptyPlayer": "Elige una emisora para empezar",
+  "today.continueStation": "Reproducir {station}",
+  "today.search": "Buscar",
+  "today.atlas": "Atlas",
+  "today.moreFilters": "Más filtros"
 };

@@ -55,7 +55,7 @@ export default {
   "map.loadingDetail": "正在加载地图详情…",
   "map.detailUnavailable": "地图详情不可用，显示基础地图。",
   'app.tagline': '可靠的全球广播',
-  'app.skip': '跳到电台列表',
+  "app.skip": "跳到内容",
 
   'status.initializing': '正在初始化…',
   'status.loading': '正在加载电台目录…',
@@ -144,7 +144,7 @@ export default {
   'search.title': '搜索电台',
 
   'map.label': '电台地图',
-  'map.assistive': '地图仅作视觉辅助。等价电台仍可在“收听”和“搜索”中使用。',
+  "map.assistive": "地图提供视觉辅助。你可以在搜索中浏览并播放同样的电台。",
   'map.retry': '重试地图',
   'map.unavailable': '地图图块不可用。请改用列表浏览电台。',
   'map.previewPlay': '播放',
@@ -331,5 +331,24 @@ export default {
   "music.accountChanged": "账户已变更，请重新打开歌曲库。",
   "music.confirmClear": "清除最近收听记录？喜欢的歌曲会保留。",
   "music.identify": "识别歌曲",
-  "music.identifying": "正在识别…"
+  "music.identifying": "正在识别…",
+  "today.title": "今天",
+  "today.place": "今日城市",
+  "today.cancel": "取消连接 {station}",
+  "today.pause": "暂停 {station}",
+  "today.play": "播放 {station}",
+  "today.cancelShort": "取消",
+  "today.noStation": "暂无可用电台",
+  "today.unavailableTitle": "每天探索一座新城市",
+  "today.unavailable": "尚未加载此城市支持的电台。请刷新或探索地图。",
+  "today.explore": "探索地图",
+  "today.onair": "正在播出",
+  "today.airEmpty": "加载电台，寻找想听的内容。",
+  "today.library": "资料库",
+  "today.accountHelp": "在不同设备上保存你的电台和歌曲。",
+  "today.emptyPlayer": "选择一个电台开始收听",
+  "today.continueStation": "播放 {station}",
+  "today.search": "搜索",
+  "today.atlas": "地图集",
+  "today.moreFilters": "更多筛选"
 };

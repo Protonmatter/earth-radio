@@ -28,7 +28,7 @@ export function silentWav(seconds = 30) {
 const AUDIO = silentWav();
 const ALL_STATIONS = [...FIXTURE_STATIONS, ...EXPANSION_STATIONS];
 
-export async function setupApp(page, { sameOriginNowPlaying = null, sameOriginFingerprint = null, enableAuth = false } = {}) {
+export async function setupApp(page, { sameOriginNowPlaying = null, sameOriginFingerprint = null, enableAuth = false, navigate = true, startPath = '/#listen' } = {}) {
   // Chrome 151+ (the build CI's `playwright install chromium` provides) answers
   // canPlayType('application/vnd.apple.mpegurl') with 'maybe', so the runtime takes
   // its native-HLS branch and never creates the MediaSource blob: source these tests
@@ -117,13 +117,43 @@ export async function setupApp(page, { sameOriginNowPlaying = null, sameOriginFi
       });
     });
   }
-  await page.goto('/');
+  // Existing station/search regressions deliberately start in the list context.
+  // Default-Today cases configure the same fixtures with navigate:false and
+  // navigate to '/' themselves, exercising the real production launch policy.
+  if(!navigate)return{fingerprintRequests};
+  await page.goto(startPath);
   await expect(page.locator('.station-card').first()).toBeVisible({ timeout: 20_000 });
   return { fingerprintRequests };
 }
 
 export function card(page, name) {
   return page.locator('.station-card').filter({has:page.getByText(name,{exact:true})}).first();
+}
+
+export async function openAccountView(page){
+  await page.locator('.er-primary-nav [data-er-primary="library"]').click();
+  await page.locator('#grid-panel [data-er-library-section="account"]').click();
+  const control=page.locator('#er-auth-button');await expect(control).toBeVisible();return control;
+}
+
+export async function openSearchView(page){
+  await page.locator('.er-primary-nav [data-er-primary="search"]').click();
+  await expect(page.locator('#er-discovery-query')).toBeVisible();
+}
+export async function openAtlasView(page){
+  await page.locator('.er-primary-nav [data-er-primary="atlas"]').click();
+  await page.locator('#er-today [data-er-dest="map"]').click();
+  await expect(page.locator('#map-panel')).toBeVisible();
+}
+export async function openSongLibraryView(page){
+  await page.locator('.er-primary-nav [data-er-primary="library"]').click();
+  await page.locator('#grid-panel [data-er-library-section="music"]').click();
+  await expect(page.locator('#er-you .er-song-library')).toBeVisible();
+}
+export async function refreshDirectory(page){
+  await page.locator('#settings-toggle').click();
+  await page.locator('#settings-modal [data-click-id="refresh-stations"]').click();
+  await page.locator('#settings-modal .settings-header [data-close-settings]').click();
 }
 
 export async function revealCard(page, name) {

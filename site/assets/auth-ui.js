@@ -1,10 +1,10 @@
-import { createAuthClient } from './auth-core.js?v=0.32.2';
-import { createDesktopAuthClient, isDesktopAuthAvailable } from './desktop-auth.js?v=0.32.2';
-import { songLibraryStore, setSongLibraryAccount, pauseSongLibraryAccount } from './song-library-store.js?v=0.32.2';
+import { createAuthClient } from './auth-core.js?v=0.33.0';
+import { createDesktopAuthClient, isDesktopAuthAvailable } from './desktop-auth.js?v=0.33.0';
+import { songLibraryStore, setSongLibraryAccount, pauseSongLibraryAccount } from './song-library-store.js?v=0.33.0';
 import {
   accountDataKey, accountLocalRecords, createSyncEngine, planLocalAccountTransition,
   shouldResetBrowserAccount, stableStringify, syncDocuments
-} from './sync-core.js?v=0.32.2';
+} from './sync-core.js?v=0.33.0';
 
 export function quiesceSignOut({ cancelReload, syncTimer, invalidateSync, clearIntervalImpl = clearInterval }) {
   invalidateSync();
@@ -184,7 +184,7 @@ async function boot() {
 
   const stylesheet = document.createElement('link');
   stylesheet.rel = 'stylesheet';
-  stylesheet.href = './assets/auth-ui.css?v=0.32.2';
+  stylesheet.href = './assets/auth-ui.css?v=0.33.0';
   document.head.appendChild(stylesheet);
 
   const nativeAuth = isDesktopAuthAvailable(window.earthRadio, window.location);
@@ -213,7 +213,7 @@ async function boot() {
   button.type = 'button';
   button.id = 'er-auth-button';
   button.setAttribute('aria-haspopup', 'dialog');
-  const rail = document.querySelector('.header-right');
+  const rail = document.getElementById('er-library-account-actions')||document.querySelector('.header-right');
   if (rail) rail.insertBefore(button, rail.firstChild);
   else document.querySelector('.er-header-tools')?.appendChild(button);
   // Static proxies for this button ship hidden so they never dead-click on a build

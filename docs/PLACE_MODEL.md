@@ -1,9 +1,10 @@
 # Verified city and local-time foundation
 
-This prerequisite supports the approved Today and place-first work. It adds a
-small curated vocabulary and pure model without changing the current home, map,
-player, directory loader, producer, account or sync entry points. Today, Passport,
-broader city geocoding and country-badge rendering have separate acceptance work.
+This foundation supplies a small curated vocabulary and pure model, now consumed
+by the candidate [Today presentation](TODAY.md). Its original prerequisite added
+no active UI behavior. Place-first, Passport, broader city geocoding and country
+badges retain separate acceptance work; the model does not alter the directory
+producer or account/sync data.
 
 ## Source data and licensing
 

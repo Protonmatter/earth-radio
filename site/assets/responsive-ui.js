@@ -13,9 +13,9 @@
  * maintained catalogs, over a bounded list of known runtime-owned elements.
  */
 
-import { getCurrentSongSnapshot } from './metadata-enrichment.js?v=0.32.2';
-import { countryCode, countryWords, matchesCountry } from './search-core.js?v=0.32.2';
-import { countryIndex } from './directory-expansion.js?v=0.32.2';
+import { getCurrentSongSnapshot } from './metadata-enrichment.js?v=0.33.0';
+import { countryCode, countryWords, matchesCountry } from './search-core.js?v=0.33.0';
+import { countryIndex } from './directory-expansion.js?v=0.33.0';
 import {
   applyDeclarativeI18n,
   applyDocumentLocale,
@@ -26,7 +26,7 @@ import {
   DEFAULT_LOCALE,
   FONT_PROFILES,
   t
-} from '../i18n/index.js?v=0.32.2';
+} from '../i18n/index.js?v=0.33.0';
 
 export const UI_STORAGE_KEY = 'earthRadio.ui.v1';
 export const DEFAULT_SPLIT = 42;
@@ -37,7 +37,21 @@ export const TABLET_MAX = 1099;
 // Match responsive-ui.css's base strip depth. A transient layout must not
 // subtract its safe inset into a smaller value and latch the header there.
 const MIN_HEADER_HEIGHT = 56;
-export const DESTINATIONS = Object.freeze(['listen', 'search', 'map', 'saved', 'you']);
+export const DESTINATIONS = Object.freeze(['today','listen', 'search', 'map', 'saved', 'you']);
+export function primaryDestination(destination){
+  return ['today','map'].includes(destination)?'atlas':['saved','you'].includes(destination)?'library':'search';
+}
+export function launchDestination(hash,{navigationType='',previousDestination}={}){
+  const explicit=parseDestination(hash);
+  if(explicit)return explicit;
+  if(['reload','back_forward'].includes(navigationType)&&DESTINATIONS.includes(previousDestination))return previousDestination;
+  const parameters=new URLSearchParams(String(hash||'').replace(/^#/,''));
+  if(parameters.has('station'))return'listen';
+  if(['favorites','recent'].includes(parameters.get('view')))return'saved';
+  if(['q','countries','tags','bitrates','secure','minQuality','view'].some(key=>parameters.has(key)))return'listen';
+  return'today';
+}
+let librarySection='music';
 
 /** Column gap used by the recovered virtual list (`gap: 12`). */
 export const GRID_GAP_PX = 12;
@@ -170,6 +184,7 @@ export function matchesSelectedCountry(metadata, selectedCountry) {
 export function parseDestination(hash) {
   const raw = String(hash || '').replace(/^#/, '');
   if (!raw) return null;
+  if(['er-workspace','er-you','er-station-query'].includes(raw))return null;
   if (raw.includes('=')) return null;
   const token = raw.split(/[/?&]/, 1)[0].toLowerCase();
   return DESTINATIONS.includes(token) ? token : 'listen';
@@ -459,6 +474,7 @@ function applyLocale(locale) {
 
   const select = byId('setting-locale');
   if (select && [...select.options].some(option => option.value === resolved)) select.value = resolved;
+  window.dispatchEvent(new Event('earthradio:locale-changed'));
   return resolved;
 }
 
@@ -602,6 +618,7 @@ function bindLocaleOptions() {
   const modal = byId('settings-modal');
   if (modal) {
     let wasVisible = settingsModalIsVisible(modal);
+    let focusWasVisible=wasVisible;
     const restorePersistedLocale = () => {
       dismissLocalePreview();
       wasVisible = false;
@@ -611,6 +628,12 @@ function bindLocaleOptions() {
     }, true);
     new MutationObserver(() => {
       const visible = settingsModalIsVisible(modal);
+      if(visible!==focusWasVisible){
+        focusWasVisible=visible;
+        const trigger=byId('settings-toggle');trigger?.setAttribute('aria-expanded',String(visible));
+        if(visible)focusFirst(modal);
+        else if(modal.contains(document.activeElement)||document.activeElement===document.body)trigger?.focus({preventScroll:true});
+      }
       if (visible === wasVisible) return;
       wasVisible = visible;
       // Opening also clears any interrupted/stale preview before the runtime
@@ -713,21 +736,25 @@ function applyViewport(state) {
   const root = document.documentElement;
   root.dataset.erDest = state.destination;
   root.dataset.erSaved = state.savedSegment;
+  root.dataset.erLibrarySection=librarySection;
+  const today=byId('er-today');if(today)today.hidden=state.destination!=='today';
+  const skip=document.querySelector('.er-skip');if(skip)skip.href=state.destination==='you'?'#er-you':state.destination==='search'&&mode==='mobile'?'#er-station-query':'#er-workspace';
   root.dataset.erCollapsed = state.collapsed || '';
   root.dataset.erMode = mode;
   root.style.setProperty('--er-list-pct', `${state.split}%`);
 
   for (const button of document.querySelectorAll('[data-er-dest]')) {
-    const active = button.getAttribute('data-er-dest') === state.destination;
+    const active = button.hasAttribute('data-er-primary')?button.dataset.erPrimary===primaryDestination(state.destination):button.getAttribute('data-er-dest') === state.destination&&(!button.dataset.erLibrarySection||button.dataset.erLibrarySection===librarySection);
     // `aria-current` belongs to the bottom navigation only; the Now Playing
     // "Show on map" shortcut reuses the attribute hook but is not a destination.
     if (button.closest('.er-mobile-nav') || button.classList.contains('er-icon-btn')) {
       button.setAttribute('aria-current', active ? 'page' : 'false');
     }
     button.classList.toggle('is-active', active);
+    if(button.hasAttribute('data-er-library-section'))button.setAttribute('aria-pressed',String(active));
   }
   for (const button of document.querySelectorAll('button[data-er-saved]')) {
-    button.setAttribute('aria-pressed', String(button.getAttribute('data-er-saved') === state.savedSegment));
+    button.setAttribute('aria-pressed', String(state.destination==='saved'&&button.getAttribute('data-er-saved') === state.savedSegment));
   }
 
   applyWorkspace(state, mode);
@@ -780,6 +807,10 @@ function applyWorkspace(state, mode) {
   }
 
   if (you) you.hidden = true;
+
+  if(state.destination==='today'){
+    list.hidden=true;map.hidden=false;hideSeparator();showRestore(null);presentSearch(false);return;
+  }
 
   if (mode === 'mobile') {
     list.hidden = state.destination === 'map' || state.destination === 'search';
@@ -1468,6 +1499,12 @@ export function nowPlayingSheetCopy({ station = '', facts = '', trackTitle = '',
 function syncPlayLabel(locale = effectiveLocale()) {
   const play = byId('btn-play');
   if (!play) return;
+  if(byId('player-bar')?.dataset.empty==='true'){
+    play.removeAttribute('data-i18n');
+    const label=play.dataset.defaultStation?t('today.play',{station:play.dataset.defaultStation},locale):t('today.emptyPlayer',undefined,locale);
+    if(play.getAttribute('aria-label')!==label)play.setAttribute('aria-label',label);
+    return;
+  }
   const connecting = byId('player-bar')?.dataset.playbackState === 'loading';
   const key = connecting || byId('audio-player')?.paused === false ? 'player.pause' : 'player.play';
   const label = t(key, undefined, locale);
@@ -1584,13 +1621,36 @@ function trapNowPlayingFocus(event) {
  * Action routing
  * ------------------------------------------------------------------ */
 
+let filterReturnControl=null;
+function restoreFilterControl(){
+  const sidebar=byId('filter-sidebar');
+  if(sidebar?.getAttribute('aria-hidden')==='false')return;
+  // An outside navigation click already chose a new focus target. Only rescue
+  // focus still inside the now-closed surface (or reset to the document body).
+  if(document.activeElement!==document.body&&!sidebar?.contains(document.activeElement))return;
+  if(filterReturnControl?.getClientRects().length&&!filterReturnControl.disabled)filterReturnControl.focus({preventScroll:true});
+}
 function bindActions() {
+  const filterSidebar=byId('filter-sidebar');
+  if(filterSidebar){
+    let wasOpen=filterSidebar.getAttribute('aria-hidden')==='false';
+    new MutationObserver(()=>{
+      const open=filterSidebar.getAttribute('aria-hidden')==='false';
+      if(wasOpen&&!open)restoreFilterControl();
+      wasOpen=open;
+    }).observe(filterSidebar,{attributes:true,attributeFilter:['aria-hidden']});
+  }
   // Capture before the recovered runtime's target handlers. Some runtime
   // controls stop bubbling, while this presentation layer still needs to
   // route the additive shell controls consistently.
   document.addEventListener('click', event => {
     const target = event.target instanceof Element ? event.target : null;
     if (!target) return;
+    const filterTrigger=target.closest('[data-open-filters]');
+    if(filterTrigger){
+      if(filterTrigger.getClientRects().length)filterReturnControl=filterTrigger;
+      return;
+    }
     const searchResult = target.closest('#search-results .search-result-item:not(.search-result-item--empty)');
     if (searchResult && loadUiState().destination === 'search') {
       markActivatedSearchResult(searchResult);
@@ -1606,7 +1666,9 @@ function bindActions() {
     if (dest) {
       event.preventDefault();
       const destination = dest.getAttribute('data-er-dest');
-      if (destination === 'you' && loadUiState().destination === 'you' && classifyViewport() !== 'mobile') {
+      if(dest.dataset.erLibrarySection)librarySection=dest.dataset.erLibrarySection==='account'?'account':'music';
+      if(dest.dataset.erPrimary==='search'&&loadUiState().collapsed==='list')saveUiState({collapsed:null});
+      if (destination === 'you' && !dest.dataset.erLibrarySection&&loadUiState().destination === 'you' && classifyViewport() !== 'mobile') {
         setDestination('listen', true);
         return;
       }
@@ -1619,6 +1681,7 @@ function bindActions() {
         closeNowPlaying();
       }
       setDestination(destination, true);
+      if(dest.dataset.erPrimary==='search')queueMicrotask(()=>byId('er-discovery-query')?.focus());
       return;
     }
 
@@ -1671,6 +1734,7 @@ function bindActions() {
     const proxy = target.closest('[data-click-id]');
     if (proxy) {
       const targetId = proxy.getAttribute('data-click-id');
+      if(targetId==='filters-toggle')filterReturnControl=proxy;
       clickExisting(targetId);
       if (proxy.closest('#er-overflow')) {
         const transfersFocus = targetId === 'settings-toggle' || targetId === 'filters-toggle' || targetId === 'er-auth-button';
@@ -1784,6 +1848,7 @@ function bindActions() {
         settings.setAttribute('aria-hidden', 'true');
         return;
       }
+      if(byId('filter-sidebar')?.getAttribute('aria-hidden')==='false'){queueMicrotask(restoreFilterControl);return;}
       if (!byId('er-overflow')?.hidden) {
         setOverflowOpen(false);
         return;
@@ -1943,16 +2008,16 @@ function start() {
   bindSearchIme();
   bindCountrySearch();
 
-  const hashDest = parseDestination(location.hash);
   const loaded = loadUiState();
   const state = saveUiState({
     ...loaded,
-    destination: hashDest || loaded.destination,
+    destination: launchDestination(location.hash,{navigationType:performance.getEntriesByType?.('navigation')?.[0]?.type,previousDestination:loaded.destination}),
     locale: readLocale(loaded),
     localeExplicit: loaded.localeExplicit
   });
 
   restoreStoredTheme();
+  for(const preference of document.querySelectorAll('[data-er-settings-preference]'))byId('er-settings-preferences')?.appendChild(preference);
   applyLocale(state.locale);
   guardDocumentLocale();
   // setupHeaderEvents() runs only after hydrateStorage(); clicks before

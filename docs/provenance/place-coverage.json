@@ -195,7 +195,7 @@
       {
         "path": "site/assets/place-core.js",
         "bytes": 5510,
-        "sha256": "8cd9f04a8d742409b46438f81b86da41fc1136fd3444044440265c215a002e3a"
+        "sha256": "6c56c12906f9fb2e765a127dc55f0a6a1a1710c7e4e797d003362e998dddd2b0"
       },
       {
         "path": "site/assets/curated-places.js",
@@ -205,7 +205,7 @@
       {
         "path": "site/assets/station-location.js",
         "bytes": 1640,
-        "sha256": "b4925558867ffaf9a9ea21d00611eb10cbe36e08da78608d75de237ed543a6fd"
+        "sha256": "436e2c763e67dfd9062b2bdb55f6bfc3d59ae10de8fa37b99dbfa653e802b6f4"
       },
       {
         "path": "site/assets/country-locations.js",
@@ -215,22 +215,22 @@
       {
         "path": "site/assets/station-variants.js",
         "bytes": 8422,
-        "sha256": "111a011c3c366c99263ab4102730cceb07cddf9876d10c889febc9092f38d3a6"
+        "sha256": "31a978129cb48c84cfbd13d3047ad6bef2ffe8690f40024692748d29efc433df"
       },
       {
         "path": "site/assets/search-core.js",
         "bytes": 8877,
-        "sha256": "4d13cbf505fce573b3f763e98c6fc390b8e4882848084b5e2d4f9486c2378b0f"
+        "sha256": "f4449ad0bce03f7fef2fc7784028c0d40a2990fdf9660d5f3f583265f2cf62d9"
       },
       {
         "path": "site/assets/discovery-core.js",
         "bytes": 15194,
-        "sha256": "adbc4e0d557dca9afca993511712be2cd67d6af8e8c7a9971070132329d75e61"
+        "sha256": "0b1641ae25ec3a33b6771c44a8ac692643a600a449b8c44d7f5dabf1bf75f70b"
       },
       {
         "path": "site/assets/program-components.js",
         "bytes": 2032,
-        "sha256": "4df7c441973e79e7ca38957c70e1ba6cad772583b8aa2f6bb247f60d67a34d4d"
+        "sha256": "ee1df4fcee319018c9a649dbf84b40a373757ddb96e83ee36234e587849ec15a"
       },
       {
         "path": "scripts/qualify-place-data.mjs",
@@ -256,8 +256,8 @@
       "architecture": "arm64"
     }
   },
-  "qualifiedAt": "2026-11-11T13:42:16.647Z",
-  "scope": "Local frozen-input model qualification; no active app UI or broad geocoding rollout.",
+  "qualifiedAt": "2026-11-11T14:05:37.190Z",
+  "scope": "Frozen-input place-model qualification only; no playback, UI, broad-geocoding or physical-device claim.",
   "sourceAcquisition": {
     "checkedAt": "2026-11-11T11:40:00.984Z",
     "integrityCheckedBy": "createPublishedCatalog; SHA-bound manifest descriptor and bounded HTTPS payload",

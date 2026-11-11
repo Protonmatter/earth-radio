@@ -43,7 +43,7 @@ test('responsive UI rendered matrix preserves layout, actions, and locale contra
       assert.ok(item.rect.bottom <= probe.header.rect.bottom, `${id}: header control is clipped`);
     }
     assert.equal(overlapArea(probe.player.rect, probe.nav.rect), 0, `${id}: player overlaps navigation`);
-    assert.equal(probe.navButtons.length, 4, `${id}: destination count`);
+    assert.equal(probe.navButtons.length, 3, `${id}: destination count`);
     for (const button of probe.navButtons) {
       assert.equal(button.actionable, true, `${id}: ${button.text} is not actionable`);
       assert.ok(button.rect.width >= 44 && button.rect.height >= 44, `${id}: ${button.text} touch target`);
@@ -119,19 +119,20 @@ test('responsive UI rendered matrix preserves layout, actions, and locale contra
   assert.equal(nowPlayingMap.destination, 'map');
   assert.equal(nowPlayingMap.nowPlaying.visible, false);
 
-  const overflow = byId(payload.results, 'mobile-overflow-390x844').probe;
-  assert.equal(overflow.overflowSheet.visible, true);
-  assert.equal(overflow.headerOverflow.ariaExpanded, 'true');
-  assert.equal(overflow.overflowItems.every(item => item.actionable), true);
-  assert.equal(overflow.activeElement.tag, 'BUTTON');
+  const utilities = byId(payload.results, 'mobile-settings-390x844').probe;
+  assert.equal(utilities.settingsModal.visible, true);
+  assert.equal(utilities.settingsTrigger.visible,true);
+  assert.equal(utilities.settingsTrigger.ariaExpanded,'true');
+  assert.equal(utilities.settingsFixedActions.every(item => item.actionable), true);
+  assert.equal(utilities.activeElement.tag, 'BUTTON');
 
-  const overflowSettings = byId(payload.results, 'mobile-overflow-settings-390x844').probe;
+  const overflowSettings = byId(payload.results, 'mobile-settings-focus-390x844').probe;
   assert.equal(overflowSettings.overflowSheet.visible, false);
   assert.equal(overflowSettings.settingsModal.visible, true);
   assert.equal(
     ['INPUT', 'BUTTON', 'SELECT'].includes(overflowSettings.activeElement.tag),
     true,
-    'Settings did not receive focus after opening from overflow'
+    'Settings did not receive focus after opening from its visible control'
   );
   assert.notEqual(overflowSettings.activeElement.id, 'er-overflow-toggle');
 
@@ -141,9 +142,9 @@ test('responsive UI rendered matrix preserves layout, actions, and locale contra
   assertInsideLateralSafeArea(landscape.headerContent, 'mobile-landscape header');
   assertInsideLateralSafeArea(landscape.playerContent, 'mobile-landscape player');
 
-  const landscapeOverflow = byId(payload.results, 'mobile-landscape-overflow-844x390').probe;
-  assert.equal(landscapeOverflow.overflowSheet.visible, true);
-  assertInsideLateralSafeArea(landscapeOverflow.overflowItems, 'mobile-landscape overflow');
+  const landscapeSettings = byId(payload.results, 'mobile-landscape-settings-844x390').probe;
+  assert.equal(landscapeSettings.settingsModal.visible, true);
+  assertInsideLateralSafeArea(landscapeSettings.settingsFixedActions, 'mobile-landscape Settings');
 
   const landscapeNowPlaying = byId(payload.results, 'mobile-landscape-nowplaying-844x390').probe;
   assert.equal(landscapeNowPlaying.nowPlaying.visible, true);
@@ -151,7 +152,8 @@ test('responsive UI rendered matrix preserves layout, actions, and locale contra
 
   const desktop = byId(payload.results, 'desktop-1440x900').probe;
   assert.match(desktop.documentElementClass, /\ber-desktop\b/);
-  assert.equal(desktop.nav.visible, false);
+  assert.equal(desktop.nav.visible, true);
+  assert.equal(desktop.navButtons.length,3);
   assert.equal(desktop.separator.visible, true);
 
   const keyboard = byId(payload.results, 'desktop-1440x900-keyboard').probe;

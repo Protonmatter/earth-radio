@@ -55,7 +55,7 @@ export default {
   "map.loadingDetail": "지도 세부 정보를 불러오는 중…",
   "map.detailUnavailable": "지도 세부 정보를 불러올 수 없어 기본 지도를 표시합니다.",
   'app.tagline': '회복력 있는 글로벌 라디오',
-  'app.skip': '방송국 목록으로 건너뛰기',
+  "app.skip": "본문으로 건너뛰기",
 
   'status.initializing': '초기화 중…',
   'status.loading': '방송국 디렉터리를 불러오는 중…',
@@ -144,7 +144,7 @@ export default {
   'search.title': '방송국 검색',
 
   'map.label': '방송국 지도',
-  'map.assistive': '지도는 시각 보조입니다. 동일한 방송국은 듣기와 검색에서도 이용할 수 있습니다.',
+  "map.assistive": "지도는 시각적 안내입니다. 검색에서 같은 방송국을 찾아 재생할 수 있습니다.",
   'map.retry': '지도 다시 시도',
   'map.unavailable': '지도 타일을 사용할 수 없습니다. 목록에서 방송국을 찾아보세요.',
   'map.previewPlay': '재생',
@@ -331,5 +331,24 @@ export default {
   "music.accountChanged": "계정이 변경되었습니다. 라이브러리를 다시 여세요.",
   "music.confirmClear": "최근 감상 기록을 지울까요? 좋아요한 곡은 유지됩니다.",
   "music.identify": "곡 식별",
-  "music.identifying": "식별 중…"
+  "music.identifying": "식별 중…",
+  "today.title": "오늘",
+  "today.place": "오늘의 도시",
+  "today.cancel": "{station} 연결 취소",
+  "today.pause": "{station} 일시 정지",
+  "today.play": "{station} 재생",
+  "today.cancelShort": "취소",
+  "today.noStation": "이용 가능한 방송국이 없습니다",
+  "today.unavailableTitle": "매일 새로운 도시",
+  "today.unavailable": "이 도시에서 지원되는 방송국을 아직 불러오지 못했습니다. 새로 고치거나 지도를 탐색하세요.",
+  "today.explore": "지도 탐색",
+  "today.onair": "지금 방송 중",
+  "today.airEmpty": "방송국을 불러와 들을 방송을 찾아보세요.",
+  "today.library": "라이브러리",
+  "today.accountHelp": "여러 기기에서 방송국과 노래를 함께 보관하세요.",
+  "today.emptyPlayer": "방송국을 선택해 시작하세요",
+  "today.continueStation": "{station} 재생",
+  "today.search": "검색",
+  "today.atlas": "지도",
+  "today.moreFilters": "추가 필터"
 };

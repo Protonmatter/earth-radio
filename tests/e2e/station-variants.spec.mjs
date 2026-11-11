@@ -18,7 +18,7 @@ async function setup(page,{fail320=false}={}){
   });return audio;
 }
 for(const width of [320,390,1440])test(`variant grouping, accessible quality choice and HTTP disclosure at ${width}px`,async({page})=>{
-  await page.setViewportSize({width,height:900});const audio=await setup(page);await page.goto('/');
+  await page.setViewportSize({width,height:900});const audio=await setup(page);await page.goto('/#listen');
   await page.getByRole('searchbox',{name:'Find a station'}).fill('bbc radio 4');
   await expect(page.locator('.station-card__name')).toHaveText(['E2E BBC Radio 4']);
   const quality=page.getByRole('combobox',{name:'Stream quality for E2E BBC Radio 4'});await expect(quality).toHaveValue('variant-320');await expect(quality.locator('option')).toHaveCount(2);
@@ -45,7 +45,7 @@ test('legacy UUID deep links and saved alias favorites survive grouped reload',a
   await expect(page.locator('#audio-player')).toHaveJSProperty('paused',true);
 });
 test('a failed selected stream recovers to an untried sibling without a duplicate card',async({page})=>{
-  const audio=await setup(page,{fail320:true});await page.goto('/');await page.getByRole('searchbox',{name:'Find a station'}).fill('bbc radio 4');
+  const audio=await setup(page,{fail320:true});await page.goto('/#listen');await page.getByRole('searchbox',{name:'Find a station'}).fill('bbc radio 4');
   await page.getByRole('button',{name:'Play: E2E BBC Radio 4',exact:true}).click();await expect(page.locator('#player-bar')).toHaveClass(/is-playing/);
   expect(audio).toContain('/320');expect(audio.at(-1)).toBe('/128');await expect(page.locator('.station-card__name')).toHaveText(['E2E BBC Radio 4']);
 });

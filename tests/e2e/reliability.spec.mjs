@@ -200,7 +200,7 @@ test.describe('semantic country selection', () => {
         window.recordCountrySelection(event.detail);
       });
     });
-    await page.getByRole('button', { name: 'Search stations', exact: true }).first().click();
+    await page.keyboard.press('Control+k');
     const country = page.locator('#er-country-query');
     await country.fill('Japan');
     await country.press('Enter');
@@ -340,7 +340,7 @@ test.describe('search snapshot freshness', () => {
     // or visible result metadata, so the responsive filter must validate the match
     // against the runtime's IndexedDB snapshot — which at this point predates the
     // expansion.
-    await page.getByRole('button', { name: 'Search stations', exact: true }).first().click();
+    await page.keyboard.press('Control+k');
     await page.locator('#er-station-query').fill('jpop');
     await expect(page.locator('#search-results .search-result-item', { hasText: 'E2E Tokyo FM' })).toHaveCount(0);
 
