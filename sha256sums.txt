@@ -70,7 +70,7 @@ e9e57aa12c4cf47827a04ee792ee9646f0ba1b0b118ea999de998faf0b2f78ba  docs/RELEASE.m
 466d12660b75b1518df5ed33e5016e3cbbf9943bc778e3065bfa0bd62506f224  docs/superpowers/plans/2026-11-08-normalized-directory.md
 7e3d2c8d046b23881c40171c805ac032083de99ebc5bcfeb3d6dedecfd365003  docs/superpowers/plans/2026-11-08-public-website-domains.md
 85b2e60907ac91eacea64d5ff8b7c1586ba57792efe34d372d8cb77aea0eb2e6  docs/superpowers/plans/2026-11-11-place-time.md
-502439c73dc5bf2834be2f0fd048ca54227314ac4354c7fbe4ac42c350749ac9  docs/superpowers/plans/2026-11-11-settings-auth-focus.md
+90e8cee42b4a49ae97154cf330a509b7ab36d2e8bb8bdf34559565865b89d678  docs/superpowers/plans/2026-11-11-settings-auth-focus.md
 472143e1277955086ea4b6b818c6d6305ac26e0bf6517ff4658d032306f82e67  docs/superpowers/plans/2026-11-11-today-home.md
 815ff3d352b2dec000309074e4157d47c0ee7dbcf99bae8ef9f729520deda43b  docs/superpowers/specs/2026-08-21-earth-radio-public-cloudflare-design.md
 aafc2e962fb56fcab198b8df9993a800cec3f0e2a8db1a879982e54daf833c29  docs/superpowers/specs/2026-08-22-earth-radio-responsive-ui-design.md
@@ -80,7 +80,7 @@ f83a051cd824d2968f92f07a09db518a653f2feae46b08894f41ed21566bad38  docs/superpowe
 9c6207475598357c7b20a30b7191d253ab5c5d187a9dd70fcc726cbea2c6a71b  docs/superpowers/specs/2026-11-08-normalized-directory-design.md
 c519622810cc4159f75ec461af2c1f66ade729a89a946425514d7995d651f4ab  docs/superpowers/specs/2026-11-08-public-website-domains-design.md
 5edbdb75dffa502547555d74a582259ef197527278bab5efc1fc46883b0207fa  docs/superpowers/specs/2026-11-11-place-time-design.md
-e222e199b52ec3126f79c6c646f169b490f9561724367ddb43f08ff302ab2c1e  docs/superpowers/specs/2026-11-11-settings-auth-focus-design.md
+ffa8cf44b739637ba84fc00124ada8bd212f488ef23d45786de370ceec430005  docs/superpowers/specs/2026-11-11-settings-auth-focus-design.md
 4c471cb65731862c966f59f25590ff640362adaf2390804adb2cccdc7132477f  docs/superpowers/specs/2026-11-11-today-home-design.md
 ad586e9826dcb9716b815e761af224d32f31ae4eb1b4ab55b041974cedc1cd69  docs/TODAY.md
 5465aab07ef46f3dada0901ba3b0258b06fb88f4fa1f3a3d6f7210a4ebdd4548  electron-builder.yml
