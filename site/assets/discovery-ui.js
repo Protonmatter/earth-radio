@@ -6,6 +6,7 @@ import {stationLocation,stationMapPoint} from './station-location.js?v=0.32.1';
 import {displayCountry} from './search-core.js?v=0.32.1';
 import {groupStationVariants,projectVariantResults,expandFavoriteIds,chooseGroupStation} from './station-variants.js?v=0.32.1';
 import {atlasViewAction} from './map-viewport.js?v=0.32.1';
+import {createPlaybackIntent} from './playback-intent.js?v=0.32.1';
 
 // A hidden-to-visible resize can leave Leaflet's animated bounds correction
 // running. Its moveend handler can start another correction while stop() fires.
@@ -24,16 +25,34 @@ export function settledMapAction(map, action) {
 }
 
 // Adapter contract is documented in docs/DISCOVERY.md. This module owns only
-// discovery state, never playback, persisted account records, or runtime routes.
+// discovery state and explicit listener intent; audio, persistence and routes stay
+// behind the runtime adapter.
 export function installDiscovery(adapter) {
   const root = document.getElementById('er-discovery');
-  if (!root) return { ownsSearch: false, augment: stations => stations, transform: stations => stations, options: () => ({}), observe() {}, clear() {}, explainButton: () => document.createTextNode(''), variantControl:()=>document.createTextNode(''),favoriteIds:(_all,ids)=>ids,isFavorite:(station,ids)=>ids.has(station.stationuuid),favoriteTargets:station=>[station],begin(){},selectedStation:()=>null,recover:()=>false };
+  if (!root) return { ownsSearch: false, augment: stations => stations, transform: stations => stations, options: () => ({}), observe() {}, clear() {}, explainButton: () => document.createTextNode(''), variantControl:()=>document.createTextNode(''),favoriteIds:(_all,ids)=>ids,isFavorite:(station,ids)=>ids.has(station.stationuuid),favoriteTargets:station=>[station],begin:()=>0,isCurrent:()=>true,isFailed:()=>false,acceptsError:()=>false,canAutoSkip:()=>false,cancel(){},playing(){},fail(){},selectedStation:()=>null,recover:()=>false };
   root.dataset.searchAuthority = 'discovery';
   let prefs = sanitizePreferences(null), bounds = null, entries = new Map(), facetSource = null;
   let timer = 0, composing = false, refreshQueued = false;
   const health = new Map();
   let groupSource=null,groups=[],byId=new Map();
   const selections=new Map(),attempts=new Set();
+  const playback=createPlaybackIntent({onExpire:station=>adapter.timeout(station)});
+  const keyOf=station=>byId.get(station?.stationuuid)?.key||station?.stationuuid;
+  const player=document.getElementById('player-bar'),failure=document.createElement('div');
+  failure.className='er-playback-failure';failure.hidden=true;failure.setAttribute('role','group');
+  const retry=document.createElement('button'),similar=document.createElement('button');
+  retry.type=similar.type='button';failure.append(retry,similar);player.append(failure);
+  let failedStation=null;
+  function failureLabels(){
+    retry.textContent=t('playback.retry');similar.textContent=t('playback.similar');failure.setAttribute('aria-label',t('playback.failedActions'));
+    if(failedStation)document.getElementById('player-meta').textContent=t('playback.couldNotConnect');
+  }
+  function hideFailure(){failedStation=null;failure.hidden=true;player.classList.remove('is-failed');document.documentElement.classList.remove('er-playback-failed');}
+  const alternative=()=>pickStation(adapter.visible().filter(row=>keyOf(row)!==keyOf(failedStation)),{...context(),current:failedStation,secureOnly:location.protocol==='https:'||prefs.secureOnly});
+  retry.addEventListener('click',()=>{if(failedStation)adapter.play(failedStation,{retry:true});});
+  similar.addEventListener('click',()=>{const next=alternative();if(next)adapter.play(next);});
+  new MutationObserver(failureLabels).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});
+  failureLabels();
   function catalog(all){
     if(all===groupSource)return;
     groupSource=all;groups=groupStationVariants(all);byId=new Map();
@@ -276,14 +295,29 @@ export function installDiscovery(adapter) {
       const selected=chooseGroupStation(group,{selectedId});
       return selected&&(selected.url_resolved||selected.url)!==(station.url_resolved||station.url)?selected:null;
     },
-    begin(station,{recovery=false}={}){if(!recovery)attempts.clear();if(station)attempts.add(station.url_resolved||station.url);},
+    begin(station,options={}){
+      const token=playback.begin(keyOf(station),station,options);if(token===null)return null;
+      if(!options.recovery)attempts.clear();attempts.add(station.url_resolved||station.url);hideFailure();return token;
+    },
+    isCurrent:playback.isCurrent,
+    isFailed:()=>playback.state()?.phase==='failed',
+    acceptsError(station){const state=playback.state();return Boolean(state&&state.key===keyOf(station)&&state.phase!=='failed');},
+    canAutoSkip:playback.canAutoSkip,
+    cancel(){playback.cancel();hideFailure();},
+    playing(station){return playback.playing(keyOf(station));},
+    fail(station){
+      if(!playback.fail(keyOf(station)))return;
+      adapter.fail(station);failedStation=station;failure.hidden=false;failureLabels();
+      similar.disabled=!alternative();player.classList.add('is-failed');document.documentElement.classList.add('er-playback-failed');
+    },
     recover(station){
-      const group=byId.get(station?.stationuuid);if(!group||attempts.size>=3)return false;
+      const group=byId.get(station?.stationuuid);if(!group||attempts.size>=3||!playback.canRecover(keyOf(station)))return false;
       attempts.add(station.url_resolved||station.url);
       const variants=group.variants.filter(variant=>!attempts.has(variant.url)&&(location.protocol!=='https:'||variant.url.startsWith('https:')));
       const next=chooseGroupStation({...group,variants});if(!next)return false;
-      attempts.add(next.url_resolved||next.url);selections.set(group.key,next.stationuuid);
-      adapter.notify?.(t('discovery.tryingStream',{name:group.name}));queueMicrotask(()=>adapter.play(next,{recovery:true}));return true;
+      attempts.add(next.url_resolved||next.url);selections.set(group.key,next.stationuuid);refresh();
+      const token=playback.state().token;
+      adapter.notify?.(t('discovery.tryingStream',{name:group.name}));queueMicrotask(()=>{if(playback.isCurrent(token))adapter.play(next,{recovery:true});});return true;
     },
     options: context,
     clear,

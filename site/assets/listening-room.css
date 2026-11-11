@@ -419,3 +419,16 @@ html.er-root :is(.er-song-library, .er-nowplaying, .er-song-details) [hidden] { 
   html.er-root .er-nowplaying-timer { grid-column: 2; grid-row: 4; }
   html.er-root #er-song-services { grid-row: 5; }
 }
+/* Connection failure is an explicit listener choice, with two reachable actions. */
+.er-playback-failure { display: flex; gap: 8px; flex-wrap: wrap; }
+.er-playback-failure[hidden] { display: none; }
+.er-playback-failure button { min-width: 44px; min-height: 44px; border: 1px solid var(--er2-line); border-radius: 8px; padding: 8px 12px; background: var(--er2-surface); color: var(--er2-ink); font: inherit; }
+html.er-root .player-bar.is-failed { flex-wrap: wrap; gap: 4px 12px; }
+html.er-root .player-bar.is-failed :is(.player-extras,.player-eq) { display: none; }
+html.er-mobile .player-bar.is-failed .player-controls { display: none; }
+html.er-root .player-bar.is-failed .player-info { flex: 1 1 180px; }
+html.er-mobile.er-playback-failed { --er-player: 124px; }
+html.er-mobile .player-bar.is-failed { display: grid; grid-template-columns: 1fr; align-content: center; }
+html.er-mobile .player-bar.is-failed .player-info { width: 100%; }
+html.er-mobile .er-playback-failure { flex-wrap: nowrap; }
+html.er-mobile .er-playback-failure button { flex: 1; min-width: 0; padding: 6px 8px; font-size: 12px; }

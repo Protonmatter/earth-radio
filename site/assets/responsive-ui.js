@@ -1468,7 +1468,8 @@ export function nowPlayingSheetCopy({ station = '', facts = '', trackTitle = '',
 function syncPlayLabel(locale = effectiveLocale()) {
   const play = byId('btn-play');
   if (!play) return;
-  const key = byId('audio-player')?.paused === false ? 'player.pause' : 'player.play';
+  const connecting = byId('player-bar')?.dataset.playbackState === 'loading';
+  const key = connecting || byId('audio-player')?.paused === false ? 'player.pause' : 'player.play';
   const label = t(key, undefined, locale);
   // The generic translation pass must preserve this dynamic state. Write only
   // on change so the narrow attribute observer cannot feed itself indefinitely.

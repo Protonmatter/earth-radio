@@ -1,5 +1,10 @@
 // English catalog. Canonical key set for Earth Radio chrome and known runtime labels.
 export default {
+  "playback.retry": "Try again",
+  "playback.similar": "Play something similar",
+  "playback.couldNotConnect": "Couldn't connect",
+  "playback.failedActions": "Station connection failed",
+  "playback.scanning": "World Scan: trying {name}",
   "discovery.streamQuality": "Stream quality for {name}",
   "discovery.chooseStream": "Choose a stream, then press Play",
   "discovery.httpStream": "HTTP stream",

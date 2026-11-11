@@ -553,14 +553,14 @@ test('same-station platform polls accept only the newest generation', async () =
 test('runtime source and installed bundle dispatch selections only on truthful playback results', async () => {
   const root = path.resolve(import.meta.dirname, '..');
   const source = await readFile(path.join(root, 'src-recovered', 'main.ts'), 'utf8');
-  const bundle = await readFile(path.join(root, 'site', 'assets', 'index-54500e78.js'), 'utf8');
+  const bundle = await readFile(path.join(root, 'site', 'assets', 'index-1d06892a.js'), 'utf8');
   for (const text of [source, bundle]) {
     assert.match(text, /earthradio:station-selected/);
     assert.match(text, /earthradio:stations-load-settled/);
     assert.match(text, /url_resolved/);
   }
-  assert.match(source, /result\.ok && result\.station/);
-  assert.match(bundle, /e\.ok&&e\.station&&await nc\(e\.station\)/);
+  // Previous/next now share the explicit selection path. Consumer playback,
+  // failed-attempt and cancellation behavior is covered by playback-trust.spec.
   assert.match(source, /if \(stationLoadState\.queued\) return loadStations\(\)/);
   assert.match(bundle, /if\(_erLoadQueued\)return \$s\(\)/);
 });

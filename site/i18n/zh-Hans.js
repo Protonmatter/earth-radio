@@ -1,5 +1,10 @@
 // Engineering-authored Simplified Chinese catalog. Native editorial review has not occurred.
 export default {
+  "playback.retry": "重试",
+  "playback.similar": "播放类似电台",
+  "playback.couldNotConnect": "无法连接",
+  "playback.failedActions": "电台连接失败",
+  "playback.scanning": "世界漫游：正在尝试 {name}",
   "discovery.streamQuality": "{name} 的流音质",
   "discovery.chooseStream": "选择音频流，然后按播放",
   "discovery.httpStream": "HTTP 音频流",
