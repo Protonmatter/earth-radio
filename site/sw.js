@@ -1,4 +1,4 @@
-const CACHE_NAME = 'earth-radio-shell-v69-brand-release';
+const CACHE_NAME = 'earth-radio-shell-v70-playback-intent';
 const SHELL_ASSETS = [
   './',
   './config.js?v=0.32.1',
@@ -17,7 +17,7 @@ const SHELL_ASSETS = [
   './branding/earth-radio-maskable-icon-512.png',
   './branding/earth-radio-maskable-icon-1024.png',
   './assets/hls.light-Dr1Fv81C.js',
-  './assets/index-54500e78.js',
+  './assets/index-1d06892a.js',
   './assets/index-CSoL7F-Y.css',
   './assets/storage-guard.js?v=0.32.1',
   './assets/directory-expansion.js?v=0.32.1',
@@ -45,6 +45,7 @@ const SHELL_ASSETS = [
   './assets/discovery-core.js?v=0.32.1',
   './assets/map-directory.js?v=0.32.1',
   './assets/discovery-ui.js?v=0.32.1',
+  './assets/playback-intent.js?v=0.32.1',
   './assets/discovery.css?v=0.32.1',
   './assets/listening-room.css?v=0.32.1',
   './assets/brand-identity.css?v=0.32.1',
@@ -122,7 +123,7 @@ async function cacheFirst(request) {
 }
 
 function isImmutableAsset(pathname) {
-  return /index-54500e78|index-CSoL7F-Y|hls\.light-Dr1Fv81C|map-(?:world|detail|terrain|roads)-[a-f0-9]{8}\.js/.test(pathname);
+  return /index-1d06892a|index-CSoL7F-Y|hls\.light-Dr1Fv81C|map-(?:world|detail|terrain|roads)-[a-f0-9]{8}\.js/.test(pathname);
 }
 
 self.addEventListener('fetch', event => {

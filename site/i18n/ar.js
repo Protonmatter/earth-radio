@@ -1,5 +1,10 @@
 // Engineering-authored Arabic catalog. Native editorial review has not occurred.
 export default {
+  "playback.retry": "إعادة المحاولة",
+  "playback.similar": "تشغيل محطة مشابهة",
+  "playback.couldNotConnect": "تعذر الاتصال",
+  "playback.failedActions": "فشل الاتصال بالمحطة",
+  "playback.scanning": "استكشاف العالم: جارٍ تجربة {name}",
   "discovery.streamQuality": "جودة بث {name}",
   "discovery.chooseStream": "اختر البث، ثم اضغط تشغيل",
   "discovery.httpStream": "بث HTTP",

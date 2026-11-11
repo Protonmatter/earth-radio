@@ -277,7 +277,7 @@ test('failed playback dispatches no station selection event', async ({ page }) =
   });
 
   await (await revealCard(page, 'E2E Seoul Pop')).locator('.station-card__play').click();
-  await expect(page.locator('#status-line')).toContainText(/Playback failed|Station unavailable/, { timeout: 15_000 });
+  await expect(page.locator('#status-line')).toContainText("Couldn't connect", { timeout: 8_000 });
   await expect.poll(() => page.evaluate(() => window.__stationSelectedEvents.length)).toBe(0);
 });
 

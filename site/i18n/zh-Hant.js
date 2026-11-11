@@ -1,5 +1,10 @@
 // Engineering-authored Traditional Chinese catalog. Native editorial review has not occurred.
 export default {
+  "playback.retry": "重試",
+  "playback.similar": "播放類似電台",
+  "playback.couldNotConnect": "無法連線",
+  "playback.failedActions": "電台連線失敗",
+  "playback.scanning": "世界漫遊：正在嘗試 {name}",
   "discovery.streamQuality": "{name} 的串流音質",
   "discovery.chooseStream": "選擇串流，然後按播放",
   "discovery.httpStream": "HTTP 串流",

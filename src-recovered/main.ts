@@ -2,6 +2,7 @@ import './style.css';
 // Maintained modules are shared with the shipped runtime; this evidence snapshot still has no rebuild toolchain.
 import { installDiscovery } from '../site/assets/discovery-ui.js';
 import { directorySnapshotStatus } from '../site/assets/directory-status.js';
+import { t as translate } from '../site/i18n/index.js';
 import './domains/radio/index';
 import './domains/sdr/index';
 
@@ -28,13 +29,10 @@ import {
   initPlayer,
   isPlayingNow,
   pause,
-  playNext,
-  playPrev,
+  getRelativeStation,
   playStation,
   setNowPlayingMetadata,
   setVolume,
-  shouldAutoSkip,
-  togglePlay
 } from './core/player';
 import { showToast } from './core/toast';
 import { getMapInstance, initMap, setMapTheme, setPlayingStation, updateMapMarkers } from './ui/map';
@@ -130,6 +128,12 @@ const discovery = installDiscovery({
   favorites: getFavorites,
   selected: () => activeStationUuid,
   notify: showToast,
+  timeout: (station: Station) => handlePlaybackFailure(station, new Error('selection-timeout')),
+  fail: (station: Station) => {
+    stopNowPlaying(); pause({ preserveIntent: true }); updatePlayerBar(station);
+    highlightCard(station.stationuuid); syncRoute(getActiveFilters());
+    setStatus(translate('playback.couldNotConnect'));
+  },
   play: (station: Station, options = {}) => { void onStationClick(station, options); }
 });
 
@@ -370,14 +374,18 @@ function updateGridTitle(filters: ReturnType<typeof getActiveFilters>): void {
   else gridTitleEl.textContent = hasFilters ? t('grid.filtered') : t('grid.all');
 }
 
-async function onStationClick(station: Station, options = {}): Promise<void> {
-  discovery.begin(station, options);
+async function onStationClick(station: Station, options: { retry?: boolean; recovery?: boolean; intent?: string; continuation?: boolean } = {}): Promise<void> {
   if (!station) return;
+  const restart = Boolean(options.retry || discovery.isFailed());
+  const ticket = discovery.begin(station, options);
+  if (ticket === null) return;
+  if (!options.recovery && !options.continuation) autoSkipCount = 0;
+  highlightCard(station.stationuuid); syncRoute(getActiveFilters());
   setStatus(t('status.loadingStation', { name: station.name }));
   // Telemetry is best-effort and must never delay playback starting.
   void activePack.recordSelection(station);
-  const ok = await playStation(station);
-  if (ok) {
+  const ok = await playStation(station, { restart });
+  if (ok && discovery.isCurrent(ticket) && discovery.playing(station)) {
     clearStationPlaybackFailure(station.stationuuid);
     setLastPlayed(station);
     updatePlayerBar(station);
@@ -459,6 +467,7 @@ function updatePlayerBar(station: Station | null): void {
 
 function updatePlayBtnState(): void {
   if (!btnPlay) return;
+  byId('player-bar')!.dataset.playbackState = getPlaybackStatus();
   const status = getPlaybackStatus();
   const playing = status === 'playing' || status === 'loading';
   btnPlay.replaceChildren(icon(playing ? 'pause' : 'play'));
@@ -644,27 +653,23 @@ function applyCountry(country: string): void {
 
 function setupPlayerEvents(): void {
   btnPlay?.addEventListener('click', async () => {
-    const chosen = discovery.selectedStation(getCurrentStation());
-    if (!isPlayingNow() && chosen) { await onStationClick(chosen); updatePlayBtnState(); return; }
-    if (!getCurrentStation()) {
-      const last = getLastPlayed();
-      const selected = allStations.find(station => station.stationuuid === activeStationUuid)
-        || allStations.find(station => station.stationuuid === last?.stationuuid) || last;
-      if (selected) { await onStationClick(selected); updatePlayBtnState(); return; }
-    }
-    const ok = await togglePlay();
-    if (!ok && currentStations.length) await onStationClick(currentStations[0]);
+    if (isPlayingNow()) { pause(); updatePlayBtnState(); return; }
+    const last = getLastPlayed();
+    const selected = discovery.selectedStation(getCurrentStation()) || getCurrentStation()
+      || allStations.find(station => station.stationuuid === activeStationUuid)
+      || allStations.find(station => station.stationuuid === last?.stationuuid) || last;
+    if (selected) await onStationClick(selected);
     updatePlayBtnState();
   });
 
   btnPrev?.addEventListener('click', async () => {
-    const result = await playPrev(currentStations);
-    if (result.ok && result.station) await afterNeighbor(result.station);
+    const selected = getRelativeStation(currentStations, -1);
+    if (selected) await onStationClick(selected);
   });
 
   btnNext?.addEventListener('click', async () => {
-    const result = await playNext(currentStations);
-    if (result.ok && result.station) await afterNeighbor(result.station);
+    const selected = getRelativeStation(currentStations, 1);
+    if (selected) await onStationClick(selected);
   });
 
   btnSimilar?.addEventListener('click', () => {
@@ -695,15 +700,6 @@ function setupPlayerEvents(): void {
   });
 
   setupSleepTimer();
-}
-
-async function afterNeighbor(station: Station): Promise<void> {
-  void activePack.recordSelection(station);
-  setLastPlayed(station);
-  updatePlayerBar(station);
-  highlightCard(station.stationuuid);
-  dispatchStationSelected(station);
-  presentNowPlaying(station);
 }
 
 function setupSleepTimer(): void {
@@ -766,7 +762,7 @@ function setupHeaderEvents(): void {
     const pick = surpriseStation(pool);
     if (pick) {
       showToast(t('toast.surprise', { name: pick.name }));
-      void onStationClick(pick);
+      void onStationClick(pick, { intent: 'world-scan' });
     } else {
       showToast(t('toast.noStations'));
     }
@@ -895,14 +891,15 @@ function pickNextStation(failed: Station): Station | null {
 
 function setupAudioErrorHandling(): void {
   initPlayer({
-    onStateChange: updatePlayBtnState,
+    onStateChange: (state, station) => { updatePlayBtnState(); if (state === 'playing' && discovery.playing(station)) autoSkipCount = 0; },
     onStationChange: updatePlayerBar,
+    onPause: () => discovery.cancel(),
+    onPlay: () => void btnPlay?.click(),
     onPrev: () => void btnPrev?.click(),
     onNext: () => void btnNext?.click(),
     onCanPlay: station => {
       discovery.observe(station, true);
       if (!station) return;
-      autoSkipCount = 0;
       clearStationPlaybackFailure(station.stationuuid);
       if (!config.streamProbeEnabled) return;
       void probeStationStream(station).then(observation => {
@@ -915,39 +912,25 @@ function setupAudioErrorHandling(): void {
         }
       });
     },
-    onError: (station, error) => {
-      discovery.observe(station, false);
-      if (station) markStationPlaybackFailure(station.stationuuid, error?.message || 'playback-error');
-      if (discovery.recover(station)) return;
-      stopNowPlaying();
-      updatePlayBtnState();
-
-      if (!shouldAutoSkip(config.autoSkipOnPlaybackError, currentStations.length)) {
-        showToast(t('toast.unavailable'), 'error');
-        setStatus(t('status.failed', { name: station?.name || '' }));
-        return;
-      }
-
-      if (autoSkipCount >= MAX_AUTO_SKIPS) {
-        autoSkipCount = 0;
-        showToast(t('toast.noWorking'), 'error');
-        setStatus(t('toast.noWorking'));
-        return;
-      }
-
-      autoSkipCount += 1;
-      const next = station ? pickNextStation(station) : currentStations[0];
-      if (next) {
-        setStatus(t('status.skipping', { name: next.name }));
-        void onStationClick(next);
-      } else {
-        showToast(t('toast.noWorking'), 'error');
-        setStatus(t('toast.noWorking'));
-      }
-    },
+    onError: handlePlaybackFailure,
     onEnded: updatePlayBtnState,
     onVolumeChange: volume => setPreference('volume', volume)
   });
+}
+
+function handlePlaybackFailure(station: Station | null, error: Error): void {
+  if (!discovery.acceptsError(station)) return;
+  discovery.observe(station, false);
+  if (station) markStationPlaybackFailure(station.stationuuid, error?.message || 'playback-error');
+  stopNowPlaying();
+  if (discovery.recover(station)) return;
+  if (!discovery.canAutoSkip() || !config.autoSkipOnPlaybackError || autoSkipCount >= MAX_AUTO_SKIPS) { discovery.fail(station); return; }
+  autoSkipCount += 1;
+  const next = station ? pickNextStation(station) : currentStations[0];
+  if (!next) { discovery.fail(station); return; }
+  showToast(translate('playback.scanning', { name: next.name }));
+  setStatus(t('status.skipping', { name: next.name }));
+  void onStationClick(next, { intent: 'world-scan', continuation: true });
 }
 
 function setupRouting(): void {

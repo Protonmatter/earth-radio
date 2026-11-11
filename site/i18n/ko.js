@@ -1,5 +1,10 @@
 // Engineering-authored Korean catalog. Native editorial review has not occurred.
 export default {
+  "playback.retry": "다시 시도",
+  "playback.similar": "비슷한 방송 듣기",
+  "playback.couldNotConnect": "연결할 수 없습니다",
+  "playback.failedActions": "방송국 연결 실패",
+  "playback.scanning": "세계 탐색: {name} 연결 중",
   "discovery.streamQuality": "{name} 스트림 음질",
   "discovery.chooseStream": "스트림을 선택한 다음 재생을 누르세요",
   "discovery.httpStream": "HTTP 스트림",

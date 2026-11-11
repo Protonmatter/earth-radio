@@ -1,5 +1,10 @@
 // Engineering-authored Spanish catalog. Native editorial review has not occurred.
 export default {
+  "playback.retry": "Reintentar",
+  "playback.similar": "Escuchar algo similar",
+  "playback.couldNotConnect": "No se pudo conectar",
+  "playback.failedActions": "Falló la conexión con la emisora",
+  "playback.scanning": "Explorar el mundo: probando {name}",
   "discovery.streamQuality": "Calidad de transmisión de {name}",
   "discovery.chooseStream": "Elige una transmisión y pulsa Reproducir",
   "discovery.httpStream": "Transmisión HTTP",

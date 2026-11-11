@@ -16,6 +16,8 @@ export interface PlayerCallbacks {
   onVolumeChange?: (volume: number) => void;
   onPrev?: () => void;
   onNext?: () => void;
+  onPlay?: () => void;
+  onPause?: () => void;
 }
 
 export interface PlaybackResult {
@@ -101,7 +103,7 @@ export function initPlayer(next: PlayerCallbacks = {}): void {
     clearConnectTimer();
     setStatus('playing');
   });
-  audio.addEventListener('pause', () => setStatus(audio?.ended ? 'ended' : 'paused'));
+  audio.addEventListener('pause', () => setStatus(audio?.ended ? 'ended' : intendedPlaying && !hasPlayedCurrent ? 'loading' : 'paused'));
   audio.addEventListener('ended', () => {
     setStatus('ended');
     callbacks.onEnded?.(currentStation);
@@ -112,11 +114,11 @@ export function initPlayer(next: PlayerCallbacks = {}): void {
   audio.addEventListener('volumechange', () => callbacks.onVolumeChange?.(audio!.volume));
 }
 
-export async function playStation(station: Station | null): Promise<boolean> {
+export async function playStation(station: Station | null, { restart = false } = {}): Promise<boolean> {
   if (!audio || !station) return false;
   if (!(station.url_resolved || station.url)) return false;
 
-  const isNewStation = !currentStation || currentStation.stationuuid !== station.stationuuid;
+  const isNewStation = restart || !hasPlayedCurrent || Boolean(audio.error) || !currentStation || currentStation.stationuuid !== station.stationuuid;
   currentStation = station;
   intendedPlaying = true;
 
@@ -137,7 +139,7 @@ export async function playStation(station: Station | null): Promise<boolean> {
     if (token !== loadToken) return false; // a newer selection superseded this load
 
     try {
-      await attachSource(playable);
+      await attachSource(playable, token);
     } catch (error) {
       if (token === loadToken) handleFatalError(error as Error);
       return false;
@@ -165,10 +167,12 @@ export async function togglePlay(): Promise<boolean> {
   return true;
 }
 
-export function pause(): void {
+export function pause({ preserveIntent = false } = {}): void {
   if (!audio) return;
   intendedPlaying = false;
+  loadToken += 1;
   clearTimers();
+  if (!preserveIntent) callbacks.onPause?.();
   audio.pause();
   setStatus('paused');
   setMediaSessionState('paused');
@@ -227,11 +231,11 @@ export function setNowPlayingMetadata(title: string): void {
   }
 }
 
-async function startPlayback(token?: number): Promise<boolean> {
+async function startPlayback(token = loadToken): Promise<boolean> {
   if (!audio) return false;
   try {
     await audio.play();
-    if (token !== undefined && token !== loadToken) return false;
+    if (token !== loadToken || !intendedPlaying) return false;
     hasPlayedCurrent = true;
     clearConnectTimer();
     setStatus('playing');
@@ -240,23 +244,24 @@ async function startPlayback(token?: number): Promise<boolean> {
   } catch (error) {
     // A stale attempt reports neither status nor error: its failure belongs to the
     // superseded selection, not to whatever station is current by now.
-    if (token !== undefined && token !== loadToken) return false;
+    if (token !== loadToken || !intendedPlaying) return false;
     setStatus('error');
     callbacks.onError?.(currentStation, error as Error);
     return false;
   }
 }
 
-async function attachSource(url: string): Promise<void> {
+async function attachSource(url: string, owner = loadToken): Promise<void> {
   if (!audio) return;
   const nativeHls = audio.canPlayType('application/vnd.apple.mpegurl') !== '';
 
   if (isHlsUrl(url) && !nativeHls) {
     const { default: Hls } = await import('hls.js');
+    if (owner !== loadToken || !intendedPlaying) return;
     if (Hls.isSupported()) {
       const instance = new Hls({ enableWorker: true, lowLatencyMode: false });
       instance.on(Hls.Events.ERROR, (_event: unknown, data: { fatal?: boolean }) => {
-        if (data?.fatal) handleHlsFatal();
+        if (data?.fatal && hls === instance && intendedPlaying) handleHlsFatal();
       });
       instance.loadSource(url);
       instance.attachMedia(audio);
@@ -297,7 +302,7 @@ async function resolvePlayableUrl(station: Station): Promise<string> {
   return raw;
 }
 
-function getRelativeStation(stations: Station[], offset: number): Station | null {
+export function getRelativeStation(stations: Station[], offset: number): Station | null {
   if (!Array.isArray(stations) || stations.length === 0) return null;
   if (!currentStation) return stations[0];
   const index = stations.findIndex(station => station.stationuuid === currentStation!.stationuuid);
@@ -306,7 +311,8 @@ function getRelativeStation(stations: Station[], offset: number): Station | null
 }
 
 function handleMediaError(): void {
-  const code = audio?.error?.code;
+  if (!intendedPlaying || !audio?.error) return;
+  const code = audio.error.code;
   // Only reconnect a stream that actually started playing then dropped (transient network).
   // A stream that never connected is treated as unavailable so auto-skip happens promptly.
   if (intendedPlaying && hasPlayedCurrent && classifyPlaybackError(code) === 'transient' && canReconnect(reconnectAttempts)) {
@@ -337,28 +343,33 @@ function scheduleReconnect(): void {
   if (reconnectTimer) clearTimeout(reconnectTimer);
   const delay = reconnectDelayMs(reconnectAttempts);
   setStatus('loading');
-  reconnectTimer = setTimeout(() => void reattach(), delay);
+  const owner = loadToken;
+  reconnectTimer = setTimeout(() => { if (owner === loadToken && intendedPlaying) void reattach(); }, delay);
 }
 
 async function reattach(): Promise<void> {
   if (!audio || !currentStation || !intendedPlaying) return;
   const token = ++loadToken;
+  hasPlayedCurrent = false;
   teardownHls();
   try {
     const playable = await resolvePlayableUrl(currentStation);
-    if (token !== loadToken) return;
-    await attachSource(playable);
+    if (token !== loadToken || !intendedPlaying) return;
+    await attachSource(playable, token);
+    if (token !== loadToken || !intendedPlaying) return;
     await audio.play();
-    setStatus('playing');
+    if (token === loadToken && intendedPlaying) setStatus('playing');
   } catch (error) {
-    handleFatalError(error as Error);
+    if (token === loadToken && intendedPlaying) handleFatalError(error as Error);
   }
 }
 
 function armStallTimer(): void {
   if (!intendedPlaying) return;
+  const owner = loadToken;
   clearStallTimer();
   stallTimer = setTimeout(() => {
+    if (owner !== loadToken) return;
     if (intendedPlaying && status !== 'playing') {
       if (canReconnect(reconnectAttempts)) scheduleReconnect();
       else handleFatalError(new Error('stalled'));
@@ -376,8 +387,10 @@ function clearStallTimer(): void {
 // Watchdog: if a freshly-selected stream never reaches "playing", treat it as unavailable
 // so the UI doesn't sit on a spinner waiting for a slow/absent media error event.
 function armConnectTimer(): void {
+  const owner = loadToken;
   clearConnectTimer();
   connectTimer = setTimeout(() => {
+    if (owner !== loadToken) return;
     if (intendedPlaying && !hasPlayedCurrent && status !== 'playing') {
       handleFatalError(new Error('connect-timeout'));
     }
@@ -415,7 +428,7 @@ function updateMediaSession(station: Station): void {
   if (typeof navigator === 'undefined' || !('mediaSession' in navigator)) return;
   try {
     navigator.mediaSession.metadata = new MediaMetadata(buildMediaSessionMetadata(station));
-    navigator.mediaSession.setActionHandler('play', () => void togglePlay());
+    navigator.mediaSession.setActionHandler('play', () => callbacks.onPlay ? callbacks.onPlay() : void togglePlay());
     navigator.mediaSession.setActionHandler('pause', () => pause());
     navigator.mediaSession.setActionHandler('previoustrack', () => callbacks.onPrev?.());
     navigator.mediaSession.setActionHandler('nexttrack', () => callbacks.onNext?.());
