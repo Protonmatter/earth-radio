@@ -89,5 +89,13 @@ schema must preserve the original account, local collections and supported sync.
 Passport cannot infer historical duration from Recent. Use IANA time zones and
 explicit location provenance; never manufacture city precision to meet coverage.
 
+The [minimal place/time foundation](PLACE_MODEL.md) adds an eleven-city vocabulary,
+conservative coordinate/name resolver and explicit IANA formatter as a prerequisite.
+Its frozen public-data qualification finds at least five program components per
+curated city after family/shared-stream deduplication. It does not change current
+home/map/player entry points or claim broad geocoding coverage. The next separate
+change must expose Continue/Today's place/On air now, prove UTC-date determinism
+and cached offline rendering, and account for the native reader's bounded sample.
+
 New paid services/signing require cost approval. Analytics and notifications
 remain separate opt-in product decisions; this roadmap does not enable either.

@@ -4,6 +4,9 @@ Natural Earth geographic data: public domain. Personal and commercial use, modif
 
 Natural Earth is generalized geographic data, not comprehensive street/address or routing data. See docs/MAP_DATA.md in the source repository for pinned sources, transformations, omissions and checksums.
 
+Curated city timezone identifiers and country membership: IANA tzdb 2026f zone1970.tab, public-domain data. Terms: https://data.iana.org/time-zones/tzdb-2026f/LICENSE
+Only the small explicit identifier/country selection is bundled, not IANA timezone implementation code or transition rules. Local-time formatting uses the host's Intl/ICU data. No timezone lookup service, key or paid API is used. See docs/PLACE_MODEL.md for provenance and confidence limits.
+
 Leaflet 1.9.4
 BSD 2-Clause License
 

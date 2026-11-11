@@ -56,8 +56,8 @@
 
 **Interfaces:** File-only CLI takes an explicit public snapshot JSON path, bounded to 16 MiB/10,000 records/groups. It groups variants, resolves each program conservatively and reports confidence/city program counts plus supplied generation/source metadata. It makes no request and mutates no input/account data.
 
-- [ ] Write tests for variant deduplication, malformed/oversized/ambiguous input, reproducible counts and no hidden network call; run focused test to observe RED.
-- [ ] Implement bounded CLI and qualify the retained/publicly integrity-checked snapshot. Report actual counts; revise scope honestly rather than fabricating coverage.
-- [ ] Document purpose, provenance/public-domain terms, explicit download/build/check commands, resolver API/confidence limits, coverage results, failure paths and rollback. Distinguish this prerequisite from unshipped Today/broader geocoding.
-- [ ] Regenerate manifests; run focused tests and `npm run verify`, inspect exact diff and committed-object hashes. Expected GREEN with no active UI/loader/account behavior change.
+- [x] Write tests for variant deduplication, malformed/oversized/ambiguous input, reproducible counts and no hidden network call; run focused test to observe RED.
+- [x] Implement bounded CLI and qualify the retained/publicly integrity-checked snapshot. Report actual counts; revise scope honestly rather than fabricating coverage.
+- [x] Document purpose, provenance/public-domain terms, explicit download/build/check commands, resolver API/confidence limits, coverage results, failure paths and rollback. Distinguish this prerequisite from unshipped Today/broader geocoding.
+- [x] Regenerate manifests; run focused tests and `npm run verify`, inspect exact diff and committed-object hashes. Expected GREEN with no active UI/loader/account behavior change.
 - [ ] Obtain fresh read-only whole-branch review, resolve concrete findings with RED/GREEN coverage, push/create PR, attach it, and wait exact-head CI/deployed artifacts before authorized merge. Keep source and served acceptance separate. Then update Spaces and proceed to the separate Today plan.
