@@ -55,8 +55,8 @@
     },
     {
       "path": "docs/BUILD_STATE.md",
-      "bytes": 35503,
-      "sha256": "b64c8adde6f07f5167886e7d1eb68a87b7223b5e87cc7fd06f3e1ec3788ed776"
+      "bytes": 36812,
+      "sha256": "b817ebb0113bf33fdefdceb58e104fdd3c44684f8f959f25a5bfd6b92a15098b"
     },
     {
       "path": "docs/CLOUDFLARE_DEPLOYMENT.md",
@@ -180,8 +180,8 @@
     },
     {
       "path": "docs/QA-0.34.0.md",
-      "bytes": 3165,
-      "sha256": "7a99c5d47f9a0cb63aeef1d4728e65d1feda9445a23d021f30c7bfb84f7c42c7"
+      "bytes": 3724,
+      "sha256": "ca80581e8e43b45afa506a695cb2b92fa965dc966b576f60bc7e92adc11384ca"
     },
     {
       "path": "docs/QUALIFICATION-0.26.0.md",
@@ -369,6 +369,11 @@
       "sha256": "7e3d2c8d046b23881c40171c805ac032083de99ebc5bcfeb3d6dedecfd365003"
     },
     {
+      "path": "docs/superpowers/plans/2026-11-11-directory-place-minimum.md",
+      "bytes": 3062,
+      "sha256": "35c51a2523173f33549b716dc9b7d89eb3e490723132ec1104b519acc2b5a644"
+    },
+    {
       "path": "docs/superpowers/plans/2026-11-11-place-first.md",
       "bytes": 6234,
       "sha256": "7fd8617e46ecbe4509601d6690f2fefe9195f3e80f95386e2f70cf7998e8d4a8"
@@ -422,6 +427,11 @@
       "path": "docs/superpowers/specs/2026-11-08-public-website-domains-design.md",
       "bytes": 4305,
       "sha256": "c519622810cc4159f75ec461af2c1f66ade729a89a946425514d7995d651f4ab"
+    },
+    {
+      "path": "docs/superpowers/specs/2026-11-11-directory-place-minimum.md",
+      "bytes": 2868,
+      "sha256": "1d4965c41c3519800cdfe3b959db18c722c53d6e2a0193cd78a30203452aaa98"
     },
     {
       "path": "docs/superpowers/specs/2026-11-11-place-first-design.md",
@@ -540,8 +550,8 @@
     },
     {
       "path": "package.json",
-      "bytes": 5344,
-      "sha256": "e79e0541996a170ed80281c294a2a90079b33185fc43434cd2d30371f0cb2d91"
+      "bytes": 5385,
+      "sha256": "16708cbaac9bcd37a74f0228b7c25862ab742d0427b3fb13db3daa5a64a3f4ea"
     },
     {
       "path": "scripts/build-desktop-icon.mjs",
@@ -577,6 +587,11 @@
       "path": "scripts/desktop-package-compat.mjs",
       "bytes": 419,
       "sha256": "807fd9520efba03152efd4295d17e4eae5ecafaa8ac95915e0a9ad7b89bdb0ca"
+    },
+    {
+      "path": "scripts/directory-place-selection.mjs",
+      "bytes": 3301,
+      "sha256": "3b08999bd8f27eb64674e0a4457005aabde3d2bc2316bc4569b500322da5d4b2"
     },
     {
       "path": "scripts/ensure-electron-runtime.mjs",
@@ -1612,6 +1627,11 @@
       "path": "tests/directory-normalize.test.mjs",
       "bytes": 6207,
       "sha256": "d9487dd2e70952e66a3c588bc90eb36565064adde6f07a0a7f4a217b98d44d51"
+    },
+    {
+      "path": "tests/directory-place-selection.test.mjs",
+      "bytes": 5427,
+      "sha256": "9d71afce0df9137321461696f16a54fe996ebd3faa648132e7201daff7026912"
     },
     {
       "path": "tests/directory-producer.test.mjs",
