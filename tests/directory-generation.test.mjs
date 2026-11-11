@@ -3,9 +3,13 @@ import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {buildDirectoryGeneration} from '../scripts/build-directory-snapshot.mjs';
 import {validateSnapshotManifest,snapshotDescriptor,snapshotRepresentation,SNAPSHOT_ACCEPT} from '../site/assets/snapshot-protocol.js';
+import {CURATED_PLACES} from '../site/assets/curated-places.js';
+import {cityProgramChoices} from '../site/assets/today-core.js';
+import {normalizeDirectory} from '../server/directory-normalize.mjs';
+import {snapshotRows} from '../site/assets/directory-client.js';
 
 const row=(id,extra={})=>({stationuuid:id,name:'BBC Radio 4',country:'United Kingdom',countrycode:'GB',url:`https://radio.example/${id}`,tags:'radio,pop music',lastcheckok:1,...extra});
-const options={generatedAt:'2026-11-08T20:17:00.000Z',producerSourceSha:'a'.repeat(40),minimumRecords:1,minimumCountries:1,globalLimit:10000,countryLimit:1000};
+const options={generatedAt:'2026-11-08T20:17:00.000Z',producerSourceSha:'a'.repeat(40),minimumRecords:1,minimumCountries:1,globalLimit:10000,countryLimit:1000,minimumCityPrograms:0};
 
 test('published generation has normalized grouped/legacy views with exact content hashes',()=>{
   const result=buildDirectoryGeneration([row('a'),row('b',{name:'bbc radio 4'}),row('c',{countrycode:'FR',country:'France',name:'FIP'})],options);
@@ -49,4 +53,50 @@ test('invalid metadata cannot introduce arbitrary URLs, paths or oversized snaps
 test('a severely truncated or empty producer response cannot replace last-good publication',()=>{
   assert.throws(()=>buildDirectoryGeneration([],options),/minimum|empty/i);
   assert.throws(()=>buildDirectoryGeneration([row('a')],{...options,minimumRecords:1000}),/minimum/i);
+});
+
+function placeFixture(){
+  const dublin=CURATED_PLACES.find(city=>city.name==='Dublin');
+  const make=(city,i,offset,clickcount)=>row(`00000000-0000-4000-8000-${String(offset+i).padStart(12,'0')}`,{
+    name:`${city.name} Programme ${i+1}`,country:city.countrycode,countrycode:city.countrycode,state:city.name,
+    geo_lat:city.point[0],geo_long:city.point[1],clickcount,codec:'MP3',bitrate:128
+  });
+  const rest=CURATED_PLACES.filter(city=>city!==dublin).flatMap((city,c)=>Array.from({length:5},(_,i)=>make(city,i,c*10,100000-i)));
+  const ireland=Array.from({length:5},(_,i)=>make(dublin,i,500,i<3?50000-i:1));
+  const filler=Array.from({length:7},(_,i)=>row('filler-'+i,{name:'Filler '+i,country:'New Zealand',countrycode:'NZ',state:'Wellington',geo_lat:-41.2865,geo_long:174.7762,clickcount:1000-i}));
+  return{dublin,rows:[...rest,...ireland,...filler]};
+}
+const programs=(rows,city)=>cityProgramChoices(rows,city.id,{secureOnly:false}).length;
+
+test('curated place programs survive the production global cutoff',()=>{
+  const{dublin,rows}=placeFixture();assert.equal(programs(normalizeDirectory(rows).stations.slice(0,60),dublin),3);
+  const result=buildDirectoryGeneration(rows,{...options,globalLimit:60,minimumCityPrograms:5});
+  const root=JSON.parse(result.files.get(result.manifest.files.legacy.path));
+  assert.equal(root.length,60);for(const city of CURATED_PLACES)assert.ok(programs(root,city)>=5,city.name);
+  const web=snapshotRows(JSON.parse(result.files.get(result.manifest.files.catalog.path)));
+  assert.equal(web.length,60);for(const city of CURATED_PLACES)assert.ok(programs(web,city)>=5,city.name+' grouped');
+  assert.equal(result.report.placeSelection.addedForPlaces,2);
+  assert.ok(result.report.placeSelection.coverage.every(row=>row.selectedPrograms>=5));
+});
+
+test('production city policy fails closed by default when witnesses are unavailable',()=>{
+  const strict={...options};delete strict.minimumCityPrograms;
+  assert.throws(()=>buildDirectoryGeneration([row('unlocated')],strict),/qualified programs|minimum 5/);
+});
+
+test('place selection preserves country views and stable hashes across input ordering',()=>{
+  const{rows}=placeFixture(),opts={...options,globalLimit:60};
+  const a=buildDirectoryGeneration(rows,{...opts,minimumCityPrograms:5}),b=buildDirectoryGeneration([...rows].reverse(),{...opts,minimumCityPrograms:5,generatedAt:'2026-11-08T21:17:00.000Z'});
+  const previous=buildDirectoryGeneration(rows,{...opts,minimumCityPrograms:0});
+  for(const key of ['catalog','legacy'])assert.equal(a.manifest.files[key].sha256,b.manifest.files[key].sha256);
+  assert.deepEqual(a.manifest.byCountry,previous.manifest.byCountry);assert.deepEqual(a.manifest.files.countries,previous.manifest.files.countries);
+});
+
+test('grouped representation cannot publish a lost city witness as a satisfied minimum',()=>{
+  const{rows,dublin}=placeFixture(),witness=rows.find(row=>row.name==='Dublin Programme 5');
+  const alias={...witness,stationuuid:'00000000-0000-4000-8000-000000000999',geo_lat:null,geo_long:null,clickcount:1000000};
+  const input=[...rows,alias],plain=buildDirectoryGeneration(input,{...options,minimumCityPrograms:0});
+  const legacy=JSON.parse(plain.files.get(plain.manifest.files.legacy.path)),web=snapshotRows(JSON.parse(plain.files.get(plain.manifest.files.catalog.path)));
+  assert.equal(programs(legacy,dublin),5);assert.equal(programs(web,dublin),4);
+  assert.throws(()=>buildDirectoryGeneration(input,{...options,minimumCityPrograms:5}),/grouped.*Dublin|Dublin.*grouped/i);
 });

@@ -4,12 +4,15 @@ import {execFileSync} from 'node:child_process';
 import path from 'node:path';
 import {pathToFileURL} from 'node:url';
 import {normalizeDirectory} from '../server/directory-normalize.mjs';
-import {groupStationVariants,serializeVariantGroups} from '../site/assets/station-variants.js';
+import {groupStationVariants,serializeVariantGroups,expandVariantGroups} from '../site/assets/station-variants.js';
 import {createDirectoryHosts} from '../site/assets/directory-hosts.js';
 import {SNAPSHOT_MANAGED_BY,validateSnapshotManifest} from '../site/assets/snapshot-protocol.js';
 import {requestPublic} from '../server/net-guard.mjs';
+import {selectDirectoryPlaces} from './directory-place-selection.mjs';
+import {CURATED_PLACES} from '../site/assets/curated-places.js';
+import {cityProgramChoices} from '../site/assets/today-core.js';
 
-export function buildDirectoryGeneration(input,{generatedAt=new Date().toISOString(),producerSourceSha,producerVersion='0.32.0',servers=[],minimumRecords=1000,minimumCountries=20,globalLimit=10000,countryLimit=1000}={}){
+export function buildDirectoryGeneration(input,{generatedAt=new Date().toISOString(),producerSourceSha,producerVersion='0.32.0',servers=[],minimumRecords=1000,minimumCountries=20,globalLimit=10000,countryLimit=1000,minimumCityPrograms=5}={}){
   if(!Number.isInteger(globalLimit)||globalLimit<1||globalLimit>10000||!Number.isInteger(countryLimit)||countryLimit<1||countryLimit>1000)throw Error('Invalid snapshot limits');
   const normalized=normalizeDirectory(input),all=normalized.stations;
   const buckets=new Map();for(const station of all)if(station.countrycode){if(!buckets.has(station.countrycode))buckets.set(station.countrycode,[]);buckets.get(station.countrycode).push(station);}
@@ -19,7 +22,13 @@ export function buildDirectoryGeneration(input,{generatedAt=new Date().toISOStri
     files.set(name,bytes);return{path:name,sha256,bytes:bytes.length,records};
   };
   const views=rows=>({catalog:put({schemaVersion:2,groups:serializeVariantGroups(rows)},rows.length),legacy:put(rows,rows.length)});
-  const global=all.slice(0,globalLimit),globalGroups=groupStationVariants(global),primary=views(global);
+  const {stations:global,...placeSelection}=selectDirectoryPlaces(all,{globalLimit,minimumCityPrograms});
+  const globalGroups=groupStationVariants(global),primary=views(global);
+  if(minimumCityPrograms){
+    const grouped=expandVariantGroups(JSON.parse(files.get(primary.catalog.path)).groups);
+    placeSelection.groupedCoverage=CURATED_PLACES.map(city=>({cityId:city.id,city:city.name,selectedPrograms:cityProgramChoices(grouped,city.id,{secureOnly:false}).length}));
+    for(const city of placeSelection.groupedCoverage)if(city.selectedPrograms<minimumCityPrograms)throw Error(`Grouped ${city.city} has ${city.selectedPrograms} qualified programs; minimum ${minimumCityPrograms}`);
+  }
   const byCountry={},countries=[];
   for(const[code,rows]of [...buckets].sort(([a],[b])=>a.localeCompare(b,'en'))){
     byCountry[code]=views(rows.slice(0,countryLimit));
@@ -32,7 +41,7 @@ export function buildDirectoryGeneration(input,{generatedAt=new Date().toISOStri
     files:{...primary,countries:put(countries,countries.length),servers:put(safeServers,safeServers.length),emptyCatalog:put({schemaVersion:2,groups:[]},0),emptyLegacy:put([],0)},byCountry};
   validateSnapshotManifest(manifest,{now:Date.parse(generatedAt)});
   if(Buffer.byteLength(JSON.stringify(manifest))>128*1024)throw Error('Snapshot manifest exceeds byte budget');
-  return{manifest,files,report:{...normalized.stats,logicalStations:manifest.totals.stations,streams:manifest.totals.streams,files:files.size,legacyBytes:primary.legacy.bytes,catalogBytes:primary.catalog.bytes}};
+  return{manifest,files,report:{...normalized.stats,placeSelection,logicalStations:manifest.totals.stations,streams:manifest.totals.streams,files:files.size,legacyBytes:primary.legacy.bytes,catalogBytes:primary.catalog.bytes}};
 }
 
 export async function fetchDirectoryForPublication({timeoutMs=120000,requestImpl=requestPublic}={}){
@@ -87,7 +96,7 @@ if(process.argv[1]&&pathToFileURL(path.resolve(process.argv[1])).href===import.m
     const inputIndex=args.indexOf('--input');
     const source=inputIndex>=0?{rows:JSON.parse(await readFile(args[inputIndex+1],'utf8')),servers:[]}:await fetchDirectoryForPublication();
     const producerSourceSha=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim();
-    const generation=buildDirectoryGeneration(source.rows,{producerSourceSha,servers:source.servers});
+    const generation=buildDirectoryGeneration(source.rows,{producerSourceSha,servers:source.servers,minimumCityPrograms:5});
     await writeDirectoryGeneration(generation,output);console.log(JSON.stringify({output:path.resolve(output),generatedAt:generation.manifest.generatedAt,...generation.report}));
   }catch(error){console.error(error.message);process.exitCode=1;}
 }

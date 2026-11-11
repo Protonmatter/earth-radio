@@ -29,10 +29,10 @@ tests/directory-place-selection.test.mjs; package test list and manifests.
 Files: scripts/build-directory-snapshot.mjs; existing producer/generation and
 publication fixtures; documentation/provenance and manifests.
 
-- [ ] Reproduce the producer integration cutoff against the old slice.
-- [ ] Use selection before global views, production minimum5, report coverage;
+- [x] Reproduce the producer integration cutoff against the old slice.
+- [x] Use selection before global views, production minimum5, report coverage;
   preserve explicit small-fixture opt-outs and every prior assertion/limit.
-- [ ] Qualify against retained complete publication input/country shards and live
+- [x] Qualify against retained complete publication input/country shards and live
   data; verify global/country shapes, hashes, every city and native sampling.
 - [ ] Run full verify and appropriate changed-data/browser checks; demonstrate
   unchanged application assets and dependencies. Get one fresh read-only review,

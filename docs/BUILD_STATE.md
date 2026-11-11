@@ -13,11 +13,15 @@ They are unpublished and retained separately from stable 0.32.2.
 Fresh publication 43103795772 exposed a coverage gap: Dublin has 3 programs in the
 global 10,000-row root and 30 in its 196-row Ireland shard. Native sampling also
 returns 3. The loss occurs at the producer cutoff. A new
-pure selection helper has ten focused passing checks, but remains inactive until
-the separate producer integration. It protects qualified city witnesses before
-clipping and fails an unmet minimum, without extra requests or location guesses.
-The inactive core passes the full verifier: 675 tests, three existing Windows
-skips and 439 hashes. Active publication still uses the previous selector.
+pure selection helper has ten focused passing checks. The feature-branch producer
+integration protects qualified city witnesses before clipping and rejects an unmet
+legacy or grouped minimum, without extra requests or location guesses. The inactive
+core passed 675 tests, three existing Windows skips and 439 hashes. Integration
+passes 46 focused producer/protocol cases and 37 browser/loading cases. Fresh live
+input replay restores Dublin to five, retains 10,000 rows and all country views,
+and passes eleven-city native sampling with one root read. Full integration
+verification passes 679 tests, three existing Windows skips and 441 hashes.
+Review and publication are pending; production still uses the prior selector.
 See the [correction design](superpowers/specs/2026-11-11-directory-place-minimum.md).
 
 ## 0.34.0 place-first source qualification

@@ -10,8 +10,8 @@
     },
     {
       "path": ".github/workflows/directory-snapshot.yml",
-      "bytes": 1726,
-      "sha256": "9b143311cebe23cd0cb7025c7a8bd5f01a03b9fb8c1b7aea8fa0469491ef83c5"
+      "bytes": 1767,
+      "sha256": "021d483b442388d023b968727b1493dfb7cf7fd94fe2f36f8dcecba9ed2383db"
     },
     {
       "path": ".github/workflows/macos-release.yml",
@@ -55,8 +55,8 @@
     },
     {
       "path": "docs/BUILD_STATE.md",
-      "bytes": 36812,
-      "sha256": "b817ebb0113bf33fdefdceb58e104fdd3c44684f8f959f25a5bfd6b92a15098b"
+      "bytes": 37141,
+      "sha256": "5f4a7a7b601898b5173414dd1c7643b2a83740192f43c08a7713ce3be15d37d0"
     },
     {
       "path": "docs/CLOUDFLARE_DEPLOYMENT.md",
@@ -70,8 +70,8 @@
     },
     {
       "path": "docs/DIRECTORY_PUBLICATION.md",
-      "bytes": 5367,
-      "sha256": "30ee963608287b7842cecffdfb3d1aae468992402fa4459354029817cae83039"
+      "bytes": 7125,
+      "sha256": "f1e39bb8374a3dafee5f1641b04a2f0b0f49ab24716a7db6ff7b685cdf14421e"
     },
     {
       "path": "docs/DISCOVERY_RELIABILITY.md",
@@ -134,6 +134,11 @@
       "sha256": "97c15870f78485a7347bfba652f6eb159ecef181a916012a8b525bc059d1b348"
     },
     {
+      "path": "docs/provenance/directory-place-coverage.json",
+      "bytes": 5866,
+      "sha256": "8040b6e38ce183820af48339bfc4fad653f4879c45fed1dd14c155f0bf6a0ba7"
+    },
+    {
       "path": "docs/provenance/discovery-geography.json",
       "bytes": 692,
       "sha256": "77d9a63ec0c232266264b4841c4d2482d3c5a19dd512591e12af7273cef4fd61"
@@ -182,6 +187,11 @@
       "path": "docs/QA-0.34.0.md",
       "bytes": 3724,
       "sha256": "ca80581e8e43b45afa506a695cb2b92fa965dc966b576f60bc7e92adc11384ca"
+    },
+    {
+      "path": "docs/QA-DIRECTORY-PLACE-MINIMUM.md",
+      "bytes": 3392,
+      "sha256": "ab50e40dc5104a7d37c43fa15fb92d70121cf27a3e80a6d8d1329fe4720bb117"
     },
     {
       "path": "docs/QUALIFICATION-0.26.0.md",
@@ -371,7 +381,7 @@
     {
       "path": "docs/superpowers/plans/2026-11-11-directory-place-minimum.md",
       "bytes": 3062,
-      "sha256": "35c51a2523173f33549b716dc9b7d89eb3e490723132ec1104b519acc2b5a644"
+      "sha256": "e031344187fbff35e1c7681cbc48c49177c211d4b0a11533eda887fdb8e8da9e"
     },
     {
       "path": "docs/superpowers/plans/2026-11-11-place-first.md",
@@ -560,8 +570,8 @@
     },
     {
       "path": "scripts/build-directory-snapshot.mjs",
-      "bytes": 7553,
-      "sha256": "8dbbfa3082d207ce95a83d4241586a4a6a091528ef58faef8d95759b7c36df49"
+      "bytes": 8419,
+      "sha256": "db8592261017bdc61c125f2544adbb9e1844c0380f8072ca1abcd689cecc28d4"
     },
     {
       "path": "scripts/build-discovery-geography.mjs",
@@ -1620,8 +1630,8 @@
     },
     {
       "path": "tests/directory-generation.test.mjs",
-      "bytes": 4420,
-      "sha256": "cb28d1db93d4bed1d8bade097fc06a6fba20169cd4cee8e401782acfcfd5229c"
+      "bytes": 8243,
+      "sha256": "dced30e9bc55f3576f942d210d16ebeefb88e63d4bde59812067b21ad52b67c0"
     },
     {
       "path": "tests/directory-normalize.test.mjs",
@@ -1640,8 +1650,8 @@
     },
     {
       "path": "tests/directory-publication.test.mjs",
-      "bytes": 3149,
-      "sha256": "3804197445599b1cf8826cd798bdf51dd3b9d6c41e329817a918020ac3229e34"
+      "bytes": 3171,
+      "sha256": "5412bba8d85f573611f68cb92826ed09c9ff61ad33f22a83e7fae326a1d1976a"
     },
     {
       "path": "tests/directory-snapshot.test.mjs",
@@ -1675,8 +1685,8 @@
     },
     {
       "path": "tests/e2e/directory-snapshot.spec.mjs",
-      "bytes": 12343,
-      "sha256": "f93ab7ff0e40b811bfba3a9a17393c28da0ff9eeec3efbacc0fefa944990ba84"
+      "bytes": 14844,
+      "sha256": "729a680e4da6c4cbb60bd6f92826adef58dc77a351aaeb0cd014294bba93e10c"
     },
     {
       "path": "tests/e2e/discovery.spec.mjs",
@@ -1965,8 +1975,8 @@
     },
     {
       "path": "tests/published-directory.test.mjs",
-      "bytes": 8513,
-      "sha256": "b25a757d14dea766ddd5d4a3b31d396c37ecb56486a33832a55bcb13812e48ea"
+      "bytes": 8557,
+      "sha256": "d37e7131273a8fa602322098b3d6d2dcd0ee1fef1c4b8725808becdeddf9bd79"
     },
     {
       "path": "tests/recovery-inventory.test.mjs",

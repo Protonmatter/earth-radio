@@ -1,0 +1,266 @@
+{
+  "schemaVersion": 1,
+  "scope": "Unpublished working-tree qualification using retained normalized live input; zero source identity is deliberate, not a release.",
+  "input": {
+    "sha256": "2ae63f727ae12ee9b27ccca2d632d9feb5972d11147ae3559681646880a4f597",
+    "rawRecords": 52713,
+    "normalizedRecords": 52630,
+    "acquiredAt": "2026-11-11T22:33:09.848Z",
+    "retainedFile": ".build/directory-place-minimum/normalized-live-input.json"
+  },
+  "algorithms": [
+    {
+      "path": "scripts/directory-place-selection.mjs",
+      "sha256": "3b08999bd8f27eb64674e0a4457005aabde3d2bc2316bc4569b500322da5d4b2"
+    },
+    {
+      "path": "scripts/build-directory-snapshot.mjs",
+      "sha256": "db8592261017bdc61c125f2544adbb9e1844c0380f8072ca1abcd689cecc28d4"
+    }
+  ],
+  "rootRecords": 10000,
+  "rootLegacySha256": "9c06c4079f1aae4a9b6133d8dda28a55a4ebba9ca119d58eed0e6fb861453870",
+  "selection": {
+    "coverage": [
+      {
+        "cityId": "ne-1159151529",
+        "city": "Berlin",
+        "availablePrograms": 57,
+        "retainedWitnesses": 5,
+        "selectedPrograms": 26
+      },
+      {
+        "cityId": "ne-1159151563",
+        "city": "Vienna",
+        "availablePrograms": 26,
+        "retainedWitnesses": 5,
+        "selectedPrograms": 20
+      },
+      {
+        "cityId": "ne-1159151575",
+        "city": "New York",
+        "availablePrograms": 50,
+        "retainedWitnesses": 5,
+        "selectedPrograms": 21
+      },
+      {
+        "cityId": "ne-1159151503",
+        "city": "Madrid",
+        "availablePrograms": 41,
+        "retainedWitnesses": 5,
+        "selectedPrograms": 17
+      },
+      {
+        "cityId": "ne-1159151579",
+        "city": "Istanbul",
+        "availablePrograms": 14,
+        "retainedWitnesses": 5,
+        "selectedPrograms": 10
+      },
+      {
+        "cityId": "ne-1159151577",
+        "city": "London",
+        "availablePrograms": 54,
+        "retainedWitnesses": 5,
+        "selectedPrograms": 17
+      },
+      {
+        "cityId": "ne-1159151557",
+        "city": "Toronto",
+        "availablePrograms": 23,
+        "retainedWitnesses": 5,
+        "selectedPrograms": 8
+      },
+      {
+        "cityId": "ne-1159151309",
+        "city": "Dublin",
+        "availablePrograms": 27,
+        "retainedWitnesses": 3,
+        "selectedPrograms": 5
+      },
+      {
+        "cityId": "ne-1159151599",
+        "city": "Jakarta",
+        "availablePrograms": 20,
+        "retainedWitnesses": 5,
+        "selectedPrograms": 10
+      },
+      {
+        "cityId": "ne-1159151491",
+        "city": "Chicago",
+        "availablePrograms": 11,
+        "retainedWitnesses": 5,
+        "selectedPrograms": 6
+      },
+      {
+        "cityId": "ne-1159151523",
+        "city": "Seoul",
+        "availablePrograms": 5,
+        "retainedWitnesses": 5,
+        "selectedPrograms": 5
+      }
+    ],
+    "addedForPlaces": 2,
+    "candidateRecords": 50000,
+    "groupedCoverage": [
+      {
+        "cityId": "ne-1159151529",
+        "city": "Berlin",
+        "selectedPrograms": 26
+      },
+      {
+        "cityId": "ne-1159151563",
+        "city": "Vienna",
+        "selectedPrograms": 19
+      },
+      {
+        "cityId": "ne-1159151575",
+        "city": "New York",
+        "selectedPrograms": 21
+      },
+      {
+        "cityId": "ne-1159151503",
+        "city": "Madrid",
+        "selectedPrograms": 15
+      },
+      {
+        "cityId": "ne-1159151579",
+        "city": "Istanbul",
+        "selectedPrograms": 9
+      },
+      {
+        "cityId": "ne-1159151577",
+        "city": "London",
+        "selectedPrograms": 18
+      },
+      {
+        "cityId": "ne-1159151557",
+        "city": "Toronto",
+        "selectedPrograms": 8
+      },
+      {
+        "cityId": "ne-1159151309",
+        "city": "Dublin",
+        "selectedPrograms": 5
+      },
+      {
+        "cityId": "ne-1159151599",
+        "city": "Jakarta",
+        "selectedPrograms": 10
+      },
+      {
+        "cityId": "ne-1159151491",
+        "city": "Chicago",
+        "selectedPrograms": 6
+      },
+      {
+        "cityId": "ne-1159151523",
+        "city": "Seoul",
+        "selectedPrograms": 5
+      }
+    ]
+  },
+  "web": {
+    "records": 10000,
+    "counts": [
+      {
+        "city": "Berlin",
+        "programs": 26
+      },
+      {
+        "city": "Vienna",
+        "programs": 19
+      },
+      {
+        "city": "New York",
+        "programs": 21
+      },
+      {
+        "city": "Madrid",
+        "programs": 15
+      },
+      {
+        "city": "Istanbul",
+        "programs": 9
+      },
+      {
+        "city": "London",
+        "programs": 18
+      },
+      {
+        "city": "Toronto",
+        "programs": 8
+      },
+      {
+        "city": "Dublin",
+        "programs": 5
+      },
+      {
+        "city": "Jakarta",
+        "programs": 10
+      },
+      {
+        "city": "Chicago",
+        "programs": 6
+      },
+      {
+        "city": "Seoul",
+        "programs": 5
+      }
+    ]
+  },
+  "native": {
+    "records": 3286,
+    "rootReads": 1,
+    "counts": [
+      {
+        "city": "Berlin",
+        "programs": 13
+      },
+      {
+        "city": "Vienna",
+        "programs": 11
+      },
+      {
+        "city": "New York",
+        "programs": 9
+      },
+      {
+        "city": "Madrid",
+        "programs": 6
+      },
+      {
+        "city": "Istanbul",
+        "programs": 5
+      },
+      {
+        "city": "London",
+        "programs": 12
+      },
+      {
+        "city": "Toronto",
+        "programs": 8
+      },
+      {
+        "city": "Dublin",
+        "programs": 5
+      },
+      {
+        "city": "Jakarta",
+        "programs": 5
+      },
+      {
+        "city": "Chicago",
+        "programs": 5
+      },
+      {
+        "city": "Seoul",
+        "programs": 5
+      }
+    ]
+  },
+  "allCountryViewsUnchanged": true,
+  "extraProviderRequests": 0,
+  "minimumCountsIncludeHttp": true,
+  "audioAvailabilityQualified": false
+}

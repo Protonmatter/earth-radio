@@ -9,7 +9,7 @@ async function fixture(t){
   await mkdir('.build',{recursive:true});const root=await mkdtemp(path.resolve('.build/directory-publication-test-'));
   t.after(()=>rm(root,{recursive:true,force:true}));
   const input=path.join(root,'input'),output=path.join(root,'output');
-  const generation=buildDirectoryGeneration(rows,{producerSourceSha:'a'.repeat(40),minimumRecords:1,minimumCountries:1});
+  const generation=buildDirectoryGeneration(rows,{producerSourceSha:'a'.repeat(40),minimumRecords:1,minimumCountries:1,minimumCityPrograms:0});
   await writeDirectoryGeneration(generation,input);return{input,output,generation};
 }
 test('publication includes exactly validated files and never source/account data',async t=>{
