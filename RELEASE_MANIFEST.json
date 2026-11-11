@@ -120,8 +120,8 @@
     },
     {
       "path": "docs/PLACE_MODEL.md",
-      "bytes": 9441,
-      "sha256": "e4f847203606d7deaf1883106b6e75279f5e5b8c970d32c685e7d17f1d9be3cb"
+      "bytes": 9789,
+      "sha256": "12dcfccaa718070fcf6d65ba648e21ebe1492c75bc16d6c48e7b398588f0b71c"
     },
     {
       "path": "docs/PROVENANCE.md",
@@ -146,7 +146,7 @@
     {
       "path": "docs/provenance/place-coverage.json",
       "bytes": 8572,
-      "sha256": "0157c78a7f871117a6f1e2652965929ff18eaea6a5c7ef145e581a63ad30c3c7"
+      "sha256": "68fa690ed6c19c059c551d7f77aeff64b599294f66bca04393c273daf4ddd2b7"
     },
     {
       "path": "docs/provenance/place-data.json",
@@ -565,8 +565,8 @@
     },
     {
       "path": "scripts/qualify-place-data.mjs",
-      "bytes": 8430,
-      "sha256": "95c50d5af332e1adb53706f8bcc628283630502f3ac9f5988a4aec567dbc8e69"
+      "bytes": 8819,
+      "sha256": "c53a0b40438f9b3357d05fae9bc31cd0634c3ef3d77843adfe885427442914e3"
     },
     {
       "path": "scripts/recovery-inventory.mjs",
@@ -880,8 +880,8 @@
     },
     {
       "path": "site/assets/place-core.js",
-      "bytes": 5301,
-      "sha256": "9a112dd0de0dcea449e1ac430f0785f06f912748aec9da6d5714f563f667ad75"
+      "bytes": 5510,
+      "sha256": "8cd9f04a8d742409b46438f81b86da41fc1136fd3444044440265c215a002e3a"
     },
     {
       "path": "site/assets/place-vocabulary.js",
@@ -1785,8 +1785,8 @@
     },
     {
       "path": "tests/place-core.test.mjs",
-      "bytes": 8105,
-      "sha256": "ed141ec2865fd31f6000cbcc41e66abbe1217bb80d4df2e9ff998488f7008f8e"
+      "bytes": 8568,
+      "sha256": "0e121bac146edf71c836a3580bbfb85ffc9ea8a49d33e48ec61aa6ad9e73ed36"
     },
     {
       "path": "tests/place-data.test.mjs",
@@ -1795,8 +1795,8 @@
     },
     {
       "path": "tests/place-qualification.test.mjs",
-      "bytes": 7010,
-      "sha256": "c305e2c1bc384492c3dadabc4a0744679ebd916da694eeb8f4f49f7150109748"
+      "bytes": 8101,
+      "sha256": "75f53e4a4301143630040ca781f122583bb07765da9c85c48937b7ceb048c90f"
     },
     {
       "path": "tests/playback-intent.test.mjs",

@@ -36,7 +36,9 @@ export function stationPlace(station,places=CURATED_PLACES){
  if(explicit){
   // An explicit but unrecognized/conflicting city is not repaired by the brand
   // name. State/province text only adds city evidence when it names a city.
-  if(!cityMatches.length||stateMatches.some(city=>!cityMatches.includes(city)))return base;
+  // Multiple geographic records with one folded name (e.g. Springfield) may
+  // be disambiguated by coordinates. Two different explicit names may not.
+  if(!cityMatches.length||new Set(cityMatches.map(city=>text(city.name))).size>1||stateMatches.some(city=>!cityMatches.includes(city)))return base;
   candidates=cityMatches;
  }else candidates=stateMatches.length?stateMatches:cities.filter(city=>mentions(name,city));
  const nearby=candidates.filter(city=>distanceKm(location.point,city.point)<=CITY_EVIDENCE_RADIUS_KM);

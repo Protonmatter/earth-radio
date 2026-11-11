@@ -48,6 +48,13 @@ test('conflicting explicit city evidence is not repaired by a name or a nearby p
  assert.equal(stationPlace({...ny,city:'New York',name:'Chicago Jazz'}).city,'New York');
 });
 
+test('two different curated city labels in one explicit field stay unresolved at either city',()=>{
+ for(const point of [[40.72156,-73.99572],[41.84796,-87.63524]])for(const state of ['','New York','Chicago']){
+  const value=stationPlace({name:'Radio',countrycode:'US',city:'New York / Chicago',state,geo_lat:point[0],geo_long:point[1]});
+  assert.equal(value.confidence,'exact');assert.equal(value.city,undefined);assert.equal(value.timeZone,undefined);
+ }
+});
+
 test('same-name cities need country and point agreement and never choose the first ambiguous match',()=>{
  const springfields=[city(1,'Springfield','US',[39.78,-89.65],'America/Chicago'),city(2,'Springfield','US',[42.1,-72.59],'America/New_York')];
  const station={name:'Springfield FM',countrycode:'US',geo_lat:39.78,geo_long:-89.65};

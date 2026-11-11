@@ -23,6 +23,17 @@ test('shared streams join differently named directory groups transitively for co
  assert.deepEqual(qualifyPlaceData([...rows].reverse()),report);
 });
 
+test('conflicting duplicate identities fail closed before they can manufacture a five-program minimum',()=>{
+ const bridge=[station(1,{stationuuid:'one',name:'Alpha',url:'https://example.com/a'}),station(1,{stationuuid:'one',name:'Beta',url:'https://example.com/b'}),station(2,{stationuuid:'two',name:'Beta',url:'https://example.com/c'})];
+ const threshold=[...bridge,station(3,{name:'Gamma'}),station(4,{name:'Delta'}),station(5,{name:'Epsilon'})];
+ for(const rows of [bridge,[...bridge].reverse(),threshold,[...threshold].reverse()])assert.throws(()=>qualifyPlaceData(rows),/duplicate.*identity|single.generation/i);
+});
+
+test('identical repeated UUID observations, including case variants, still count once without rewriting inputs',()=>{
+ const row=station(1,{stationuuid:'abcdefab-1234-4000-8000-000000000001'}),rows=[row,{...row,stationuuid:row.stationuuid.toUpperCase()}],before=structuredClone(rows),report=qualifyPlaceData(rows);
+ assert.equal(report.programs,1);assert.equal(report.duplicateIdentityRows,1);assert.equal(count(report,'Seoul'),1);assert.deepEqual(rows,before);
+});
+
 test('conflicting supported cities or countries exclude a shared-stream component from city totals',()=>{
  const row=station(1),newYork=station(2,{name:'New York Radio',countrycode:'US',state:'New York',geo_lat:40.72156,geo_long:-73.99572,url:row.url});
  const report=qualifyPlaceData([row,newYork]);assert.equal(report.programs,1);assert.equal(report.confidenceCounts.ambiguous,1);assert.equal(count(report,'Seoul'),0);assert.equal(count(report,'New York'),0);

@@ -194,8 +194,8 @@
     "files": [
       {
         "path": "site/assets/place-core.js",
-        "bytes": 5301,
-        "sha256": "9a112dd0de0dcea449e1ac430f0785f06f912748aec9da6d5714f563f667ad75"
+        "bytes": 5510,
+        "sha256": "8cd9f04a8d742409b46438f81b86da41fc1136fd3444044440265c215a002e3a"
       },
       {
         "path": "site/assets/curated-places.js",
@@ -229,8 +229,8 @@
       },
       {
         "path": "scripts/qualify-place-data.mjs",
-        "bytes": 8430,
-        "sha256": "95c50d5af332e1adb53706f8bcc628283630502f3ac9f5988a4aec567dbc8e69"
+        "bytes": 8819,
+        "sha256": "c53a0b40438f9b3357d05fae9bc31cd0634c3ef3d77843adfe885427442914e3"
       },
       {
         "path": "docs/provenance/place-data.json",
@@ -251,15 +251,15 @@
       "architecture": "arm64"
     }
   },
-  "qualifiedAt": "2026-11-11T11:47:21.459Z",
+  "qualifiedAt": "2026-11-11T12:04:58.354Z",
   "scope": "Local frozen-input model qualification; no active app UI or broad geocoding rollout.",
   "sourceAcquisition": {
+    "checkedAt": "2026-11-11T11:40:00.984Z",
     "integrityCheckedBy": "createPublishedCatalog; SHA-bound manifest descriptor and bounded HTTPS payload",
     "raw": {
       "bytes": 6166192,
       "sha256": "b9f0aa7cd7fa1ad661ad47b79538cfe175684c83a5ab846123e66695f2c05bdb"
     },
-    "transformation": "Added supplied generation/source fields from the integrity-checked response headers; station groups unchanged.",
-    "checkedAt": "2026-11-11T11:40:00.984Z"
+    "transformation": "Added supplied generation/source fields from the integrity-checked response headers; station groups unchanged."
   }
 }

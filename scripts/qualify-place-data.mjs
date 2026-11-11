@@ -28,7 +28,7 @@ function snapshotRecords(value){
  else if(value?.schemaVersion===2&&Array.isArray(value.groups))rows=expandVariantGroups(value.groups,{maxGroups:10000,maxRecords:10000});
  else throw Error('Expected a legacy array or schema2 station snapshot');
  if(!rows.length)throw Error('Empty station snapshot');
- return rows.map(row=>{
+ const records=rows.map(row=>{
   if(!row||typeof row!=='object'||Array.isArray(row)||typeof row.stationuuid!=='string'||!/^[A-Za-z0-9][A-Za-z0-9:_.-]{0,159}$/.test(row.stationuuid)||['constructor','prototype'].includes(row.stationuuid)||typeof row.name!=='string'||!row.name.trim()||row.name.length>160||/[\u0000-\u001f\u007f]/.test(row.name))throw Error('Invalid station identity/name in snapshot');
   if(row.countrycode!=null&&(typeof row.countrycode!=='string'||row.countrycode!==''&&!/^[A-Za-z]{2}$/.test(row.countrycode)))throw Error('Invalid station country in snapshot');
   for(const field of ['state','city'])if(row[field]!=null&&(typeof row[field]!=='string'||row[field].length>128))throw Error('Invalid station place field in snapshot');
@@ -37,6 +37,13 @@ function snapshotRecords(value){
   // Tags, artwork, arbitrary nested metadata and source URLs never enter reports.
   return{stationuuid:row.stationuuid,name:row.name,countrycode:String(row.countrycode||'').toUpperCase(),state:row.state||'',city:row.city||'',geo_lat:row.geo_lat,geo_long:row.geo_long,url:streamIdentity(row)};
  });
+ const observations=new Map();
+ for(const record of records){
+  const id=canonicalId(record.stationuuid),observation=JSON.stringify({...record,stationuuid:id});
+  if(observations.has(id)&&observations.get(id)!==observation)throw Error('Conflicting duplicate station identity; supply a normalized single-generation snapshot');
+  observations.set(id,observation);
+ }
+ return records;
 }
 
 export function qualifyPlaceData(snapshot){

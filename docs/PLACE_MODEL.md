@@ -57,7 +57,8 @@ municipal boundary nor an empirical accuracy claim. Explicit but unrecognized or
 conflicting city evidence is not repaired by a nearby point or a station brand.
 City-like state evidence has priority over a brand/genre name. Same-name matches
 must resolve uniquely using country and coordinates; overlapping candidates are
-left unresolved. The optional place-array argument is for trusted curated data
+left unresolved. Two different recognized city labels in one explicit city field
+remain unresolved even if one is closer. The optional place-array argument is for trusted curated data
 and controlled tests, not arbitrary station-supplied location claims.
 
 `formatPlaceTime(place, instant, locale = 'en')` uses an explicit IANA identifier
@@ -119,8 +120,11 @@ report, not that all future availability or Today acceptance has been establishe
 Malformed/oversized input or I/O failure exits 1 without printing raw input values.
 
 Existing family/stream grouping combines variants. Shared normalized stream URLs
-and duplicate identities join groups transitively, so aliases cannot inflate city
-totals. Conflicting supported cities/countries are excluded as ambiguous. At least
+and identical repeated identities join groups transitively, so aliases cannot
+inflate city totals. Repeated identities with differing retained metadata are
+rejected before grouping: a qualification input must represent one current row
+per identity, rather than a mixture of generations. UUID case-only repetitions
+remain equivalent. Conflicting supported cities/countries are excluded as ambiguous. At least
 one corroborated variant supports each counted city program; partial variant
 evidence is disclosed. Future Today selection must choose a matching variant and
 retain the existing program/UUID aliases and explicit playback intent.
