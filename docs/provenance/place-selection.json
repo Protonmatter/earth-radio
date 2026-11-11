@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "calendarOrder": "v1; preserve this order when Today starts using it",
+  "places": [
+    { "naturalEarthId": 1159151529, "timeZone": "Europe/Berlin" },
+    { "naturalEarthId": 1159151563, "timeZone": "Europe/Vienna" },
+    { "naturalEarthId": 1159151575, "timeZone": "America/New_York" },
+    { "naturalEarthId": 1159151503, "timeZone": "Europe/Madrid" },
+    { "naturalEarthId": 1159151579, "timeZone": "Europe/Istanbul" },
+    { "naturalEarthId": 1159151577, "timeZone": "Europe/London" },
+    { "naturalEarthId": 1159151557, "timeZone": "America/Toronto" },
+    { "naturalEarthId": 1159151309, "timeZone": "Europe/Dublin" },
+    { "naturalEarthId": 1159151599, "timeZone": "Asia/Jakarta" },
+    { "naturalEarthId": 1159151491, "timeZone": "America/Chicago" },
+    { "naturalEarthId": 1159151523, "timeZone": "Asia/Seoul" }
+  ]
+}

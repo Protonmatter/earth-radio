@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "license": "Public domain",
+  "terms": [
+    "https://www.naturalearthdata.com/about/terms-of-use/",
+    "https://data.iana.org/time-zones/tzdb-2026f/LICENSE"
+  ],
+  "sources": [
+    {
+      "name": "ne_10m_populated_places_simple.geojson",
+      "revision": "Natural Earth v5.1.2",
+      "url": "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/v5.1.2/geojson/ne_10m_populated_places_simple.geojson",
+      "bytes": 4932147,
+      "sha256": "fd3fa867a320cbd5c5b6bb5bc550afeec2939fb2cef688e508007282a55ac42f"
+    },
+    {
+      "name": "zone1970.tab",
+      "revision": "IANA tzdb 2026f",
+      "url": "https://data.iana.org/time-zones/tzdb-2026f/zone1970.tab",
+      "bytes": 17592,
+      "sha256": "5f23781702bf51408ff1581daa109ab3b9257fb433b1554e579d92172892c0cf"
+    },
+    {
+      "name": "LICENSE",
+      "revision": "IANA tzdb 2026f",
+      "url": "https://data.iana.org/time-zones/tzdb-2026f/LICENSE",
+      "bytes": 252,
+      "sha256": "0613408568889f5739e5ae252b722a2659c02002839ad970a63dc5e9174b27cf"
+    },
+    {
+      "name": "version",
+      "revision": "IANA tzdb 2026f",
+      "url": "https://data.iana.org/time-zones/tzdb-2026f/version",
+      "bytes": 6,
+      "sha256": "9f9a9e6bfd18cd6a0a4d65764931072577edcbb731981a068ef52bba6615b1de"
+    }
+  ],
+  "selection": {
+    "path": "docs/provenance/place-selection.json",
+    "bytes": 858,
+    "sha256": "0c03e53b1159b47845be2b5b3abd54fc6920bed1e025a648bed454f1ed810966"
+  },
+  "output": {
+    "path": "site/assets/curated-places.js",
+    "bytes": 3005,
+    "sha256": "52486790d515d8999fe9865dd4ae81c384b48e05304cc28cab201d1d4a511c3a",
+    "records": 11
+  }
+}
