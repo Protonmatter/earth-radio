@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { setupApp, playFromList } from './helpers.mjs';
+import { setupApp, playFromList,openAtlasView,openSearchView } from './helpers.mjs';
 import { EXPANSION_STATIONS } from './fixtures/stations.mjs';
 
 test('inline discovery filters without autoplay, supports reset and survives repeated use', async ({ page }) => {
@@ -53,7 +53,7 @@ test('area search loads mapped stations outside the initial featured-country cat
   await expect(page.getByRole('button', { name: 'Search this area' })).toBeEnabled();
   expect(geoRequests).toHaveLength(1);
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.getByRole('button', { name: 'Map', exact: true }).click();
+  await openAtlasView(page);
   await expect(page.getByRole('button', { name: 'Clear map area' })).toBeVisible();
   await page.getByRole('button', { name: 'Clear map area' }).click();
   await expect(page.getByRole('button', { name: 'Clear map area' })).not.toBeVisible();
@@ -87,7 +87,8 @@ for (const mode of ['favorites', 'recent']) {
   test(`area search exits ${mode} mode and clears its active header toggle`, async ({ page }) => {
     await setupApp(page);
     const toggle = page.locator(`#${mode}-toggle`);
-    await toggle.click();
+    await page.locator('.er-primary-nav [data-er-primary="library"]').click();
+    if(mode==='recent')await page.locator('#grid-panel [data-er-saved="recent"]').click();
     await expect(toggle).toHaveClass(/header-btn--active/);
     await page.getByRole('button', { name: 'Search this area' }).click();
     await expect(toggle).not.toHaveClass(/header-btn--active/);
@@ -151,7 +152,7 @@ test('map focus tracks playback and mobile discovery has no horizontal overflow'
   await expect(page.getByRole('button', { name: 'Focus playing station' })).toBeEnabled();
   await page.getByRole('button', { name: 'Focus playing station' }).click();
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.getByRole('button', { name: 'Browse', exact: true }).last().click();
+  await openSearchView(page);
   await expect(page.getByRole('searchbox', { name: 'Find a station' })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });

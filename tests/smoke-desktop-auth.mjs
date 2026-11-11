@@ -130,9 +130,16 @@ app.whenReady().then(async () => {
   }
   async function openAccount() {
     await until("Boolean(document.getElementById('er-auth-button'))");
+    if(await window.webContents.executeJavaScript("document.querySelector('.er-auth-modal')?.hidden === false"))return;
+    await until("document.documentElement.dataset.erUiReady === 'true'");
     for (let i = 0; i < 50; i++) {
       try {
-        await window.webContents.executeJavaScript("document.getElementById('er-auth-button')?.click()");
+        await window.webContents.executeJavaScript(`(() => {
+          document.querySelector('.er-primary-nav [data-er-primary="library"]')?.click();
+          document.querySelector('#grid-panel [data-er-library-section="account"]')?.click();
+          const button=document.getElementById('er-auth-button');
+          if(button?.getClientRects().length)button.click();
+        })()`);
         if (await window.webContents.executeJavaScript("document.querySelector('.er-auth-modal')?.hidden === false")) return;
       } catch { /* a namespace reload can replace the document after the first read */ }
       await new Promise(resolve => setTimeout(resolve, 20));

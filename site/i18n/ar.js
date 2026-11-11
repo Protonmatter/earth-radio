@@ -55,7 +55,7 @@ export default {
   "map.loadingDetail": "جارٍ تحميل تفاصيل الخريطة…",
   "map.detailUnavailable": "تفاصيل الخريطة غير متاحة. يتم عرض الأطلس الأساسي.",
   'app.tagline': 'راديو عالمي مَرِن',
-  'app.skip': 'تخطي إلى قائمة المحطات',
+  "app.skip": "انتقل إلى المحتوى",
 
   'status.initializing': 'جارٍ التهيئة…',
   'status.loading': 'جارٍ تحميل دليل المحطات…',
@@ -144,7 +144,7 @@ export default {
   'search.title': 'البحث عن محطات',
 
   'map.label': 'خريطة المحطات',
-  'map.assistive': 'الخريطة مساعدة بصرية. تبقى المحطات المكافئة متاحة في الاستماع والبحث.',
+  "map.assistive": "الخريطة وسيلة بصرية. يمكنك تصفح المحطات نفسها وتشغيلها من البحث.",
   'map.retry': 'إعادة محاولة الخريطة',
   'map.unavailable': 'بلاطات الخريطة غير متاحة. تصفح المحطات من القائمة.',
   'map.previewPlay': 'تشغيل',
@@ -331,5 +331,24 @@ export default {
   "music.accountChanged": "تغيّر الحساب. افتح المكتبة مجددًا للمتابعة.",
   "music.confirmClear": "هل تريد مسح سجل الاستماع؟ ستبقى الأغاني المعجب بها.",
   "music.identify": "تحديد الأغنية",
-  "music.identifying": "جارٍ تحديد الأغنية…"
+  "music.identifying": "جارٍ تحديد الأغنية…",
+  "today.title": "اليوم",
+  "today.place": "وجهة اليوم",
+  "today.cancel": "إلغاء الاتصال بـ {station}",
+  "today.pause": "إيقاف {station} مؤقتًا",
+  "today.play": "تشغيل {station}",
+  "today.cancelShort": "إلغاء",
+  "today.noStation": "لا توجد محطة متاحة",
+  "today.unavailableTitle": "مكان جديد كل يوم",
+  "today.unavailable": "لم يتم تحميل محطة مدعومة من هذه المدينة. حدّث القائمة أو استكشف الخريطة.",
+  "today.explore": "استكشف الأطلس",
+  "today.onair": "على الهواء الآن",
+  "today.airEmpty": "حمّل المحطات للعثور على ما تستمع إليه.",
+  "today.library": "المكتبة",
+  "today.accountHelp": "احتفظ بمحطاتك وأغانيك معًا عبر أجهزتك.",
+  "today.emptyPlayer": "اختر محطة للبدء",
+  "today.continueStation": "تشغيل {station}",
+  "today.search": "بحث",
+  "today.atlas": "الأطلس",
+  "today.moreFilters": "المزيد من المرشحات"
 };

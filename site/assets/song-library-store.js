@@ -1,7 +1,7 @@
 import {
   emptySongLibrary, normalizeSongLibrary, encodeSongEnvelope, decodeSongEnvelope,
   songNamespaceKey, songSyncStateKey, addSongsFromLibrary
-} from './song-library-core.js?v=0.32.2';
+} from './song-library-core.js?v=0.33.0';
 
 // The supported auth adapter selects the tab's identity. IndexedDB independently
 // verifies it in every transaction; another tab changing account cannot redirect

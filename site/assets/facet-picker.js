@@ -1,4 +1,4 @@
-import {filterFacetOptions} from './search-core.js?v=0.32.2';
+import {filterFacetOptions} from './search-core.js?v=0.33.0';
 
 // Progressive enhancement: the named select remains the form's value authority.
 // DOM focus stays in the text input; only aria-activedescendant moves in the list.

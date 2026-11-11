@@ -2,18 +2,19 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import test from 'node:test';
-import { DESTINATIONS, parseDestination, sanitizeUiState } from '../site/assets/responsive-ui.js';
+import { DESTINATIONS, parseDestination, sanitizeUiState,primaryDestination } from '../site/assets/responsive-ui.js';
 import { t } from '../site/i18n/index.js';
 
 const root = path.resolve(import.meta.dirname, '..');
 
-test('phone destinations are Map, Browse, Favorites, and Account', async () => {
+test('primary destinations are Atlas, Library and Search with retained internal destinations', async () => {
   const html = await readFile(path.join(root, 'site', 'index.html'), 'utf8');
-  const nav = html.match(/<nav class="er-mobile-nav"[\s\S]*?<\/nav>/);
+  const nav = html.match(/<nav[^>]*class="[^"]*\ber-mobile-nav\b[^"]*"[\s\S]*?<\/nav>/);
   assert.ok(nav, 'missing mobile nav');
   const dests = [...nav[0].matchAll(/data-er-dest="([^"]+)"/g)].map(match => match[1]);
-  assert.deepEqual(dests, ['map', 'listen', 'saved', 'you']);
-  assert.equal(nav[0].includes('data-er-dest="search"'), false);
+  assert.deepEqual(dests, ['today','saved','listen']);
+  assert.deepEqual([...nav[0].matchAll(/data-er-primary="([^"]+)"/g)].map(match=>match[1]),['atlas','library','search']);
+  assert.ok(DESTINATIONS.includes('map')&&DESTINATIONS.includes('search')&&DESTINATIONS.includes('you'));
   assert.match(html, /id="er-you"/);
   assert.match(html, /atlas-lock\.css/);
   assert.match(html, /atlas-lock\.js/);
@@ -57,7 +58,7 @@ test('glass frosts only the log, and Night/Paper replace system theme', async ()
   assert.match(css, /data-er-palette="night"/);
   assert.match(css, /data-er-palette="paper"/);
   assert.match(js, /loadUiState\(\)\.palette === 'paper' \? 'light' : 'dark'/);
-  assert.match(js, /destination === 'you' && loadUiState\(\)\.destination === 'you'/);
+  assert.equal(primaryDestination('you'),'library');
   assert.match(lock, /saveUiState\(\{ palette/);
   assert.match(lock, /glassLog/);
   assert.doesNotMatch(scenarios, /data-er-dest="search"/);
@@ -99,13 +100,13 @@ test('both palette paths hand the runtime a theme that matches the basemap', asy
 test('the operations smoke checklist names the destinations the app actually has', async () => {
   const operations = await readFile(path.join(root, 'docs', 'OPERATIONS.md'), 'utf8');
   const html = await readFile(path.join(root, 'site', 'index.html'), 'utf8');
-  const nav = html.match(/<nav class="er-mobile-nav"[\s\S]*?<\/nav>/)[0];
+  const nav = html.match(/<nav[^>]*class="[^"]*\ber-mobile-nav\b[^"]*"[\s\S]*?<\/nav>/)[0];
   const smoke = operations.slice(operations.indexOf('## Local smoke'), operations.indexOf('## Deploy'));
-  for (const label of ['Map', 'Browse', 'Favorites', 'Account']) {
+  for (const label of ['Atlas','Library','Search']) {
     assert.ok(nav.includes(label), `the mobile nav no longer offers ${label}`);
     assert.ok(smoke.includes(label), `the smoke checklist omits the ${label} destination`);
   }
-  // Search is a header action now, so the checklist must not send an operator hunting a tab.
+  // Keep legacy internal fragments out of user-facing navigation instructions.
   assert.doesNotMatch(smoke, /Listen\/Search\/Map\/Saved/);
   assert.ok(smoke.includes('palette'), 'the checklist must exercise the You palette controls');
 });

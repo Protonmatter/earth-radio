@@ -1,5 +1,22 @@
 # Build state
 
+## 0.33.0 Today candidate — local, delivery pending
+
+Branch work integrates a frozen UTC city calendar, bounded opt-in native seeds,
+Today/Continue/On air presentation, Atlas/Library/Search primary navigation and
+an actionable idle player. It retains the existing catalog, station-intent,
+audio, counter, song, account and sync owners. Candidate runtime/module URLs and
+v74 shell are coherent. See [contracts, validation and rollback](TODAY.md).
+
+The core commit passed 645 tests with three existing skips and 414 source hashes.
+Local post-review checks now pass 652 tests with the same three skips, 422 hashes,
+all 274 browser cases at the documented three-worker setting, 42 rendered Electron
+scenarios and native ARM64 sandbox/auth/restart checks. See the
+[qualification record and retained timing observation](QA-0.33.0.md).
+The fresh review's four P2 findings have covering failing-then-passing tests;
+CI, preview and production acceptance remain pending. No 0.33.0
+desktop binaries or tag have been published; 0.32.2 stays immutable.
+
 ## Place/time foundation prerequisite
 
 The source adds eleven curated Natural Earth/IANA identities, a conservative pure

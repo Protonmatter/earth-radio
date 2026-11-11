@@ -22,7 +22,7 @@ async function setup(page,{fail=false,hang=false}={}){
     if(url.hostname==='listen.moe')return route.fulfill({contentType:'audio/wav',body:silentWav(120)});
     return url.hostname==='127.0.0.1'?route.continue():route.abort();
   });
-  await page.goto('/');await page.getByRole('searchbox',{name:'Find a station'}).fill('Counter fixture');
+  await page.goto('/#listen');await page.getByRole('searchbox',{name:'Find a station'}).fill('Counter fixture');
   await expect(page.locator('.station-card__name')).toHaveCount(2);
   return{clicks,held,release:()=>Promise.allSettled(held.splice(0).map(route=>route.abort()))};
 }

@@ -98,7 +98,8 @@ export const SCENARIOS = [
     safeArea: IPHONE_SAFE_AREA,
     seed: SEEDED,
     actions: [
-      { type: 'click', selector: '[data-er-open-search]' },
+      { type: 'click', selector: '#er-discovery [data-er-open-search]' },
+      { type: 'focus', selector: '#er-station-query' },
       { type: 'wait', ms: 150 },
       { type: 'ime', selector: '#er-station-query', text: '서울' },
       { type: 'wait', ms: 150 }
@@ -113,7 +114,8 @@ export const SCENARIOS = [
     safeArea: IPHONE_SAFE_AREA,
     seed: SEEDED,
     actions: [
-      { type: 'click', selector: '[data-er-open-search]' },
+      { type: 'click', selector: '#er-discovery [data-er-open-search]' },
+      { type: 'focus', selector: '#er-station-query' },
       { type: 'focus', selector: '#er-country-query' },
       {
         type: 'script',
@@ -136,7 +138,8 @@ export const SCENARIOS = [
     safeArea: IPHONE_SAFE_AREA,
     seed: SEEDED,
     actions: [
-      { type: 'click', selector: '[data-er-open-search]' },
+      { type: 'click', selector: '#er-discovery [data-er-open-search]' },
+      { type: 'focus', selector: '#er-station-query' },
       {
         type: 'script',
         code: `(() => {
@@ -165,7 +168,8 @@ export const SCENARIOS = [
     safeArea: IPHONE_SAFE_AREA,
     seed: SEEDED,
     actions: [
-      { type: 'click', selector: '[data-er-open-search]' },
+      { type: 'click', selector: '#er-discovery [data-er-open-search]' },
+      { type: 'focus', selector: '#er-station-query' },
       { type: 'focus', selector: '#er-country-query' },
       {
         type: 'script',
@@ -210,7 +214,8 @@ export const SCENARIOS = [
     safeArea: IPHONE_SAFE_AREA,
     seed: SEEDED,
     actions: [
-      { type: 'click', selector: '[data-er-open-search]' },
+      { type: 'click', selector: '#er-discovery [data-er-open-search]' },
+      { type: 'focus', selector: '#er-station-query' },
       {
         type: 'script',
         code: `(() => {
@@ -275,29 +280,29 @@ export const SCENARIOS = [
     ]
   },
   {
-    id: 'mobile-overflow-390x844',
-    title: 'iPhone 14 portrait — overflow surface',
+    id: 'mobile-settings-390x844',
+    title: 'iPhone 14 portrait — Settings utilities',
     width: 390,
     height: 844,
     destination: 'listen',
     safeArea: IPHONE_SAFE_AREA,
     seed: SEEDED,
     actions: [
-      { type: 'click', selector: '[data-er-overflow]' },
+      { type: 'click', selector: '#settings-toggle' },
       { type: 'wait', ms: 150 }
     ]
   },
   {
-    id: 'mobile-overflow-settings-390x844',
-    title: 'iPhone 14 portrait — overflow opens Settings with focus',
+    id: 'mobile-settings-focus-390x844',
+    title: 'iPhone 14 portrait — Settings keyboard focus',
     width: 390,
     height: 844,
     destination: 'listen',
     safeArea: IPHONE_SAFE_AREA,
     seed: SEEDED,
     actions: [
-      { type: 'click', selector: '[data-er-overflow]' },
-      { type: 'click', selector: '#er-overflow [data-click-id="settings-toggle"]' },
+      { type: 'click', selector: '#settings-toggle' },
+      { type: 'focus', selector: '#setting-locale' },
       { type: 'wait', ms: 200 }
     ]
   },
@@ -424,15 +429,15 @@ export const SCENARIOS = [
     seed: SEEDED
   },
   {
-    id: 'mobile-landscape-overflow-844x390',
-    title: 'iPhone landscape — overflow inside lateral safe areas',
+    id: 'mobile-landscape-settings-844x390',
+    title: 'iPhone landscape — Settings inside lateral safe areas',
     width: 844,
     height: 390,
     destination: 'listen',
     safeArea: IPHONE_LANDSCAPE_SAFE_AREA,
     seed: SEEDED,
     actions: [
-      { type: 'click', selector: '[data-er-overflow]' },
+      { type: 'click', selector: '#settings-toggle' },
       { type: 'wait', ms: 150 }
     ]
   },
@@ -571,6 +576,8 @@ export const SCENARIOS = [
     height: 900,
     seed: SEEDED,
     actions: [
+      { type: 'click', selector: '.station-card__play' },
+      { type: 'wait', ms: 200 },
       { type: 'click', selector: '#er-open-nowplaying' },
       { type: 'wait', ms: 250 }
     ]

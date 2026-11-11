@@ -55,7 +55,7 @@ export default {
   "map.loadingDetail": "Loading map detail…",
   "map.detailUnavailable": "Map detail unavailable. Showing the basic atlas.",
   'app.tagline': 'Resilient global radio',
-  'app.skip': 'Skip to station list',
+  "app.skip": "Skip to content",
 
   'status.initializing': 'Initializing…',
   'status.loading': 'Loading station directory…',
@@ -144,7 +144,7 @@ export default {
   'search.title': 'Search stations',
 
   'map.label': 'Station map',
-  'map.assistive': 'The map is a visual aid. Equivalent stations remain available in Listen and Search.',
+  "map.assistive": "The map is a visual aid. Browse and play the same stations in Search.",
   'map.retry': 'Retry map',
   'map.unavailable': 'Map tiles are unavailable. Browse stations in the list instead.',
   'map.previewPlay': 'Play',
@@ -331,5 +331,24 @@ export default {
   "music.accountChanged": "Your account changed. Reopen the library to continue.",
   "music.confirmClear": "Clear recent songs? Liked songs will stay.",
   "music.identify": "Identify song",
-  "music.identifying": "Identifying…"
+  "music.identifying": "Identifying…",
+  "today.title": "Today",
+  "today.place": "Today's place",
+  "today.cancel": "Cancel connecting to {station}",
+  "today.pause": "Pause {station}",
+  "today.play": "Play {station}",
+  "today.cancelShort": "Cancel",
+  "today.noStation": "No station available",
+  "today.unavailableTitle": "A new place each day",
+  "today.unavailable": "No supported station from this city is loaded. Refresh or explore the map.",
+  "today.explore": "Explore the atlas",
+  "today.onair": "On air now",
+  "today.airEmpty": "Load stations to find something to play.",
+  "today.library": "Library",
+  "today.accountHelp": "Keep your stations and songs together across devices.",
+  "today.emptyPlayer": "Choose a station to begin",
+  "today.continueStation": "Play {station}",
+  "today.search": "Search",
+  "today.atlas": "Atlas",
+  "today.moreFilters": "More filters"
 };

@@ -5,7 +5,8 @@ import {createReadStream} from 'node:fs';
 import {lstat,readFile} from 'node:fs/promises';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {expandVariantGroups,groupStationVariants} from '../site/assets/station-variants.js';
+import {expandVariantGroups} from '../site/assets/station-variants.js';
+import {programComponents} from '../site/assets/program-components.js';
 import {streamIdentity} from '../site/assets/discovery-core.js';
 import {stationPlace,CITY_EVIDENCE_RADIUS_KM} from '../site/assets/place-core.js';
 import {CURATED_PLACES} from '../site/assets/curated-places.js';
@@ -48,17 +49,10 @@ function snapshotRecords(value){
 
 export function qualifyPlaceData(snapshot){
  const rows=snapshotRecords(snapshot),metadata=suppliedMetadata(Array.isArray(snapshot)?null:snapshot);
- const groups=groupStationVariants(rows),parent=Array.from({length:rows.length},(_,index)=>index),ids=new Map(),streams=new Map();
- const find=value=>{let root=value;while(parent[root]!==root)root=parent[root];while(parent[value]!==value){const next=parent[value];parent[value]=root;value=next;}return root;};
- const join=(a,b)=>{a=find(a);b=find(b);if(a!==b)parent[Math.max(a,b)]=Math.min(a,b);};
- rows.forEach((row,index)=>{
-  const id=canonicalId(row.stationuuid);if(ids.has(id))join(index,ids.get(id));else ids.set(id,index);
-  const key=row.url;if(streams.has(key))join(index,streams.get(key));else streams.set(key,index);
- });
- for(const group of groups){const members=group.memberIds.map(id=>ids.get(canonicalId(id)));for(const member of members.slice(1))join(members[0],member);}
- const components=new Map();rows.forEach((row,index)=>{const key=find(index);if(!components.has(key))components.set(key,[]);components.get(key).push({row,place:stationPlace(row)});});
+ const {groups,components:programs,identityCount}=programComponents(rows);
+ const components=programs.map(component=>component.map(row=>({row,place:stationPlace(row)})));
  const confidenceCounts={city:0,exact:0,country:0,unknown:0,ambiguous:0},counts=new Map(CURATED_PLACES.map(city=>[city.id,[]]));let partial=0;
- for(const component of components.values()){
+ for(const component of components){
   const countries=new Set(component.map(item=>item.place?.countrycode).filter(Boolean)),cities=new Set(component.map(item=>item.place?.cityId).filter(Boolean));
   if(countries.size>1||cities.size>1){confidenceCounts.ambiguous++;continue;}
   if(cities.size===1){
@@ -70,7 +64,7 @@ export function qualifyPlaceData(snapshot){
   else confidenceCounts.unknown++;
  }
  const cities=CURATED_PLACES.map(city=>{const examples=counts.get(city.id).sort(compare);return{id:city.id,name:city.name,countrycode:city.countrycode,timeZone:city.timeZone,programs:examples.length,meetsFiveProgramMinimum:examples.length>=5,exampleStationIds:examples.slice(0,5)};});
- return{schemaVersion:1,suppliedMetadata:metadata,inputRecords:rows.length,directoryGroups:groups.length,programs:components.size,duplicateIdentityRows:rows.length-ids.size,confidenceCounts,cityProgramsWithPartialVariantEvidence:partial,cities,allCuratedCitiesMeetFiveProgramMinimum:cities.every(city=>city.meetsFiveProgramMinimum),criteria:'One count per station-family/shared-stream component. At least one corroborated variant supports a city; conflicting supported cities/countries are excluded. Supplied generation metadata is not an independent source-verification claim.'};
+ return{schemaVersion:1,suppliedMetadata:metadata,inputRecords:rows.length,directoryGroups:groups.length,programs:components.length,duplicateIdentityRows:rows.length-identityCount,confidenceCounts,cityProgramsWithPartialVariantEvidence:partial,cities,allCuratedCitiesMeetFiveProgramMinimum:cities.every(city=>city.meetsFiveProgramMinimum),criteria:'One count per station-family/shared-stream component. At least one corroborated variant supports a city; conflicting supported cities/countries are excluded. Supplied generation metadata is not an independent source-verification claim.'};
 }
 
 export async function qualifyPlaceFile(file){
@@ -82,7 +76,7 @@ export async function qualifyPlaceFile(file){
  finally{stream.destroy();}
  const bytes=Buffer.concat(chunks);let value;
  try{value=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(bytes));}catch(error){throw Error('Invalid snapshot JSON',{cause:error});}
- const modelFiles=['site/assets/place-core.js','site/assets/curated-places.js','site/assets/station-location.js','site/assets/country-locations.js','site/assets/station-variants.js','site/assets/search-core.js','site/assets/discovery-core.js','scripts/qualify-place-data.mjs','docs/provenance/place-data.json','docs/provenance/place-selection.json'];
+ const modelFiles=['site/assets/place-core.js','site/assets/curated-places.js','site/assets/station-location.js','site/assets/country-locations.js','site/assets/station-variants.js','site/assets/search-core.js','site/assets/discovery-core.js','site/assets/program-components.js','scripts/qualify-place-data.mjs','docs/provenance/place-data.json','docs/provenance/place-selection.json'];
  const root=new URL('../',import.meta.url),files=[];
  for(const relative of modelFiles){const source=await readFile(new URL(relative,root));files.push({path:relative,bytes:source.length,sha256:createHash('sha256').update(source).digest('hex')});}
  return{...qualifyPlaceData(value),input:{bytes:bytes.length,sha256:createHash('sha256').update(bytes).digest('hex')},model:{candidateRadiusKm:CITY_EVIDENCE_RADIUS_KM,files,runtime:{node:process.versions.node,icu:process.versions.icu,timeZoneData:process.versions.tz,platform:process.platform,architecture:process.arch}}};

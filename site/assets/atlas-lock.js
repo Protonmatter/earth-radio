@@ -3,13 +3,15 @@
  * Additive. Does not rewrite the hashed runtime.
  */
 
-import { loadUiState, saveUiState } from './responsive-ui.js?v=0.32.2';
+import { loadUiState, saveUiState } from './responsive-ui.js?v=0.33.0';
 
 export function applyAtlasChrome(state = loadUiState()) {
   const root = document.documentElement;
   const palette = state.palette === 'paper' ? 'paper' : 'night';
   root.dataset.erPalette = palette;
   const theme = palette === 'paper' ? 'light' : 'dark';
+  const setting=document.getElementById('setting-theme');
+  if(setting)setting.value=theme;
   root.dataset.theme = theme;
   // The runtime also writes an inline color-scheme from its own preference; that value
   // outranks the stylesheet for native controls, so the palette has to claim it too.
@@ -17,7 +19,7 @@ export function applyAtlasChrome(state = loadUiState()) {
   root.classList.toggle('er-glass-log', state.glassLog === true);
   const meta = document.querySelector('meta[name="theme-color"]');
   if (meta) meta.content = palette === 'paper' ? '#f5f1e9' : '#142b27';
-  for (const button of document.querySelectorAll('#er-you [data-er-palette]')) {
+  for (const button of document.querySelectorAll('#er-settings-preferences [data-er-palette],#er-you [data-er-palette]')) {
     button.setAttribute('aria-pressed', String(button.getAttribute('data-er-palette') === palette));
   }
   const glass = document.getElementById('er-glass-log');
@@ -77,10 +79,10 @@ function selectPalette(palette) {
 }
 
 function bindAtlasLock() {
-  const you = document.getElementById('er-you');
-  you?.addEventListener('click', event => {
+  const controls = document.getElementById('er-settings-preferences')||document.getElementById('er-you');
+  controls?.addEventListener('click', event => {
     const chip = event.target instanceof Element ? event.target.closest('[data-er-palette]') : null;
-    if (!chip || !you.contains(chip)) return;
+    if (!chip || !controls.contains(chip)) return;
     event.preventDefault();
     const palette = chip.getAttribute('data-er-palette') === 'paper' ? 'paper' : 'night';
     if (palette === (loadUiState().palette === 'paper' ? 'paper' : 'night')) {

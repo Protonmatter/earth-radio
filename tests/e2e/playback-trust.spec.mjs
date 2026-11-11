@@ -28,7 +28,7 @@ async function setup(page,{hangChosen=false,scan=false,playlistChosen=false}={})
     if(url.hostname.endsWith('api.radio-browser.info'))return route.fulfill({json:url.pathname==='/json/servers'?[{name:'de1.api.radio-browser.info'}]:{ok:true}});
     return url.hostname==='127.0.0.1'?route.continue():route.abort();
   });
-  await page.goto('/');await page.getByRole('searchbox',{name:'Find a station'}).fill('Trust fixture');
+  await page.goto('/#listen');await page.getByRole('searchbox',{name:'Find a station'}).fill('Trust fixture');
   await expect(page.locator('.station-card__name')).toHaveCount(2);
   return{media,held,release:()=>Promise.allSettled(held.splice(0).map(route=>route.abort()))};
 }
@@ -55,17 +55,22 @@ test('exhausted chosen-program variants stop with explicit actions and consisten
   }
 });
 
-test('one connection budget bounds hung sibling attempts and a paused attempt stays cancelled',async({page})=>{
+test('one connection budget bounds hung sibling attempts and a paused attempt stays cancelled',async({page},testInfo)=>{
   const state=await setup(page,{hangChosen:true});
   await page.evaluate(()=>{
     window.__trustTiming={};
+    window.__trustLongTasks=[];
+    new PerformanceObserver(list=>{for(const entry of list.getEntries())window.__trustLongTasks.push({start:entry.startTime,duration:entry.duration});window.__trustLongTasks=window.__trustLongTasks.slice(-32);}).observe({entryTypes:['longtask']});
     document.addEventListener('click',event=>{if(event.target.closest('.station-card__play'))window.__trustTiming.started=performance.now();},true);
     new MutationObserver(()=>{if(!document.querySelector('.er-playback-failure').hidden)window.__trustTiming.failed=performance.now();})
       .observe(document.querySelector('.er-playback-failure'),{attributes:true,attributeFilter:['hidden']});
   });
   await page.getByRole('button',{name:'Play: Trust fixture chosen',exact:true}).click();
   try{
-    await expect(page.getByRole('button',{name:'Try again',exact:true})).toBeVisible({timeout:8000});
+    await expect(page.getByRole('button',{name:'Try again',exact:true})).toBeVisible({timeout:8000}).catch(async error=>{
+      const browser=await page.evaluate(()=>({timing:window.__trustTiming,now:performance.now(),longTasks:window.__trustLongTasks,visibility:document.visibilityState,playback:document.getElementById('player-bar').dataset.playbackState,hash:location.hash,audio:{paused:document.getElementById('audio-player').paused,readyState:document.getElementById('audio-player').readyState,networkState:document.getElementById('audio-player').networkState}}));
+      await testInfo.attach('connection-budget-state',{body:JSON.stringify({browser,media:state.media,held:state.held.length}),contentType:'application/json'});throw error;
+    });
     expect(await page.evaluate(()=>window.__trustTiming.failed-window.__trustTiming.started)).toBeLessThan(8000);expect(state.media).not.toContain('/trust-other');
     await page.getByRole('button',{name:'Try again',exact:true}).click();
     await expect(page.locator('#btn-play')).toHaveAttribute('aria-label','Pause');await page.locator('#btn-play').click();
@@ -85,8 +90,8 @@ test('retry stays in the chosen group and Similar changes program only after its
 });
 
 test('World Scan may skip programs and keeps the new program identity in every surface',async({page})=>{
-  const state=await setup(page,{scan:true});await page.getByRole('button',{name:'More actions',exact:true}).click();
-  await page.locator('[data-click-id="surprise"]').click();await expect(page.locator('#player-bar')).toHaveClass(/is-playing/,{timeout:12000});
+  const state=await setup(page,{scan:true});await page.locator('.er-primary-nav [data-er-primary="atlas"]').click();
+  await page.locator('#er-today [data-click-id="surprise"]').click();await expect(page.locator('#player-bar')).toHaveClass(/is-playing/,{timeout:12000});
   const groups=new Set(state.media.map(path=>path.includes('trust-chosen')?'chosen':'other'));expect(groups.size).toBe(2);
   const name=state.media.at(-1)==='/trust-other'?'Trust fixture other':'Trust fixture chosen';
   await identity(page,name,name.endsWith('other')?[ids.other]:[ids.high,ids.low]);

@@ -1,6 +1,6 @@
 import { mkdir, readFile } from 'node:fs/promises';
 import { expect, test } from '@playwright/test';
-import { setupApp } from './helpers.mjs';
+import { setupApp,openSongLibraryView } from './helpers.mjs';
 import { reviewBackupOrdering } from './fixtures/song-store-schedule.mjs';
 
 const broadcast = { found: true, source: 'icy', platform: 'icy', artist: 'IU', title: 'Blueming', raw: 'IU - Blueming' };
@@ -50,8 +50,9 @@ for (const [width, height, night, rtl] of [[1440, 900, false, false], [390, 844,
     await playSong(page);
     if (night) {
       await page.locator('#er-nowplaying-dismiss').click();
-      await page.locator('.er-mobile-nav [data-er-dest="you"]').click();
+      await page.locator('#settings-toggle').click();
       if (night) await page.getByRole('button', { name: 'Night', exact: true }).click();
+      await page.locator('#settings-modal .settings-header [data-close-settings]').click();
       await page.locator('#er-open-nowplaying').click();
     }
     await expect(page.locator('#er-nowplaying-title')).toHaveText('Blueming');
@@ -99,7 +100,7 @@ test('heard songs, likes, details, removal/undo and reload persist independently
   await expect(page.locator('#er-song-like')).toHaveAttribute('aria-pressed', 'true');
   await page.locator('[data-er-nowplaying-play]').click();
   await page.locator('#er-nowplaying-dismiss').click();
-  await page.locator('header [data-er-dest="you"]').click();
+  await openSongLibraryView(page);
   await expect(page.locator('#er-song-feed')).toContainText('Blueming');
   await page.locator('[data-song-view="liked"]').click();
   await expect(page.locator('#er-song-feed [data-song-id]')).toHaveCount(1);
@@ -175,7 +176,8 @@ test('reload and resume preserve the selected station and its canonical song ide
   await playSong(page);
   await page.locator('[data-er-nowplaying-play]').click();
   await page.reload();
-  await expect(page.locator('#player-station')).toHaveText('E2E Seoul Pop');
+  await expect(page.locator('#btn-play')).toHaveAccessibleName('Play E2E Seoul Pop');
+  await expect(page.locator('#audio-player')).toHaveJSProperty('paused',true);
   await page.locator('#btn-play').click();
   await expect(page.locator('#player-bar')).toHaveClass(/is-playing/);
   await expect(page.locator('#player-track')).toContainText('Blueming', { timeout: 25000 });

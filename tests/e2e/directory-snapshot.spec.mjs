@@ -2,13 +2,14 @@ import {test,expect} from '@playwright/test';
 import {FIXTURE_STATIONS} from './fixtures/stations.mjs';
 import {serializeVariantGroups} from '../../site/assets/station-variants.js';
 import {CATALOGS} from '../../site/i18n/index.js';
+import {openAtlasView} from './helpers.mjs';
 
 for(const locale of ['en','es','ar','ko','zh-Hans','zh-Hant'])test(`grouped wire results expose a bounded quality picker without autoplay in ${locale}`,async({page})=>{
   await page.setViewportSize({width:320,height:844});
   await page.addInitScript(locale=>localStorage.setItem('earthRadio.ui.v1',JSON.stringify({locale,palette:'paper'})),locale);
   const rows=[128,320].map(bitrate=>({...FIXTURE_STATIONS[0],name:'Grouped News',stationuuid:'grouped-'+bitrate,bitrate,url:'http://streams.e2e.example/'+bitrate,url_resolved:'http://streams.e2e.example/'+bitrate}));
   await page.route('**/*',route=>{const url=new URL(route.request().url());if(url.pathname==='/directory/snapshot')return route.fulfill({json:{schemaVersion:2,groups:serializeVariantGroups(rows)}});return url.hostname==='127.0.0.1'?route.continue():route.abort();});
-  await page.goto('/');await page.locator('#er-discovery-query').fill('Grouped News');
+  await page.goto('/#listen');await page.locator('#er-discovery-query').fill('Grouped News');
   await expect(page.locator('.station-card__name')).toHaveText(['Grouped News']);
   const picker=page.getByRole('combobox',{name:CATALOGS[locale]['discovery.streamQuality'].replace('{name}','Grouped News'),exact:true});await picker.selectOption('grouped-128');await expect(picker).toBeFocused();
   await expect(page.getByRole('img',{name:CATALOGS[locale]['discovery.httpStream'],exact:true})).toBeVisible();
@@ -29,7 +30,7 @@ for(const width of [390,1440])test(`catalog status does not become a control-cov
     }}).observe(document,{childList:true,subtree:true});
   });
   await page.route('**/*',route=>{const url=new URL(route.request().url());if(url.pathname==='/directory/snapshot')return route.fulfill({json:FIXTURE_STATIONS});return url.hostname==='127.0.0.1'?route.continue():route.abort();});
-  await page.goto('/');await expect(page.locator('.station-card').first()).toBeVisible();
+  await page.goto('/#listen');await expect(page.locator('.station-card').first()).toBeVisible();
   expect(await page.evaluate(()=>window.__e2eCatalogToasts)).not.toEqual(expect.arrayContaining([expect.stringMatching(/stations loaded/i)]));
   await page.locator('.station-card__favorite').first().click();await expect(page.locator('#toast-container .toast--visible')).toHaveCount(1);
   const geometry=await page.evaluate(()=>{
@@ -45,8 +46,8 @@ for(const width of [390,1440])test(`atlas latitude bounds exclude Antarctic fall
   await page.addInitScript(()=>{window.__e2eAtlasViews=[];document.addEventListener('earthradio:map-viewport',event=>window.__e2eAtlasViews.push(event.detail));});
   const rows=[FIXTURE_STATIONS[0],...Array.from({length:8},(_,i)=>({...FIXTURE_STATIONS[0],stationuuid:'aq-'+i,name:'AQ station '+i,country:'Antarctica',countrycode:'AQ',geo_lat:null,geo_long:null}))];
   await page.route('**/*',route=>{const url=new URL(route.request().url());if(url.pathname==='/directory/snapshot')return route.fulfill({json:rows});return url.hostname==='127.0.0.1'?route.continue():route.abort();});
-  await page.goto('/');await expect(page.locator('.station-card').first()).toBeVisible();
-  if(width<768)await page.getByRole('button',{name:'Map',exact:true}).click();
+  await page.goto('/#listen');await expect(page.locator('.station-card').first()).toBeVisible();
+  if(width<768)await openAtlasView(page);
   const valid=()=>page.evaluate(()=>{const view=window.__e2eAtlasViews.at(-1);return Boolean(view&&view.south>=-60.00001&&view.north<=85.00001);});
   await expect.poll(valid).toBe(true);await expect(page.locator('#er-map-count')).toContainText('8 unlocated');
   const before=await page.evaluate(()=>window.__e2eAtlasViews.length);await page.setViewportSize({width,height:1100});
@@ -61,7 +62,7 @@ for(const width of [390,1440])test(`cold boot uses one same-origin snapshot and 
     if(url.hostname.endsWith('api.radio-browser.info')){calls.push('unexpected mirror');return route.abort();}
     return url.hostname==='127.0.0.1'?route.continue():route.abort();
   });
-  await page.goto('/');await expect(page.locator('.station-card').first()).toBeVisible();
+  await page.goto('/#listen');await expect(page.locator('.station-card').first()).toBeVisible();
   expect(calls).toEqual(['snapshot']);await expect(page.locator('#audio-player')).toHaveJSProperty('paused',true);
   await page.getByRole('searchbox',{name:'Find a station'}).fill('jazz london');
   await expect(page.locator('.station-card__name')).toHaveText(['E2E London Jazz']);
@@ -80,7 +81,7 @@ test('snapshot outage falls back through discovered hosts and preserves station 
     }
     return url.hostname==='127.0.0.1'?route.continue():route.abort();
   });
-  await page.goto('/');await expect(page.locator('.station-card').first()).toBeVisible();
+  await page.goto('/#listen');await expect(page.locator('.station-card').first()).toBeVisible();
   expect(requests.filter(value=>value.includes('/json/servers'))).toHaveLength(1);
   expect(requests.filter(value=>value.includes('/json/stations/')).every(value=>value.startsWith('de2.api.radio-browser.info'))).toBe(true);
   expect(requests.some(value=>/nl1|at1/.test(value))).toBe(false);
@@ -96,7 +97,7 @@ test('explicit built-in country selection loads targeted records and retries aft
     if(url.pathname==='/directory/country/KR'){attempts++;return attempts===1?route.fulfill({status:503,json:{error:'outage'}}):route.fulfill({json:[korea]});}
     return url.hostname==='127.0.0.1'?route.continue():route.abort();
   });
-  await page.goto('/');await expect(page.locator('.station-card').first()).toBeVisible();
+  await page.goto('/#listen');await expect(page.locator('.station-card').first()).toBeVisible();
   await page.getByRole('button',{name:'Choose country',exact:true}).click();await page.locator('#er-country-query').fill('KR');
   await page.locator('#er-country-options [data-country="South Korea"]').click();
   await expect.poll(()=>attempts).toBe(1);
@@ -107,7 +108,7 @@ test('explicit built-in country selection loads targeted records and retries aft
 });
 
 test('legacy data-module URLs still load after a worker upgrade',async({page})=>{
-  await page.goto('/');
+  await page.goto('/#listen');
   const count=await page.evaluate(async()=>{const data=await import('/assets/map-world.js');return data.MAP_WORLD.countries.features.length;});
   expect(count).toBeGreaterThan(200);
 });
@@ -119,7 +120,7 @@ test('missing coordinates get an honest country marker and insecure favicons use
     const url=new URL(route.request().url());if(url.pathname==='/directory/snapshot')return route.fulfill({json:[...FIXTURE_STATIONS,station]});
     return url.hostname==='127.0.0.1'?route.continue():route.abort();
   });
-  await page.goto('/');await expect(page.locator('.station-card').first()).toBeVisible();
+  await page.goto('/#listen');await expect(page.locator('.station-card').first()).toBeVisible();
   await page.getByRole('searchbox',{name:'Find a station'}).fill('Approx Country Station');
   await expect(page.locator('.station-card__name')).toHaveText(['Approx Country Station']);
   await expect(page.locator('.station-card__monogram')).toBeVisible();
@@ -133,6 +134,6 @@ test('missing coordinates get an honest country marker and insecure favicons use
 test('clusters disclose when they include country-level positions',async({page})=>{
   const rows=[1,2].map(i=>({...FIXTURE_STATIONS[0],stationuuid:'approx-cluster-'+i,name:'Approx Cluster '+i,country:'Germany',countrycode:'DE',geo_lat:null,geo_long:null}));
   await page.route('**/*',route=>{const url=new URL(route.request().url());if(url.pathname==='/directory/snapshot')return route.fulfill({json:rows});return url.hostname==='127.0.0.1'?route.continue():route.abort();});
-  await page.goto('/');await expect(page.locator('.station-card').first()).toBeVisible();await expect(page.locator('.er-cluster--approximate').first()).toHaveAttribute('title',/country-level locations/);
+  await page.goto('/#listen');await expect(page.locator('.station-card').first()).toBeVisible();await expect(page.locator('.er-cluster--approximate').first()).toHaveAttribute('title',/country-level locations/);
   await expect(page.locator('#audio-player')).toHaveJSProperty('paused',true);
 });

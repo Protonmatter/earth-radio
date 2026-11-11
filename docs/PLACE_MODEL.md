@@ -1,9 +1,10 @@
 # Verified city and local-time foundation
 
-This prerequisite supports the approved Today and place-first work. It adds a
-small curated vocabulary and pure model without changing the current home, map,
-player, directory loader, producer, account or sync entry points. Today, Passport,
-broader city geocoding and country-badge rendering have separate acceptance work.
+This foundation supplies a small curated vocabulary and pure model, now consumed
+by the candidate [Today presentation](TODAY.md). Its original prerequisite added
+no active UI behavior. Place-first, Passport, broader city geocoding and country
+badges retain separate acceptance work; the model does not alter the directory
+producer or account/sync data.
 
 ## Source data and licensing
 
@@ -119,7 +120,11 @@ those fields alone do not establish upstream integrity. Exit 0 means a valid
 report, not that all future availability or Today acceptance has been established.
 Malformed/oversized input or I/O failure exits 1 without printing raw input values.
 
-Existing family/stream grouping combines variants. Shared normalized stream URLs
+Existing family/stream grouping combines variants. UUID/family components are
+shared with Today through `program-components.js`.
+The refreshed retained-input receipt binds that helper as its eleventh model file;
+all frozen coverage counts and example IDs remain unchanged after extraction.
+Shared normalized stream URLs
 and identical repeated identities join groups transitively, so aliases cannot
 inflate city totals. Repeated identities with differing retained metadata are
 rejected before grouping: a qualification input must represent one current row

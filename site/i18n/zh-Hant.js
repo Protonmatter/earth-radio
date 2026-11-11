@@ -55,7 +55,7 @@ export default {
   "map.loadingDetail": "正在載入地圖詳情…",
   "map.detailUnavailable": "地圖詳情無法載入，顯示基礎地圖。",
   'app.tagline': '可靠的全球廣播',
-  'app.skip': '跳到電臺列表',
+  "app.skip": "跳至內容",
 
   'status.initializing': '正在初始化…',
   'status.loading': '正在載入電臺目錄…',
@@ -144,7 +144,7 @@ export default {
   'search.title': '搜尋電臺',
 
   'map.label': '電臺地圖',
-  'map.assistive': '地圖僅作視覺輔助。同等電臺仍可在「收聽」與「搜尋」中使用。',
+  "map.assistive": "地圖提供視覺輔助。你可以在搜尋中瀏覽並播放相同的電台。",
   'map.retry': '重試地圖',
   'map.unavailable': '地圖圖磚無法使用。請改用列表瀏覽電臺。',
   'map.previewPlay': '播放',
@@ -331,5 +331,24 @@ export default {
   "music.accountChanged": "帳戶已變更，請重新開啟歌曲庫。",
   "music.confirmClear": "清除最近收聽記錄？喜歡的歌曲會保留。",
   "music.identify": "辨識歌曲",
-  "music.identifying": "正在辨識…"
+  "music.identifying": "正在辨識…",
+  "today.title": "今天",
+  "today.place": "今日城市",
+  "today.cancel": "取消連線 {station}",
+  "today.pause": "暫停 {station}",
+  "today.play": "播放 {station}",
+  "today.cancelShort": "取消",
+  "today.noStation": "暫無可用電台",
+  "today.unavailableTitle": "每天探索一座新城市",
+  "today.unavailable": "尚未載入此城市支援的電台。請重新整理或探索地圖。",
+  "today.explore": "探索地圖",
+  "today.onair": "正在播出",
+  "today.airEmpty": "載入電台，尋找想聽的內容。",
+  "today.library": "資料庫",
+  "today.accountHelp": "在不同裝置上保存你的電台和歌曲。",
+  "today.emptyPlayer": "選擇一個電台開始收聽",
+  "today.continueStation": "播放 {station}",
+  "today.search": "搜尋",
+  "today.atlas": "地圖集",
+  "today.moreFilters": "更多篩選"
 };

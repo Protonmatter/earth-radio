@@ -1,6 +1,6 @@
 import { mkdir } from 'node:fs/promises';
 import { test, expect } from '@playwright/test';
-import { setupApp } from './helpers.mjs';
+import { setupApp,openSearchView } from './helpers.mjs';
 
 for (const size of [{ width: 1440, height: 960 }, { width: 390, height: 844 }, { width: 320, height: 720 }]) {
   test(`listening room keeps compact rows actionable at ${size.width}px`, async ({ page }) => {
@@ -29,16 +29,14 @@ for (const size of [{ width: 1440, height: 960 }, { width: 390, height: 844 }, {
       }
     }
     expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBe(0);
-    // Quick picks keep their original runtime handlers in the existing overflow menu.
-    await page.locator('#er-overflow-toggle').click();
-    await expect(page.locator('#daily-dashboard')).toBeVisible();
-    await expect(page.locator('[data-dashboard-action="world-scan"]')).toBeVisible();
-    await page.locator('[data-dashboard-action="world-scan"]').click();
+    // World Scan stays a separate explicit action through its original owner.
+    await page.locator('.er-primary-nav [data-er-primary="atlas"]').click();
+    await page.locator('#er-today [data-click-id="surprise"]').click();
     await expect(page.locator('#er-overflow')).not.toBeVisible();
-    await expect(page.locator('#player-station')).not.toHaveText('Select a station');
+    await expect(page.locator('#player-bar')).toHaveClass(/is-playing/);
     // Narrow through the supported search UI before selecting again: quick-pick
     // health updates can legitimately replace virtual nodes as playback settles.
-    await page.locator('#er-discovery-query').fill('Berlin');
+    await openSearchView(page);await page.locator('#er-discovery-query').fill('Berlin');
     await expect(page.locator('.station-card__name')).toHaveText(['E2E Berlin Techno']);
     await page.locator('.station-card__play').click();
     await expect(page.locator('#player-station')).toHaveText('E2E Berlin Techno');
@@ -53,11 +51,12 @@ for (const size of [{ width: 1440, height: 960 }, { width: 390, height: 844 }, {
 
 test('saved Night remains available after reload and returns to Paper', async ({ page }) => {
   await setupApp(page);
-  await page.locator('header [data-er-dest="you"]').click();
+  await page.locator('#settings-toggle').click();
   await page.getByRole('button', { name: 'Night', exact: true }).click();
   await expect(page.locator('html')).toHaveAttribute('data-er-palette', 'night');
+  await page.locator('#settings-modal .settings-header [data-close-settings]').click();
   await page.reload();
   await expect(page.locator('html')).toHaveAttribute('data-er-palette', 'night');
-  await page.getByRole('button', { name: 'Paper', exact: true }).click();
+  await page.locator('#settings-toggle').click();await page.getByRole('button', { name: 'Paper', exact: true }).click();
   await expect(page.locator('html')).toHaveAttribute('data-er-palette', 'paper');
 });

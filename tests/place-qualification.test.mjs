@@ -82,7 +82,8 @@ test('frozen coverage receipt binds the current model bytes and accounts for eve
  assert.deepEqual(report.cities.map(city=>city.id),CURATED_PLACES.map(city=>city.id));
  assert.equal(report.allCuratedCitiesMeetFiveProgramMinimum,true);
  for(const city of report.cities){assert.ok(city.programs>=5);assert.equal(city.exampleStationIds.length,5);assert.equal(new Set(city.exampleStationIds).size,5);}
- assert.equal(report.model.candidateRadiusKm,25);assert.equal(report.model.files.length,10);
+ assert.equal(report.model.candidateRadiusKm,25);assert.equal(report.model.files.length,11);
+ assert.ok(report.model.files.some(file=>file.path==='site/assets/program-components.js'));
  for(const file of report.model.files){const bytes=await readFile(new URL(file.path,root));assert.equal(bytes.length,file.bytes,file.path);assert.equal(createHash('sha256').update(bytes).digest('hex'),file.sha256,file.path);}
  assert.match(report.suppliedMetadata.producerSourceSha,/^[a-f0-9]{40}$/);assert.match(report.input.sha256,/^[a-f0-9]{64}$/);assert.match(report.sourceAcquisition.raw.sha256,/^[a-f0-9]{64}$/);
 });

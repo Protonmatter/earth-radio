@@ -238,6 +238,8 @@ const PROBE = `(async () => {
     dashboard: query('#daily-dashboard'),
     dashboardActions: queryAll('#daily-dashboard [data-dashboard-action]'),
     settingsModal: query('#settings-modal'),
+    settingsTrigger: query('#settings-toggle'),
+    settingsFixedActions: queryAll('#settings-modal .settings-header button, #settings-modal .er-settings-tools button, #settings-modal .settings-footer button'),
     settingsLocale: query('#setting-locale'),
     filterSidebar: query('#filter-sidebar'),
     stationRows: [...document.querySelectorAll('#station-grid .station-card')].slice(0, 4).map(card => ({
@@ -646,7 +648,7 @@ async function runScenario(scenario, baseUrl) {
     await contents.loadURL(`${baseUrl}/__seed`);
     await contents.executeJavaScript(seedScript(scenario), true);
 
-    const destination = scenario.destination ? `#${scenario.destination}` : '';
+    const destination = `#${scenario.destination||'listen'}`;
     await contents.loadURL(`${baseUrl}/index.html${destination}`);
     await contents.executeJavaScript(standaloneScript(scenario), true);
     await contents.executeJavaScript(safeAreaScript(scenario), true);
@@ -654,6 +656,8 @@ async function runScenario(scenario, baseUrl) {
     const ready = await waitFor(contents, "document.querySelectorAll('#station-grid .station-card').length > 0 && document.documentElement.dataset.erUiReady === 'true'");
     await new Promise(resolve => setTimeout(resolve, 400));
     await correctViewport(window_, scenario);
+    const initialDestination=await contents.executeJavaScript('document.documentElement.dataset.erDest',true);
+    if(initialDestination!==(scenario.destination||'listen'))throw Error(`Wrong initial destination for ${scenario.id}: ${initialDestination}`);
     // Zoom is applied after the viewport is pinned so a 200% scenario reports the CSS viewport a
     // real browser would report at that zoom level rather than fighting the correction loop.
     if (scenario.zoom) {

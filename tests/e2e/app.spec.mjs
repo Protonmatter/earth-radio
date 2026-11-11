@@ -72,7 +72,7 @@ test.describe('directory and playback selection', () => {
     await expect(savedTab).toBeVisible();
     await savedTab.click();
     await expect(page.locator('html')).toHaveAttribute('data-er-dest', 'saved');
-    await expect(page.locator('button[data-er-saved="favorites"]')).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.locator('#grid-panel button[data-er-saved="favorites"]')).toHaveAttribute('aria-pressed', 'true');
     await expect(page.locator('#grid-title')).toHaveText(/favorites/i);
   });
 
@@ -146,7 +146,10 @@ test.describe('map progressive disclosure', () => {
     await expect(tooltip.locator('.er-tt-name')).toHaveText(/E2E /);
     await expect(tooltip.locator('.er-tt-hint')).toHaveText(/click to listen/i);
     // Nothing has been selected by hover alone.
-    await expect(page.locator('#player-station')).not.toHaveText(/E2E /);
+    await expect(page.locator('#audio-player')).toHaveJSProperty('paused',true);
+    await expect(page.locator('#audio-player')).not.toHaveAttribute('src',/.+/);
+    await expect(page.locator('#player-bar')).toHaveAttribute('data-empty','true');
+    expect(new URL(page.url()).hash).not.toContain('station=');
   });
 
   test('clicking the hovered dot selects exactly the disclosed station', async ({ page }) => {
