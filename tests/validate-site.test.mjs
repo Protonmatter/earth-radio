@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdtemp, mkdir, rm, unlink, writeFile } from 'node:fs/promises';
+import { appendFile, mkdtemp, mkdir, rm, unlink, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
@@ -21,6 +21,10 @@ async function createSite(root, {
   await writeFile(path.join(root, 'manifest.webmanifest'), '{"start_url":"./"}\n');
   await writeFile(path.join(root, 'sw.js'), "const SHELL_ASSETS=['./','./config.js','./assets/app.js'];\n");
   await writeFile(path.join(root, '_headers'), headers);
+  await writeFile(path.join(root,'404.html'),'<meta name="robots" content="noindex"><main data-earth-radio-not-found><a href="/">Return home</a></main>');
+  await writeFile(path.join(root,'robots.txt'),'User-agent: *\nAllow: /\n');
+  await writeFile(path.join(root,'_redirects'),'/sitemap.xml https://earthradio.stream/sitemap.xml 301\n');
+  await appendFile(path.join(root,'index.html'),'<link rel="canonical" href="https://app.earthradio.stream/"><meta name="robots" content="noindex, follow">');
 }
 
 test('validateSite accepts a complete direct-mode site', async () => {

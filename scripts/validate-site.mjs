@@ -3,6 +3,8 @@ import {createHash} from 'node:crypto';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { validateMapData } from '../site/assets/map-core.js';
+import {validateRouteArtifacts,validateRouteResponses} from './public-route-contract.mjs';
+export {validateRouteResponses};
 
 async function collectFiles(root) {
   const files = [];
@@ -21,7 +23,8 @@ async function collectFiles(root) {
 
 function localAsset(value) {
   if (!value || /^(?:https?:|data:|blob:|#|mailto:)/i.test(value)) return null;
-  return value.replace(/^\.\//, '').split(/[?#]/, 1)[0].replace(/\/$/, 'index.html');
+  const relative=value.replace(/^\.?\//, '').split(/[?#]/, 1)[0].replace(/\/$/, 'index.html');
+  return relative==='privacy'?'privacy.html':relative;
 }
 
 function parseHeaderRules(source) {
@@ -108,10 +111,11 @@ export async function validateSite(rootInput) {
   const files = await collectFiles(root);
   const fileSet = new Set(files);
   const errors = [];
-  for (const required of ['index.html', 'config.js', 'sw.js', 'manifest.webmanifest', '_headers']) {
+  for (const required of ['index.html', 'config.js', 'sw.js', 'manifest.webmanifest', '_headers', '404.html', 'robots.txt', '_redirects']) {
     if (!fileSet.has(required)) errors.push(`Missing required file: ${required}`);
   }
   if (errors.length) throw new Error(errors.join('\n'));
+  try { await validateRouteArtifacts(root); } catch (error) { errors.push(error.message); }
 
   if(fileSet.has('_routes.json')){
     const routes=JSON.parse(await readFile(path.join(root,'_routes.json'),'utf8'));
@@ -120,9 +124,11 @@ export async function validateSite(rootInput) {
 
   const html = await readFile(path.join(root, 'index.html'), 'utf8');
   const assets = [];
-  for (const match of html.matchAll(/(?:src|href)=["']([^"']+)["']/gi)) {
-    const asset = localAsset(match[1]);
-    if (asset) assets.push(asset);
+  for (const page of [html,await readFile(path.join(root,'404.html'),'utf8')]) {
+    for (const match of page.matchAll(/(?:src|href)=["']([^"']+)["']/gi)) {
+      const asset = localAsset(match[1]);
+      if (asset) assets.push(asset);
+    }
   }
   const manifest = JSON.parse(await readFile(path.join(root, 'manifest.webmanifest'), 'utf8'));
   for (const icon of manifest.icons ?? []) {
@@ -187,7 +193,10 @@ export async function validateSite(rootInput) {
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  if(process.argv.length>3&&((process.argv.length!==5&&process.argv.length!==6)||process.argv[3]!=='--origin'||(process.argv.length===6&&process.argv[5]!=='--preview')))throw Error('Usage: validate-site.mjs [directory] [--origin https://host [--preview]]');
   const root = path.resolve(process.argv[2] ?? 'site');
   const result = await validateSite(root);
   process.stdout.write(`Validated ${result.files.length} site files and ${result.assets.length} references.\n`);
+  if(process.argv[3]==='--origin')try{process.stdout.write(JSON.stringify(await validateRouteResponses(process.argv[4],{deployment:process.argv[5]==='--preview'?'preview':'production'}))+'\n');}
+  catch(error){process.stderr.write(error.message+'\n');process.exitCode=1;}
 }
