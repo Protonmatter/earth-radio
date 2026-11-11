@@ -1545,8 +1545,8 @@
     },
     {
       "path": "tests/e2e/helpers.mjs",
-      "bytes": 7674,
-      "sha256": "6a9eb5cc69ad5f1e9552f2527b822d59f0cfca551226cbc788c7cd1427296a37"
+      "bytes": 8306,
+      "sha256": "a838ebb657b230612217bbb46ce181886b0d6fd7e2abb7eb268061cf5ff8c153"
     },
     {
       "path": "tests/e2e/listening-room.spec.mjs",
@@ -1617,6 +1617,11 @@
       "path": "tests/e2e/ui-state.spec.mjs",
       "bytes": 6820,
       "sha256": "63aa1a7f1389b1cb7c364548ad809f12cac3245658f8d496361c5163f0966b27"
+    },
+    {
+      "path": "tests/e2e/virtual-reveal.spec.mjs",
+      "bytes": 1918,
+      "sha256": "69edfeb9836344a8d71072c40c3b6e01cb396477b4d17bcd1ac4ca4264619f97"
     },
     {
       "path": "tests/e2e/web-nowplaying.spec.mjs",
