@@ -1,15 +1,30 @@
 # Build state
 
-## 0.32.2 desktop/distribution candidate
+## 0.32.2 desktop/distribution delivery
 
 ER-01, ER-02 and ER-07 landed through PRs 39, 40 and 42, with the narrowly scoped
-WebKit readiness correction in PR 41. Main 64a6968 passed all ten checks; all three
-production route gates and a fresh production worker/offline test passed. This
-candidate advances the application/module version to 0.32.2 and shell to v73,
-adds Windows x64 installer/portable targets and coherent build-time website
-fallback metadata. Final source, six packages, signatures, served parity, release
-and public downloads remain gates until recorded with evidence. Existing published
-v0.32.1 assets remain unchanged. See [0.32.2 gates](RELEASE-0.32.2.md).
+WebKit readiness correction in PR 41. PR 43 merged as final package source
+`b5f2546ccff2154e7598005105984816c825c476`; all ten required main checks and the
+existing directory publisher's build/deploy passed. Local verification passed
+606 tests with three skips, 201 browser cases, 42 rendered scenarios, native
+synthetic auth/restart and 395 committed hashes. Production matches 98 public
+artifacts on each app origin and 19 website artifacts, including headers; route
+and actual installed-worker offline checks passed.
+
+[v0.32.2](https://github.com/Protonmatter/earth-radio/releases/tag/v0.32.2) was
+published November 11, 2026 at 10:36:31 UTC. Windows ARM64/x64 installer/portable
+and both native Mac DMGs match all 120 application files and the locked builder's
+complete production package metadata. Windows payloads match 88 physical files;
+local signatures, RFC3161 binding, isolated startup and guest favorite/volume
+restart without autoplay passed. Mac architecture, DMG/mount, ad-hoc signature,
+approved icon and native startup passed. All thirteen draft and anonymous public
+downloads passed full size/SHA-256 checks; the prior v0.32.1 assets remain unchanged.
+
+The website/docs-only follow-up advances static fallback metadata to that verified
+release. It does not alter packaged application files or retarget the release tag.
+Windows public trust, Apple notarization, physical installation/upgrade, fresh
+public-provider signup and human audio fidelity remain outside this qualification.
+See the [0.32.2 record and rollback](RELEASE-0.32.2.md).
 
 ## 0.32.1 precision identity delivery
 

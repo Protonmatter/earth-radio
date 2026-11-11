@@ -55,8 +55,8 @@
     },
     {
       "path": "docs/BUILD_STATE.md",
-      "bytes": 30100,
-      "sha256": "8947311346b59c6e76639ac4abed152976ff60e2e5af3947a1eb49ed4f0dabea"
+      "bytes": 31101,
+      "sha256": "ba52469a0b95a8588e343f534406da5b5fafd4a8b3fdc2552e6e1e40c18e4d54"
     },
     {
       "path": "docs/CLOUDFLARE_DEPLOYMENT.md",
@@ -270,8 +270,8 @@
     },
     {
       "path": "docs/RELEASE-0.32.2.md",
-      "bytes": 5897,
-      "sha256": "84482cbc9eb1e8bf16d1806014280668bc2f04377a94701f5c09869336965043"
+      "bytes": 9609,
+      "sha256": "70f31ff21ebfcafc11b49ab87a248c9f78432740b4630b8e77f924fbdf4a4f67"
     },
     {
       "path": "docs/RELEASE.md",
@@ -1920,13 +1920,13 @@
     },
     {
       "path": "website/index.html",
-      "bytes": 10826,
-      "sha256": "0feff29db05215a6424b33eeb5b410f69a344a99d49705942a74bb533aa31d20"
+      "bytes": 11041,
+      "sha256": "76f305a185cfb8517199ac24105381fcf49b0d0d80bc83f7b1d71915b6c555c6"
     },
     {
       "path": "website/published-release.js",
-      "bytes": 2586,
-      "sha256": "6000e6d0ca801aec890207f29f606f13d76d4b26449016eab2bfef21869120fb"
+      "bytes": 3318,
+      "sha256": "1637dd03f136ea2696fe325b7d2e3277a0c4a806bfd67eb5ff1e7945a2067324"
     },
     {
       "path": "website/release-core.js",

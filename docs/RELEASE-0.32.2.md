@@ -1,9 +1,57 @@
-# Earth Radio 0.32.2 delivery gates
+# Earth Radio 0.32.2 release qualification
 
-This candidate packages the qualified playback-intent, confirmed-play counter and
-public-route changes, retains the approved identity, and adds Windows x64. It is
-not a publication receipt. The final source, package and served evidence must be
-recorded after each gate passes; do not infer physical acceptance from fixtures.
+This release packages the qualified playback-intent, confirmed-play counter and
+public-route changes, retains the approved identity, and adds Windows x64.
+[v0.32.2](https://github.com/Protonmatter/earth-radio/releases/tag/v0.32.2) is
+stable/Latest, published November 11, 2026 at 10:36:31 UTC (release 441543551).
+Its annotated tag points to `b5f2546ccff2154e7598005105984816c825c476`; tag object
+`f6796abe1588eb932305207460e0d348fc5edc0a` and both local/remote peeled source
+were checked at publication. No prior tag or asset was replaced.
+
+## Completed qualification
+
+- All ten required exact-head and merged-source checks passed, including
+  [native CI and browser tests](https://github.com/Protonmatter/earth-radio/actions/runs/43001282960)
+  and [database/auth workflow](https://github.com/Protonmatter/earth-radio/actions/runs/43001282975).
+  The [existing directory publisher](https://github.com/Protonmatter/earth-radio/actions/runs/43001575393)
+  refreshed the normalized generation from the final source.
+- Local gates passed 606 tests with three existing platform skips, 201 browser
+  cases, 42 rendered scenarios, native synthetic auth/restart and 395 Git-object
+  manifest hashes. Independent reviews closed playback races, package-identity
+  validation, bounded virtualizer readiness and exact-tag publication guards.
+- Production readback matched 98 public artifacts per app origin and 19 website
+  artifacts with cache/security policy. All fifteen route responses and actual
+  preview/production installed-worker offline checks passed. Both app origins
+  passed stable normalized directory ETags/conditional requests; the actual native
+  reader and loopback route used that publication, retaining UUID identities.
+- Six application builds match all 120 `site`/`electron`/`server` files and complete
+  locked-builder production package metadata, including the unchanged `earth-radio`
+  profile identity. Windows installer/portable extraction matches 88 physical
+  payload files per architecture, with actual application PE machines AA64/8664.
+- Windows ARM64 and emulated x64 passed isolated startup, live Seoul search (21
+  results, FEBC first), muted Classic Vinyl playback, guest favorite/volume retention
+  and no autoplay after restart. Both File → Exit cycles per architecture completed;
+  owned wrappers/windows closed. The original account profile was untouched.
+- All four Windows files passed the expected local signer/file-status/chain checks,
+  valid primary/nested CMS signatures and fully consumed RFC3161 timestamp tokens
+  cryptographically bound to their primary signer. This establishes cryptographic
+  validity with the accepted local signer; it does not confer public publisher trust.
+- Native Mac ARM64/x64 CI verified architecture, DMG integrity/read-only mount,
+  ad-hoc signature, approved packaged icon and isolated startup. Hash-verified DMG
+  inspection also confirmed full production metadata and all 120 application files.
+- All thirteen draft downloads and thirteen anonymous public downloads passed full
+  size/SHA-256 verification. Latest-release readback matched; all eleven prior
+  v0.32.1 asset IDs, names, sizes and digests were rechecked unchanged.
+
+The public receipts are
+[BUILD-PROVENANCE.json](https://github.com/Protonmatter/earth-radio/releases/download/v0.32.2/BUILD-PROVENANCE.json),
+[PRODUCTION-PARITY.json](https://github.com/Protonmatter/earth-radio/releases/download/v0.32.2/PRODUCTION-PARITY.json),
+[WINDOWS-VERIFICATION.json](https://github.com/Protonmatter/earth-radio/releases/download/v0.32.2/WINDOWS-VERIFICATION.json),
+both `MACOS-VERIFICATION-*.json` files, and
+[SHA256SUMS.txt](https://github.com/Protonmatter/earth-radio/releases/download/v0.32.2/SHA256SUMS.txt).
+The website/docs follow-up advances the curated fallback only after this public
+download gate, without changing the 120 packaged application files or immutable tag.
+The remaining sections retain the reproducible gate and rollback procedures.
 
 ## Source and browser gates
 
@@ -21,10 +69,10 @@ An older or incomplete latest-release API response cannot downgrade that fallbac
 Windows x64 links appear only when the complete pair is present; releases from
 0.32.2 require the pair in addition to the four existing application assets.
 
-While 0.32.2 is unpublished, fallback metadata remains on the previously verified
-complete v0.32.1 release. Do not create public links to nonexistent draft assets.
-After publication and full anonymous download hashing, update the record and its
-source HTML bindings explicitly:
+During qualification, fallback metadata stayed on the previously verified complete
+v0.32.1 release. It advanced only after publication and full anonymous download
+hashing. Follow the same sequence for future releases; never create public links
+to nonexistent draft assets. The explicit updater step used for this release was:
 
 ```powershell
 gh api repos/Protonmatter/earth-radio/releases/tags/v0.32.2 | Set-Content -Encoding UTF8 -LiteralPath .build/public-release-0.32.2.json

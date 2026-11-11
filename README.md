@@ -2,7 +2,7 @@
 
 Explore live radio stations around the world in a recovered, auditable web and Electron application.
 
-Release **0.32.2 is being qualified**. It keeps explicit station playback within its program, reports directory clicks only after confirmed audio, serves real online/offline 404s, and adds Windows x64 alongside ARM64 and both macOS architectures. All six application builds must pass the [release gates](docs/RELEASE-0.32.2.md) before publication. Grouped streams, the normalized scheduled directory and approved identity are retained. The website stages fallback download links from validated published-release metadata.
+Release **[0.32.2 is published](https://github.com/Protonmatter/earth-radio/releases/tag/v0.32.2)**. It keeps explicit station playback within its program, reports directory clicks only after confirmed audio, serves real online/offline 404s, and adds Windows x64 alongside ARM64 and both macOS architectures. All six application builds match the qualified source; all thirteen draft and anonymous public downloads passed full size/SHA-256 verification. See the [release record and qualification limits](docs/RELEASE-0.32.2.md). Grouped streams, the normalized scheduled directory and approved identity are retained. The website stages fallback download links from the verified published-release metadata.
 
 Website and downloads: **https://earthradio.stream/**. Radio app: **https://app.earthradio.stream/**. The earlier **https://earth-radio.pages.dev/** app remains available for existing shortcuts and unsynced local collections. Public repository: **https://github.com/Protonmatter/earth-radio**.
 
