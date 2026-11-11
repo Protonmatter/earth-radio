@@ -1,5 +1,20 @@
 # Build state
 
+## 0.33.1 Settings focus correction — qualification pending
+
+PR46's Today UI merged as `5e9742834ad78b1ee1f41c33fa92d21d4bf26569` after all ten
+head checks, matching previews and actual hosted UI. Production matches 104 files
+on each app origin and 19 website files, with headers and 15 route checks. Its
+account-enabled production keyboard check then found that a mounted hidden account
+dialog disabled Settings focus containment. The bounded correction uses the
+existing visible-state flag, adds enabled/disabled account coverage and advances
+coherent 0.33.1/v75 cache identity. Twelve focused Settings/account cases pass
+after four observed failures. Full local gates now pass 652 tests/three existing
+Windows skips, 425 hashes, 278 browser cases at three workers, 42 rendered scenarios
+and native ARM64 sandbox/auth/restart checks. Fresh review, hosted and served
+acceptance remain.
+See [0.33.1 qualification](QA-0.33.1.md). Original accounts and providers are unchanged.
+
 ## 0.33.0 Today candidate — local, delivery pending
 
 Branch work integrates a frozen UTC city calendar, bounded opt-in native seeds,

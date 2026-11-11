@@ -553,7 +553,7 @@ test('same-station platform polls accept only the newest generation', async () =
 test('runtime source and installed bundle dispatch selections only on truthful playback results', async () => {
   const root = path.resolve(import.meta.dirname, '..');
   const source = await readFile(path.join(root, 'src-recovered', 'main.ts'), 'utf8');
-  const bundle = await readFile(path.join(root, 'site', 'assets', 'index-71dc0f68.js'), 'utf8');
+  const bundle = await readFile(path.join(root, 'site', 'assets', 'index-747d751d.js'), 'utf8');
   for (const text of [source, bundle]) {
     assert.match(text, /earthradio:station-selected/);
     assert.match(text, /earthradio:stations-load-settled/);

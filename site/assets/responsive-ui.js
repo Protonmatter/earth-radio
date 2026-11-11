@@ -13,9 +13,9 @@
  * maintained catalogs, over a bounded list of known runtime-owned elements.
  */
 
-import { getCurrentSongSnapshot } from './metadata-enrichment.js?v=0.33.0';
-import { countryCode, countryWords, matchesCountry } from './search-core.js?v=0.33.0';
-import { countryIndex } from './directory-expansion.js?v=0.33.0';
+import { getCurrentSongSnapshot } from './metadata-enrichment.js?v=0.33.1';
+import { countryCode, countryWords, matchesCountry } from './search-core.js?v=0.33.1';
+import { countryIndex } from './directory-expansion.js?v=0.33.1';
 import {
   applyDeclarativeI18n,
   applyDocumentLocale,
@@ -26,7 +26,7 @@ import {
   DEFAULT_LOCALE,
   FONT_PROFILES,
   t
-} from '../i18n/index.js?v=0.33.0';
+} from '../i18n/index.js?v=0.33.1';
 
 export const UI_STORAGE_KEY = 'earthRadio.ui.v1';
 export const DEFAULT_SPLIT = 42;
@@ -1848,7 +1848,7 @@ function bindActions() {
   document.addEventListener('keydown', event => {
     if (byId('er-song-details')?.open) return;
     const settings=byId('settings-modal');
-    if(event.key==='Tab'&&settingsModalIsVisible(settings)&&!document.querySelector('.er-auth-modal')){
+    if(event.key==='Tab'&&settingsModalIsVisible(settings)&&!document.querySelector('.er-auth-modal:not([hidden])')){
       const controls=[...settings.querySelectorAll(FOCUSABLE)].filter(element=>element.getClientRects().length&&getComputedStyle(element).visibility!=='hidden');
       const first=controls[0],last=controls.at(-1);
       if(first&&(!settings.contains(document.activeElement)||event.shiftKey&&document.activeElement===first||!event.shiftKey&&document.activeElement===last)){

@@ -1,5 +1,11 @@
 # 0.33.0 Today candidate qualification
 
+PR46 merged and its served production bytes/headers/routes match. The subsequent
+account-enabled production keyboard check exposed a hidden-account-modal guard
+gap; delivery acceptance remains incomplete pending the
+[0.33.1 correction](QA-0.33.1.md). The source qualification below describes its
+observed runs and does not override that production finding.
+
 This is an in-progress candidate record, not production acceptance. The base is
 merged prerequisite `c874299`; pure calendar/native seeds are committed locally
 as `c9a2a74` and the UI as `3037685`. Review fixes passed the full local gates
