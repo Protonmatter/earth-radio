@@ -3,6 +3,8 @@ import {FIXTURE_STATIONS} from './fixtures/stations.mjs';
 import {serializeVariantGroups} from '../../site/assets/station-variants.js';
 import {CATALOGS} from '../../site/i18n/index.js';
 import {openAtlasView} from './helpers.mjs';
+import {buildDirectoryGeneration} from '../../scripts/build-directory-snapshot.mjs';
+import {CURATED_PLACES} from '../../site/assets/curated-places.js';
 
 for(const locale of ['en','es','ar','ko','zh-Hans','zh-Hant'])test(`grouped wire results expose a bounded quality picker without autoplay in ${locale}`,async({page})=>{
   await page.setViewportSize({width:320,height:844});
@@ -138,5 +140,27 @@ test('clusters disclose when they include country-level positions',async({page})
   const rows=[1,2].map(i=>({...FIXTURE_STATIONS[0],stationuuid:'approx-cluster-'+i,name:'Approx Cluster '+i,country:'Germany',countrycode:'DE',geo_lat:null,geo_long:null}));
   await page.route('**/*',route=>{const url=new URL(route.request().url());if(url.pathname==='/directory/snapshot')return route.fulfill({json:rows});return url.hostname==='127.0.0.1'?route.continue():route.abort();});
   await page.goto('/#listen');await expect(page.locator('.station-card').first()).toBeVisible();await expect(page.locator('.er-cluster--approximate').first()).toHaveAttribute('title',/country-level locations/);
+  await expect(page.locator('#audio-player')).toHaveJSProperty('paused',true);
+});
+
+test('published place witnesses survive grouped browser loading and cached Dublin search',async({page})=>{
+  await page.setViewportSize({width:390,height:844});
+  const rows=CURATED_PLACES.flatMap((city,c)=>Array.from({length:5},(_,i)=>({
+    ...FIXTURE_STATIONS[0],stationuuid:`00000000-0000-4000-8000-${String(c*10+i).padStart(12,'0')}`,
+    name:`${city.name} Programme ${i+1}`,country:city.countrycode,countrycode:city.countrycode,state:city.name,
+    geo_lat:city.point[0],geo_long:city.point[1],clickcount:city.name==='Dublin'?(i<3?50000-i:1):100000-i,
+    url:`https://streams.e2e.example/city-${c}-${i}`,url_resolved:`https://streams.e2e.example/city-${c}-${i}`
+  })));
+  rows.push(...Array.from({length:7},(_,i)=>({...FIXTURE_STATIONS[0],stationuuid:'cutoff-filler-'+i,name:'Cutoff Filler '+i,country:'New Zealand',countrycode:'NZ',state:'Wellington',geo_lat:-41.2865,geo_long:174.7762,clickcount:1000-i,url:`https://streams.e2e.example/filler-${i}`,url_resolved:`https://streams.e2e.example/filler-${i}`})));
+  const generation=buildDirectoryGeneration(rows,{producerSourceSha:'a'.repeat(40),minimumRecords:1,minimumCountries:1,globalLimit:60});
+  const body=generation.files.get(generation.manifest.files.catalog.path);let calls=0;
+  await page.route('**/*',route=>{const url=new URL(route.request().url());if(url.pathname==='/directory/snapshot'){calls++;return route.fulfill({contentType:'application/json',body,headers:{'x-directory-generated-at':generation.manifest.generatedAt,'x-directory-producer-sha':'a'.repeat(40)}});}return url.hostname==='127.0.0.1'?route.continue():route.abort();});
+  await page.goto('/#listen');await page.locator('#er-discovery-query').fill('Dublin');
+  await expect(page.locator('.station-card__name')).toHaveCount(5);
+  expect((await page.locator('.station-card__name').allTextContents()).every(name=>name.startsWith('Dublin Programme'))).toBe(true);
+  await expect(page.locator('.er-station-meta-text').first()).toContainText('Dublin, Ireland');
+  await expect(page.locator('#audio-player')).toHaveJSProperty('paused',true);expect(calls).toBe(1);
+  await page.reload();await page.locator('#er-discovery-query').fill('Dublin');
+  await expect(page.locator('.station-card__name')).toHaveCount(5);expect(calls).toBe(1);
   await expect(page.locator('#audio-player')).toHaveJSProperty('paused',true);
 });

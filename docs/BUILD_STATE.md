@@ -1,6 +1,30 @@
 # Build state
 
-## 0.34.0 place-first candidate — qualification in progress
+## 0.34.0 web delivered; desktop qualification held on directory coverage
+
+PR #48 merged as `644e19f289fe2b92bf2e4dad118144083a39d4a5`. All ten head/main
+checks pass, both hosted browser logs report 330 passes with no flaky cases, and actual
+production matches 106/106/19 files with headers, 15 routes, four account-enabled UI
+contexts and an installed-worker/offline check. Original main is clean at the
+same source; 435 hashes verify. Desktop 0.34 candidates match 128 app files and
+production metadata, with 87-file Windows payload parity and local CMS/timestamps.
+They are unpublished and retained separately from stable 0.32.2.
+
+Fresh publication 43103795772 exposed a coverage gap: Dublin has 3 programs in the
+global 10,000-row root and 30 in its 196-row Ireland shard. Native sampling also
+returns 3. The loss occurs at the producer cutoff. A new
+pure selection helper has ten focused passing checks. The feature-branch producer
+integration protects qualified city witnesses before clipping and rejects an unmet
+legacy or grouped minimum, without extra requests or location guesses. The inactive
+core passed 675 tests, three existing Windows skips and 439 hashes. Integration
+passes 46 focused producer/protocol cases and 37 browser/loading cases. Fresh live
+input replay restores Dublin to five, retains 10,000 rows and all country views,
+and passes eleven-city native sampling with one root read. Full integration
+verification passes 679 tests, three existing Windows skips and 441 hashes.
+Review and publication are pending; production still uses the prior selector.
+See the [correction design](superpowers/specs/2026-11-11-directory-place-minimum.md).
+
+## 0.34.0 place-first source qualification
 
 The ER-05 branch integrates conservative place/genre/time copy across rows,
 player facts and tooltips, retains raw song input independently, and moves the
@@ -12,8 +36,8 @@ with three existing Windows skips and 435 hashes, all 330 browser cases without
 retries, the 42-scenario rendered matrix and isolated Windows ARM64 renderer/auth/
 encrypted-restart checks. Fresh review found one P2 Details refresh-focus issue;
 it was reproduced in both engines and corrected with six focused checks and the
-full green post-correction suites. Hosted delivery remains pending. Production
-and desktop versions below remain the accepted delivered versions until then.
+full green post-correction suites. Hosted and production acceptance followed as
+recorded above; desktop publication awaits the directory correction.
 
 ## 0.33.1 web delivery — verified
 

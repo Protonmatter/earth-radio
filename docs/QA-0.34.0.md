@@ -1,8 +1,14 @@
 # 0.34.0 place-first qualification
 
-This is the ER-05 candidate, based on delivered 0.33.1. It is not yet published.
-Desktop downloads remain the immutable 0.32.2 release until the final phase3
-builds and their downloads are qualified separately.
+ER-05 web 0.34.0 is delivered through PR #48/main `644e19f289fe2b92bf2e4dad118144083a39d4a5`.
+Ten head/main checks and 330 hosted browser cases without flaky results pass.
+Actual production 106/106/19 file hashes/headers, 15 routes, four account-enabled
+Chromium/WebKit contexts and installed-worker/offline checks pass. The merged
+tree equals reviewed/corrected `418dfd2` and 435 Git-object hashes verify.
+Desktop downloads remain immutable 0.32.2. Six 0.34 candidates match 128 app files
+and production metadata, but live data qualification holds publication: Dublin
+has 3 root programs versus 30 in the Ireland shard. Correct the producer cutoff
+and requalify new source/packages before publishing; no 0.34 tag/release exists.
 
 Rows, player facts and tooltips now lead with corroborated place and local time.
 Country fallback does not invent a city or clock. Technical stream choices and
@@ -29,8 +35,8 @@ staged artifacts validated. All 330 browser cases pass at three workers without
 retries. The 42-scenario rendered matrix and Windows ARM64 sandbox, synthetic
 provider PKCE/sync, encrypted restart, logout persistence and normal-quit checks
 pass in isolated profiles. Twenty-four worker checks include offline handling
-of both new facts modules. Exact-head CI, hosted previews,
-production readback and new desktop artifacts remain pending.
+of both new facts modules. Exact-head CI, hosted previews and production readback
+also pass. Final desktop artifacts/downloads remain pending the directory fix.
 
 The fresh whole-branch review found one P2 issue and no P0/P1 issues: a directory
 refresh replaced an open Details stream selector and lost its keyboard focus.

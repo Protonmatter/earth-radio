@@ -16,6 +16,26 @@ The producer uses the exact checked-out source SHA, bounded provider-host discov
 pages, incomplete pulls, invalid data, fewer than 1,000 valid rows or fewer than
 20 countries fail publication. A failed build leaves the prior deployment intact.
 
+Before the global 10,000-row cutoff, the producer protects at least five distinct
+qualified programs for every frozen Today place. It uses the existing city model
+and complete family/shared-stream components within an explicit pool of the
+50,000 highest-ranked normalized observations. Existing supported prefix rows are
+preferred. All cities' witnesses are protected before missing records are added
+and the lowest-ranked unprotected prefix rows are evicted. Output keeps source
+order and the root cap; country views keep their existing data and limits. Both
+the legacy rows and decoded grouped browser representation must meet the minimum.
+If representative metadata loses a required city witness, publication fails
+instead of inferring a replacement location.
+
+This policy adds no provider request or location inference. It rejects a generation
+before writing/uploading if any place or the root budget cannot meet the minimum.
+`report.json` includes bounded available/retained/selected coverage and additions.
+Five stream variants do not count as five programs. Production CLI explicitly
+enforces five. Small protocol fixtures may set `minimumCityPrograms: 0`, alongside
+their existing record/country overrides; the production CLI exposes no opt-out.
+The policy addresses the live case where Dublin had 30 qualified programs in the
+Ireland shard but only three survived the global cutoff.
+
 Normalization bounds fields, rejects private literal targets and credential-bearing
 URLs, canonicalizes tags/languages, infers country codes only from nonconflicting
 directory evidence, rejects implausible coordinates and deduplicates UUIDs. It does
@@ -53,7 +73,7 @@ Prerequisites: the repository's pinned Node version; no additional npm dependenc
 or credential is needed for the producer.
 
 ```powershell
-node --test tests/station-variants.test.mjs tests/directory-normalize.test.mjs tests/directory-generation.test.mjs tests/directory-producer.test.mjs tests/directory-publication.test.mjs
+node --test tests/directory-place-selection.test.mjs tests/station-variants.test.mjs tests/directory-normalize.test.mjs tests/directory-generation.test.mjs tests/directory-producer.test.mjs tests/directory-publication.test.mjs
 node scripts/build-directory-snapshot.mjs .build/directory-generation-unique
 node scripts/stage-directory-snapshot.mjs .build/directory-generation-unique .build/directory-publication-unique
 ```
@@ -72,6 +92,10 @@ the source directory and staged directory as temporary artifacts, not source fil
    build with a successful deployment or application readback.
 3. Check application fresh/cached/stale responses and conditional ETags separately.
    Confirm legacy array clients still work before releasing a grouped client.
+   Verify at least five qualified programs for every curated place in the global
+   root and actual native seeded result. An old valid cache response can precede
+   the asynchronous refresh; retain that receipt and verify the new generation
+   after refresh. Never relabel the older response as the current producer source.
 4. On a bad generation, disable this workflow's schedule and retain its logs and
    artifact. Redeploy a previously verified Pages artifact with the existing
    official deployment workflow, or correct the producer in a normal forward

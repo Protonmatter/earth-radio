@@ -8,7 +8,7 @@ const start=Date.parse('2026-11-09T00:00:00Z');
 const row={stationuuid:'one',name:'Test Station',countrycode:'GB',url:'https://radio.example/live',lastcheckok:1};
 function fixture(options={}){
   let clock=start,outage=false,generation=make(),mode='normal';const calls=[],entries=new Map(),work=[];
-  function make(extra={}){return buildDirectoryGeneration([row,...options.rows||[]],{generatedAt:new Date(clock).toISOString(),producerSourceSha:'a'.repeat(40),minimumRecords:1,minimumCountries:1,...extra});}
+  function make(extra={}){return buildDirectoryGeneration([row,...options.rows||[]],{generatedAt:new Date(clock).toISOString(),producerSourceSha:'a'.repeat(40),minimumRecords:1,minimumCountries:1,minimumCityPrograms:0,...extra});}
   const fetchImpl=async(url,init)=>{
     calls.push(url);assert.ok(url.startsWith(SNAPSHOT_ROOT));assert.equal(init.redirect,'manual');assert.equal(init.credentials,'omit');
     if(outage)return new Response('outage',{status:503});
@@ -51,7 +51,7 @@ test('provider outage makes no provider request and a publication outage retains
 });
 test('cached old manifest refreshes once when atomic publication removed its blob',async()=>{
   const f=fixture(),read=createPublishedCatalog({fetchImpl:f.fetchImpl,now:()=>f.clock});await read('/directory/snapshot','catalog');
-  f.generation=buildDirectoryGeneration([{...row,url:'https://radio.example/new'}],{generatedAt:new Date(start).toISOString(),producerSourceSha:'b'.repeat(40),minimumRecords:1,minimumCountries:1});
+  f.generation=buildDirectoryGeneration([{...row,url:'https://radio.example/new'}],{generatedAt:new Date(start).toISOString(),producerSourceSha:'b'.repeat(40),minimumRecords:1,minimumCountries:1,minimumCityPrograms:0});
   const response=await read('/directory/snapshot','catalog');assert.match(await response.text(),/radio.example\/new/);
   assert.equal(f.calls.filter(url=>url.includes('manifest.json?refresh=')).length,1);
 });
