@@ -55,8 +55,8 @@
     },
     {
       "path": "docs/BUILD_STATE.md",
-      "bytes": 33809,
-      "sha256": "ce04ea214c0111a5aaf4fd3b2dce83eb8517c0d0d625b6d95c5c82673a499326"
+      "bytes": 35087,
+      "sha256": "cd1ea9af8ff925fdce7acb1e4d2534889ce6e2e3a04807039873f6f8bbf5f05b"
     },
     {
       "path": "docs/CLOUDFLARE_DEPLOYMENT.md",
@@ -124,6 +124,11 @@
       "sha256": "6faa79ac610040af176a736162448ae5c0f853b639c9aac44b2c1f3e38cfdedf"
     },
     {
+      "path": "docs/PLACE_PRESENTATION.md",
+      "bytes": 3289,
+      "sha256": "ba3b54118c0403ca9aef77d24164644e054d55e50af7134345ed4a1580eb9bd3"
+    },
+    {
       "path": "docs/PROVENANCE.md",
       "bytes": 2789,
       "sha256": "97c15870f78485a7347bfba652f6eb159ecef181a916012a8b525bc059d1b348"
@@ -165,13 +170,13 @@
     },
     {
       "path": "docs/QA-0.33.0.md",
-      "bytes": 6916,
-      "sha256": "24f946d748af5b6a2fa1de53d0368226d291265776a89af3b1511fe8ede44d69"
+      "bytes": 6973,
+      "sha256": "7d51b2cf3818d87645d7c0a143ff83add0dc874f261a2d330397cf9314df4afb"
     },
     {
       "path": "docs/QA-0.33.1.md",
-      "bytes": 2469,
-      "sha256": "b19cf643c98dd4ab3da7329cf9b2ed22568237c583df8755d2ab3f2fd00bb72a"
+      "bytes": 2738,
+      "sha256": "7c119212dfa275868fa7fffba0588b62710ef189c4cc708f11eef58f1f4a0264"
     },
     {
       "path": "docs/QUALIFICATION-0.26.0.md",
@@ -359,6 +364,11 @@
       "sha256": "7e3d2c8d046b23881c40171c805ac032083de99ebc5bcfeb3d6dedecfd365003"
     },
     {
+      "path": "docs/superpowers/plans/2026-11-11-place-first.md",
+      "bytes": 6234,
+      "sha256": "5790e51155275b108fc53fc25d6beb12383bb89a7638b9a4f22aad21b2daa2c0"
+    },
+    {
       "path": "docs/superpowers/plans/2026-11-11-place-time.md",
       "bytes": 6628,
       "sha256": "85b2e60907ac91eacea64d5ff8b7c1586ba57792efe34d372d8cb77aea0eb2e6"
@@ -407,6 +417,11 @@
       "path": "docs/superpowers/specs/2026-11-08-public-website-domains-design.md",
       "bytes": 4305,
       "sha256": "c519622810cc4159f75ec461af2c1f66ade729a89a946425514d7995d651f4ab"
+    },
+    {
+      "path": "docs/superpowers/specs/2026-11-11-place-first-design.md",
+      "bytes": 5418,
+      "sha256": "1b030ad3697f91267c9607557216661e0b7ca9e5f20d94c958e9509ff0c34d48"
     },
     {
       "path": "docs/superpowers/specs/2026-11-11-place-time-design.md",
@@ -520,8 +535,8 @@
     },
     {
       "path": "package.json",
-      "bytes": 5288,
-      "sha256": "d4a05b6852e19dc707020deedf3cbe84bed9029ae209a6f596b7861278464e76"
+      "bytes": 5314,
+      "sha256": "a2da14ef94a3fa1d6f94f5fa031d1fa6dedda6f7169a19bb758852cc50537d99"
     },
     {
       "path": "scripts/build-desktop-icon.mjs",
@@ -914,6 +929,11 @@
       "sha256": "8513aab94b50a3fffb5ab6fa55bbcefb9e2a541e265d7c924e76ddd9a50359de"
     },
     {
+      "path": "site/assets/place-copy.js",
+      "bytes": 2108,
+      "sha256": "557f8011043086b5d09e193fc7a38e51e804b6e0ce4915e931632b6178758b22"
+    },
+    {
       "path": "site/assets/place-core.js",
       "bytes": 5510,
       "sha256": "3907b774686e2005557fe8b665c503415a4dee039aca80413942e60e97b10d0b"
@@ -1170,18 +1190,18 @@
     },
     {
       "path": "site/i18n/ar.js",
-      "bytes": 19390,
-      "sha256": "2c591369e9cbe7ed0b09e02d113a4f42209e4b4d57f3f428c3dcc69a367d1a85"
+      "bytes": 19493,
+      "sha256": "fd4fcc5f1cd2c57b5ebcb3a9503d3f2fa618ddc0719ee878ee91b91f5aa97043"
     },
     {
       "path": "site/i18n/en.js",
-      "bytes": 14833,
-      "sha256": "f0fd9a73babae29065046d6adc6ede1f0a84058baf733350b8668130364c36ab"
+      "bytes": 14922,
+      "sha256": "408f69b33b40743f4c5b8d89193e6caa36856ee641f68bca4ae318758da1dbd2"
     },
     {
       "path": "site/i18n/es.js",
-      "bytes": 16194,
-      "sha256": "7dd1c21b9416356c2abcba1d55655bd600824f713e7815c61d18933c1a394f65"
+      "bytes": 16285,
+      "sha256": "a0b6268b3e33abb7174f44b6db981c444c9b6424759d0254e7f3851d4ca1b1cd"
     },
     {
       "path": "site/i18n/index.js",
@@ -1190,18 +1210,18 @@
     },
     {
       "path": "site/i18n/ko.js",
-      "bytes": 17229,
-      "sha256": "69359c91367574538e4e9eca649ca3dfcc1890af42bae29062d4d76af7766c63"
+      "bytes": 17323,
+      "sha256": "bf2b5d7f9afc8a7073f2a9504608cc534812930c9c539b52bf37c7ad9abbacca"
     },
     {
       "path": "site/i18n/zh-Hans.js",
-      "bytes": 14964,
-      "sha256": "71f892786604c8525b7c654eaf322ee8b32eba7c9c70326208c7888e5f14ae55"
+      "bytes": 15050,
+      "sha256": "a7d4ecd53e7e5609fd39577d9354d5b30d776091ab76d29d32227fa840c883f7"
     },
     {
       "path": "site/i18n/zh-Hant.js",
-      "bytes": 15046,
-      "sha256": "f39fe2a6133fec21dda71592855255dfbd2ba65b07a3bcc51448af28df132a2c"
+      "bytes": 15132,
+      "sha256": "bfd1fb62f2c6c6f0e28b49a8be0545371a389ccfe3e3b3a57c105efc2111158c"
     },
     {
       "path": "site/icon-192.png",
@@ -1857,6 +1877,11 @@
       "path": "tests/pinned-stations.test.mjs",
       "bytes": 3895,
       "sha256": "174ac3acf13fe3ad9dcef945013d98c9150d477cf3c3f82956b08251b629de1f"
+    },
+    {
+      "path": "tests/place-copy.test.mjs",
+      "bytes": 4185,
+      "sha256": "55b91609a840d94bcfe3ef72bb7c5cdd08920bd208b72c4df6a30f4d12c5e00d"
     },
     {
       "path": "tests/place-core.test.mjs",

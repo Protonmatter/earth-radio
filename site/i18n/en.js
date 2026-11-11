@@ -350,5 +350,7 @@ export default {
   "today.continueStation": "Play {station}",
   "today.search": "Search",
   "today.atlas": "Atlas",
-  "today.moreFilters": "More filters"
+  "today.moreFilters": "More filters",
+  "place.unknownCountry": "Country unknown",
+  "place.cityCountry": "{city}, {country}"
 };

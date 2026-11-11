@@ -350,5 +350,7 @@ export default {
   "today.continueStation": "播放 {station}",
   "today.search": "搜尋",
   "today.atlas": "地圖集",
-  "today.moreFilters": "更多篩選"
+  "today.moreFilters": "更多篩選",
+  "place.unknownCountry": "國家不詳",
+  "place.cityCountry": "{city}, {country}"
 };

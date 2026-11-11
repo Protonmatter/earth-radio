@@ -350,5 +350,7 @@ export default {
   "today.continueStation": "{station} 재생",
   "today.search": "검색",
   "today.atlas": "지도",
-  "today.moreFilters": "추가 필터"
+  "today.moreFilters": "추가 필터",
+  "place.unknownCountry": "국가 정보 없음",
+  "place.cityCountry": "{city}, {country}"
 };

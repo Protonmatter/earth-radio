@@ -350,5 +350,7 @@ export default {
   "today.continueStation": "Reproducir {station}",
   "today.search": "Buscar",
   "today.atlas": "Atlas",
-  "today.moreFilters": "Más filtros"
+  "today.moreFilters": "Más filtros",
+  "place.unknownCountry": "País desconocido",
+  "place.cityCountry": "{city}, {country}"
 };

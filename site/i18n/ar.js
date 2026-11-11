@@ -350,5 +350,7 @@ export default {
   "today.continueStation": "تشغيل {station}",
   "today.search": "بحث",
   "today.atlas": "الأطلس",
-  "today.moreFilters": "المزيد من المرشحات"
+  "today.moreFilters": "المزيد من المرشحات",
+  "place.unknownCountry": "البلد غير معروف",
+  "place.cityCountry": "{city}، {country}"
 };
