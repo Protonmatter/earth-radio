@@ -127,17 +127,28 @@ export function card(page, name) {
 }
 
 export async function revealCard(page, name) {
-  const target = card(page, name);
-  if(!await target.count())await page.locator('#station-grid').evaluate(grid=>{grid.scrollTop=0;});
+  const target = card(page, name),grid=page.locator('#station-grid');
+  const settledWindow=()=>page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+  // A presence count can belong to a window queued for replacement. Commit the
+  // requested scroll position before inspecting rows, including on repeated seeks.
+  await grid.evaluate(grid=>{grid.scrollTop=0;});await settledWindow();
   // The station list is virtualized: a card below the fold has no DOM node until the
   // grid scrolls near it, and scrollIntoViewIfNeeded on a nonexistent node waits
   // forever. Step the grid until the card materializes.
   await expect.poll(async () => {
-    if (await target.count()) return true;
-    await page.locator('#station-grid').evaluate(grid => { grid.scrollTop += grid.clientHeight; });
+    if (await target.count()) {
+      try {
+        await target.scrollIntoViewIfNeeded({timeout:1000});await settledWindow();
+        if(await target.isVisible())return true;
+      }catch(error){if(error.name!=='TimeoutError'&&!/not attached|detached/i.test(error.message))throw error;}
+    }
+    await grid.evaluate(grid=>{
+      const end=Math.max(0,grid.scrollHeight-grid.clientHeight);
+      grid.scrollTop=grid.scrollTop>=end-1?0:Math.min(end,grid.scrollTop+grid.clientHeight);
+    });
+    await settledWindow();
     return false;
   }, { timeout: 15_000, message: `station card "${name}" never materialized` }).toBe(true);
-  await target.scrollIntoViewIfNeeded();
   return target;
 }
 

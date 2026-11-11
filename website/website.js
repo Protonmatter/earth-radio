@@ -1,7 +1,11 @@
-import {FALLBACK_RELEASE,LATEST_RELEASE_API,normalizePublicRelease} from './release-core.js';
+import {FALLBACK_RELEASE,LATEST_RELEASE_API,normalizePublicRelease,compareReleaseVersions} from './release-core.js';
 
 function presentRelease(release) {
-  for(const anchor of document.querySelectorAll('[data-download]'))anchor.href=release.downloads[anchor.dataset.download];
+  for(const anchor of document.querySelectorAll('[data-download]')){
+    const url=release.downloads[anchor.dataset.download];
+    if(url)anchor.href=url;else anchor.removeAttribute('href');
+  }
+  for(const group of document.querySelectorAll('[data-download-group]'))group.hidden=group.dataset.downloadGroup==='windowsX64'&&!release.downloads.windowsX64Setup;
   for(const element of document.querySelectorAll('[data-release-version]'))element.textContent=release.tag;
   for(const anchor of document.querySelectorAll('[data-release-install]'))anchor.href=release.install;
   for(const anchor of document.querySelectorAll('[data-release-checksums]'))anchor.href=release.checksums;
@@ -17,7 +21,7 @@ async function refreshRelease() {
     let length=0,text='';const decoder=new TextDecoder();
     try{for(;;){const part=await reader.read();if(part.done)break;length+=part.value.length;if(length>262144){await reader.cancel();return;}text+=decoder.decode(part.value,{stream:true});}text+=decoder.decode();}
     finally{reader.releaseLock();}
-    const release=normalizePublicRelease(JSON.parse(text));if(release)presentRelease(release);
+    const release=normalizePublicRelease(JSON.parse(text));if(release&&compareReleaseVersions(release.version,FALLBACK_RELEASE.version)>=0)presentRelease(release);
   }catch{/* Verified fallback remains usable when the public API is unavailable. */}
   finally{clearTimeout(timer);}
 }

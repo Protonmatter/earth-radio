@@ -1,5 +1,16 @@
 # Build state
 
+## 0.32.2 desktop/distribution candidate
+
+ER-01, ER-02 and ER-07 landed through PRs 39, 40 and 42, with the narrowly scoped
+WebKit readiness correction in PR 41. Main 64a6968 passed all ten checks; all three
+production route gates and a fresh production worker/offline test passed. This
+candidate advances the application/module version to 0.32.2 and shell to v73,
+adds Windows x64 installer/portable targets and coherent build-time website
+fallback metadata. Final source, six packages, signatures, served parity, release
+and public downloads remain gates until recorded with evidence. Existing published
+v0.32.1 assets remain unchanged. See [0.32.2 gates](RELEASE-0.32.2.md).
+
 ## 0.32.1 precision identity delivery
 
 PR #36 merged approved identity source de0e621 into main as 1d95684. This patch

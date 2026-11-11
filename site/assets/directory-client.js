@@ -1,6 +1,6 @@
-import {browserDirectoryHosts,directoryJson} from './directory-hosts.js?v=0.32.1';
-import {expandVariantGroups} from './station-variants.js?v=0.32.1';
-import {SNAPSHOT_ACCEPT} from './snapshot-protocol.js?v=0.32.1';
+import {browserDirectoryHosts,directoryJson} from './directory-hosts.js?v=0.32.2';
+import {expandVariantGroups} from './station-variants.js?v=0.32.2';
+import {SNAPSHOT_ACCEPT} from './snapshot-protocol.js?v=0.32.2';
 const countryStatus=new Map();
 export const snapshotCountryStatus=code=>countryStatus.get(code);
 export function snapshotRows(value,maxRecords=10000){
@@ -32,7 +32,7 @@ export async function loadDirectorySnapshot(config,{fetchImpl=globalThis.fetch,t
     }catch{missing.push(code);countryStatus.set(code,'failed');}}}));
     // Merge once after parsing; avoid cloning/stringifying the multi-MB snapshot
     // in the generic fetch overlay. Runtime storage is already hydrated here.
-    const {mergePinnedStations}=await import('./pinned-stations.js?v=0.32.1');
+    const {mergePinnedStations}=await import('./pinned-stations.js?v=0.32.2');
     const stale=response.headers.get('x-directory-state')==='stale';
     const generatedAt=response.headers.get('x-directory-generated-at'),producerSourceSha=response.headers.get('x-directory-producer-sha');
     const directorySnapshot=Number.isFinite(Date.parse(generatedAt))&&/^[a-f0-9]{40}$/.test(producerSourceSha||'')?{generatedAt,producerSourceSha}:null;

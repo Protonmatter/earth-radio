@@ -1,12 +1,12 @@
-import { buildFacetOptions, pickStation, rankStations, sanitizePreferences } from './discovery-core.js?v=0.32.1';
-import { createMapDirectory, mergeMappedStations } from './map-directory.js?v=0.32.1';
-import { installSearchControls } from './search-controls.js?v=0.32.1';
-import { getLocale, t } from '../i18n/index.js?v=0.32.1';
-import {stationLocation,stationMapPoint} from './station-location.js?v=0.32.1';
-import {displayCountry} from './search-core.js?v=0.32.1';
-import {groupStationVariants,projectVariantResults,expandFavoriteIds,chooseGroupStation} from './station-variants.js?v=0.32.1';
-import {atlasViewAction} from './map-viewport.js?v=0.32.1';
-import {createPlaybackIntent} from './playback-intent.js?v=0.32.1';
+import { buildFacetOptions, pickStation, rankStations, sanitizePreferences } from './discovery-core.js?v=0.32.2';
+import { createMapDirectory, mergeMappedStations } from './map-directory.js?v=0.32.2';
+import { installSearchControls } from './search-controls.js?v=0.32.2';
+import { getLocale, t } from '../i18n/index.js?v=0.32.2';
+import {stationLocation,stationMapPoint} from './station-location.js?v=0.32.2';
+import {displayCountry} from './search-core.js?v=0.32.2';
+import {groupStationVariants,projectVariantResults,expandFavoriteIds,chooseGroupStation} from './station-variants.js?v=0.32.2';
+import {atlasViewAction} from './map-viewport.js?v=0.32.2';
+import {createPlaybackIntent} from './playback-intent.js?v=0.32.2';
 
 // A hidden-to-visible resize can leave Leaflet's animated bounds correction
 // running. Its moveend handler can start another correction while stop() fires.

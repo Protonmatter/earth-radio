@@ -1,20 +1,23 @@
-# Install Earth Radio v0.32.1
+# Install Earth Radio v0.32.2
 
 Website and downloads: **https://earthradio.stream/**
 
 Production web app: **https://app.earthradio.stream/**
 
-Desktop downloads: **https://github.com/Protonmatter/earth-radio/releases/tag/v0.32.1**
+Desktop downloads: **https://github.com/Protonmatter/earth-radio/releases/tag/v0.32.2**
 
 Download only the file for your computer, plus `SHA256SUMS.txt`. The release also
 includes `BUILD-PROVENANCE.json`, platform verification receipts and this guide as
 `INSTALL.md`. Older published releases retain their original files and checksums.
 
-Version 0.32.1 uses the approved precision identity for the app, website and native desktop icons. Existing OS icon caches can refresh later than the page; avoid clearing account data as an icon troubleshooting step.
+Version 0.32.2 uses the approved precision identity for the app, website and native desktop icons. Existing OS icon caches can refresh later than the page; avoid clearing account data as an icon troubleshooting step.
 
 Version 0.32 shows one station card for matching stream variants. Choose its stream
 quality, then press Play; choosing a stream alone never starts audio. The main Play
-button uses that choice when resuming from pause. A failed stream may try a sibling.
+button uses that choice when resuming from pause. A failed stream may try a sibling within one 7.5-second connection budget.
+After exhaustion it stops with **Try again** and **Play something similar**; it
+does not change programs until you choose an action. Only **World Scan** grants
+automatic program skipping.
 An HTTP badge means web playback can be blocked by the browser; choose an HTTPS
 stream or try the desktop app. Declared bitrate is not a measured fidelity result.
 
@@ -98,11 +101,18 @@ is unavailable, unlock it and restart; local listening remains available. If sig
 reports incomplete removal, sync/linking stay paused: resolve storage access and retry
 **Sign out**. Do not clear a profile or remove credentials manually as the first step.
 
-## Windows ARM64
+## Windows — ARM64 and x64
 
-Use `EarthRadio-Setup-0.32.1-arm64.exe` for the installer or
-`EarthRadio-Portable-0.32.1-arm64.exe` for the portable app. These are for ARM64
-Windows; no Windows x64 package is included in this release.
+Open **Settings → System → About → System type** before choosing a download.
+
+| Windows PC | Installer | Portable |
+| --- | --- | --- |
+| ARM64 / ARM-based processor | `EarthRadio-Setup-0.32.2-arm64.exe` | `EarthRadio-Portable-0.32.2-arm64.exe` |
+| x64 / Intel or AMD processor | `EarthRadio-Setup-0.32.2-x64.exe` | `EarthRadio-Portable-0.32.2-x64.exe` |
+
+Choose the architecture matching your PC. A native ARM64 build is preferable on
+ARM-based Windows; x64 qualification on an ARM machine uses Windows emulation and
+does not establish physical Intel/AMD installer acceptance.
 
 Download from the release page, verify its hash against `SHA256SUMS.txt`, then run
 the selected package. The installer supports a per-user installation. Close an
@@ -111,11 +121,12 @@ older Earth Radio instance before upgrading, and export local preferences first.
 The installer lab verified a 0.25.1-to-0.26.0 upgrade, favorite/volume preservation,
 clean startup and uninstall with a separate qualification identity. Original-identity
 upgrade across every existing profile remains unqualified. Keep your export for rollback.
-For a separate portable profile, run from the download folder in PowerShell:
+For a separate portable profile, run from the download folder in PowerShell
+(change `arm64` to `x64` when using that build):
 
 ```powershell
-$radioProfile = Join-Path $env:LOCALAPPDATA 'EarthRadio-Portable-0.32.1'
-& .\EarthRadio-Portable-0.32.1-arm64.exe "--user-data-dir=$radioProfile"
+$radioProfile = Join-Path $env:LOCALAPPDATA 'EarthRadio-Portable-0.32.2'
+& .\EarthRadio-Portable-0.32.2-arm64.exe "--user-data-dir=$radioProfile"
 ```
 
 These builds have local self-signed Authenticode signatures and DigiCert timestamps.
@@ -128,8 +139,8 @@ Choose the DMG matching **Apple menu → About This Mac**:
 
 | Mac | Release file |
 | --- | --- |
-| Apple Silicon (M-series chip) | `EarthRadio-0.32.1-macOS-arm64-unnotarized.dmg` |
-| Intel processor | `EarthRadio-0.32.1-macOS-x64-unnotarized.dmg` |
+| Apple Silicon (M-series chip) | `EarthRadio-0.32.2-macOS-arm64-unnotarized.dmg` |
+| Intel processor | `EarthRadio-0.32.2-macOS-x64-unnotarized.dmg` |
 
 1. Download and verify the appropriate DMG from the release page.
 2. Open the disk image and drag **Earth Radio** into **Applications**.
@@ -156,13 +167,13 @@ you do not need to download every platform's installer.
 Windows PowerShell:
 
 ```powershell
-Get-FileHash -LiteralPath .\EarthRadio-Setup-0.32.1-arm64.exe -Algorithm SHA256
+Get-FileHash -LiteralPath .\EarthRadio-Setup-0.32.2-arm64.exe -Algorithm SHA256
 ```
 
 macOS Terminal (replace the filename for Intel):
 
 ```sh
-shasum -a 256 EarthRadio-0.32.1-macOS-arm64-unnotarized.dmg
+shasum -a 256 EarthRadio-0.32.2-macOS-arm64-unnotarized.dmg
 ```
 
 The checksums prove file equality with this release's published values. They do not

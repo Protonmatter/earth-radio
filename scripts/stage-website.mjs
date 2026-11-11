@@ -3,8 +3,11 @@ import {copyFile,lstat,mkdir,readFile,realpath,rm,writeFile} from 'node:fs/promi
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {validateWebsite} from './validate-website.mjs';
+import {PUBLISHED_RELEASE} from '../website/published-release.js';
+import {normalizePublicRelease} from '../website/release-core.js';
+import {publishedReleaseModule,stampReleaseHtml} from './release-metadata.mjs';
 
-export const WEBSITE_FILES=Object.freeze(['index.html','styles.css','website.js','release-core.js','_headers','_redirects','robots.txt','sitemap.xml','images/radio-player.png','images/listening-map.png','images/earth-radio-og.png']);
+export const WEBSITE_FILES=Object.freeze(['index.html','styles.css','website.js','release-core.js','published-release.js','_headers','_redirects','robots.txt','sitemap.xml','images/radio-player.png','images/listening-map.png','images/earth-radio-og.png']);
 export const BRAND_ASSETS=Object.freeze([
   ['earth-radio-favicon-pine-16.png','earth-radio-favicon-16.png'],
   ['earth-radio-favicon-pine-32.png','earth-radio-favicon-32.png'],
@@ -15,7 +18,9 @@ export const BRAND_ASSETS=Object.freeze([
 const defaultRoot=path.resolve(import.meta.dirname,'..');
 function childOf(parent,child){const relative=path.relative(parent,child);return relative!==''&&!path.isAbsolute(relative)&&relative!=='..'&&!relative.startsWith(`..${path.sep}`);}
 async function regular(file,bound){const metadata=await lstat(file);if(metadata.isSymbolicLink()||!metadata.isFile()||!childOf(await realpath(bound),await realpath(file)))throw new Error(`Expected a regular source file within its public source directory: ${path.basename(file)}`);}
-export async function stageWebsite({root=defaultRoot,output,cloudflare=false}={}){
+export async function stageWebsite({root=defaultRoot,output,cloudflare=false,release=PUBLISHED_RELEASE}={}){
+  const downloads=normalizePublicRelease(release);if(!downloads)throw Error('Cannot stage an incomplete public release');
+  const metadataModule=publishedReleaseModule(release);
   root=path.resolve(root);const source=path.join(root,'website'),parent=cloudflare?source:path.join(root,'.build');
   const expectedOutput=path.join(parent,cloudflare?'.build':'website');
   output=path.resolve(output||expectedOutput);
@@ -40,6 +45,8 @@ export async function stageWebsite({root=defaultRoot,output,cloudflare=false}={}
   const files=[];
   for(const input of inputs){
     const target=path.join(output,input.path);await mkdir(path.dirname(target),{recursive:true});await copyFile(input.source,target);
+    if(input.path==='index.html')await writeFile(target,stampReleaseHtml(await readFile(target,'utf8'),downloads));
+    if(input.path==='published-release.js')await writeFile(target,metadataModule);
     if(input.path==='privacy.html'){
       const privacy=await readFile(target,'utf8');
       await writeFile(target,privacy.replaceAll('href="./icon-192.png"','href="./images/earth-radio-favicon-32.png"').replaceAll('https://earth-radio.pages.dev/','https://app.earthradio.stream/'));

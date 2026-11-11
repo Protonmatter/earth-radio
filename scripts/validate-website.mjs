@@ -2,7 +2,9 @@ import {readFile,readdir} from 'node:fs/promises';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {validateRouteArtifacts,validateRouteResponses} from './public-route-contract.mjs';
-const EXPECTED=new Set(['404.html','not-found.css','index.html','styles.css','website.js','release-core.js','_headers','_redirects','robots.txt','sitemap.xml','images/radio-player.png','images/listening-map.png','privacy.html','images/earth-radio-og.png','images/earth-radio-favicon-16.png','images/earth-radio-favicon-32.png','images/earth-radio-favicon.svg','images/earth-radio-apple-touch-icon-180.png','images/earth-radio-logo.svg','asset-manifest.json']);
+import {parsePublishedReleaseModule,stampReleaseHtml} from './release-metadata.mjs';
+import {normalizePublicRelease} from '../website/release-core.js';
+const EXPECTED=new Set(['404.html','not-found.css','index.html','styles.css','website.js','release-core.js','published-release.js','_headers','_redirects','robots.txt','sitemap.xml','images/radio-player.png','images/listening-map.png','privacy.html','images/earth-radio-og.png','images/earth-radio-favicon-16.png','images/earth-radio-favicon-32.png','images/earth-radio-favicon.svg','images/earth-radio-apple-touch-icon-180.png','images/earth-radio-logo.svg','asset-manifest.json']);
 async function walk(root,prefix=''){
   const files=[];for(const entry of await readdir(path.join(root,prefix),{withFileTypes:true})){
     if(entry.isSymbolicLink())throw new Error('Website artifact contains a symbolic link');const relative=path.posix.join(prefix,entry.name);
@@ -19,6 +21,8 @@ export async function validateWebsite(root){
     if(/localhost|127\.0\.0\.1|file:\/\/|[A-Za-z]:\\Users\\|sb_secret_|-----BEGIN[^\n]*PRIVATE KEY|(?:access_token|refresh_token)\s*:/i.test(text))throw new Error(`Forbidden local/secret reference in website ${file}`);
   }
   const html=await readFile(path.join(root,'index.html'),'utf8');
+  const release=normalizePublicRelease(parsePublishedReleaseModule(await readFile(path.join(root,'published-release.js'),'utf8')));
+  if(stampReleaseHtml(html,release)!==html)throw Error('Website HTML download fallback does not match published release metadata');
   if((html.match(/<h1\b/gi)||[]).length!==1||/<iframe|<form|serviceWorker\.register/i.test(html))throw new Error('Website must have one primary heading and no embedded app/login/worker');
   for(const page of ['index.html','privacy.html','404.html']){
     const text=await readFile(path.join(root,page),'utf8');

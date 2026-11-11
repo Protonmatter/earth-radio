@@ -1,9 +1,9 @@
-import ar from './ar.js?v=0.32.1';
-import en from './en.js?v=0.32.1';
-import es from './es.js?v=0.32.1';
-import ko from './ko.js?v=0.32.1';
-import zhHans from './zh-Hans.js?v=0.32.1';
-import zhHant from './zh-Hant.js?v=0.32.1';
+import ar from './ar.js?v=0.32.2';
+import en from './en.js?v=0.32.2';
+import es from './es.js?v=0.32.2';
+import ko from './ko.js?v=0.32.2';
+import zhHans from './zh-Hans.js?v=0.32.2';
+import zhHant from './zh-Hant.js?v=0.32.2';
 
 export const DEFAULT_LOCALE = 'en';
 export const SUPPORTED_LOCALES = Object.freeze(['en', 'es', 'ar', 'ko', 'zh-Hans', 'zh-Hant']);
