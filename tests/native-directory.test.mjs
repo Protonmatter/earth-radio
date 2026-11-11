@@ -38,13 +38,27 @@ test('native city enrichment is opt-in, prefix preserving and uses only the exis
  const defaults=await publishedStationRows(read,{limit:1,countryCodes:[],countryLimit:25});
  assert.equal(defaults.stations.length,1);assert.deepEqual(calls,['/directory/snapshot']);calls.length=0;
  const enriched=await publishedStationRows(read,{limit:1,countryCodes:[],countryLimit:25,placeSeeds:true});
- assert.deepEqual(enriched.stations.slice(0,1),defaults.stations);assert.ok(enriched.stations.length<=56);
+ assert.deepEqual(enriched.stations.slice(0,1).map(({nativeProgram:_evidence,...row})=>row),defaults.stations);assert.ok(enriched.stations.length<=56);
  assert.deepEqual(calls,['/directory/snapshot']);assert.equal(new Set(enriched.stations.map(row=>row.stationuuid)).size,enriched.stations.length);
  for(const city of CURATED_PLACES)assert.equal(cityProgramChoices(enriched.stations,city.id).length,5,city.name);
 });
 
 test('invalid native opt-in values fail before a published directory read',async()=>{
  for(const placeSeeds of [null,'1',1,'false',{}])await assert.rejects(publishedStationRows(()=>{throw Error('unexpected read');},{limit:1,countryCodes:[],countryLimit:25,placeSeeds}),/flag|option|limits/i);
+});
+
+test('native sampling retains omitted transitive bridges and conflicting place evidence',async()=>{
+ const seoul=CURATED_PLACES.find(city=>city.name==='Seoul'),vienna=CURATED_PLACES.find(city=>city.name==='Vienna');
+ const local=(id,name,stream,clickcount,city=seoul)=>({...station(id,name,clickcount,city.countrycode),url:`https://radio.example/${stream}`,state:city.name,geo_lat:city.point[0],geo_long:city.point[1]});
+ const prefix=[local('a','Alpha','a',100),local('b','Beta','b',99)];
+ for(const conflict of [false,true]){
+  const root=[...prefix,local('bridge','Alpha','b',1),...Array.from({length:3},(_,i)=>local('p'+i,'Distinct '+i,'p'+i,20-i))];
+  if(conflict)root.push(local('conflict','Other place','b',0,vienna));
+  let reads=0;const result=await publishedStationRows(async()=>{reads++;return response(root);},{limit:2,countryCodes:[],countryLimit:25,placeSeeds:true});
+  assert.deepEqual(result.stations.slice(0,2).map(row=>row.stationuuid),['a','b']);
+  assert.equal(reads,1);assert.ok(result.stations.length<=57);
+  assert.equal(cityProgramChoices(result.stations,seoul.id).length,conflict?3:4);
+ }
 });
 
 test('the actual federated route rejects malformed flag values and forwards only explicit opt-in',async()=>{

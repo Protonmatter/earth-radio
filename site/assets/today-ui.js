@@ -31,6 +31,7 @@ export function installToday(adapter){
   if(station)actions.set(button,station);else actions.delete(button);
  }
  function recommendations(){
+  try{
   const secureOnly=adapter.native?.()!==true,options={secureOnly,now:Date.now(),badStations:adapter.badStations?.()};
   hero=place?cityProgramChoices(catalog,place.id,options)[0]||null:null;
   const model=programComponents(catalog),componentByRow=new Map();
@@ -42,6 +43,12 @@ export function installToday(adapter){
    seen.add(component);air.push(entry.station);if(air.length===3)break;
   }
   cardsKey='';
+  }catch{
+   // This optional surface must never turn a successful shared-catalog load
+   // into a player/search failure. Keep Continue and the existing refresh path.
+   hero=null;air=[];componentsById.clear();cardsKey='';
+   console.warn('Earth Radio Today: catalog recommendations unavailable');
+  }
  }
  function render(){
   const now=Date.now(),date=new Date(now).toISOString().slice(0,10),locale=getLocale();

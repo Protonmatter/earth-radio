@@ -1,6 +1,6 @@
 # Today home Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Make Atlas/Today a useful one-tap launch with honest city/time data and bounded native sampling.
 
@@ -34,10 +34,10 @@
 
 **Interfaces:** `programComponents(stations)` returns existing groups, connected row components and canonical identity count with no I/O/mutation. `todayPlaceForUTCDate(dayKey, places)` uses explicit YYYY-MM-DD UTC and frozen IDs. `cityProgramChoices(stations, cityId, options)` returns one ranked matched station per component. `appendCitySeeds(prefix, root)` returns a prefix-preserving array with at most55 matched additions. Existing native federated input supports optional `placeSeeds=1`, default false.
 
-- [ ] Add failing tests for frozen calendar/date validity, all-day/next-day/TZ/order independence, aliases/shared streams, matching-variant choice, country/city conflict, stable rank and input immutability. Observe missing-module RED.
-- [ ] Extract common components without changing accepted qualifier results; preserve conflicting-duplicate failure. Implement pure date/candidate/seed helpers, then run focused tests GREEN. Check frozen metrics unchanged and update hash-bound receipt.
-- [ ] Add native request tests for default unchanged, invalid flag400, prefix/IDs/budget, five supported programs, missing-city degradation and no extra read. Observe RED, wire explicit opt-in and run GREEN.
-- [ ] Update test list/manifests, run npm run verify and committed-object checks; commit the bounded task. Record decisions/tests in this plan's ledger.
+- [x] Add failing tests for frozen calendar/date validity, all-day/next-day/TZ/order independence, aliases/shared streams, matching-variant choice, country/city conflict, stable rank and input immutability. Observe missing-module RED.
+- [x] Extract common components without changing accepted qualifier results; preserve conflicting-duplicate failure. Implement pure date/candidate/seed helpers, then run focused tests GREEN. Check frozen metrics unchanged and update hash-bound receipt.
+- [x] Add native request tests for default unchanged, invalid flag400, prefix/IDs/budget, five supported programs, missing-city degradation and no extra read. Observe RED, wire explicit opt-in and run GREEN.
+- [x] Update test list/manifests, run npm run verify and committed-object checks; commit the bounded task. Record decisions/tests in this plan's ledger.
 
 ## Task 2: Today surface, three primary destinations and runtime adapter
 
@@ -45,11 +45,11 @@
 
 **Interfaces:** `installToday(adapter)` receives existing `play`, pause/toggle, refresh, domain/map and snapshot authority. `observe(snapshot)` consumes stations/currentStation/lastPlayed and active player state. `defaultStation()` supplies idle Continue/Today. Runtime continues to own all audio, routes and persistence. UI destination today joins legacy states; primary nav groups Atlas/Library/Search, existing saved/current-account panes remain the data owners.
 
-- [ ] Write failing browser cases for default/returning390x844, named one-tap play/pause/retry, no autoplay, date rollover without audio change, explicit deep link, Library controls/focus and empty/offline data. Add pure UI/destination tests where appropriate; observe RED.
-- [ ] Build semantic Continue/Today's place/On air sections with stable buttons and bounded text. Add primary nav/Library presentation, Settings utilities and generic visible skip target, keeping old runtime controls as single authoritative elements. No duplicate visible overflow actions.
-- [ ] Wire the narrow dashboard snapshot/action adapter and idle footer/default native request flag. Fingerprint runtime, record exact rationale, advance candidate0.33.0 and fresh worker/module URLs, include only small new active modules/CSS in precache.
-- [ ] Add every visible string to all six catalogs. Validate first-viewport geometry,44px controls, palettes/RTL/text zoom, reduced motion and actual map; inspect screenshots and correct concrete collisions.
-- [ ] Run focused tests, npm run verify and relevant rendered/native gates. Commit only qualified feature files/manifests.
+- [x] Write failing browser cases for default/returning390x844, named one-tap play/pause/retry, no autoplay, date rollover without audio change, explicit deep link, Library controls/focus and empty/offline data. Add pure UI/destination tests where appropriate; observe RED.
+- [x] Build semantic Continue/Today's place/On air sections with stable buttons and bounded text. Add primary nav/Library presentation, Settings utilities and generic visible skip target, keeping old runtime controls as single authoritative elements. No duplicate visible overflow actions.
+- [x] Wire the narrow dashboard snapshot/action adapter and idle footer/default native request flag. Fingerprint runtime, record exact rationale, advance candidate0.33.0 and fresh worker/module URLs, include only small new active modules/CSS in precache.
+- [x] Add every visible string to all six catalogs. Validate first-viewport geometry,44px controls, palettes/RTL/text zoom, reduced motion and actual map; inspect screenshots and correct concrete collisions.
+- [x] Run focused tests, npm run verify and relevant rendered/native gates. Commit only qualified feature files/manifests.
 
 ## Task 3: Whole-regression and authorized delivery
 

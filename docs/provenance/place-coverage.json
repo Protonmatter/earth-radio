@@ -229,8 +229,8 @@
       },
       {
         "path": "site/assets/program-components.js",
-        "bytes": 2032,
-        "sha256": "ee1df4fcee319018c9a649dbf84b40a373757ddb96e83ee36234e587849ec15a"
+        "bytes": 3087,
+        "sha256": "3cc371dd5208d3b49924bb427cb29a8784b9090bd73d69fc1bf77f4e5bd6a65a"
       },
       {
         "path": "scripts/qualify-place-data.mjs",
@@ -256,7 +256,7 @@
       "architecture": "arm64"
     }
   },
-  "qualifiedAt": "2026-11-11T14:05:37.190Z",
+  "qualifiedAt": "2026-11-11T17:27:03.472Z",
   "scope": "Frozen-input place-model qualification only; no playback, UI, broad-geocoding or physical-device claim.",
   "sourceAcquisition": {
     "checkedAt": "2026-11-11T11:40:00.984Z",

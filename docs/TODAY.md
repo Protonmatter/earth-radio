@@ -42,6 +42,8 @@ aligns its hidden existing theme field before Save.
 The recovered router suppresses feedback only for a real hash assignment.
 `history.replaceState` emits no hashchange event and must not consume the next
 user fragment. Same-document geography and quality links retain their meaning.
+Owned skip links move keyboard focus without changing fragments, history or active
+filters. Settings contains Tab/Shift+Tab focus and restores its visible trigger.
 
 The 0.33.0 module URLs and v74 worker include only the small active Today/place
 modules. Large map detail/terrain/roads remain outside the precache. The recovered
@@ -60,6 +62,11 @@ record or invalid date/zone returns null; it does not silently pick another city
 and canonical-UUID component logic without rewriting identities or input rows.
 The qualifier retains its stricter conflicting-duplicate validation before using
 this helper. Conservative program counts do not count stream aliases as cities.
+The shared helper admits at most 50,000 observations, covering the existing reader
+maximum of 40,002 after root/country/pinned/map augmentation. Native seed inputs
+retain their separate 6,500-prefix and 10,000-root limits. Optional recommendation
+failure clears the recommendation and leaves Continue/Search/refresh usable; it
+cannot turn the shared catalog load into a playback or search failure.
 
 `cityProgramChoices(stations, cityId, options)` returns at most one corroborated
 variant per non-conflicting program component, ordered by the existing reliable
@@ -82,7 +89,14 @@ selected. `appendCitySeeds(prefix, root)` reuses that root to bring available
 calendar cities to five supported programs, appending at most five per city and
 55 total above the original merged/capped prefix (6,500 maximum). It preserves
 prefix order and original station identities and adds no directory request. The
-existing direct-mirror fallback keeps its old bounds/fanout and may offer fewer
+opt-in result adds bounded `nativeProgram: {id, cityId}` evidence to each selected
+row. Its ID joins full-root components only for recommendation counting, and its
+city or null restricts qualification when the sample omits a transitive bridge or
+conflicting place. It cannot confer coordinates/city evidence, change UUIDs,
+expand playback-recovery families or change default endpoint results. All original
+prefix fields are preserved; objects are copied to avoid mutating input records.
+Invalid present support fails city qualification rather than becoming evidence.
+The existing direct-mirror fallback keeps its old bounds/fanout and may offer fewer
 city programs during a published-directory outage; the UI must disclose the
 available count rather than promise complete coverage.
 

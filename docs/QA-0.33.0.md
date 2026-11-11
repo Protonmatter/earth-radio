@@ -2,7 +2,8 @@
 
 This is an in-progress candidate record, not production acceptance. The base is
 merged prerequisite `c874299`; pure calendar/native seeds are committed locally
-as `c9a2a74`. UI changes await the required regressions before commit. Published
+as `c9a2a74` and the UI as `3037685`. Review fixes passed the full local gates
+below before their commit. Published
 0.32.2 assets and their tag remain unchanged.
 
 ## Scope and corrected defects
@@ -70,8 +71,21 @@ verified physical studio positions.
 
 ## Remaining gates
 
+The final source review identified four P2 cases: sampled component evidence,
+large accepted catalogs, skip-link route loss and Settings focus containment.
+Their covering tests first failed. The candidate now carries bounded opt-in
+native component/city support through normalization, admits the existing maximum
+catalog, contains optional recommendation failure, preserves skip-link routes,
+and contains Settings keyboard focus. Post-review local gates pass: 652 tests with
+the same three Windows skips, 422 source hashes, all 274 browser cases at three
+workers, all 42 rendered scenarios, and native ARM64 sandbox/auth/restart checks.
+The native bridge case also covers an omitted conflicting city observation.
+The broad-catalog test uses the actual root/country loader and map merge; a browser
+case expands beyond 20,000 while retaining Search, Today and existing audio.
+
 Local full verify, browsers, rendered matrix and native sandbox/auth/restart pass.
-Require whole-branch review, committed manifests, exact-head CI and actual preview
+The fresh whole-branch review's four findings have covering RED-to-GREEN tests.
+Require committed manifests, exact-head CI and actual preview
 acceptance. Then merge, verify final-main/production and update
 the Space. Desktop distribution requires a separate immutable artifact build
 and qualification after phase3 UI acceptance.

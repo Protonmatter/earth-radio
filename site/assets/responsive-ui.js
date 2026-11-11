@@ -1646,6 +1646,15 @@ function bindActions() {
   document.addEventListener('click', event => {
     const target = event.target instanceof Element ? event.target : null;
     if (!target) return;
+    const skip=target.closest('a.er-skip');
+    if(skip){
+      const id=skip.getAttribute('href')?.slice(1);
+      if(['er-workspace','er-you','er-station-query'].includes(id)){
+        const destination=byId(id);
+        if(destination){event.preventDefault();destination.focus({preventScroll:true});}
+      }
+      return;
+    }
     const filterTrigger=target.closest('[data-open-filters]');
     if(filterTrigger){
       if(filterTrigger.getClientRects().length)filterReturnControl=filterTrigger;
@@ -1838,8 +1847,16 @@ function bindActions() {
 
   document.addEventListener('keydown', event => {
     if (byId('er-song-details')?.open) return;
+    const settings=byId('settings-modal');
+    if(event.key==='Tab'&&settingsModalIsVisible(settings)&&!document.querySelector('.er-auth-modal')){
+      const controls=[...settings.querySelectorAll(FOCUSABLE)].filter(element=>element.getClientRects().length&&getComputedStyle(element).visibility!=='hidden');
+      const first=controls[0],last=controls.at(-1);
+      if(first&&(!settings.contains(document.activeElement)||event.shiftKey&&document.activeElement===first||!event.shiftKey&&document.activeElement===last)){
+        event.preventDefault();(event.shiftKey?last:first).focus();
+      }
+      return;
+    }
     if (event.key === 'Escape') {
-      const settings = byId('settings-modal');
       if (settingsModalIsVisible(settings)) {
         event.preventDefault();
         dismissLocalePreview();

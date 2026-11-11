@@ -4,6 +4,36 @@ import {setupApp} from './helpers.mjs';
 import {mkdir,writeFile} from 'node:fs/promises';
 test.use({viewport:{width:390,height:844}});
 
+for(const conflict of [false,true])test(`native component evidence survives runtime normalization, conflict=${conflict}`,async({page})=>{
+ await setupToday(page);
+ const rows=['Alpha','Beta'].map((name,index)=>({stationuuid:`native-${name}`,name:`Berlin ${name}`,countrycode:'DE',state:'Berlin',geo_lat:52.5,geo_long:13.4,url:`https://streams.e2e.example/${index}.wav`,codec:'MP3',bitrate:128,lastcheckok:1,clickcount:100-index,nativeProgram:{id:'native-alpha',cityId:conflict?null:'ne-1159151529'}}));
+ await page.route(url=>url.hostname.endsWith('api.radio-browser.info')&&/\/json\/stations\/(?:topclick|search)/.test(url.pathname),route=>route.fulfill({json:rows}));
+ await page.goto('/');
+ if(conflict){await expect(page.locator('#grid-count')).toHaveText('4 stations');await expect(page.locator('#er-today-place [data-today-play]')).toBeDisabled();}
+ else{await expect(page.locator('#er-today-place [data-today-play]')).toBeEnabled();await expect(page.locator('#er-today-onair')).not.toContainText('Berlin Beta');}
+ await expect(page.locator('#audio-player')).toHaveJSProperty('paused',true);
+});
+
+test('keyboard skip preserves the active geography, quality and station fragment',async({page})=>{
+ await setupToday(page);await page.goto('/#countries=Germany&minQuality=30');
+ await expect(page.locator('#er-discovery-active')).toContainText('Germany');
+ await expect(page.locator('#er-discovery-active')).toContainText('Quality 30+');
+ const filteredURL=page.url();
+ await page.locator('.er-skip').focus();await page.keyboard.press('Enter');
+ await expect(page.locator('#er-workspace')).toBeFocused();
+ await expect(page).toHaveURL(filteredURL);
+ await expect(page.locator('#er-discovery-active')).toContainText('Germany');
+ await expect(page.locator('#er-discovery-active')).toContainText('Quality 30+');
+ await page.goto('/?skip-check=station#station=00000000-0000-4000-8000-000000000400');
+ await expect(page.locator('#btn-play')).toHaveAttribute('aria-label',/Vienna Radio 1/);
+ const stationURL=page.url();
+ await page.locator('.er-skip').focus();await page.keyboard.press('Enter');
+ await expect(page.locator('#er-workspace')).toBeFocused();
+ await expect(page).toHaveURL(stationURL);
+ await expect(page.locator('#btn-play')).toHaveAttribute('aria-label',/Vienna Radio 1/);
+ await expect(page.locator('#audio-player')).toHaveJSProperty('paused',true);
+});
+
 test('startup controls wait for the owned runtime and Settings receives keyboard focus',async({page})=>{
  await setupToday(page);let release;const pending=new Promise(resolve=>{release=resolve;});
  await page.route('**/assets/index-*.js',async route=>{await pending;await route.fallback();});
@@ -15,6 +45,21 @@ test('startup controls wait for the owned runtime and Settings receives keyboard
   await expect.poll(()=>page.evaluate(()=>Boolean(document.activeElement?.closest('#settings-modal')))).toBe(true);
   await page.locator('#settings-modal .settings-header [data-close-settings]').click();await expect(page.locator('#settings-toggle')).toBeFocused();
  }finally{release();}
+});
+
+for(const width of [390,1440])test(`Settings contains keyboard focus and returns to its trigger at ${width}px`,async({page})=>{
+ await page.setViewportSize({width,height:900});await setupToday(page);await page.goto('/');
+ const trigger=page.locator('#settings-toggle'),modal=page.locator('#settings-modal');
+ await trigger.click();await expect(modal).toBeVisible();
+ const first=modal.locator('.settings-header [data-close-settings]'),last=page.locator('#settings-save');
+ await first.focus();await page.keyboard.press('Shift+Tab');await expect(last).toBeFocused();
+ await page.keyboard.press('Tab');await expect(first).toBeFocused();
+ for(let count=0;count<24;count++){
+  await page.keyboard.press('Tab');
+  await expect.poll(()=>page.evaluate(()=>Boolean(document.activeElement?.closest('#settings-modal')))).toBe(true);
+ }
+ await page.keyboard.press('Escape');await expect(modal).toBeHidden();await expect(trigger).toBeFocused();
+ await trigger.click();await first.click();await expect(modal).toBeHidden();await expect(trigger).toBeFocused();
 });
 
 test('saving Settings after a palette selection keeps the basemap and stored theme aligned',async({page})=>{

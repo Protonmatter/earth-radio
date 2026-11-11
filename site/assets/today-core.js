@@ -2,7 +2,7 @@
 // an existing day's city. Selection is recommendation-only; it never plays audio.
 import {CURATED_PLACES} from './curated-places.js?v=0.33.0';
 import {stationPlace,formatPlaceTime} from './place-core.js?v=0.33.0';
-import {programComponents} from './program-components.js?v=0.33.0';
+import {programComponents,nativeProgramSupport} from './program-components.js?v=0.33.0';
 import {rankStations} from './discovery-core.js?v=0.33.0';
 
 export const TODAY_CALENDAR_V1=Object.freeze([
@@ -26,7 +26,11 @@ function supportedComponents(stations){
   const observations=rows.map(row=>({row,place:stationPlace(row)}));
   const countries=new Set(observations.map(item=>item.place?.countrycode).filter(Boolean));
   const cities=new Set(observations.map(item=>item.place?.cityId).filter(Boolean));
-  return{rows,observations,cityId:countries.size===1&&cities.size===1?[...cities][0]:null};
+  let cityId=countries.size===1&&cities.size===1?[...cities][0]:null;
+  // A sampled subset may omit a bridge or conflicting place. Native evidence can
+  // restrict qualification; it cannot confer city evidence on an unsupported row.
+  if(rows.some(row=>{const support=nativeProgramSupport(row);return support!==undefined&&(!support||support.cityId!==cityId);}))cityId=null;
+  return{rows,observations,cityId};
  });
 }
 
@@ -48,6 +52,7 @@ export function cityProgramChoices(stations,cityId,options={}){
 
 export function appendCitySeeds(prefix,root){
  if(!Array.isArray(prefix)||!Array.isArray(root)||prefix.length>6500||root.length>10000)throw TypeError('Invalid native city seed budgets');
+ if(!root.length)return[...prefix];
  const components=supportedComponents([...prefix,...root]);
  const prefixRows=new Set(prefix),rootRows=new Set(root),ids=new Set(prefix.map(row=>identity(row.stationuuid))),result=[...prefix];
  for(const cityId of TODAY_CALENDAR_V1){
@@ -63,5 +68,10 @@ export function appendCitySeeds(prefix,root){
    if(station){result.push(station);ids.add(identity(station.stationuuid));present.add(item.component);}
   }
  }
- return result;
+ const evidence=new Map();
+ for(const component of components){
+  const support={id:identity(component.rows[0].stationuuid),cityId:component.cityId};
+  for(const row of component.rows)evidence.set(row,support);
+ }
+ return result.map(row=>({...row,nativeProgram:evidence.get(row)||null}));
 }

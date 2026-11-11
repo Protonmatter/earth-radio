@@ -2,6 +2,7 @@
 // is unit-testable in isolation (tests/unit/api.normalize.spec.ts, filters.spec.ts).
 import { normalizeSourceClaims, scoreSourceAgreement } from '../../core/sourceGraph.js';
 import './sources.js';
+import { nativeProgramSupport } from '../../../site/assets/program-components.js';
 import type { Quality, Station } from '../../core/types';
 
 export interface BitrateBucket {
@@ -145,6 +146,7 @@ export function normalizeStation(raw: any, badStations: Map<string, { failures: 
     tagList: tags,
     country,
     countrycode,
+    nativeProgram: nativeProgramSupport(raw),
     language,
     codec,
     bitrate,
