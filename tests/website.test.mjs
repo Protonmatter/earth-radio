@@ -4,6 +4,7 @@ import {tmpdir} from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
 import {FALLBACK_RELEASE,normalizePublicRelease} from '../website/release-core.js';
+import {PUBLISHED_RELEASE} from '../website/published-release.js';
 import {BRAND_ASSETS,stageWebsite} from '../scripts/stage-website.mjs';
 import {validateWebsite} from '../scripts/validate-website.mjs';
 import {validateRouteResponses} from '../scripts/public-route-contract.mjs';
@@ -15,9 +16,9 @@ const fixture=(tag='v0.29.1')=>({tag_name:tag,draft:false,prerelease:false,html_
 ].map(name=>({name,size:1234,state:'uploaded',browser_download_url:`https://github.com/Protonmatter/earth-radio/releases/download/${tag}/${name}`}))});
 
 test('website fallback points to the previously verified complete stable release',()=>{
-  assert.equal(FALLBACK_RELEASE.tag,'v0.29.0');
-  assert.equal(Object.keys(FALLBACK_RELEASE.downloads).length,4);
-  assert.ok(Object.values(FALLBACK_RELEASE.downloads).every(url=>url.startsWith('https://github.com/Protonmatter/earth-radio/releases/download/v0.29.0/')));
+  assert.equal(FALLBACK_RELEASE.tag,PUBLISHED_RELEASE.tag_name);
+  assert.equal(Object.keys(FALLBACK_RELEASE.downloads).length,PUBLISHED_RELEASE.assets.filter(asset=>/\.(exe|dmg)$/.test(asset.name)).length);
+  assert.ok(Object.values(FALLBACK_RELEASE.downloads).every(url=>url.startsWith(`https://github.com/Protonmatter/earth-radio/releases/download/${PUBLISHED_RELEASE.tag_name}/`)));
 });
 
 test('release lookup accepts only complete stable releases and exact repository asset URLs',()=>{
@@ -26,6 +27,15 @@ test('release lookup accepts only complete stable releases and exact repository 
   for(const mutate of [r=>{r.draft=true;},r=>{r.prerelease=true;},r=>{r.tag_name='v0.29.1-rc1';},r=>{r.assets.pop();},r=>{r.assets[0].state='open';},r=>{r.assets[0].size=0;},r=>{r.assets[0].browser_download_url='https://github.com.evil.example/download.exe';},r=>{r.assets[0].browser_download_url+='?token=untrusted';},r=>{r.html_url='javascript:alert(1)';},r=>{r.assets[0].name='EarthRadio-Setup-0.29.0-arm64.exe';}]){
     const raw=fixture();mutate(raw);assert.equal(normalizePublicRelease(raw),null);
   }
+});
+
+test('desktop releases from 0.32.2 require a complete Windows x64 pair',()=>{
+  const raw=fixture('v0.32.2'),base='https://github.com/Protonmatter/earth-radio/releases/download/v0.32.2/';
+  for(const name of ['EarthRadio-Setup-0.32.2-x64.exe','EarthRadio-Portable-0.32.2-x64.exe'])raw.assets.push({name,size:1234,state:'uploaded',browser_download_url:base+name});
+  const release=normalizePublicRelease(raw);
+  assert.equal(release.downloads.windowsX64Setup,base+'EarthRadio-Setup-0.32.2-x64.exe');
+  assert.equal(release.downloads.windowsX64Portable,base+'EarthRadio-Portable-0.32.2-x64.exe');
+  raw.assets.pop();assert.equal(normalizePublicRelease(raw),null);raw.assets.pop();assert.equal(normalizePublicRelease(raw),null);
 });
 
 test('website staging is explicit, static, validated and independent from app Functions',async()=>{

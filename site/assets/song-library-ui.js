@@ -1,11 +1,11 @@
-import { t, normalizeLocale } from '../i18n/index.js?v=0.32.1';
-import { getCurrentSongSnapshot, subscribeCurrentSong } from './metadata-enrichment.js?v=0.32.1';
+import { t, normalizeLocale } from '../i18n/index.js?v=0.32.2';
+import { getCurrentSongSnapshot, subscribeCurrentSong } from './metadata-enrichment.js?v=0.32.2';
 import {
   emptySongLibrary, normalizeSong, songId, songServiceLinks, libraryEntries,
   setSongLiked, recordHeardSongs, clearSongHistory, removeSong, setSongHistoryEnabled,
   addSongsFromLibrary, exportSongLibrary, importSongLibrary, ListeningSession
-} from './song-library-core.js?v=0.32.1';
-import { songLibraryStore, getSongLibraryAccount, subscribeSongLibraryAccount } from './song-library-store.js?v=0.32.1';
+} from './song-library-core.js?v=0.32.2';
+import { songLibraryStore, getSongLibraryAccount, subscribeSongLibraryAccount } from './song-library-store.js?v=0.32.2';
 
 const byId = id => document.getElementById(id);
 const node = (tag, className, text) => { const element = document.createElement(tag); if (className) element.className = className; if (text !== undefined) element.textContent = text; return element; };

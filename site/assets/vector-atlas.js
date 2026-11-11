@@ -1,7 +1,7 @@
-import { WORLD_LAND } from './world-land.js?v=0.32.1';
-import { MAP_LABEL_STORAGE, sanitizeMapLabels, layoutMapLabels, intersectsBounds, resolveMapTheme } from './map-core.js?v=0.32.1';
-import { t, normalizeLocale } from '../i18n/index.js?v=0.32.1';
-import {installMapViewport} from './map-viewport.js?v=0.32.1';
+import { WORLD_LAND } from './world-land.js?v=0.32.2';
+import { MAP_LABEL_STORAGE, sanitizeMapLabels, layoutMapLabels, intersectsBounds, resolveMapTheme } from './map-core.js?v=0.32.2';
+import { t, normalizeLocale } from '../i18n/index.js?v=0.32.2';
+import {installMapViewport} from './map-viewport.js?v=0.32.2';
 
 // All geography ships with the app. No tile, geocoder or location service is
 // used. The runtime retains ownership of the Leaflet map and radio markers.

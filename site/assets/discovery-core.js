@@ -1,8 +1,8 @@
 // Maintained, pure discovery algorithms. Scores are engineering heuristics, not
 // calibrated probabilities of stream uptime. No network, storage, or browser globals.
-import {fold,canonicalGenre,canonicalLanguage,countryWords,genreWords,languageWords,closeWord,searchTerms,facetLabel,isPlaceTerm,isGenreTerm,correctGenre} from './search-core.js?v=0.32.1';
-export {fold} from './search-core.js?v=0.32.1';
-import {stationLocation} from './station-location.js?v=0.32.1';
+import {fold,canonicalGenre,canonicalLanguage,countryWords,genreWords,languageWords,closeWord,searchTerms,facetLabel,isPlaceTerm,isGenreTerm,correctGenre} from './search-core.js?v=0.32.2';
+export {fold} from './search-core.js?v=0.32.2';
+import {stationLocation} from './station-location.js?v=0.32.2';
 const SORTS = new Set(['best', 'reliable', 'explore', 'bitrate', 'name', 'similar']);
 const COOLDOWN_MS = 15 * 60 * 1000;
 const clamp = (value, max = 100) => Math.min(max, Math.max(0, Number.isFinite(Number(value)) ? Number(value) : 0));

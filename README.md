@@ -2,11 +2,11 @@
 
 Explore live radio stations around the world in a recovered, auditable web and Electron application.
 
-Release **0.32.1** carries the approved precision identity across web and native desktop icons, and groups stream variants into one station with a quality picker, serves scheduled normalized directory generations with stable content hashes, preserves original favorites and links, and corrects the catalog toast and Antarctic fallback regressions. See [directory publication](docs/DIRECTORY_PUBLICATION.md), [reliability](docs/DISCOVERY_RELIABILITY.md) and the [release gates](docs/RELEASE-0.32.1.md).
+Release **0.32.2 is being qualified**. It keeps explicit station playback within its program, reports directory clicks only after confirmed audio, serves real online/offline 404s, and adds Windows x64 alongside ARM64 and both macOS architectures. All six application builds must pass the [release gates](docs/RELEASE-0.32.2.md) before publication. Grouped streams, the normalized scheduled directory and approved identity are retained. The website stages fallback download links from validated published-release metadata.
 
 Website and downloads: **https://earthradio.stream/**. Radio app: **https://app.earthradio.stream/**. The earlier **https://earth-radio.pages.dev/** app remains available for existing shortcuts and unsynced local collections. Public repository: **https://github.com/Protonmatter/earth-radio**.
 
-See the [installation guide](docs/INSTALLATION.md) for Windows ARM64, macOS Apple Silicon/Intel, and Safari Home Screen installation on iPhone/iPad. Get desktop downloads, checksums and build provenance from the [v0.32.1 release page](https://github.com/Protonmatter/earth-radio/releases/tag/v0.32.1). Windows uses the accepted local signer; macOS builds are explicitly labeled unnotarized.
+See the [installation guide](docs/INSTALLATION.md) for Windows ARM64/x64, macOS Apple Silicon/Intel, and Safari Home Screen installation on iPhone/iPad. Get desktop downloads, checksums and build provenance from the [latest complete release](https://github.com/Protonmatter/earth-radio/releases/latest). Windows uses the accepted local signer; macOS builds are explicitly labeled unnotarized.
 
 This repository was reconstructed from the installed Earth Radio 0.24.0 application and two user-supplied archives. It is not a byte-for-byte reproduction of the original development repository. The newest runnable installed assets were selected where they differed from older archived source; those decisions are recorded in [docs/PROVENANCE.md](docs/PROVENANCE.md).
 
