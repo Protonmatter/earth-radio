@@ -55,8 +55,8 @@
     },
     {
       "path": "docs/BUILD_STATE.md",
-      "bytes": 31101,
-      "sha256": "ba52469a0b95a8588e343f534406da5b5fafd4a8b3fdc2552e6e1e40c18e4d54"
+      "bytes": 31787,
+      "sha256": "5a11d5b3efd381e6c1cb5e24f07b2cbe5f1ce4a84082e11d21be286a3facb822"
     },
     {
       "path": "docs/CLOUDFLARE_DEPLOYMENT.md",
@@ -65,8 +65,8 @@
     },
     {
       "path": "docs/DAILY_RETURN_DELIVERY.md",
-      "bytes": 5173,
-      "sha256": "d8bbd425c4ace76e23dc205aff0930850c3fa322bbc4233e5f2a163b0206e593"
+      "bytes": 5750,
+      "sha256": "57741007beb16ea56fd573b148b95dd7b3d50ad9ca2ac6ff9c450181543a6ac7"
     },
     {
       "path": "docs/DIRECTORY_PUBLICATION.md",
@@ -119,6 +119,11 @@
       "sha256": "e4d9aa237f76406876277d205706a945a6d040d9ef8865440b4cea9963ac642f"
     },
     {
+      "path": "docs/PLACE_MODEL.md",
+      "bytes": 9789,
+      "sha256": "12dcfccaa718070fcf6d65ba648e21ebe1492c75bc16d6c48e7b398588f0b71c"
+    },
+    {
       "path": "docs/PROVENANCE.md",
       "bytes": 2789,
       "sha256": "97c15870f78485a7347bfba652f6eb159ecef181a916012a8b525bc059d1b348"
@@ -137,6 +142,21 @@
       "path": "docs/provenance/map-data.json",
       "bytes": 4883,
       "sha256": "046943e528977411d8de640f4d51a7c447fdf2fd128bb8f509f3aa7ef5900442"
+    },
+    {
+      "path": "docs/provenance/place-coverage.json",
+      "bytes": 8572,
+      "sha256": "68fa690ed6c19c059c551d7f77aeff64b599294f66bca04393c273daf4ddd2b7"
+    },
+    {
+      "path": "docs/provenance/place-data.json",
+      "bytes": 1665,
+      "sha256": "e254928bb14b389b415b04bb887a04354b8e0e2f2508fa9b6d21f51447cf5ecf"
+    },
+    {
+      "path": "docs/provenance/place-selection.json",
+      "bytes": 858,
+      "sha256": "0c03e53b1159b47845be2b5b3abd54fc6920bed1e025a648bed454f1ed810966"
     },
     {
       "path": "docs/provenance/recovery-manifest.json",
@@ -329,6 +349,11 @@
       "sha256": "7e3d2c8d046b23881c40171c805ac032083de99ebc5bcfeb3d6dedecfd365003"
     },
     {
+      "path": "docs/superpowers/plans/2026-11-11-place-time.md",
+      "bytes": 6628,
+      "sha256": "85b2e60907ac91eacea64d5ff8b7c1586ba57792efe34d372d8cb77aea0eb2e6"
+    },
+    {
       "path": "docs/superpowers/specs/2026-08-21-earth-radio-public-cloudflare-design.md",
       "bytes": 17922,
       "sha256": "815ff3d352b2dec000309074e4157d47c0ee7dbcf99bae8ef9f729520deda43b"
@@ -362,6 +387,11 @@
       "path": "docs/superpowers/specs/2026-11-08-public-website-domains-design.md",
       "bytes": 4305,
       "sha256": "c519622810cc4159f75ec461af2c1f66ade729a89a946425514d7995d651f4ab"
+    },
+    {
+      "path": "docs/superpowers/specs/2026-11-11-place-time-design.md",
+      "bytes": 4974,
+      "sha256": "5edbdb75dffa502547555d74a582259ef197527278bab5efc1fc46883b0207fa"
     },
     {
       "path": "electron-builder.yml",
@@ -455,8 +485,8 @@
     },
     {
       "path": "package.json",
-      "bytes": 5143,
-      "sha256": "98b7b774d9a5525aae1662e9518d4000a1b3132e5f114f68ffdb34af147248da"
+      "bytes": 5230,
+      "sha256": "c459476d90db354fa56f4139f1dee80261a0c2065a2748690202e41f2a8afd92"
     },
     {
       "path": "scripts/build-desktop-icon.mjs",
@@ -477,6 +507,11 @@
       "path": "scripts/build-map-data.mjs",
       "bytes": 9694,
       "sha256": "71c6f4f88c4b11e187d0fe68c776d0c9fcfcf3df0bab86dcd7e3ed95b2675b1c"
+    },
+    {
+      "path": "scripts/build-place-data.mjs",
+      "bytes": 9721,
+      "sha256": "651e1be6993105ae7df8518758f93611013d7b899242c029c602fe26ef2b0eef"
     },
     {
       "path": "scripts/build-windows.mjs",
@@ -527,6 +562,11 @@
       "path": "scripts/qualify-live-streams.mjs",
       "bytes": 5068,
       "sha256": "c36e6b0d8d3b3684210eb48dcd816451f88b699f6ad1e7e2d6eecfd81c5e640a"
+    },
+    {
+      "path": "scripts/qualify-place-data.mjs",
+      "bytes": 8819,
+      "sha256": "c53a0b40438f9b3357d05fae9bc31cd0634c3ef3d77843adfe885427442914e3"
     },
     {
       "path": "scripts/recovery-inventory.mjs",
@@ -719,6 +759,11 @@
       "sha256": "6edbbf24b984d6b5a862f41fbdf8fdf90d48cd6a64cfe2f2ebbf53c0e55848b4"
     },
     {
+      "path": "site/assets/curated-places.js",
+      "bytes": 3005,
+      "sha256": "52486790d515d8999fe9865dd4ae81c384b48e05304cc28cab201d1d4a511c3a"
+    },
+    {
       "path": "site/assets/desktop-auth.js",
       "bytes": 2189,
       "sha256": "c7deb35b2972d3bf8f54a4a0703494b5e2686c8a79ec8888d323a31991f6c509"
@@ -832,6 +877,11 @@
       "path": "site/assets/pinned-stations.js",
       "bytes": 5877,
       "sha256": "8513aab94b50a3fffb5ab6fa55bbcefb9e2a541e265d7c924e76ddd9a50359de"
+    },
+    {
+      "path": "site/assets/place-core.js",
+      "bytes": 5510,
+      "sha256": "8cd9f04a8d742409b46438f81b86da41fc1136fd3444044440265c215a002e3a"
     },
     {
       "path": "site/assets/place-vocabulary.js",
@@ -1125,8 +1175,8 @@
     },
     {
       "path": "site/map-data-notices.txt",
-      "bytes": 3090,
-      "sha256": "7b5e24222aa39f49cd542c265c72537f9a543fec4be603d37e5e5aa31c9211ad"
+      "bytes": 3550,
+      "sha256": "55c09273df36e0f6ce96622cabe1b288925b474b45e61284033a402ad8b16d3d"
     },
     {
       "path": "site/not-found.css",
@@ -1732,6 +1782,21 @@
       "path": "tests/pinned-stations.test.mjs",
       "bytes": 3895,
       "sha256": "174ac3acf13fe3ad9dcef945013d98c9150d477cf3c3f82956b08251b629de1f"
+    },
+    {
+      "path": "tests/place-core.test.mjs",
+      "bytes": 8568,
+      "sha256": "0e121bac146edf71c836a3580bbfb85ffc9ea8a49d33e48ec61aa6ad9e73ed36"
+    },
+    {
+      "path": "tests/place-data.test.mjs",
+      "bytes": 6352,
+      "sha256": "e3a4b464deda3b9bfc9247ab6a9df3e30216548d86e1420488fee1fc5e72bf94"
+    },
+    {
+      "path": "tests/place-qualification.test.mjs",
+      "bytes": 8101,
+      "sha256": "75f53e4a4301143630040ca781f122583bb07765da9c85c48937b7ceb048c90f"
     },
     {
       "path": "tests/playback-intent.test.mjs",

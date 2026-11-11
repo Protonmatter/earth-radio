@@ -1,0 +1,265 @@
+{
+  "schemaVersion": 1,
+  "suppliedMetadata": {
+    "generatedAt": "2026-11-11T11:22:15.959Z",
+    "producerSourceSha": "87e353d690424d3bce4fbd0a596987fdac88a271"
+  },
+  "inputRecords": 10000,
+  "directoryGroups": 9422,
+  "programs": 9400,
+  "duplicateIdentityRows": 0,
+  "confidenceCounts": {
+    "city": 148,
+    "exact": 2251,
+    "country": 6921,
+    "unknown": 77,
+    "ambiguous": 3
+  },
+  "cityProgramsWithPartialVariantEvidence": 7,
+  "cities": [
+    {
+      "id": "ne-1159151529",
+      "name": "Berlin",
+      "countrycode": "DE",
+      "timeZone": "Europe/Berlin",
+      "programs": 28,
+      "meetsFiveProgramMinimum": true,
+      "exampleStationIds": [
+        "01683d91-4e1e-4152-b1bc-30f2f1360b98",
+        "0b6cc5a0-f5a0-4a62-b128-e48153fd864c",
+        "0d4fd9a6-0014-4733-8f06-0e75dea1b57d",
+        "0e1a47cb-f16d-4169-851a-5985c6133055",
+        "17e9e55b-47f5-42bd-9ae2-63f4f9a36997"
+      ]
+    },
+    {
+      "id": "ne-1159151563",
+      "name": "Vienna",
+      "countrycode": "AT",
+      "timeZone": "Europe/Vienna",
+      "programs": 18,
+      "meetsFiveProgramMinimum": true,
+      "exampleStationIds": [
+        "154fc4d3-4584-4b59-b2ed-e8656e0420e8",
+        "1e13ed4e-daa9-4728-8550-e08d89c1c8e7",
+        "1e79dab4-3e2b-489d-b44e-8acd4bbc15e3",
+        "206f93c5-5f3c-4ba1-82c2-19a42582fcc2",
+        "27d8066d-3745-4fea-8d9b-90bbe50a3be8"
+      ]
+    },
+    {
+      "id": "ne-1159151575",
+      "name": "New York",
+      "countrycode": "US",
+      "timeZone": "America/New_York",
+      "programs": 25,
+      "meetsFiveProgramMinimum": true,
+      "exampleStationIds": [
+        "07981318-5162-4398-a43a-9d38eec639ad",
+        "16ad6c66-f145-4c6d-8315-d54533479710",
+        "1a3f65ba-aad8-400f-ba9e-8f679801aad1",
+        "2aa8ebfb-680d-43ce-bddb-249733909995",
+        "2dfc4904-2a83-4cc6-8777-b1e3230f0c55"
+      ]
+    },
+    {
+      "id": "ne-1159151503",
+      "name": "Madrid",
+      "countrycode": "ES",
+      "timeZone": "Europe/Madrid",
+      "programs": 13,
+      "meetsFiveProgramMinimum": true,
+      "exampleStationIds": [
+        "07dbb40c-f3a8-4f45-925d-c16ef08c7293",
+        "08ff2e20-23c8-4d65-a640-f87082565906",
+        "2b1d504a-16a4-44ea-be7b-293edbc3824d",
+        "328563aa-8f11-472b-a191-e684bfe3afec",
+        "4a3bd909-1245-43bd-b77d-58053ad16f50"
+      ]
+    },
+    {
+      "id": "ne-1159151579",
+      "name": "Istanbul",
+      "countrycode": "TR",
+      "timeZone": "Europe/Istanbul",
+      "programs": 12,
+      "meetsFiveProgramMinimum": true,
+      "exampleStationIds": [
+        "0653654f-116a-4c06-ad53-3878cc00346b",
+        "1111c128-3215-49dd-9741-7858967455c4",
+        "2815bbc7-2cbf-11e8-91bf-52543be04c81",
+        "3e96b295-7ab8-4bae-b21d-66d92a7ac1b1",
+        "51d0f041-acdf-44ab-aa2d-a2056aa3c640"
+      ]
+    },
+    {
+      "id": "ne-1159151577",
+      "name": "London",
+      "countrycode": "GB",
+      "timeZone": "Europe/London",
+      "programs": 22,
+      "meetsFiveProgramMinimum": true,
+      "exampleStationIds": [
+        "069d7554-2cb4-4490-8f3d-70cfbf96546c",
+        "0e42abac-460f-4ef3-b742-818d584f6762",
+        "0f1a8621-d35a-4073-83d3-7ee14207a9a9",
+        "1a421361-eb9f-40e9-9ab1-1a4ca39b90dd",
+        "1b6ecef5-c2d7-4e6b-b5d9-cf234b30f7aa"
+      ]
+    },
+    {
+      "id": "ne-1159151557",
+      "name": "Toronto",
+      "countrycode": "CA",
+      "timeZone": "America/Toronto",
+      "programs": 7,
+      "meetsFiveProgramMinimum": true,
+      "exampleStationIds": [
+        "03835a3a-928f-4b69-8974-215c80ad18bb",
+        "147a830e-fbc3-4260-9504-6dcc62530923",
+        "1a310409-363b-4ef6-aa3f-178d53c9a05a",
+        "278df5f8-6b73-4254-a8df-07c62e07da8b",
+        "4bb85759-d22b-433b-b256-29ad8a6e9ecd"
+      ]
+    },
+    {
+      "id": "ne-1159151309",
+      "name": "Dublin",
+      "countrycode": "IE",
+      "timeZone": "Europe/Dublin",
+      "programs": 6,
+      "meetsFiveProgramMinimum": true,
+      "exampleStationIds": [
+        "02dd025e-d691-4310-bd2f-cf16007bdefb",
+        "32e96359-9dbb-4cc8-adf9-7d5a948223db",
+        "52637865-3e18-49af-b28d-191f4ff201eb",
+        "6650bb57-12aa-41d3-8ae4-ed5dcf0909cd",
+        "9cd72f5e-5395-4c61-a9a3-923a70cbffcb"
+      ]
+    },
+    {
+      "id": "ne-1159151599",
+      "name": "Jakarta",
+      "countrycode": "ID",
+      "timeZone": "Asia/Jakarta",
+      "programs": 6,
+      "meetsFiveProgramMinimum": true,
+      "exampleStationIds": [
+        "16cc7691-8785-4e36-ae75-c9376eedfdcf",
+        "30ba9673-6034-40ff-966d-b8a8b3da2536",
+        "3c71fe54-9bd4-43dc-85d2-cff2d2269a5e",
+        "4fbee4a8-f8e6-4b34-98ed-21bde0af1b0d",
+        "56b2ae3e-9b35-4a05-991f-460a5bd898f3"
+      ]
+    },
+    {
+      "id": "ne-1159151491",
+      "name": "Chicago",
+      "countrycode": "US",
+      "timeZone": "America/Chicago",
+      "programs": 6,
+      "meetsFiveProgramMinimum": true,
+      "exampleStationIds": [
+        "1050ed1a-94d8-433b-b43b-1aa96256835d",
+        "2bb9dbf2-15e1-42c5-b876-e7c351d31668",
+        "89383a68-f676-4d54-ac28-6333e5afe364",
+        "8c137563-0b79-4dd0-b968-311885c70db4",
+        "aa9282e9-1821-4b22-8b25-f4fc1b542bcc"
+      ]
+    },
+    {
+      "id": "ne-1159151523",
+      "name": "Seoul",
+      "countrycode": "KR",
+      "timeZone": "Asia/Seoul",
+      "programs": 5,
+      "meetsFiveProgramMinimum": true,
+      "exampleStationIds": [
+        "3058649c-068d-43e8-8c47-4a5a89dbdc4c",
+        "9b8512b7-436d-4da8-8777-633ad9b6671f",
+        "a5e6a0b8-b68e-4931-80c6-1861299fad86",
+        "c038a859-7be1-11e9-aa30-52543be04c81",
+        "d6441a3a-478c-46e2-b50d-3b89240a8d88"
+      ]
+    }
+  ],
+  "allCuratedCitiesMeetFiveProgramMinimum": true,
+  "criteria": "One count per station-family/shared-stream component. At least one corroborated variant supports a city; conflicting supported cities/countries are excluded. Supplied generation metadata is not an independent source-verification claim.",
+  "input": {
+    "bytes": 6166295,
+    "sha256": "3bcad47c64438e582a6db644942f2739e162a62d90c72281423e1f7ed081d9b6"
+  },
+  "model": {
+    "candidateRadiusKm": 25,
+    "files": [
+      {
+        "path": "site/assets/place-core.js",
+        "bytes": 5510,
+        "sha256": "8cd9f04a8d742409b46438f81b86da41fc1136fd3444044440265c215a002e3a"
+      },
+      {
+        "path": "site/assets/curated-places.js",
+        "bytes": 3005,
+        "sha256": "52486790d515d8999fe9865dd4ae81c384b48e05304cc28cab201d1d4a511c3a"
+      },
+      {
+        "path": "site/assets/station-location.js",
+        "bytes": 1640,
+        "sha256": "b4925558867ffaf9a9ea21d00611eb10cbe36e08da78608d75de237ed543a6fd"
+      },
+      {
+        "path": "site/assets/country-locations.js",
+        "bytes": 144780,
+        "sha256": "6edbbf24b984d6b5a862f41fbdf8fdf90d48cd6a64cfe2f2ebbf53c0e55848b4"
+      },
+      {
+        "path": "site/assets/station-variants.js",
+        "bytes": 8422,
+        "sha256": "111a011c3c366c99263ab4102730cceb07cddf9876d10c889febc9092f38d3a6"
+      },
+      {
+        "path": "site/assets/search-core.js",
+        "bytes": 8877,
+        "sha256": "4d13cbf505fce573b3f763e98c6fc390b8e4882848084b5e2d4f9486c2378b0f"
+      },
+      {
+        "path": "site/assets/discovery-core.js",
+        "bytes": 15194,
+        "sha256": "adbc4e0d557dca9afca993511712be2cd67d6af8e8c7a9971070132329d75e61"
+      },
+      {
+        "path": "scripts/qualify-place-data.mjs",
+        "bytes": 8819,
+        "sha256": "c53a0b40438f9b3357d05fae9bc31cd0634c3ef3d77843adfe885427442914e3"
+      },
+      {
+        "path": "docs/provenance/place-data.json",
+        "bytes": 1665,
+        "sha256": "e254928bb14b389b415b04bb887a04354b8e0e2f2508fa9b6d21f51447cf5ecf"
+      },
+      {
+        "path": "docs/provenance/place-selection.json",
+        "bytes": 858,
+        "sha256": "0c03e53b1159b47845be2b5b3abd54fc6920bed1e025a648bed454f1ed810966"
+      }
+    ],
+    "runtime": {
+      "node": "24.18.0",
+      "icu": "78.3",
+      "timeZoneData": "2026b",
+      "platform": "win32",
+      "architecture": "arm64"
+    }
+  },
+  "qualifiedAt": "2026-11-11T12:04:58.354Z",
+  "scope": "Local frozen-input model qualification; no active app UI or broad geocoding rollout.",
+  "sourceAcquisition": {
+    "checkedAt": "2026-11-11T11:40:00.984Z",
+    "integrityCheckedBy": "createPublishedCatalog; SHA-bound manifest descriptor and bounded HTTPS payload",
+    "raw": {
+      "bytes": 6166192,
+      "sha256": "b9f0aa7cd7fa1ad661ad47b79538cfe175684c83a5ab846123e66695f2c05bdb"
+    },
+    "transformation": "Added supplied generation/source fields from the integrity-checked response headers; station groups unchanged."
+  }
+}

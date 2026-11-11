@@ -1,5 +1,16 @@
 # Build state
 
+## Place/time foundation prerequisite
+
+The source adds eleven curated Natural Earth/IANA identities, a conservative pure
+station-place resolver, an explicit local-time formatter and a bounded file-only
+coverage qualifier. It does not change active home/map/player, directory producer,
+loader, account, sync or worker entry points. Today and place-first UI remain the
+next separate phase. The frozen 10,000-record qualification gives 9,400 program
+components; all eleven curated cities have at least five components with city
+evidence. This is a small prerequisite, not broad geocoding coverage or future
+stream-availability acceptance. See [model/provenance/rollback](PLACE_MODEL.md).
+
 ## 0.32.2 desktop/distribution delivery
 
 ER-01, ER-02 and ER-07 landed through PRs 39, 40 and 42, with the narrowly scoped
