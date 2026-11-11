@@ -14,6 +14,7 @@ import {createPublishedCatalog} from '../site/assets/published-catalog.js';
 import {snapshotRows} from '../site/assets/directory-client.js';
 import {normalizeDirectory} from './directory-normalize.mjs';
 import {isRadioBrowserUuid} from '../site/assets/station-clicks.js';
+import {appendCitySeeds} from '../site/assets/today-core.js';
 
 const USER_AGENT = 'EarthRadio/0.24.0 desktop-proxy (+https://github.com/Protonmatter/EarthRadio)';
 const directoryHosts=createDirectoryHosts({fetchImpl:async(url,options)=>{
@@ -85,10 +86,12 @@ async function route(req, res, routePrefix) {
   }
 
   if (url.pathname === '/api/stations/federated' || url.pathname === '/api/stations/top') {
+    const seedFlags=url.searchParams.getAll('placeSeeds');
+    if(seedFlags.length>1||seedFlags.length===1&&seedFlags[0]!=='1')return sendJson(res,400,{error:'invalid placeSeeds flag'});
     const limit = clampInt(url.searchParams.get('limit'), 1000, 50, 5000);
     const countryCodes = parseCountryCodes(url.searchParams.get('countries'), FEATURED_COUNTRY_CODES);
     const countryLimit = clampInt(url.searchParams.get('countryLimit'), FEATURED_COUNTRY_LIMIT, 25, 1000);
-    return sendJson(res, 200, await getStations(limit, countryCodes, countryLimit));
+    return sendJson(res, 200, await getStations(limit, countryCodes, countryLimit,seedFlags.length===1));
   }
 
   const clickMatch = url.pathname.match(/^\/api\/stations\/click\/(.+)$/);
@@ -145,13 +148,13 @@ function allowedCorsOrigin(origin) {
   return '';
 }
 
-async function getStations(limit, countryCodes = FEATURED_COUNTRY_CODES, countryLimit = FEATURED_COUNTRY_LIMIT) {
+async function getStations(limit, countryCodes = FEATURED_COUNTRY_CODES, countryLimit = FEATURED_COUNTRY_LIMIT,placeSeeds=false) {
   const maxStations = Math.min(MAX_FEDERATED_STATIONS, limit + countryCodes.length * countryLimit);
-  const cacheKey = `federated:${limit}:${countryLimit}:${countryCodes.join(',')}`;
+  const cacheKey = `federated:${limit}:${countryLimit}:${countryCodes.join(',')}:${placeSeeds?'places-v1':'default'}`;
   const cached = directoryCache.get(cacheKey);
   if (cached && Date.now() - cached.savedAt < DIRECTORY_CACHE_TTL_MS) return { ...cached.payload, cached: true };
   if (directoryInFlight.has(cacheKey)) return { ...await directoryInFlight.get(cacheKey), cached: true };
-  const promise = fetchStationsUncached(limit, countryCodes, countryLimit, maxStations, cacheKey);
+  const promise = fetchStationsUncached(limit, countryCodes, countryLimit, maxStations, cacheKey,placeSeeds);
   directoryInFlight.set(cacheKey, promise);
   try {
     return await promise;
@@ -160,11 +163,11 @@ async function getStations(limit, countryCodes = FEATURED_COUNTRY_CODES, country
   }
 }
 
-async function fetchStationsUncached(limit, countryCodes, countryLimit, maxStations, cacheKey) {
+async function fetchStationsUncached(limit, countryCodes, countryLimit, maxStations, cacheKey,placeSeeds=false) {
   const errors = [];
   try{
-    const result=await publishedStationRows(publishedDirectory,{limit,countryCodes,countryLimit});
-    const merged=mergeStationRecords(result.stations).slice(0,maxStations);if(!merged.length)throw Error('Empty published directory');
+    const result=await publishedStationRows(publishedDirectory,{limit,countryCodes,countryLimit,placeSeeds});
+    const merged=mergeStationRecords(result.stations).slice(0,maxStations+(placeSeeds?55:0));if(!merged.length)throw Error('Empty published directory');
     const payload={...result,source:'desktop-proxy:normalized-snapshot',mode:'scheduled-directory',countryCodes,countryLimit,stations:merged};
     setDirectoryCache(cacheKey,payload);return payload;
   }catch{/* Guarded direct mirrors remain a last-resort native fallback. */}
@@ -201,7 +204,8 @@ async function fetchStationsUncached(limit, countryCodes, countryLimit, maxStati
 
 // The native record cap applies after restoring producer click priority from the
 // family-ordered wire format. Country failures preserve a usable root catalog.
-export async function publishedStationRows(read,{limit,countryCodes,countryLimit}){
+export async function publishedStationRows(read,{limit,countryCodes,countryLimit,placeSeeds=false}){
+  if(typeof placeSeeds!=='boolean')throw Error('Invalid placeSeeds flag');
   if(!Number.isInteger(limit)||limit<1||limit>6500||!Number.isInteger(countryLimit)||countryLimit<1||countryLimit>1000||!Array.isArray(countryCodes)||countryCodes.length>20||countryCodes.some(code=>!(/^[A-Z]{2}$/).test(code)))throw Error('Invalid published native limits');
   const deadlineAt=Date.now()+20000,response=await read('/directory/snapshot','catalog',{deadlineAt}),root=snapshotRows(await response.json());
   const stations=root.slice(0,limit),missingCountries=[];let cursor=0;
@@ -210,7 +214,8 @@ export async function publishedStationRows(read,{limit,countryCodes,countryLimit
     try{const country=await read('/directory/country/'+code,'catalog',{deadlineAt});stations.push(...snapshotRows(await country.json(),1000).slice(0,countryLimit));}
     catch{missingCountries.push(code);}
   }}));
-  return{stations,missingCountries,directorySnapshot:{generatedAt:response.headers.get('x-directory-generated-at'),producerSourceSha:response.headers.get('x-directory-producer-sha')},generatedAt:response.headers.get('x-directory-generated-at')};
+  const selected=placeSeeds?appendCitySeeds(mergeStationRecords(stations).slice(0,Math.min(MAX_FEDERATED_STATIONS,limit+countryCodes.length*countryLimit)),root):stations;
+  return{stations:selected,missingCountries,directorySnapshot:{generatedAt:response.headers.get('x-directory-generated-at'),producerSourceSha:response.headers.get('x-directory-producer-sha')},generatedAt:response.headers.get('x-directory-generated-at')};
 }
 
 function setDirectoryCache(cacheKey, payload) {

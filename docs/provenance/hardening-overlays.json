@@ -21,10 +21,10 @@
         "sha256": "329c8af7c7fa7b0921dd2c0028a057e8fea8ff4ac706c0760b8d8de629ede401"
       },
       "current": {
-        "bytes": 25277,
-        "sha256": "1c93f2b51cd442c75b022a6e70be1bff3ff1eb51076af448c92af3d8c4fe2fcb"
+        "bytes": 25929,
+        "sha256": "c4c8ee35a4de3508629b2de026b5ac3223fc98bf7b31e778636a0b81d5532adc"
       },
-      "reason": "Require a per-launch capability path and Origin on API routes, and reject mapped IPv6, CGNAT, and other private stream targets. Mount the combined metadata API (platform now-playing, fingerprint) and import the shared outbound network guard extracted to server/net-guard.mjs. Validated dynamic directory mirrors, fail-fast fan-out and bounded guarded JSON reads (0.31.0). Guarded normalized scheduled publication, generation metadata and shared normalization on fallback (0.32.0). ER-02: confirmed-playing-only, once-per-session directory UUID reporting; strict native click validation; single best-effort upstream counter attempt and v71 shell."
+      "reason": "Require a per-launch capability path and Origin on API routes, and reject mapped IPv6, CGNAT, and other private stream targets. Mount the combined metadata API (platform now-playing, fingerprint) and import the shared outbound network guard extracted to server/net-guard.mjs. Validated dynamic directory mirrors, fail-fast fan-out and bounded guarded JSON reads (0.31.0). Guarded normalized scheduled publication, generation metadata and shared normalization on fallback (0.32.0). ER-02: confirmed-playing-only, once-per-session directory UUID reporting; strict native click validation; single best-effort upstream counter attempt and v71 shell. ER-03 prerequisite: explicit validated placeSeeds opt-in, isolated native cache key and at most55 city-qualified program additions from the existing root download; default limits and direct fallback requests unchanged."
     },
     {
       "path": "server/example-proxy.mjs",

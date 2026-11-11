@@ -119,7 +119,11 @@ those fields alone do not establish upstream integrity. Exit 0 means a valid
 report, not that all future availability or Today acceptance has been established.
 Malformed/oversized input or I/O failure exits 1 without printing raw input values.
 
-Existing family/stream grouping combines variants. Shared normalized stream URLs
+Existing family/stream grouping combines variants. UUID/family components are
+shared with Today through `program-components.js`.
+The refreshed retained-input receipt binds that helper as its eleventh model file;
+all frozen coverage counts and example IDs remain unchanged after extraction.
+Shared normalized stream URLs
 and identical repeated identities join groups transitively, so aliases cannot
 inflate city totals. Repeated identities with differing retained metadata are
 rejected before grouping: a qualification input must represent one current row

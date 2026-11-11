@@ -228,9 +228,14 @@
         "sha256": "adbc4e0d557dca9afca993511712be2cd67d6af8e8c7a9971070132329d75e61"
       },
       {
+        "path": "site/assets/program-components.js",
+        "bytes": 2032,
+        "sha256": "4df7c441973e79e7ca38957c70e1ba6cad772583b8aa2f6bb247f60d67a34d4d"
+      },
+      {
         "path": "scripts/qualify-place-data.mjs",
-        "bytes": 8819,
-        "sha256": "c53a0b40438f9b3357d05fae9bc31cd0634c3ef3d77843adfe885427442914e3"
+        "bytes": 8103,
+        "sha256": "06e9399eaac83d6c35de62f52f9c97ce41fafe144377b05c2ed3e7c692818a25"
       },
       {
         "path": "docs/provenance/place-data.json",
@@ -251,7 +256,7 @@
       "architecture": "arm64"
     }
   },
-  "qualifiedAt": "2026-11-11T12:04:58.354Z",
+  "qualifiedAt": "2026-11-11T13:42:16.647Z",
   "scope": "Local frozen-input model qualification; no active app UI or broad geocoding rollout.",
   "sourceAcquisition": {
     "checkedAt": "2026-11-11T11:40:00.984Z",
