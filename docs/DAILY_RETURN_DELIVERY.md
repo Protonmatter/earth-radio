@@ -1,6 +1,31 @@
 # Playback intent and delivery sequence
 
-## Current candidate: ER-01
+## ER-02: confirmed playback counters
+
+Radio Browser click reporting runs only from the audio element's `playing` event
+for the active selection, with trusted media events and available audio data.
+`canplay`, script-dispatched events, a resolved play promise, selection, retries
+that never start, and synthetic provider IDs do not count. Only complete UUIDs
+are accepted; uppercase UUIDs share the same session reservation as lowercase.
+The client reserves each UUID before asynchronous I/O and makes a single
+best-effort request. A failed response is not retried because the server might
+already have accepted the counter. Reporting never delays audio or account sync.
+
+Reservations live only in the current browser document/desktop renderer. Reload
+or application restart creates a new session; no listener history or account ID
+is stored for counters. Radio Browser also documents server-side daily deduping.
+The native capability endpoint rejects invalid IDs with HTTP 400, including
+malformed percent encoding, rather than stripping characters into another ID.
+Directory *read* failover and availability behavior are unchanged.
+
+Verification adds `tests/station-clicks.test.mjs`,
+`tests/native-click-route.test.mjs` and `tests/e2e/station-clicks.spec.mjs`.
+These use controlled I/O and make no public counter requests. The shared module
+is included in the offline shell and native package. Rollback follows the
+coherent deployment/cache procedure below; existing counter values cannot be
+reversed by this client.
+
+## ER-01: station intent
 
 A direct station action owns a program, including its grouped stream variants.
 All sibling attempts share one 7.5-second connection budget. Exhaustion pauses the
