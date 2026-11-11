@@ -35,8 +35,8 @@
 **Interfaces:** `stationFacts(station, {locale = 'en', now} = {})` returns `{place, genre, time, text, cityId}` using existing place/country/genre helpers. It performs no I/O, implicit clock or mutation.
 
 - [x] Add failing tests for corroborated city, country-only/conflict/centroid fallback, short localized country, meaningful genre, explicit DST/time, malformed fields and immutability; observe missing-module RED.
-- [ ] Implement the pure helper and all new static keys in six catalogs; prove focused GREEN without an implicit Date.now.
-- [ ] Update contracts and current delivered 0.33.1 facts, run `npm run verify`, refresh manifests and verify committed Git-object hashes; commit this inactive core.
+- [x] Implement the pure helper and all new static keys in six catalogs; prove focused GREEN without an implicit Date.now.
+- [x] Update contracts and current delivered 0.33.1 facts, run `npm run verify`, refresh manifests and verify committed Git-object hashes; commit this inactive core.
 
 ## Task 2: Facts surfaces, Details choice and metadata signal
 
@@ -44,12 +44,12 @@
 
 **Interfaces:** `createStationFacts(station)` registers a row node; `updatePlayerFacts(station, {rawTitle} = {})` marks facts and retains bounded raw input for the same identity. The existing metadata extractor reads the explicit input without treating facts as a song. Original `variantControl` stays the sole selection owner inside Details.
 
-- [ ] Write browser RED cases for place-first rows/player/tooltip, no false metadata/provider/history work, actual raw/HLS/platform title preservation and minute/locale updates without playback change.
-- [ ] Implement visible-node clock rendering and narrow runtime hooks; keep compact palette country metadata compatible with country selection. Preserve higher-trust metadata fencing.
-- [ ] Move original variant controls to Details; show technical facts there. Reproduce and cover no-autoplay choice/Resume, alias favorites, sibling budget, refresh/close focus and web playability guidance.
-- [ ] Move original diagnostic nodes to Settings and add neutral map summary; preserve load/playback recovery. Probe the auto-open account-error focus observation and correct only a demonstrated defect.
-- [ ] Add all six-catalog strings and scoped existing stylesheet rules. Check Paper/Night, RTL, 320–1440px, enlarged text, safe areas, tooltips and at least 44px controls with unchanged limits.
-- [ ] Advance coherent 0.34.0/v76, fingerprint and refresh source/model provenance. Run full verify, all browser/rendered/native gates before committing the UI integration.
+- [x] Write browser RED cases for place-first rows/player/tooltip, no false metadata/provider/history work, actual raw/HLS/platform title preservation and minute/locale updates without playback change.
+- [x] Implement visible-node clock rendering and narrow runtime hooks; keep compact palette country metadata compatible with country selection. Preserve higher-trust metadata fencing.
+- [x] Move original variant controls to Details; show technical facts there. Reproduce and cover no-autoplay choice/Resume, alias favorites, sibling budget, refresh/close focus and web playability guidance.
+- [x] Move original diagnostic nodes to Settings and add neutral map summary; preserve load/playback recovery. Probe the auto-open account-error focus observation and correct only a demonstrated defect.
+- [x] Add all six-catalog strings and scoped existing stylesheet rules. Check Paper/Night, RTL, 320–1440px, enlarged text, safe areas, tooltips and at least 44px controls with unchanged limits.
+- [x] Advance coherent 0.34.0/v76, fingerprint and refresh source/model provenance. Run full verify, all browser/rendered/native gates before committing the UI integration.
 
 ## Task 3: Reviewed delivery and final phase3 desktop release
 

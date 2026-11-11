@@ -10,6 +10,7 @@ import {
   clampSplitPercent,
   advanceLocalePreview,
   nextCollapse,
+  matchesSelectedCountry,
   nowPlayingSheetCopy,
   parseDestination,
   parseNowPlayingHistory,
@@ -19,6 +20,13 @@ import {
 } from '../site/assets/responsive-ui.js';
 
 const root = path.resolve(import.meta.dirname, '..');
+
+test('compact short country labels retain legacy palette country scope',()=>{
+ assert.equal(matchesSelectedCountry('UK','United Kingdom'),true);
+ assert.equal(matchesSelectedCountry('US','United States'),true);
+ assert.equal(matchesSelectedCountry('독일','Germany'),true);
+ assert.equal(matchesSelectedCountry('US','United Kingdom'),false);
+});
 
 test('destination parsing honors approved fragments and ignores runtime query hashes', () => {
   assert.equal(parseDestination('#listen'), 'listen');
@@ -154,7 +162,7 @@ test('Now Playing history state is distinct from runtime hash writes', () => {
 
 test('responsive assets are referenced after the recovered runtime and staged as site files', async () => {
   const html = await readFile(path.join(root, 'site', 'index.html'), 'utf8');
-  const runtime = html.indexOf('index-747d751d.js');
+  const runtime = html.indexOf('index-ce594249.js');
   const layer = html.indexOf('responsive-ui.js');
   assert.ok(runtime >= 0 && layer > runtime);
   assert.match(html, /viewport-fit=cover/);

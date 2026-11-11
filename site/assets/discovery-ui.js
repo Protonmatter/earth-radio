@@ -1,12 +1,14 @@
-import { buildFacetOptions, pickStation, rankStations, sanitizePreferences } from './discovery-core.js?v=0.33.1';
-import { createMapDirectory, mergeMappedStations } from './map-directory.js?v=0.33.1';
-import { installSearchControls } from './search-controls.js?v=0.33.1';
-import { getLocale, t } from '../i18n/index.js?v=0.33.1';
-import {stationLocation,stationMapPoint} from './station-location.js?v=0.33.1';
-import {displayCountry} from './search-core.js?v=0.33.1';
-import {groupStationVariants,projectVariantResults,expandFavoriteIds,chooseGroupStation} from './station-variants.js?v=0.33.1';
-import {atlasViewAction} from './map-viewport.js?v=0.33.1';
-import {createPlaybackIntent} from './playback-intent.js?v=0.33.1';
+import { buildFacetOptions, pickStation, rankStations, sanitizePreferences } from './discovery-core.js?v=0.34.0';
+import { createMapDirectory, mergeMappedStations } from './map-directory.js?v=0.34.0';
+import { installSearchControls } from './search-controls.js?v=0.34.0';
+import { getLocale, t } from '../i18n/index.js?v=0.34.0';
+import {stationLocation,stationMapPoint} from './station-location.js?v=0.34.0';
+import {stationFacts} from './place-copy.js?v=0.34.0';
+import {stationPlace} from './place-core.js?v=0.34.0';
+import {createStationFacts} from './place-ui.js?v=0.34.0';
+import {groupStationVariants,projectVariantResults,expandFavoriteIds,chooseGroupStation} from './station-variants.js?v=0.34.0';
+import {atlasViewAction} from './map-viewport.js?v=0.34.0';
+import {createPlaybackIntent} from './playback-intent.js?v=0.34.0';
 
 // A hidden-to-visible resize can leave Leaflet's animated bounds correction
 // running. Its moveend handler can start another correction while stop() fires.
@@ -77,7 +79,10 @@ export function installDiscovery(adapter) {
   const detailMeta = dialog.querySelector('[data-detail-meta]');
   const detailReasons = dialog.querySelector('ul');
   const detailPlay = dialog.querySelector('[data-detail-play]');
+  const detailFacts = dialog.querySelector('[data-detail-facts]');
+  const detailStreams = dialog.querySelector('[data-detail-streams]');
   let detailStation = null;
+  let detailGroup = '';
   const context = () => ({ ...prefs, bounds, health, ...adapter.context(), locale: getLocale() });
   const controls = installSearchControls(root, {
     preferences: () => prefs, context, readControls,
@@ -173,18 +178,40 @@ export function installDiscovery(adapter) {
     if (pick) adapter.play(pick);
     else status.textContent = 'No alternative stations match. Reset discovery to broaden the selection.';
   });
-  function showDetails(id) {
-    const entry = entries.get(id);
-    if (!entry) return;
+  function renderDetails(entry) {
     detailStation = entry.station;
     detailTitle.textContent = entry.station.name;
-    detailMeta.textContent = [displayCountry(entry.station,getLocale()), entry.station.language, entry.station.codec,
-      entry.station.bitrate ? `${entry.station.bitrate} kbps` : 'Bitrate unknown'].filter(Boolean).join(' · ');
+    detailTitle.title=entry.station.name;
+    detailMeta.replaceChildren(createStationFacts(entry.station));
+    detailStreams.replaceChildren(variantControl(entry.station,{detail:true}));
+    const station=entry.station,facts=stationFacts(station,{locale:getLocale(),now:Date.now()}),location=stationPlace(station);
+    const evidence=facts.cityId?'place.cityEvidence':location?.confidence==='exact'?'place.coordinatesOnly':'place.countryOnly';
+    const rows=[['place.format',station.codec||t('place.notSupplied')],
+      ['place.bitrate',station.bitrate?`${station.bitrate} kbps`:t('place.notSupplied')],
+      ['place.connection',/^https:/i.test(station.url_resolved||station.url||'')?'HTTPS':'HTTP'],
+      ['place.directoryScore',Number.isFinite(station.quality?.score)?String(station.quality.score):t('place.notSupplied')],
+      ['place.sources',station.sourceSummary||station.source||t('place.notSupplied')],
+      ['place.locationEvidence',t(evidence)]];
+    detailFacts.replaceChildren(...rows.flatMap(([label,value])=>{
+      const term=document.createElement('dt'),definition=document.createElement('dd');
+      term.textContent=t(label);definition.textContent=value;return[term,definition];
+    }));
     const reasons=[...entry.reasons];
     if(entry.station.countryProvenance&&!['directory-code','unknown'].includes(entry.station.countryProvenance))reasons.push(t('discovery.countryInferred'));
     detailReasons.replaceChildren(...reasons.map(reason => { const li = document.createElement('li'); li.textContent = reason; return li; }));
+  }
+  function showDetails(id) {
+    const entry = entries.get(id);
+    if (!entry) return;
+    detailGroup=entry.groupKey;renderDetails(entry);
     dialog.showModal();
   }
+  dialog.addEventListener('close',()=>queueMicrotask(()=>{
+    if(dialog.open)return;
+    const target=[...document.querySelectorAll('.er-discovery-why')].find(button=>button.dataset.discoveryGroup===detailGroup&&button.getClientRects().length)
+      ||document.getElementById('er-discovery-query');
+    if(target?.getClientRects().length)target.focus({preventScroll:true});
+  }));
   dialog.querySelector('[data-detail-close]').addEventListener('click', () => dialog.close());
   detailPlay.addEventListener('click', () => { if (detailStation) adapter.play(detailStation); dialog.close(); });
   function updatePlayingControls() {
@@ -218,6 +245,31 @@ export function installDiscovery(adapter) {
     }
   }
 
+  function variantControl(station,{detail=false}={}){
+    const entry=entries.get(station.stationuuid),wrapper=document.createElement('span');wrapper.className='er-stream-control';
+    const variants=entry?.variants||[];
+    if(detail&&variants.length>1){
+      const select=document.createElement('select');select.dataset.streamGroup=entry.groupKey;
+      select.setAttribute('aria-label',t('discovery.streamQuality',{name:station.name}));select.title=t('discovery.chooseStream');
+      variants.forEach((variant,index)=>{
+        const row=variant.station,option=new Option([row.codec||'Stream',row.bitrate?`${row.bitrate} kbps`:'',variant.url.startsWith('http:')?'HTTP':'',`· ${index+1}`].filter(Boolean).join(' '),variant.ids.includes(station.stationuuid)?station.stationuuid:variant.ids[0]);
+        select.append(option);
+      });
+      select.value=station.stationuuid;
+      for(const type of ['click','pointerdown','keydown'])select.addEventListener(type,event=>event.stopPropagation());
+      select.addEventListener('change',()=>{
+        selections.set(entry.groupKey,select.value);refresh();
+        queueMicrotask(()=>document.querySelector(`[data-stream-group="${CSS.escape(entry.groupKey)}"]`)?.focus({preventScroll:true}));
+      });
+      wrapper.append(select);
+    }
+    if(/^http:/i.test(station.url_resolved||station.url||'')&&(detail||globalThis.window?.earthRadio?.isDesktop!==true)){
+      const badge=document.createElement('span');badge.className='er-http-badge';badge.textContent=detail?'HTTP':t('place.webHint');badge.setAttribute('role','img');badge.setAttribute('aria-label',t(detail?'discovery.httpStream':'place.webHintLabel'));
+      badge.title=t(detail?'discovery.httpHint':'place.webHintHelp');wrapper.append(badge);
+    }
+    return wrapper;
+  }
+
   return {
     ownsSearch: true,
     augment(stations) {
@@ -237,6 +289,10 @@ export function installDiscovery(adapter) {
       result=projectVariantResults(result,groups,{selections,selectedId:adapter.selected?.(),currentId:adapter.current()?.stationuuid,favoriteIds:favorites(),securePreferred:true});
       for(const entry of result)if(selections.has(entry.groupKey)&&!entry.variants.some(variant=>variant.ids.includes(selections.get(entry.groupKey))))selections.delete(entry.groupKey);
       entries = new Map(result.map(entry => [entry.station.stationuuid, entry]));
+      if(dialog.open){
+        const detailEntry=result.find(entry=>entry.groupKey===detailGroup);
+        if(detailEntry)renderDetails(detailEntry);else dialog.close();
+      }
       const mode = prefs.sort === 'best' ? 'Best match' : prefs.sort === 'explore' ? 'Explore' : prefs.sort === 'reliable' ? 'Reliability' : prefs.sort === 'bitrate' ? 'Highest bitrate' : prefs.sort === 'similar' ? 'Similar genres' : 'A–Z';
       status.textContent = `${result.length.toLocaleString()} matches · ${mode}${bounds ? ' · Map area' : ''}${result[0]?.correction?' · '+t('discovery.corrected',{query:result[0].correction}):''}`;
       const mapped = result.filter(entry => stationLocation(entry.station)&&!stationLocation(entry.station).approximate).length;
@@ -246,6 +302,8 @@ export function installDiscovery(adapter) {
       const approximate=result.filter(entry=>stationLocation(entry.station)?.approximate).length;
       const located=result.filter(entry=>stationLocation(entry.station)&&!stationLocation(entry.station).approximate).length;
       document.getElementById('er-map-count').textContent = t('map.locationCounts',{located:located.toLocaleString(),approximate:approximate.toLocaleString(),missing:result.length-located-approximate});
+      const summary=document.getElementById('er-map-summary');
+      if(summary)summary.textContent=t(result.length===1?'place.mapCountOne':'place.mapCount',{count:result.length.toLocaleString(getLocale())});
       updatePlayingControls();
       controls.render(result.length);
       document.dispatchEvent(new CustomEvent('earthradio:discovery-changed', { detail: { query: prefs.query, filters: context().filters, view } }));
@@ -255,7 +313,8 @@ export function installDiscovery(adapter) {
       const button = document.createElement('button');
       button.type = 'button'; button.className = 'er-discovery-why';
       button.dataset.discoveryWhy = station.stationuuid;
-      button.textContent = t('discovery.details'); button.setAttribute('aria-label', `Why this station: ${station.name}`);
+      button.dataset.discoveryGroup=entries.get(station.stationuuid)?.groupKey||'';
+      button.textContent = t('discovery.details'); button.setAttribute('aria-label',t('place.stationDetails',{station:station.name}));
       button.addEventListener('click', event => { event.stopPropagation(); showDetails(station.stationuuid); });
       return button;
     },
@@ -265,30 +324,7 @@ export function installDiscovery(adapter) {
       const members=byId.get(station.stationuuid)?.memberIds||[station.stationuuid],saved=members.filter(uuid=>ids.has(uuid));
       return saved.length?saved.map(stationuuid=>({...station,stationuuid})):[station];
     },
-    variantControl(station){
-      const entry=entries.get(station.stationuuid),wrapper=document.createElement('span');wrapper.className='er-stream-control';
-      const variants=entry?.variants||[];
-      if(variants.length>1){
-        const select=document.createElement('select');select.dataset.streamGroup=entry.groupKey;
-        select.setAttribute('aria-label',t('discovery.streamQuality',{name:station.name}));select.title=t('discovery.chooseStream');
-        variants.forEach((variant,index)=>{
-          const row=variant.station,option=new Option([row.codec||'Stream',row.bitrate?`${row.bitrate} kbps`:'',variant.url.startsWith('http:')?'HTTP':'',`· ${index+1}`].filter(Boolean).join(' '),variant.ids.includes(station.stationuuid)?station.stationuuid:variant.ids[0]);
-          select.append(option);
-        });
-        select.value=station.stationuuid;
-        for(const type of ['click','pointerdown','keydown'])select.addEventListener(type,event=>event.stopPropagation());
-        select.addEventListener('change',()=>{
-          selections.set(entry.groupKey,select.value);refresh();
-          queueMicrotask(()=>document.querySelector(`[data-stream-group="${CSS.escape(entry.groupKey)}"]`)?.focus({preventScroll:true}));
-        });
-        wrapper.append(select);
-      }
-      if(/^http:/i.test(station.url_resolved||station.url||'')){
-        const badge=document.createElement('span');badge.className='er-http-badge';badge.textContent='HTTP';badge.setAttribute('role','img');badge.setAttribute('aria-label',t('discovery.httpStream'));
-        badge.title=t('discovery.httpHint');wrapper.append(badge);
-      }
-      return wrapper;
-    },
+    variantControl,
     selectedStation(station){
       const group=byId.get(station?.stationuuid),selectedId=group&&selections.get(group.key);
       if(!selectedId||!group.variants.some(variant=>variant.ids.includes(selectedId)))return null;

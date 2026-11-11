@@ -2,6 +2,7 @@
 import type { Station } from '../core/types';
 import { t } from '../core/i18n';
 import { byId, countryCodeToFlag } from './dom';
+import { displayCountry } from '../../site/assets/search-core.js';
 
 type SelectCallback = (station: Station) => void;
 
@@ -101,9 +102,7 @@ function renderResults(): void {
 
     const meta = document.createElement('span');
     meta.className = 'search-result-item__meta';
-    meta.textContent = [station.country, station.codec, station.bitrate ? `${station.bitrate} kbps` : '', station.quality?.label]
-      .filter(Boolean)
-      .join(' · ');
+    meta.textContent = displayCountry(station, document.documentElement.lang);
 
     info.append(name, meta);
     item.append(flag, info);

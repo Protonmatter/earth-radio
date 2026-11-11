@@ -11,12 +11,14 @@ for(const locale of ['en','es','ar','ko','zh-Hans','zh-Hant'])test(`grouped wire
   await page.route('**/*',route=>{const url=new URL(route.request().url());if(url.pathname==='/directory/snapshot')return route.fulfill({json:{schemaVersion:2,groups:serializeVariantGroups(rows)}});return url.hostname==='127.0.0.1'?route.continue():route.abort();});
   await page.goto('/#listen');await page.locator('#er-discovery-query').fill('Grouped News');
   await expect(page.locator('.station-card__name')).toHaveText(['Grouped News']);
+  await expect(page.getByRole('img',{name:CATALOGS[locale]['place.webHintLabel'],exact:true})).toBeVisible();
+  await page.locator('.station-card .er-discovery-why').click();
   const picker=page.getByRole('combobox',{name:CATALOGS[locale]['discovery.streamQuality'].replace('{name}','Grouped News'),exact:true});await picker.selectOption('grouped-128');await expect(picker).toBeFocused();
   await expect(page.getByRole('img',{name:CATALOGS[locale]['discovery.httpStream'],exact:true})).toBeVisible();
   await expect(page.locator('#audio-player')).toHaveJSProperty('paused',true);
   await expect(page.locator('.station-card__favorite')).toHaveAttribute('aria-pressed','false');
   expect(await page.locator('.station-card__favorite svg').evaluate(element=>getComputedStyle(element).fill)).toBe('none');
-  const controls=await page.locator('.er-stream-control').evaluate(node=>{const boxes=[node,...node.children].map(item=>item.getBoundingClientRect()),meta=node.closest('.station-card__meta').getBoundingClientRect();return{left:Math.min(...boxes.map(box=>box.left)),right:Math.max(...boxes.map(box=>box.right)),selectWidth:node.querySelector('select').getBoundingClientRect().width,meta:meta.toJSON()};});
+  const controls=await page.locator('#er-station-detail .er-stream-control').evaluate(node=>{const boxes=[node,...node.children].map(item=>item.getBoundingClientRect()),meta=node.closest('[data-detail-streams]').getBoundingClientRect();return{left:Math.min(...boxes.map(box=>box.left)),right:Math.max(...boxes.map(box=>box.right)),selectWidth:node.querySelector('select').getBoundingClientRect().width,meta:meta.toJSON()};});
   expect(controls.left).toBeGreaterThanOrEqual(controls.meta.left-.5);expect(controls.right).toBeLessThanOrEqual(controls.meta.right+.5);
   expect(controls.selectWidth).toBeGreaterThanOrEqual(44);
 });
@@ -127,7 +129,8 @@ test('missing coordinates get an honest country marker and insecure favicons use
   await expect(page.locator('#er-map-count')).toContainText('1 approximate');
   await page.getByRole('button',{name:'Fit stations',exact:true}).click();
   await expect(page.locator('path.er-map-approximate')).toHaveCount(1);await page.locator('path.er-map-approximate').hover();
-  await expect(page.locator('.er-tt-meta')).toContainText('Approximate country location');expect(insecure).toEqual([]);
+  await expect(page.locator('.er-tt-meta')).toHaveText('Germany');expect(insecure).toEqual([]);
+  await expect(page.locator('.er-tt-meta')).not.toContainText(/approximate|unlocated|snapshot/i);
   await expect(page.locator('#audio-player')).toHaveJSProperty('paused',true);
 });
 

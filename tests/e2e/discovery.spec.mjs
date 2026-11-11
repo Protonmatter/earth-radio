@@ -132,7 +132,7 @@ test('ranking explanation has keyboard access and plays exactly the disclosed st
   await setupApp(page);
   await page.getByRole('searchbox', { name: 'Find a station' }).fill('london');
   await expect(page.locator('#er-discovery-status')).toContainText('1 matches');
-  await page.getByRole('button', { name: 'Why this station: E2E London Jazz' }).click();
+  await page.getByRole('button', { name: 'Station details: E2E London Jazz' }).click();
   const dialog = page.getByRole('dialog', { name: 'Station details' });
   await expect(dialog).toBeVisible();
   await expect(dialog.getByRole('heading')).toHaveText('E2E London Jazz');
@@ -140,7 +140,7 @@ test('ranking explanation has keyboard access and plays exactly the disclosed st
   await dialog.getByRole('button', { name: 'Close station details' }).focus();
   await page.keyboard.press('Escape');
   await expect(dialog).not.toBeVisible();
-  await page.getByRole('button', { name: 'Why this station: E2E London Jazz' }).click();
+  await page.getByRole('button', { name: 'Station details: E2E London Jazz' }).click();
   await dialog.getByRole('button', { name: 'Play station', exact: true }).click();
   await expect(page.locator('#player-station')).toHaveText('E2E London Jazz');
   await expect(dialog).not.toBeVisible();
@@ -149,8 +149,8 @@ test('ranking explanation has keyboard access and plays exactly the disclosed st
 test('map focus tracks playback and mobile discovery has no horizontal overflow', async ({ page }) => {
   await setupApp(page);
   await playFromList(page, 'E2E London Jazz');
-  await expect(page.getByRole('button', { name: 'Focus playing station' })).toBeEnabled();
-  await page.getByRole('button', { name: 'Focus playing station' }).click();
+  await expect(page.getByRole('button', { name: 'Locate the playing station' })).toBeEnabled();
+  await page.getByRole('button', { name: 'Locate the playing station' }).click();
   await page.setViewportSize({ width: 390, height: 844 });
   await openSearchView(page);
   await expect(page.getByRole('searchbox', { name: 'Find a station' })).toBeVisible();

@@ -7,10 +7,8 @@
 //   3. On-demand audio fingerprinting through the desktop proxy (ACRCloud/AudD), user-triggered.
 // The canonical source implementation is mirrored under recovered_src/ for the next full desktop build.
 
-import { normalizeSong } from './song-library-core.js?v=0.33.1';
-import {stationLocation} from './station-location.js?v=0.33.1';
-import {displayCountry} from './search-core.js?v=0.33.1';
-import {t} from '../i18n/index.js?v=0.33.1';
+import { normalizeSong } from './song-library-core.js?v=0.34.0';
+import {stationFacts} from './place-copy.js?v=0.34.0';
 
 const VERSION = '0.25.0-metadata-overlay';
 let publishedSong = null;
@@ -804,22 +802,29 @@ function isStationFactsLine(metaLine) {
   return /\b(\d+\s*kbps|quality\s*\d+|aac|mp3|ogg|opus|flac|hls)\b/i.test(metaLine);
 }
 
-function extractRawCandidate() {
-  const eyebrow = text(byId('nowcard-eyebrow')).toLowerCase();
-  const meta = text(byId('player-meta'));
-  const nowTitle = text(byId('nowcard-title'));
-  const station = text(byId('player-station'));
-
+export function presentedRawTitle({eyebrow='',meta='',nowTitle='',station='',artistLine='',stationFacts=false,rawTitle=''}={}) {
+  const bounded=value=>typeof value==='string'&&value.length<=512?value.trim():'';
+  eyebrow=bounded(eyebrow).toLowerCase();meta=bounded(meta);nowTitle=bounded(nowTitle);
+  station=bounded(station);artistLine=bounded(artistLine);rawTitle=bounded(rawTitle);
   let raw = '';
   if (eyebrow.includes('now playing') && nowTitle && nowTitle !== '-' && nowTitle !== '\u2014' && nowTitle !== station) {
-    const artistLine = text(byId('nowcard-artist'));
     const maybeArtist = artistLine.split(/\s(?:\||\u00B7)\s/)[0];
     raw = maybeArtist && maybeArtist !== 'Live radio' ? `${maybeArtist} - ${nowTitle}` : nowTitle;
-  } else if (meta && !isStationFactsLine(meta)) {
+  } else if(rawTitle) {
+    raw=rawTitle;
+  } else if (!stationFacts && meta && !isStationFactsLine(meta)) {
     raw = meta.split(/\s(?:\||\u00B7)\s/)[0].trim();
   }
   if (!raw || raw === station || raw === 'Live radio') return '';
   return raw;
+}
+
+function extractRawCandidate() {
+  const facts=byId('player-meta');
+  return presentedRawTitle({eyebrow:text(byId('nowcard-eyebrow')),meta:text(facts),
+    nowTitle:text(byId('nowcard-title')),station:text(byId('player-station')),
+    artistLine:text(byId('nowcard-artist')),stationFacts:facts?.dataset?.erStationFacts==='true',
+    rawTitle:facts?.dataset?.erRawTitle||''});
 }
 
 // --- Live metadata feeds (platform APIs, HLS ID3, fingerprinting) ---
@@ -1540,10 +1545,7 @@ function mapTooltipNowPlayingLine(uuid) {
 
 function renderMapTooltip(station) {
   const uuid = String(station?.stationuuid || '');
-  const meta = [displayCountry(station,document.documentElement.lang), station?.codec, station?.bitrate ? `${station.bitrate} kbps` : '',stationLocation(station)?.approximate?t('map.approximateCountry',undefined,document.documentElement.lang):'']
-    .filter(Boolean)
-    .map(escapeHtmlText)
-    .join(' · ');
+  const meta = escapeHtmlText(stationFacts(station,{locale:document.documentElement.lang,now:Date.now()}).text);
   return `
     <div class="er-tt" data-station-uuid="${escapeHtmlText(uuid)}">
       <strong class="er-tt-name">${escapeHtmlText(station?.name || 'Unknown station')}</strong>

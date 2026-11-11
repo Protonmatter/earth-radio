@@ -11,6 +11,9 @@ original player and collections. Its account-enabled production focus correction
 and source/served checks are recorded in [the qualification](docs/QA-0.33.1.md).
 Desktop downloads remain on immutable 0.32.2 while the next place-first UI and
 final phase3 desktop release are developed; see [build state](docs/BUILD_STATE.md).
+The 0.34.0 branch candidate adds place-first rows/player facts and Details-based
+stream choice; its [qualification record](docs/QA-0.34.0.md) distinguishes local
+validation from hosted delivery and rebuilt desktop artifacts.
 
 See the [installation guide](docs/INSTALLATION.md) for Windows ARM64/x64, macOS Apple Silicon/Intel, and Safari Home Screen installation on iPhone/iPad. Get desktop downloads, checksums and build provenance from the [latest complete release](https://github.com/Protonmatter/earth-radio/releases/latest). Windows uses the accepted local signer; macOS builds are explicitly labeled unnotarized.
 

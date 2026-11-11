@@ -55,6 +55,21 @@ html.er-root .er-cluster { background: var(--surface); color: var(--text); borde
 .er-detail-eyebrow { font: 10px var(--er2-mono, monospace); letter-spacing: .12em; color: var(--accent); }
 .er-detail-close { position: absolute; right: 8px; top: 8px; width: 44px; height: 44px; border: 0; font-size: 24px; background: transparent; color: var(--text); cursor: pointer; }
 .er-detail-play { padding: 12px 20px; border: 0; border-radius: 8px; background: var(--accent); color: var(--accent-contrast); font: inherit; cursor: pointer; }
+.er-station-detail { max-height: calc(100dvh - 32px); overflow-y: auto; }
+.er-detail-facts { display: grid; grid-template-columns: minmax(88px, .8fr) minmax(0, 1.4fr); gap: 8px 14px; margin: 20px 0; font-size: 13px; line-height: 1.4; }
+.er-detail-facts dt { color: var(--text-muted); }
+.er-detail-facts dd { margin: 0; overflow-wrap: anywhere; }
+.station-card__meta .er-place-facts { display: flex; min-width: 0; align-items: baseline; }
+.er-place-copy { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.er-place-time { flex: 0 0 auto; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.er-station-detail .er-stream-control { display: flex; flex-wrap: wrap; max-width: 100%; }
+.er-station-detail .er-stream-control select { min-width: 120px; max-width: 100%; min-height: 44px; font: inherit; }
+.er-detail-reasons { margin: 12px 0; }
+.er-detail-close { right: auto; inset-inline-end: 8px; }
+[dir="rtl"] .er-detail-eyebrow { letter-spacing: normal; }
+.er-detail-reasons summary, #er-directory-diagnostics summary { min-height: 44px; align-content: center; cursor: pointer; }
+#er-directory-diagnostics [data-directory-status] { display: grid; gap: 8px; font-size: 13px; line-height: 1.5; overflow-wrap: anywhere; }
+html.er-root #er-directory-diagnostics .status-line, #er-directory-diagnostics #er-map-count { display: block; position: static; max-width: none; white-space: normal; color: inherit; }
 @media (max-width: 767px) {
   html.er-root .er-discovery { margin: 8px 12px; }
   html.er-root .grid-header { padding: 12px 18px 8px; }

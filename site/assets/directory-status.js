@@ -1,4 +1,4 @@
-import {getLocale,t} from '../i18n/index.js?v=0.33.1';
+import {getLocale,t} from '../i18n/index.js?v=0.34.0';
 export function directorySnapshotStale(metadata,now=Date.now()){
   const generated=Date.parse(metadata?.generatedAt);return Number.isFinite(generated)&&now-generated>7200000;
 }

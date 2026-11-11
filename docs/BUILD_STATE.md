@@ -1,14 +1,17 @@
 # Build state
 
-## Place-first work — inactive core
+## 0.34.0 place-first candidate — qualification in progress
 
-The ER-05 branch adds a pure place/country/genre/explicit-time copy helper and two
-new labels in every catalog. It remains outside active UI/audio/metadata entry
-points. The next separate integration must preserve raw song input, stream choice,
-country-scoped search and diagnostics while advancing coherent 0.34.0/v76 identity.
-See [place presentation](PLACE_PRESENTATION.md). No new dependency or service.
-Inactive-core verification passes 658 tests with the same three Windows skips,
-430 source hashes, lint/syntax and site/website validation. It adds no boot fetch.
+The ER-05 branch integrates conservative place/genre/time copy across rows,
+player facts and tooltips, retains raw song input independently, and moves the
+original stream choice and diagnostics into Details and Settings. Candidate
+identity is coherent 0.34.0/v76-place-first. See [place presentation](PLACE_PRESENTATION.md)
+and [qualification](QA-0.34.0.md). No new dependency, service or boot fetch.
+The inactive core passed 658 tests and 430 hashes. Integration passes 665 tests
+with three existing Windows skips and 435 hashes, all 324 browser cases without
+retries, the 42-scenario rendered matrix and isolated Windows ARM64 renderer/auth/
+encrypted-restart checks. Review and hosted delivery remain pending. Production
+and desktop versions below remain the accepted delivered versions until then.
 
 ## 0.33.1 web delivery — verified
 

@@ -2,6 +2,7 @@ import './style.css';
 // Maintained modules are shared with the shipped runtime; this evidence snapshot still has no rebuild toolchain.
 import { installDiscovery } from '../site/assets/discovery-ui.js';
 import { directorySnapshotStatus } from '../site/assets/directory-status.js';
+import { createStationFacts, updatePlayerFacts } from '../site/assets/place-ui.js';
 import { t as translate } from '../site/i18n/index.js';
 import './domains/radio/index';
 import './domains/sdr/index';
@@ -156,17 +157,16 @@ function renderStationCard(station: Station): HTMLElement {
   const body = createEl('div', 'station-card__body');
   const name = createEl('span', 'station-card__name', station.name || 'Unknown Station');
   name.title = station.name || 'Unknown Station';
-  const meta = createEl('div', 'station-card__meta', buildMetaLine(station));
+  const meta = createEl('div', 'station-card__meta');
 
   const pills = createEl('div', 'station-card__pills');
-  pills.append(buildQualityPill(station), buildSourcePill(station));
 
   const tags = createEl('div', 'station-card__tags');
   for (const tag of (station.tagList || []).slice(0, 3)) {
     tags.appendChild(createEl('span', 'tag-pill', tag));
   }
 
-  meta.replaceChildren(createEl('span', 'er-station-meta-text', buildMetaLine(station)), discovery.variantControl(station));
+  meta.replaceChildren(createStationFacts(station), discovery.variantControl(station));
   body.append(name, meta, pills, tags);
 
   const play = createEl('button', 'station-card__play');
@@ -426,11 +426,7 @@ function beginNowPlaying(station: Station): void {
     onTitle: title => {
       if (getCurrentStation()?.stationuuid !== station.stationuuid) return;
       setNowPlayingMetadata(title);
-      if (playerMetaEl) {
-        playerMetaEl.textContent = [title, station.country, station.codec, station.bitrate ? `${station.bitrate} kbps` : '']
-          .filter(Boolean)
-          .join(' · ');
-      }
+      updatePlayerFacts(station, { rawTitle: title });
       const track = parseNowPlaying(title);
       if (!track) return;
       setNowPlayingTrack(track, { found: false, artist: track.artist, title: track.title });
@@ -454,11 +450,7 @@ function onFavoriteStation(station: Station): void {
 function updatePlayerBar(station: Station | null): void {
   if (!station) return;
   if (playerStationEl) playerStationEl.textContent = station.name || 'Unknown Station';
-  if (playerMetaEl) {
-    playerMetaEl.textContent = [station.country, station.bitrate ? `${station.bitrate} kbps` : '', station.codec, station.quality ? `quality ${station.quality.score}` : '']
-      .filter(Boolean)
-      .join(' · ');
-  }
+  updatePlayerFacts(station);
   updateFavoriteBtnState();
   updatePlayBtnState();
 }
@@ -903,12 +895,7 @@ function setupAudioErrorHandling(): void {
       if (!config.streamProbeEnabled) return;
       void probeStationStream(station).then(observation => {
         if (!observation?.ok || getCurrentStation()?.stationuuid !== station.stationuuid) return;
-        const title = observation.metadata?.streamTitle || observation.metadata?.icyName;
-        if (playerMetaEl && title) {
-          playerMetaEl.textContent = [title, station.country, station.codec, station.bitrate ? `${station.bitrate} kbps` : '']
-            .filter(Boolean)
-            .join(' · ');
-        }
+        updatePlayerFacts(station, { probeTitle: observation.metadata?.streamTitle });
       });
     },
     onError: handlePlaybackFailure,

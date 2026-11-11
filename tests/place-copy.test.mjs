@@ -64,3 +64,8 @@ test('copy tolerates malformed fields, normalizes tags and leaves input unchange
  assert.equal(stationFacts(cityRow('Berlin',{tags:'<img src=x>,jazz'}),{now}).genre,'Jazz');
  assert.equal(stationFacts(cityRow('Berlin',{tags:'x'.repeat(513)}),{now}).genre,'');
 });
+
+test('the normalized directory Unknown sentinel uses the localized fallback',()=>{
+ assert.equal(stationFacts({country:'Unknown',countrycode:''}).text,'Country unknown');
+ assert.equal(stationFacts({country:'Unknown',countrycode:''},{locale:'ko'}).text,'국가 정보 없음');
+});
