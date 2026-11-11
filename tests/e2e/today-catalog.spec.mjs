@@ -7,7 +7,7 @@ test('an unsupported recommendation input leaves the caller and fallback control
  await page.route('**/today-harness',route=>route.fulfill({contentType:'text/html',body:html}));
  await page.goto('/today-harness');
  const result=await page.evaluate(async()=>{
-  const {installToday}=await import('/assets/today-ui.js?v=0.33.0');let plays=0,returned=false,error='';
+  const {installToday}=await import('/assets/today-ui.js?v=0.33.1');let plays=0,returned=false,error='';
   const ui=installToday({play:()=>plays++});
   try{ui.observe({stations:new Array(50001).fill({stationuuid:'invalid-budget',name:'Input',url:'https://example.com/live'})});returned=true;}catch(failure){error=failure.message;}
   return{plays,returned,error,disabled:document.querySelector('#er-today-place [data-today-play]').disabled,refreshHidden:document.querySelector('[data-today-refresh]').hidden};

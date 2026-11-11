@@ -47,8 +47,9 @@ test('startup controls wait for the owned runtime and Settings receives keyboard
  }finally{release();}
 });
 
-for(const width of [390,1440])test(`Settings contains keyboard focus and returns to its trigger at ${width}px`,async({page})=>{
- await page.setViewportSize({width,height:900});await setupToday(page);await page.goto('/');
+for(const enableAuth of [false,true])for(const width of [390,1440])test(`Settings contains keyboard focus and returns to its trigger at ${width}px, auth=${enableAuth}`,async({page})=>{
+ await page.setViewportSize({width,height:900});await setupToday(page,{enableAuth});await page.goto('/');
+ if(enableAuth){await expect(page.locator('#er-auth-button')).toHaveCount(1);await expect(page.locator('.er-auth-modal')).toHaveAttribute('hidden','');}
  const trigger=page.locator('#settings-toggle'),modal=page.locator('#settings-modal');
  await trigger.click();await expect(modal).toBeVisible();
  const first=modal.locator('.settings-header [data-close-settings]'),last=page.locator('#settings-save');

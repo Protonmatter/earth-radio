@@ -1,4 +1,4 @@
-import {ATLAS_MIN_LATITUDE,ATLAS_MAX_LATITUDE} from './station-location.js?v=0.33.0';
+import {ATLAS_MIN_LATITUDE,ATLAS_MAX_LATITUDE} from './station-location.js?v=0.33.1';
 
 const mercatorY=latitude=>(1-Math.log(Math.tan(Math.PI/4+latitude*Math.PI/360))/Math.PI)/2;
 const latitudeAt=y=>Math.atan(Math.sinh(Math.PI*(1-2*y)))*180/Math.PI;

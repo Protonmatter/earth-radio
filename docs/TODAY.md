@@ -1,6 +1,6 @@
 # Today selection and launch
 
-Candidate 0.33.0 integrates Today through a narrow adapter to the existing runtime.
+Candidate 0.33.1 integrates Today through a narrow adapter to the existing runtime.
 It is local feature work until exact-head review, CI and deployed acceptance pass;
 the previously published 0.32.2 desktop release is unchanged. The feature is staged
 in bounded core, UI and regression/delivery commits.
@@ -44,8 +44,10 @@ The recovered router suppresses feedback only for a real hash assignment.
 user fragment. Same-document geography and quality links retain their meaning.
 Owned skip links move keyboard focus without changing fragments, history or active
 filters. Settings contains Tab/Shift+Tab focus and restores its visible trigger.
+The account owner's hidden dialog does not disable this containment; a visible
+account dialog retains its own handler. See [the production correction](QA-0.33.1.md).
 
-The 0.33.0 module URLs and v74 worker include only the small active Today/place
+The 0.33.1 module URLs and v75 worker include only the small active Today/place
 modules. Large map detail/terrain/roads remain outside the precache. The recovered
 runtime is fingerprinted after its recorded integration edit; the old TypeScript
 snapshot is still a reference and does not reproduce it through compilation.

@@ -195,7 +195,7 @@
       {
         "path": "site/assets/place-core.js",
         "bytes": 5510,
-        "sha256": "6c56c12906f9fb2e765a127dc55f0a6a1a1710c7e4e797d003362e998dddd2b0"
+        "sha256": "3907b774686e2005557fe8b665c503415a4dee039aca80413942e60e97b10d0b"
       },
       {
         "path": "site/assets/curated-places.js",
@@ -205,7 +205,7 @@
       {
         "path": "site/assets/station-location.js",
         "bytes": 1640,
-        "sha256": "436e2c763e67dfd9062b2bdb55f6bfc3d59ae10de8fa37b99dbfa653e802b6f4"
+        "sha256": "60d86b0cfd93860a340b1e6cde96b172f6689ef0d42d2774a70dfcefd170b7c2"
       },
       {
         "path": "site/assets/country-locations.js",
@@ -215,22 +215,22 @@
       {
         "path": "site/assets/station-variants.js",
         "bytes": 8422,
-        "sha256": "31a978129cb48c84cfbd13d3047ad6bef2ffe8690f40024692748d29efc433df"
+        "sha256": "d39a005a568e1b1b9c8719d523fed71072e27c01e9f5f5c352de628f19b0f451"
       },
       {
         "path": "site/assets/search-core.js",
         "bytes": 8877,
-        "sha256": "f4449ad0bce03f7fef2fc7784028c0d40a2990fdf9660d5f3f583265f2cf62d9"
+        "sha256": "acdd86e39d51e47e97f56333f0280459810f8de0bfc97cf7d026547574f1ebf4"
       },
       {
         "path": "site/assets/discovery-core.js",
         "bytes": 15194,
-        "sha256": "0b1641ae25ec3a33b6771c44a8ac692643a600a449b8c44d7f5dabf1bf75f70b"
+        "sha256": "9c04d3d62fe16a554ccf09af1b53285c491793bbdb5ce45a743e53a7b78c0c09"
       },
       {
         "path": "site/assets/program-components.js",
         "bytes": 3087,
-        "sha256": "3cc371dd5208d3b49924bb427cb29a8784b9090bd73d69fc1bf77f4e5bd6a65a"
+        "sha256": "cc6fe6610243dc80a571bf308465d6f4ed074631e309d50935002546b7e265a2"
       },
       {
         "path": "scripts/qualify-place-data.mjs",
@@ -256,7 +256,7 @@
       "architecture": "arm64"
     }
   },
-  "qualifiedAt": "2026-11-11T17:27:03.472Z",
+  "qualifiedAt": "2026-11-11T17:53:52.985Z",
   "scope": "Frozen-input place-model qualification only; no playback, UI, broad-geocoding or physical-device claim.",
   "sourceAcquisition": {
     "checkedAt": "2026-11-11T11:40:00.984Z",
