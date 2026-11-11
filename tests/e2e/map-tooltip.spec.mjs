@@ -44,6 +44,8 @@ for (const { width, palette, longName = false } of [
       await page.locator('#map path.leaflet-interactive:visible').first().hover();
       const tooltip = page.locator('.er-station-tooltip');
       await expect(tooltip).toBeVisible();
+      await expect(tooltip.locator('.er-tt-meta')).toHaveText('South Korea');
+      await expect(tooltip.locator('.er-tt-meta')).not.toContainText(/AAC|kbps|quality|HTTPS/);
       await expect(tooltip.locator('.er-tt-np--pending')).toBeVisible();
       const geometry = await tooltip.evaluate(element => {
         const box = element.getBoundingClientRect();

@@ -21,14 +21,18 @@ for(const width of [320,390,1440])test(`variant grouping, accessible quality cho
   await page.setViewportSize({width,height:900});const audio=await setup(page);await page.goto('/#listen');
   await page.getByRole('searchbox',{name:'Find a station'}).fill('bbc radio 4');
   await expect(page.locator('.station-card__name')).toHaveText(['E2E BBC Radio 4']);
+  await page.getByRole('button',{name:'Station details: E2E BBC Radio 4',exact:true}).click();
   const quality=page.getByRole('combobox',{name:'Stream quality for E2E BBC Radio 4'});await expect(quality).toHaveValue('variant-320');await expect(quality.locator('option')).toHaveCount(2);
   await quality.selectOption('legacy-alias');await expect(quality).toBeFocused();await expect(page.locator('#audio-player')).toHaveJSProperty('paused',true);expect(audio).toEqual([]);
+  await page.locator('#er-station-detail [data-detail-close]').click();
   await page.getByRole('button',{name:'Play: E2E BBC Radio 4',exact:true}).click();await expect(page.locator('#player-bar')).toHaveClass(/is-playing/);expect(audio.at(-1)).toBe('/128');
   await page.locator('#btn-play').click();await expect(page.locator('#audio-player')).toHaveJSProperty('paused',true);
+  await page.getByRole('button',{name:'Station details: E2E BBC Radio 4',exact:true}).click();
   await quality.selectOption('variant-320');expect(audio.at(-1)).toBe('/128');await expect(page.locator('#audio-player')).toHaveJSProperty('paused',true);
+  await page.locator('#er-station-detail [data-detail-close]').click();
   await page.locator('#btn-play').click();await expect(page.locator('#player-bar')).toHaveClass(/is-playing/);expect(audio.at(-1)).toBe('/320');
   await page.getByRole('button',{name:'Favorite station: E2E BBC Radio 4',exact:true}).click();await expect(page.getByRole('button',{name:'Unfavorite station: E2E BBC Radio 4',exact:true})).toHaveAttribute('aria-pressed','true');
-  await page.getByRole('searchbox',{name:'Find a station'}).fill('HTTP Station');await expect(page.getByRole('img',{name:'HTTP stream',exact:true})).toBeVisible();await expect(page.locator('.er-http-badge')).toHaveText('HTTP');
+  await page.getByRole('searchbox',{name:'Find a station'}).fill('HTTP Station');await expect(page.getByRole('img',{name:'This stream may need the desktop app',exact:true})).toBeVisible();await expect(page.locator('.er-http-badge')).toHaveText('Desktop');
   const bounds=await page.locator('.er-http-badge').evaluate(node=>{const badge=node.getBoundingClientRect(),meta=node.closest('.station-card__meta').getBoundingClientRect();return{left:badge.left,right:badge.right,top:badge.top,bottom:badge.bottom,meta:meta.toJSON()};});
   expect(bounds.left).toBeGreaterThanOrEqual(bounds.meta.left-.5);expect(bounds.right).toBeLessThanOrEqual(bounds.meta.right+.5);expect(bounds.top).toBeGreaterThanOrEqual(bounds.meta.top-.5);expect(bounds.bottom).toBeLessThanOrEqual(bounds.meta.bottom+.5);
   // The boot generation status survives catalog caching; player actions may
@@ -38,10 +42,13 @@ for(const width of [320,390,1440])test(`variant grouping, accessible quality cho
 test('legacy UUID deep links and saved alias favorites survive grouped reload',async({page})=>{
   await setup(page);await page.goto('/#station=legacy-alias');await page.getByRole('searchbox',{name:'Find a station'}).fill('bbc radio 4');
   await expect(page.locator('#audio-player')).toHaveJSProperty('paused',true);
+  await page.getByRole('button',{name:'Station details: E2E BBC Radio 4',exact:true}).click();
   const quality=page.getByRole('combobox',{name:'Stream quality for E2E BBC Radio 4'});await expect(quality).toHaveValue('legacy-alias');
+  await page.locator('#er-station-detail [data-detail-close]').click();
   await page.getByRole('button',{name:'Favorite station: E2E BBC Radio 4',exact:true}).click();await page.reload();
   await page.getByRole('searchbox',{name:'Find a station'}).fill('bbc radio 4');await expect(page.locator('.station-card__name')).toHaveText(['E2E BBC Radio 4']);
-  await expect(page.getByRole('button',{name:'Unfavorite station: E2E BBC Radio 4',exact:true})).toHaveAttribute('aria-pressed','true');await expect(quality).toHaveValue('legacy-alias');
+  await expect(page.getByRole('button',{name:'Unfavorite station: E2E BBC Radio 4',exact:true})).toHaveAttribute('aria-pressed','true');
+  await page.getByRole('button',{name:'Station details: E2E BBC Radio 4',exact:true}).click();await expect(quality).toHaveValue('legacy-alias');
   await expect(page.locator('#audio-player')).toHaveJSProperty('paused',true);
 });
 test('a failed selected stream recovers to an untried sibling without a duplicate card',async({page})=>{

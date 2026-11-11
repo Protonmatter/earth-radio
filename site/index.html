@@ -19,26 +19,26 @@
   <link rel="icon" type="image/svg+xml" sizes="any" href="./branding/earth-radio-favicon-pine.svg" data-earth-radio-icon="svg" data-light="./branding/earth-radio-favicon-pine.svg" data-dark="./branding/earth-radio-favicon-obsidian.svg" />
   <link rel="apple-touch-icon" sizes="180x180" href="./branding/earth-radio-apple-touch-icon-180.png" />
   <link rel="manifest" href="./manifest.webmanifest" />
-  <script type="module" src="./config.js?v=0.33.1"></script>
-  <script type="module" src="./assets/storage-guard.js?v=0.33.1"></script>
-  <script type="module" src="./assets/directory-expansion.js?v=0.33.1"></script>
-  <script type="module" src="./assets/pinned-stations.js?v=0.33.1"></script>
-  <script type="module" src="./assets/metadata-enrichment.js?v=0.33.1"></script>
-  <link rel="stylesheet" href="./assets/metadata-enrichment.css?v=0.33.1" />
-  <script type="module" crossorigin src="./assets/index-747d751d.js"></script>
+  <script type="module" src="./config.js?v=0.34.0"></script>
+  <script type="module" src="./assets/storage-guard.js?v=0.34.0"></script>
+  <script type="module" src="./assets/directory-expansion.js?v=0.34.0"></script>
+  <script type="module" src="./assets/pinned-stations.js?v=0.34.0"></script>
+  <script type="module" src="./assets/metadata-enrichment.js?v=0.34.0"></script>
+  <link rel="stylesheet" href="./assets/metadata-enrichment.css?v=0.34.0" />
+  <script type="module" crossorigin src="./assets/index-ce594249.js"></script>
   <link rel="stylesheet" crossorigin href="./assets/index-CSoL7F-Y.css">
-  <link rel="stylesheet" href="./assets/responsive-ui.css?v=0.33.1" />
-  <script type="module" src="./assets/responsive-ui.js?v=0.33.1"></script>
-  <script type="module" src="./assets/song-library-ui.js?v=0.33.1"></script>
-  <script type="module" src="./assets/atlas-lock.js?v=0.33.1"></script>
-  <link rel="stylesheet" href="./assets/ui-refresh.css?v=0.33.1" />
-  <link rel="stylesheet" href="./assets/atlas-lock.css?v=0.33.1" />
-  <link rel="stylesheet" href="./assets/discovery.css?v=0.33.1" />
-  <link rel="stylesheet" href="./assets/search-controls.css?v=0.33.1" />
-  <link rel="stylesheet" href="./assets/listening-room.css?v=0.33.1" />
-  <link rel="stylesheet" href="./assets/brand-identity.css?v=0.33.1" />
-  <script type="module" src="./assets/brand-identity.js?v=0.33.1"></script>
-  <link rel="stylesheet" href="./assets/today-ui.css?v=0.33.1" />
+  <link rel="stylesheet" href="./assets/responsive-ui.css?v=0.34.0" />
+  <script type="module" src="./assets/responsive-ui.js?v=0.34.0"></script>
+  <script type="module" src="./assets/song-library-ui.js?v=0.34.0"></script>
+  <script type="module" src="./assets/atlas-lock.js?v=0.34.0"></script>
+  <link rel="stylesheet" href="./assets/ui-refresh.css?v=0.34.0" />
+  <link rel="stylesheet" href="./assets/atlas-lock.css?v=0.34.0" />
+  <link rel="stylesheet" href="./assets/discovery.css?v=0.34.0" />
+  <link rel="stylesheet" href="./assets/search-controls.css?v=0.34.0" />
+  <link rel="stylesheet" href="./assets/listening-room.css?v=0.34.0" />
+  <link rel="stylesheet" href="./assets/brand-identity.css?v=0.34.0" />
+  <script type="module" src="./assets/brand-identity.js?v=0.34.0"></script>
+  <link rel="stylesheet" href="./assets/today-ui.css?v=0.34.0" />
 </head>
 <body>
   <a class="er-skip" href="#er-workspace" data-i18n="app.skip">Skip to content</a>
@@ -183,7 +183,7 @@
           <button class="er-more-filters" id="filters-toggle" data-open-filters type="button" aria-controls="filter-sidebar" aria-expanded="false" data-i18n="today.moreFilters">More filters</button>
           <label><input type="checkbox" name="secureOnly" /> HTTPS only</label>
           <label><input type="checkbox" name="avoidFailures" /> Hide recent failures</label>
-          <button type="button" id="er-discovery-pick">Find my next station ↗</button>
+          <button type="button" id="er-discovery-pick" data-i18n="place.nextChoice">Find my next station</button>
         </div>
         </details>
         <div id="er-discovery-active" class="er-search-active" role="group" aria-label="Active filters" hidden></div>
@@ -201,13 +201,13 @@
       <button class="er-collapse" type="button" data-er-collapse="map" data-i18n="desktop.hideMap">Hide map</button>
       <p class="sr-only" data-i18n="map.assistive">The map is a visual aid. Use the keyboard-accessible station list on the left to browse and play stations.</p>
       <div id="map"></div>
-      <div class="er-atlas-caption" aria-hidden="true"><span>THE LISTENING ATLAS</span><strong>A world of frequencies.</strong><small id="er-map-count">Locating stations…</small></div>
+      <div class="er-atlas-caption" aria-hidden="true"><span>THE LISTENING ATLAS</span><strong>A world of frequencies.</strong><small id="er-map-summary"></small><small id="er-map-count">Locating stations…</small></div>
       <div class="er-atlas-tools" role="group" aria-label="Atlas controls">
         <p id="er-map-directory-status" class="er-map-directory-status" role="status" aria-live="polite" hidden></p>
         <button type="button" id="er-map-search">Search this area</button>
         <button type="button" id="er-map-area" hidden aria-label="Clear map area">Clear area ×</button>
         <button type="button" id="er-map-fit">Fit stations</button>
-        <button type="button" id="er-map-focus" disabled aria-label="Focus playing station">On air ↗</button>
+        <button type="button" id="er-map-focus" disabled aria-label="Locate the playing station" data-i18n="place.locatePlaying" data-i18n-attr="aria-label"><span data-i18n="place.locate">Locate</span></button>
         <details class="er-map-options" id="er-map-options">
           <summary data-i18n="map.labels">Map labels</summary>
           <div class="er-map-options-panel" role="group" aria-label="Geographic labels" data-i18n="map.labelsGroup" data-i18n-attr="aria-label">
@@ -234,12 +234,13 @@
       </aside>
     </section>
   </main>
-  <dialog class="er-station-detail" id="er-station-detail" aria-label="Station details" aria-describedby="er-detail-note">
-    <button type="button" class="er-detail-close" data-detail-close aria-label="Close station details">×</button>
-    <span class="er-detail-eyebrow">BEHIND THE SELECTION</span>
-    <h2></h2><p data-detail-meta></p><ul></ul>
-    <p id="er-detail-note">Ranking uses directory information and playback outcomes from this tab. It is a guide, not a guarantee that a stream is available.</p>
-    <button type="button" class="er-detail-play" data-detail-play>Play station</button>
+  <dialog class="er-station-detail" id="er-station-detail" aria-label="Station details" aria-describedby="er-detail-note" data-i18n="place.detailsTitle" data-i18n-attr="aria-label">
+    <button type="button" class="er-detail-close" data-detail-close aria-label="Close station details" data-i18n="place.closeDetails" data-i18n-attr="aria-label">×</button>
+    <span class="er-detail-eyebrow" data-i18n="place.detailsTitle">Station details</span>
+    <h2></h2><p data-detail-meta></p><div data-detail-streams></div><dl class="er-detail-facts" data-detail-facts></dl>
+    <details class="er-detail-reasons"><summary data-i18n="place.selectionReasons">Why this selection</summary><ul></ul>
+    <p id="er-detail-note">Ranking uses directory information and playback outcomes from this tab. It is a guide, not a guarantee that a stream is available.</p></details>
+    <button type="button" class="er-detail-play" data-detail-play data-i18n="place.playStation">Play station</button>
   </dialog>
 
   <section id="er-you" class="er-you" tabindex="-1" hidden>
@@ -393,6 +394,7 @@
       </div>
       <div class="settings-body">
         <div id="er-settings-preferences"></div>
+        <details id="er-directory-diagnostics"><summary data-i18n="place.directoryDiagnostics">Directory diagnostics</summary><div data-directory-status></div></details>
         <label class="settings-field">
           <span class="settings-label" data-i18n="settings.theme">Theme</span>
           <select id="setting-theme">

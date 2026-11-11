@@ -1,6 +1,21 @@
 # Build state
 
-## 0.33.1 Settings focus correction — qualification pending
+## 0.34.0 place-first candidate — qualification in progress
+
+The ER-05 branch integrates conservative place/genre/time copy across rows,
+player facts and tooltips, retains raw song input independently, and moves the
+original stream choice and diagnostics into Details and Settings. Candidate
+identity is coherent 0.34.0/v76-place-first. See [place presentation](PLACE_PRESENTATION.md)
+and [qualification](QA-0.34.0.md). No new dependency, service or boot fetch.
+The inactive core passed 658 tests and 430 hashes. Integration passes 665 tests
+with three existing Windows skips and 435 hashes, all 330 browser cases without
+retries, the 42-scenario rendered matrix and isolated Windows ARM64 renderer/auth/
+encrypted-restart checks. Fresh review found one P2 Details refresh-focus issue;
+it was reproduced in both engines and corrected with six focused checks and the
+full green post-correction suites. Hosted delivery remains pending. Production
+and desktop versions below remain the accepted delivered versions until then.
+
+## 0.33.1 web delivery — verified
 
 PR46's Today UI merged as `5e9742834ad78b1ee1f41c33fa92d21d4bf26569` after all ten
 head checks, matching previews and actual hosted UI. Production matches 104 files
@@ -11,11 +26,18 @@ existing visible-state flag, adds enabled/disabled account coverage and advances
 coherent 0.33.1/v75 cache identity. Twelve focused Settings/account cases pass
 after four observed failures. Full local gates now pass 652 tests/three existing
 Windows skips, 425 hashes, 278 browser cases at three workers, 42 rendered scenarios
-and native ARM64 sandbox/auth/restart checks. Fresh review, hosted and served
-acceptance remain.
+and native ARM64 sandbox/auth/restart checks.
+PR47 merged as `3ebd300af6d4189d3be3ee40e3f31f9560291b54`. All ten head and main
+gates pass; both hosted browser runs report 278 passes with no flaky cases.
+Production matches 104 files per app origin and 19 website files, with headers
+and fifteen routes. Actual Chromium/WebKit at phone/desktop widths explicitly
+mounts the hidden account dialog and verifies Settings, visible Google/GitHub/email
+controls, Today/Search/Library and muted buffered Classic Vinyl HD. The original
+checkout is clean at the same main. This does not establish fresh OAuth/email
+completion or physical devices. Spaces records the delivered state and limits.
 See [0.33.1 qualification](QA-0.33.1.md). Original accounts and providers are unchanged.
 
-## 0.33.0 Today candidate — local, delivery pending
+## 0.33.0 Today implementation — superseded by 0.33.1
 
 Branch work integrates a frozen UTC city calendar, bounded opt-in native seeds,
 Today/Continue/On air presentation, Atlas/Library/Search primary navigation and
@@ -28,17 +50,18 @@ Local post-review checks now pass 652 tests with the same three skips, 422 hashe
 all 274 browser cases at the documented three-worker setting, 42 rendered Electron
 scenarios and native ARM64 sandbox/auth/restart checks. See the
 [qualification record and retained timing observation](QA-0.33.0.md).
-The fresh review's four P2 findings have covering failing-then-passing tests;
-CI, preview and production acceptance remain pending. No 0.33.0
-desktop binaries or tag have been published; 0.32.2 stays immutable.
+The fresh review's four P2 findings have covering failing-then-passing tests.
+PR46 passed source/preview gates and deployed. The subsequent account-enabled
+production finding is corrected and qualified in 0.33.1 above. No 0.33 desktop
+binaries or tag were published; 0.32.2 stays immutable.
 
 ## Place/time foundation prerequisite
 
-The source adds eleven curated Natural Earth/IANA identities, a conservative pure
+The prerequisite added eleven curated Natural Earth/IANA identities, a conservative pure
 station-place resolver, an explicit local-time formatter and a bounded file-only
-coverage qualifier. It does not change active home/map/player, directory producer,
-loader, account, sync or worker entry points. Today and place-first UI remain the
-next separate phase. The frozen 10,000-record qualification gives 9,400 program
+coverage qualifier. That prerequisite did not change active home/map/player,
+directory producer, loader, account, sync or worker entry points. Today consumed
+it in the next phase; place-first work follows. The frozen 10,000-record qualification gives 9,400 program
 components; all eleven curated cities have at least five components with city
 evidence. This is a small prerequisite, not broad geocoding coverage or future
 stream-availability acceptance. See [model/provenance/rollback](PLACE_MODEL.md).

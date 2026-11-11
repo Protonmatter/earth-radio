@@ -23,8 +23,11 @@ Local gates pass: `npm run verify` reports 652 passing tests, three existing
 Windows skips and 425 deterministic hashes; all 278 browser cases pass at three
 workers without retries; all 42 rendered scenarios pass. Windows ARM64 sandbox,
 owned-origin, synthetic-provider PKCE/sync, OS-encrypted restart and normal-quit
-lifecycle checks pass in isolated profiles. Fresh review, exact-head hosted CI
-and actual preview/production acceptance remain required.
+lifecycle checks pass in isolated profiles. Fresh review found no issues; all ten
+head and final-main checks pass. Actual preview and account-enabled production
+verification pass on main `3ebd300af6d4189d3be3ee40e3f31f9560291b54`, including
+104/104/19 served files, headers, fifteen routes and four live UI contexts. Google,
+GitHub and email controls are present; fresh provider completion is not claimed.
 Keep `docs/QA-0.33.0.md` as the original source qualification record; green fixtures
 and previews alone did not establish the account-enabled production interaction.
 The source branch's plan/ledger retain the observed production and four local

@@ -13,9 +13,10 @@
  * maintained catalogs, over a bounded list of known runtime-owned elements.
  */
 
-import { getCurrentSongSnapshot } from './metadata-enrichment.js?v=0.33.1';
-import { countryCode, countryWords, matchesCountry } from './search-core.js?v=0.33.1';
-import { countryIndex } from './directory-expansion.js?v=0.33.1';
+import { getCurrentSongSnapshot } from './metadata-enrichment.js?v=0.34.0';
+import {refreshPlaceFacts} from './place-ui.js?v=0.34.0';
+import { countryCode, countryWords, matchesCountry } from './search-core.js?v=0.34.0';
+import { countryIndex } from './directory-expansion.js?v=0.34.0';
 import {
   applyDeclarativeI18n,
   applyDocumentLocale,
@@ -26,7 +27,7 @@ import {
   DEFAULT_LOCALE,
   FONT_PROFILES,
   t
-} from '../i18n/index.js?v=0.33.1';
+} from '../i18n/index.js?v=0.34.0';
 
 export const UI_STORAGE_KEY = 'earthRadio.ui.v1';
 export const DEFAULT_SPLIT = 42;
@@ -178,7 +179,7 @@ export function matchesSelectedCountry(metadata, selectedCountry) {
   const wanted = normalizeSearchTerm(displayCountryName(selectedCountry));
   if (!wanted) return true;
   const actual = normalizeSearchTerm(displayCountryName(String(metadata ?? '').split(/\s*[·•]\s*/, 1)[0]));
-  return actual === wanted;
+  return actual === wanted || Boolean(countryCode(wanted)&&countryCode(actual)===countryCode(wanted));
 }
 
 export function parseDestination(hash) {
@@ -728,6 +729,7 @@ function syncVirtualRows() {
 }
 
 function applyViewport(state) {
+  refreshPlaceFacts();
   const mode = classifyViewport();
   applyModeClasses(mode);
   // Clamp on every presentation pass, including restored state at boot. A later
@@ -2035,6 +2037,10 @@ function start() {
 
   restoreStoredTheme();
   for(const preference of document.querySelectorAll('[data-er-settings-preference]'))byId('er-settings-preferences')?.appendChild(preference);
+  const diagnostics=byId('er-directory-diagnostics');
+  for(const id of ['status-line','er-map-count']){
+    const node=byId(id);if(node&&diagnostics)diagnostics.querySelector('[data-directory-status]')?.appendChild(node);
+  }
   applyLocale(state.locale);
   guardDocumentLocale();
   // setupHeaderEvents() runs only after hydrateStorage(); clicks before
