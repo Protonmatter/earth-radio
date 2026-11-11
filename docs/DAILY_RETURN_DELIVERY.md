@@ -71,6 +71,13 @@ release assets. Desktop rollback uses the preceding version's published installe
 
 ## Approved delivery order
 
+The ER-01 post-merge Linux WebKit run measured a zero-width text node during the
+1440-to-320 resize transition after the outer-card check had passed. The local
+Windows WebKit diagnostic passed 12 repeats, so a persistent product collapse was
+not established. The regression now polls card width, text width, connection and
+station identity together on one DOM row. Its size thresholds are preserved and
+a persistent collapse still fails; there is no fixed delay or product CSS change.
+
 1. ER-01 playback intent and ER-02 confirmed-play click reporting as separate PRs.
 2. ER-07 real route/crawler responses; free ER-13 release fallback and Windows x64.
 3. Minimum verified place/time model, then ER-03 Today and ER-05 place-first copy.

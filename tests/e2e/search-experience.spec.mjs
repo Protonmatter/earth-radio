@@ -176,7 +176,11 @@ test('resizing the station container keeps filtered rows readable',async({page})
   await expect(page.locator('.station-card__name')).toHaveText(['E2E London Jazz']);
   for(const width of [390,1440,320]){
     await page.setViewportSize({width,height:844});
-    await expect.poll(()=>page.locator('.station-card').first().evaluate(card=>card.getBoundingClientRect().width)).toBeGreaterThan(width<768?width-65:300);
-    expect(await page.locator('.station-card__body').first().evaluate(body=>body.getBoundingClientRect().width)).toBeGreaterThan(100);
+    // Resize can replace virtualized rows between separate locator evaluations.
+    // Require both bounds on the same connected row; persistent collapse fails.
+    await expect.poll(()=>page.locator('.station-card').first().evaluate((card,minWidth)=>
+      card.isConnected&&card.getBoundingClientRect().width>minWidth
+      &&card.querySelector('.station-card__body')?.getBoundingClientRect().width>100
+      &&card.querySelector('.station-card__name')?.textContent==='E2E London Jazz',width<768?width-65:300)).toBe(true);
   }
 });
