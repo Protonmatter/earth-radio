@@ -89,8 +89,8 @@
   "algorithms": [
     {
       "path": "server/station-record-protocol.mjs",
-      "bytes": 4409,
-      "sha256": "61102d12f05fd33374b0136d712c28e75c0f558316f1fa1633043d9ad4b215f4"
+      "bytes": 4744,
+      "sha256": "fa7fa82b3f7bb13062178d5ec1477c1aedd6cd7f9efe70eaeed343933486b7af"
     },
     {
       "path": "scripts/build-station-record-index.mjs",
@@ -108,11 +108,15 @@
       "sha256": "6812090f144b25bc203ce855b9e290c6fc272df152b0b2fca7c802feb8e69088"
     }
   ],
-  "finalStagingQualifiedAt": "2026-11-12T14:23:18.194Z",
+  "finalStagingQualifiedAt": "2026-11-12T14:43:25.793Z",
   "containmentCorrection": {
     "sourceRootLinkRejected": true,
     "sourceAncestorLinkRejected": true,
     "targetAncestorLinkRejected": true,
     "existingOutputNeverAdopted": true
+  },
+  "unicodeUrlCorrection": {
+    "all707ExistingPayloadsIdentical": true,
+    "normalizerAndIndexBoundaryTestsPassed": true
   }
 }

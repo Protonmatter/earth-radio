@@ -69,6 +69,31 @@ rejection/no-output/marker assertions remain. No publication implementation,
 runtime, skip or retry change is made. Fresh checks and the same reviewer's bounded
 fixture follow-up are required; this failed run is not clean acceptance.
 
+The fixture follow-up at7f4d8c6 is clear, and actual hosted Windows verification
+then passed802 cases/three existing skips, including the cross-drive junction
+cases. Ubuntu passed805 with no skips. The new real branch publisher43238531080
+succeeded/deploy skipped; artifact13953787301 qualifies711 files/708 payloads,
+79,655,652 payload bytes,52,414 identities and all42,001 legacy observations.
+Actual preview116 app/19 website files and cache/security headers, ten routes and
+four Chrome/WebKit phone/desktop guest journeys pass, including exact Seoul search,
+details/focus/settings, Passport import/off/on/clear and muted live playback/Stop.
+
+GitHub's configured review also identified a valid P2 in the record text limit:
+`publicUrl()` caps raw text before returning percent-encoded `URL.href`, so an
+accepted optional Unicode homepage can exceed4,096 characters and fail the new
+validator. Two RED tests reproduce ordinary and maximum-input Unicode URL cases.
+The validator now permits the normalizer's bounded encoded URL output (at most
+nine characters per raw UTF-16 unit plus a canonical slash); other text limits,
+URL scheme/credential checks and256KiB shard/128MiB payload guards remain intact.
+All four URL fields retain their exact normalized values. Oversized encoded URLs
+and oversized ordinary text still fail. The complete retained generation was
+rebuilt and all707 payloads remain byte-identical; restaging and proof hashes were
+refreshed. Full checks, same-reviewer follow-up and new exact-head hosted acceptance
+remain required. A clean run on the earlier head does not waive this P2.
+
+Corrective `npm run verify` passes804 tests, with three existing Windows skips,
+zero failures and498 canonical hashes. Both new Unicode boundary regressions pass.
+
 Review scope rulings: app Share/path/preview/title behavior remains the explicit
 next PR; hosted CI/publication/readback remain delivery gates; historical ER-11
 acceptance is reconciled from its retained receipt rather than re-audited. Physical

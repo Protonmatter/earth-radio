@@ -7,6 +7,11 @@ export const STATION_RECORD_FIELDS=Object.freeze(['stationuuid','name','url','ur
 const compare=(a,b)=>a<b?-1:a>b?1:0;
 const integer=(value,max)=>Number.isSafeInteger(value)&&value>=0&&value<=max;
 const keys=(value,expected)=>value&&typeof value==='object'&&!Array.isArray(value)&&Object.keys(value).length===expected.length&&Object.keys(value).every(key=>expected.includes(key));
+const urlFields=['url','url_resolved','homepage','favicon'];
+// publicUrl() limits raw normalized text to4096 UTF-16 units before URL.href.
+// Percent encoding can use nine ASCII units for one three-byte BMP character;
+// allow that output plus a canonical trailing slash, retaining the shard byte cap.
+const maxUrlChars=9*4096+1;
 export const validStationRecordId=value=>typeof value==='string'&&/^[A-Za-z0-9][A-Za-z0-9:_.-]{0,159}$/.test(value)&&!['__proto__','prototype','constructor'].includes(value);
 
 export function validateStationRecordManifest(value,{now=Date.now()}={}){
@@ -38,9 +43,9 @@ export function validateStationRecordShard(value,descriptor){
         if(!integer(entry,key==='bitrate'?1536:['lastcheckok','hls'].includes(key)?1:1e9))throw Error('Invalid station numeric field');
       }else if(['geo_lat','geo_long'].includes(key)){
         if(typeof entry!=='number'||!Number.isFinite(entry)||Math.abs(entry)>(key==='geo_lat'?90:180))throw Error('Invalid station coordinate');
-      }else if(typeof entry!=='string'||entry.length>4096)throw Error('Invalid station text field');
+      }else if(typeof entry!=='string'||entry.length>(urlFields.includes(key)?maxUrlChars:4096))throw Error('Invalid station text field');
     }
-    for(const key of ['url','url_resolved','homepage','favicon'])if(row[key]!==undefined){
+    for(const key of urlFields)if(row[key]!==undefined){
       let url;try{url=new URL(row[key]);}catch{throw Error('Invalid station URL');}
       if(!['http:','https:'].includes(url.protocol)||url.username||url.password||url.hash)throw Error('Invalid station URL');
     }

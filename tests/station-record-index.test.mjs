@@ -5,6 +5,7 @@ import {readFile} from 'node:fs/promises';
 import {buildStationRecordIndex} from '../scripts/build-station-record-index.mjs';
 import {validateStationRecordManifest,validateStationRecordShard,STATION_RECORD_FIELDS} from '../server/station-record-protocol.mjs';
 import {buildDirectoryGeneration} from '../scripts/build-directory-snapshot.mjs';
+import {normalizeDirectory} from '../server/directory-normalize.mjs';
 
 const identity={generatedAt:'2026-11-12T13:22:34.584Z',producerSourceSha:'a'.repeat(40),producerVersion:'0.36.0'};
 const row=(stationuuid,extra={})=>({stationuuid,name:'A public station',url:`https://radio.example/${stationuuid}`,country:'United Kingdom',countrycode:'GB',lastcheckok:1,...extra});
@@ -68,6 +69,24 @@ test('index rejects duplicate/excessive input and a large shard rather than weak
 test('adversarial bucket concentration fails the per-shard record budget',()=>{
   const rows=[];for(let i=0;rows.length<1025;i++){const id='collision-'+i;if(bucket(id)===0)rows.push(row(id));}
   assert.throws(()=>buildStationRecordIndex(rows,identity),/record.*limit|count/i);
+});
+
+test('percent-encoded Unicode URL outputs retain the existing normalizer contract',()=>{
+  const url='https://radio.example/'+'界'.repeat(500),resolved='https://resolved.example/'+'音'.repeat(500);
+  const source=row('unicode',{url,url_resolved:resolved,homepage:url, favicon:url});
+  const normalized=normalizeDirectory([source]).stations[0];
+  for(const field of ['url','url_resolved','homepage','favicon'])assert.ok(normalized[field].length>4096,field);
+  const result=buildDirectoryGeneration([source],{...identity,minimumRecords:1,minimumCountries:1,minimumCityPrograms:0});
+  assert.deepEqual(record({manifest:result.stationManifest,files:result.files},'unicode'),normalized);
+});
+
+test('the maximum accepted raw Unicode URL survives encoding, while unbounded outputs remain rejected',()=>{
+  const prefix='https://radio.example/',url=prefix+'界'.repeat(4096-prefix.length);
+  const normalized=normalizeDirectory([row('max-unicode',{homepage:url})]).stations[0];
+  assert.ok(normalized.homepage.length>36000);
+  const result=buildStationRecordIndex([normalized],identity);assert.equal(record(result,'max-unicode').homepage,normalized.homepage);
+  assert.throws(()=>buildStationRecordIndex([row('too-long',{homepage:'https://radio.example/'+'%E7%95%8C'.repeat(5000)})],identity),/text field|URL|byte/i);
+  assert.throws(()=>buildStationRecordIndex([row('non-url-text',{name:'X'.repeat(4097)})],identity),/text field/i);
 });
 
 test('retained-data proof binds the current producer bytes and preserves every existing view',async()=>{

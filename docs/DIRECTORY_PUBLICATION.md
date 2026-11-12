@@ -65,6 +65,9 @@ UTF-8 JSON object with `schemaVersion:1` and a `stations` array sorted by UUID.
 Payloads use `station-records/<sha256>.json`. Empty buckets reuse one payload.
 Bounds are256 KiB and1,024 records per shard,64 KiB for the separate manifest and
 75,000 identities total. A changed timestamp does not change identical shard hashes.
+URL text bounds accommodate percent encoding of the normalizer's4,096-unit raw
+input; URLs are retained exactly rather than truncated after normalization. Other
+text limits and shard/aggregate byte budgets remain fixed.
 
 The stager verifies matching generation identity, every hash/length/count, allowed
 public fields and UUID-to-bucket assignment before creating the publication.
