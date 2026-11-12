@@ -1,9 +1,9 @@
 import {
   emptySongLibrary, normalizeSongLibrary, encodeSongEnvelope, decodeSongEnvelope,
   songNamespaceKey, songSyncStateKey, addSongsFromLibrary
-} from './song-library-core.js?v=0.34.1';
-import { queuePassportHistoryClear, mirrorPassportEnvelope, passportEnvelopeTag } from './passport-policy.js?v=0.34.1';
-import { passportNamespaceKey } from './passport-core.js?v=0.34.1';
+} from './song-library-core.js?v=0.35.0';
+import { queuePassportHistoryClear, mirrorPassportEnvelope, passportEnvelopeTag } from './passport-policy.js?v=0.35.0';
+import { passportNamespaceKey } from './passport-core.js?v=0.35.0';
 
 // The supported auth adapter selects the tab's identity. IndexedDB independently
 // verifies it in every transaction; another tab changing account cannot redirect

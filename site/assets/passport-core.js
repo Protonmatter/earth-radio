@@ -1,5 +1,5 @@
 // Pure Passport data and synthetic-clock rules. No account, DOM, network or I/O.
-import { COUNTRY_LOCATIONS } from './country-locations.js?v=0.34.1';
+import { COUNTRY_LOCATIONS } from './country-locations.js?v=0.35.0';
 
 export const PASSPORT_LIMITS = Object.freeze({ countries: 300, cities: 1000, bytes: 128_000 });
 const MAX_COUNTER = 2_147_483_647, MAX_DAY = 100_000_000, FILE_BYTES = 262_144;

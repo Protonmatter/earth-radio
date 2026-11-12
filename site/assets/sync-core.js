@@ -1,5 +1,5 @@
-import { mergeSongLibraries, mergeSongLibrariesThreeWay } from './song-library-core.js?v=0.34.1';
-import { mergePassports, mergePassportsThreeWay } from './passport-core.js?v=0.34.1';
+import { mergeSongLibraries, mergeSongLibrariesThreeWay } from './song-library-core.js?v=0.35.0';
+import { mergePassports, mergePassportsThreeWay } from './passport-core.js?v=0.35.0';
 
 const DOCUMENTS = Object.freeze([
   {

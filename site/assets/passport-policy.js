@@ -1,7 +1,7 @@
 // Helpers for an already owner-fenced earthRadio/kv transaction. This module
 // never selects an account, opens a database or imports either store.
-import { emptySongLibrary, decodeSongEnvelope, songNamespaceKey, songSyncStateKey } from './song-library-core.js?v=0.34.1';
-import { emptyPassport, encodePassportEnvelope, passportNamespaceKey, passportSyncStateKey } from './passport-core.js?v=0.34.1';
+import { emptySongLibrary, decodeSongEnvelope, songNamespaceKey, songSyncStateKey } from './song-library-core.js?v=0.35.0';
+import { emptyPassport, encodePassportEnvelope, passportNamespaceKey, passportSyncStateKey } from './passport-core.js?v=0.35.0';
 
 export function passportFailure(code, message) { const error = new Error(message); error.code = code; return error; }
 const usableGeneration = value => Number.isSafeInteger(value) && value >= 1;

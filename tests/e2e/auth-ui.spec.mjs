@@ -154,8 +154,8 @@ test('Passport-only account sync applies and uploads without reloading the page 
     return route.abort();
   });
   await page.evaluate(async user => {
-    const { passportStore } = await import('/assets/passport-store.js?v=0.34.1');
-    const { recordPassportPlace } = await import('/assets/passport-core.js?v=0.34.1');
+    const { passportStore } = await import('/assets/passport-store.js?v=' + document.documentElement.dataset.appVersion);
+    const { recordPassportPlace } = await import('/assets/passport-core.js?v=' + document.documentElement.dataset.appVersion);
     const store = passportStore(), snapshot = await store.read();
     await store.mutate(doc => recordPassportPlace(doc, { countrycode: 'FR', confidence: 'country' }, 20_000), snapshot);
     localStorage.setItem('earthRadio.auth.session.v1', JSON.stringify({ user,
@@ -164,7 +164,7 @@ test('Passport-only account sync applies and uploads without reloading the page 
   await page.reload(); await openAccountView(page); await page.locator('#er-auth-button').click();
   const dialog = page.getByRole('dialog', { name: 'Your Earth Radio account' });
   await expect(dialog.locator('.er-auth-sync')).toHaveText('Synced');
-  await expect.poll(() => page.evaluate(async () => (await (await import('/assets/passport-store.js?v=0.34.1')).passportStore().read()).canWrite)).toBe(true);
+  await expect.poll(() => page.evaluate(async () => (await (await import('/assets/passport-store.js?v=' + document.documentElement.dataset.appVersion)).passportStore().read()).canWrite)).toBe(true);
   expect(rows.has('passport')).toBe(false, 'sign-in does not silently adopt this device’s guest Passport');
   const marker = await page.evaluate(() => window.passportSyncDocumentMarker = crypto.randomUUID());
   let navigations = 0;
@@ -172,13 +172,13 @@ test('Passport-only account sync applies and uploads without reloading the page 
   rows.set('passport', { document_key: 'passport', revision: 1, deleted_at: null,
     value: { version: 1, historyEpoch: 0, historyClearedAt: 0, countries: { US: { firstDay: 20_000, lastDay: 20_000 } }, cities: {} } });
   await dialog.getByRole('button', { name: 'Sync now' }).click();
-  await expect.poll(() => page.evaluate(async () => Boolean((await (await import('/assets/passport-store.js?v=0.34.1')).passportStore().read()).value?.countries.US))).toBe(true);
+  await expect.poll(() => page.evaluate(async () => Boolean((await (await import('/assets/passport-store.js?v=' + document.documentElement.dataset.appVersion)).passportStore().read()).value?.countries.US))).toBe(true);
   await expect(dialog.locator('.er-auth-sync')).toHaveText('Synced');
   expect(await page.evaluate(() => window.passportSyncDocumentMarker)).toBe(marker);
   expect(navigations).toBe(0);
   await page.evaluate(async () => {
-    const store = (await import('/assets/passport-store.js?v=0.34.1')).passportStore();
-    const { recordPassportPlace } = await import('/assets/passport-core.js?v=0.34.1');
+    const store = (await import('/assets/passport-store.js?v=' + document.documentElement.dataset.appVersion)).passportStore();
+    const { recordPassportPlace } = await import('/assets/passport-core.js?v=' + document.documentElement.dataset.appVersion);
     await store.mutate(doc => recordPassportPlace(doc, { countrycode: 'KR', confidence: 'country' }, 20_001), await store.read());
   });
   await dialog.getByRole('button', { name: 'Sync now' }).click();

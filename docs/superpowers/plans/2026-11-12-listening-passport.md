@@ -155,7 +155,7 @@ partial failure instead of claiming everything imported. No credential fields.
 
 ### Task 5: Full qualification, one review and bounded delivery
 
-- [ ] Advance coherent0.35.0 module/runtime/worker identity, refresh provenance
+- [x] Advance coherent0.35.0 module/runtime/worker identity, refresh provenance
   with frozen place replay as needed, manifests and docs. Run `npm run verify`,
   full no-retry browser suite, rendered matrix, desktop renderer/auth/restart.
 - [ ] If needed, push an explicitly pending draft for isolated SQL/Auth CI after
