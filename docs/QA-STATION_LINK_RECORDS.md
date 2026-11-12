@@ -53,6 +53,22 @@ again with current code and its proof hashes refreshed. Corrective full verifica
 passes 802 tests with three existing Windows skips and 498 canonical hashes. The
 same reviewer's hash-bound follow-up remains required before push.
 
+The exact-head review at2e20815 closed the P2 finding, independently passed72
+focused cases/498 hashes and reproduced source/intermediate/target/build-anchor
+junction rejection plus valid deep output and existing-output refusal. Its bound
+correction patch SHA-256 is
+`93cbf84807ed3d66236b4f17d215802340f8188087a92ce68f868d7989197532`.
+PR#55 was then pushed, and the real feature-branch publisher build43237445643
+succeeded with its deploy job skipped by the main-only guard.
+
+Initial hosted Windows verification failed in two new fixture setup calls:
+`rename` attempted to move data from the checkout onD: to OS temp onC:, producing
+`EXDEV` before the stager or rejection assertion ran. The failed log is retained.
+The fixtures now copy to the external folder and create a separate junction; all
+rejection/no-output/marker assertions remain. No publication implementation,
+runtime, skip or retry change is made. Fresh checks and the same reviewer's bounded
+fixture follow-up are required; this failed run is not clean acceptance.
+
 Review scope rulings: app Share/path/preview/title behavior remains the explicit
 next PR; hosted CI/publication/readback remain delivery gates; historical ER-11
 acceptance is reconciled from its retained receipt rather than re-audited. Physical

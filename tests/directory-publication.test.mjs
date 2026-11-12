@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdtemp,readFile,writeFile,rm,mkdir,unlink,rename,symlink,lstat} from 'node:fs/promises';
+import {mkdtemp,readFile,writeFile,rm,mkdir,unlink,rename,symlink,lstat,cp} from 'node:fs/promises';
 import path from 'node:path';
 import {tmpdir} from 'node:os';
 import {createHash} from 'node:crypto';
@@ -67,14 +67,17 @@ async function externalDirectory(t){
 
 test('a linked source root cannot escape the trusted build directory',async t=>{
   const{input,output}=await fixture(t),outside=await externalDirectory(t),source=path.join(outside,'source');
-  await rename(input,source);await symlink(source,input,process.platform==='win32'?'junction':'dir');
-  await assert.rejects(stageDirectorySnapshot(input,output),/boundary|linked|symbolic/i);
+  // Hosted Windows keeps its checkout and OS temp folder on different drives.
+  await cp(input,source,{recursive:true,force:false,errorOnExist:true});
+  const link=path.join(path.dirname(input),'source-root-link');
+  await symlink(source,link,process.platform==='win32'?'junction':'dir');
+  await assert.rejects(stageDirectorySnapshot(link,output),/boundary|linked|symbolic/i);
   await assert.rejects(lstat(output),/ENOENT/);
 });
 
 test('a linked intermediate source ancestor cannot bypass containment',async t=>{
   const{input,output}=await fixture(t),outside=await externalDirectory(t),source=path.join(outside,'source');
-  await rename(input,source);const link=path.join(path.dirname(input),'source-parent-link');
+  await cp(input,source,{recursive:true,force:false,errorOnExist:true});const link=path.join(path.dirname(input),'source-parent-link');
   await symlink(outside,link,process.platform==='win32'?'junction':'dir');
   await assert.rejects(stageDirectorySnapshot(path.join(link,'source'),output),/boundary|linked|symbolic/i);
   await assert.rejects(lstat(output),/ENOENT/);

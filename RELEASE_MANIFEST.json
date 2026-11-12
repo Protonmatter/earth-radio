@@ -250,8 +250,8 @@
     },
     {
       "path": "docs/QA-STATION_LINK_RECORDS.md",
-      "bytes": 4503,
-      "sha256": "47728a5523dfcb316f5a4d236a97682659d874dd2f0d01cc2ea0e5585ef2bdf6"
+      "bytes": 5534,
+      "sha256": "ed335f59054f390c84aa87b179907cb97be0effaa6f171f63aef57640058f95b"
     },
     {
       "path": "docs/QUALIFICATION-0.26.0.md",
@@ -1830,8 +1830,8 @@
     },
     {
       "path": "tests/directory-publication.test.mjs",
-      "bytes": 9197,
-      "sha256": "136bdf6fc4f1a8c2db9f05fc7f49926e63d09f2ec05a3b66fa8d9693215b8bcb"
+      "bytes": 9430,
+      "sha256": "4fc7d08a5603fed963d6434711882caedc29b924b227d1b1a1048825b9af5e60"
     },
     {
       "path": "tests/directory-snapshot.test.mjs",
