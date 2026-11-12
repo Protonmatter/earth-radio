@@ -26,16 +26,16 @@ Review Focus:
 
 - [x] Hide the engine and focus the visible input synchronously; no other UX change.
 - [x] Advance coherent0.34.1/v77 cache/import/runtime identity and provenance.
-- [ ] Focused GREEN, complete verifier/browser (no retries), rendered/native and
+- [x] Focused GREEN, complete verifier/browser (no retries), rendered/native and
   station discovery regressions. Review the diff and obtain one fresh whole-branch
   read-only review at feature end; reproduce/correct concrete findings once.
 
 ## Task 3: Hosted and desktop delivery
 
-- [ ] Commit/push/create/attach PR after local gates. Ten exact-head checks,
+- [x] Commit/push/create/attach PR after local gates. Ten exact-head checks,
   actual preview files/headers/routes/UI/offline, expected-head merge, final-main
   gates and actual production acceptance; require no flaky browser cases.
-- [ ] Freeze final source and qualify current directory/native minima. Build all
+- [x] Freeze final source and qualify current directory/native minima. Build all
   six desktop packages separately; source/metadata/signatures/payload/guest
   restart, new annotated tag and all draft/anonymous public hashes.
 - [ ] Update current website/installation metadata after complete publication,
