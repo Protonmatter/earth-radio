@@ -2,16 +2,16 @@
 
 Explore live radio stations around the world in a recovered, auditable web and Electron application.
 
-Release **[0.32.2 is published](https://github.com/Protonmatter/earth-radio/releases/tag/v0.32.2)**. It keeps explicit station playback within its program, reports directory clicks only after confirmed audio, serves real online/offline 404s, and adds Windows x64 alongside ARM64 and both macOS architectures. All six application builds match the qualified source; all thirteen draft and anonymous public downloads passed full size/SHA-256 verification. See the [release record and qualification limits](docs/RELEASE-0.32.2.md). Grouped streams, the normalized scheduled directory and approved identity are retained. The website stages fallback download links from the verified published-release metadata.
+Release **[0.34.0 is published](https://github.com/Protonmatter/earth-radio/releases/tag/v0.34.0)** with Today, Continue, place-first station facts and Details stream choice. All six Windows/macOS builds match the qualified source; all thirteen draft and anonymous public downloads passed full size/SHA-256 verification. The scheduled directory now preserves five qualified programs per curated city before the global cutoff, verified through both public formats and the actual desktop loopback reader. See the [release record and qualification limits](docs/RELEASE-0.34.0.md). Earlier releases and original account/sync identities are preserved.
 
 Website and downloads: **https://earthradio.stream/**. Radio app: **https://app.earthradio.stream/**. The earlier **https://earth-radio.pages.dev/** app remains available for existing shortcuts and unsynced local collections. Public repository: **https://github.com/Protonmatter/earth-radio**.
 
-The deployed web UI is **0.34.0**: Today, Continue, place/genre/local-time facts and
-Details-based stream choice retain the original player, collections and accounts.
-Its [qualification record](docs/QA-0.34.0.md) separates source/served checks from
-desktop artifacts. Desktop downloads remain immutable 0.32.2: live qualification
-found a publisher cutoff gap for Dublin, so the final phase3 release is held while
-the directory minimum is corrected; see [build state](docs/BUILD_STATE.md).
+The deployed web UI and desktop release are **0.34.0**. Today, Continue,
+place/genre/local-time facts and Details-based stream choice retain the original
+player, collections and accounts. The [qualification record](docs/QA-0.34.0.md)
+distinguishes source, hosted, served, native and physical-device evidence.
+The [release receipt](docs/provenance/release-0.34.0.json) records the immutable
+source, tag, artifacts, checks and public-download readback.
 
 See the [installation guide](docs/INSTALLATION.md) for Windows ARM64/x64, macOS Apple Silicon/Intel, and Safari Home Screen installation on iPhone/iPad. Get desktop downloads, checksums and build provenance from the [latest complete release](https://github.com/Protonmatter/earth-radio/releases/latest). Windows uses the accepted local signer; macOS builds are explicitly labeled unnotarized.
 
@@ -48,7 +48,7 @@ npm run dist:desktop
 
 Packaging output is ignored under `release/`. Windows targets produce distinct `EarthRadio-Setup-*` and `EarthRadio-Portable-*` executables. A process-local packaging hook pins a legacy-compatible BCJ archive filter for the bundled NSIS decoder; both targets use 7z so their shared package cache has one format. The 0.26.0 ARM64 release uses local self-signed Authenticode signatures and DigiCert timestamps. Public Windows trust remains deferred by the user's decision; a normal build does not automatically select this machine's certificate. See the [0.26.0 release record](docs/RELEASE-0.26.0.md) for artifact provenance and qualification boundaries.
 
-The new globe/radio icon was generated with ChatGPT. Its master, exact prompt, hash and deterministic derivatives are recorded in [icon provenance](docs/branding/ICON.md).
+The earlier globe/radio icon was generated with ChatGPT. Its master, exact prompt, hash and deterministic derivatives are recorded in [icon provenance](docs/branding/ICON.md). The current approved five-wave mark, wordmark and native icon derivatives are documented in [precision identity integration](docs/BRAND_INTEGRATION.md).
 
 ## Repository map
 

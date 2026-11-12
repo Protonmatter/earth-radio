@@ -1,14 +1,25 @@
 # 0.34.0 place-first qualification
 
-ER-05 web 0.34.0 is delivered through PR #48/main `644e19f289fe2b92bf2e4dad118144083a39d4a5`.
-Ten head/main checks and 330 hosted browser cases without flaky results pass.
-Actual production 106/106/19 file hashes/headers, 15 routes, four account-enabled
-Chromium/WebKit contexts and installed-worker/offline checks pass. The merged
-tree equals reviewed/corrected `418dfd2` and 435 Git-object hashes verify.
-Desktop downloads remain immutable 0.32.2. Six 0.34 candidates match 128 app files
-and production metadata, but live data qualification holds publication: Dublin
-has 3 root programs versus 30 in the Ireland shard. Correct the producer cutoff
-and requalify new source/packages before publishing; no 0.34 tag/release exists.
+ER-05 initially delivered web presentation through PR48/main644e19f. PR49 then
+corrected a reproduced root-cutoff coverage gap and merged as release source
+`9fefbd0a1b295a79857a9fafd7a127b399061536`. All ten head/main gates pass, each hosted
+browser log reports 332 passes without flaky results, and actual production
+matches 106/106/19 files with headers, 15 routes, four account-enabled UI contexts
+and an installed-worker/offline check. The reviewed and merged Git trees match;
+441 committed source hashes verify.
+
+[v0.34.0 is published](https://github.com/Protonmatter/earth-radio/releases/tag/v0.34.0)
+with six source-matched desktop builds and seven support assets. All thirteen
+draft and anonymous public downloads pass full size/SHA-256 checks. Both public
+directory formats/origins match the current manifest and all eleven city minima;
+the actual native loopback reader also passes with one root read. Both Windows
+guest profiles retain favorite/volume and Continue without autoplay after two
+normal quit cycles. Native Mac and Windows package/signature scopes and remaining
+physical/live-provider limits are in the [release record](RELEASE-0.34.0.md) and
+[public receipt](provenance/release-0.34.0.json). Earlier candidates remain intact.
+
+The following sections retain initial ER-05 source-stage evidence; the producer
+correction and final desktop acceptance above supersede its earlier release hold.
 
 Rows, player facts and tooltips now lead with corroborated place and local time.
 Country fallback does not invent a city or clock. Technical stream choices and
@@ -36,7 +47,8 @@ retries. The 42-scenario rendered matrix and Windows ARM64 sandbox, synthetic
 provider PKCE/sync, encrypted restart, logout persistence and normal-quit checks
 pass in isolated profiles. Twenty-four worker checks include offline handling
 of both new facts modules. Exact-head CI, hosted previews and production readback
-also pass. Final desktop artifacts/downloads remain pending the directory fix.
+also pass. The subsequent producer correction and final desktop acceptance are
+recorded above; no original account, provider or vault configuration changed.
 
 The fresh whole-branch review found one P2 issue and no P0/P1 issues: a directory
 refresh replaced an open Details stream selector and lost its keyboard focus.

@@ -1,75 +1,75 @@
 // Public release metadata. Refresh only after qualifying published downloads.
 const data = {
-  "id": 441543551,
-  "tag_name": "v0.32.2",
+  "id": 442317988,
+  "tag_name": "v0.34.0",
   "draft": false,
   "prerelease": false,
-  "html_url": "https://github.com/Protonmatter/earth-radio/releases/tag/v0.32.2",
-  "published_at": "2026-11-11T10:36:31Z",
+  "html_url": "https://github.com/Protonmatter/earth-radio/releases/tag/v0.34.0",
+  "published_at": "2026-11-11T23:55:27Z",
   "assets": [
     {
-      "id": 735104297,
-      "name": "EarthRadio-Setup-0.32.2-arm64.exe",
-      "size": 105615904,
+      "id": 737342190,
+      "name": "EarthRadio-Setup-0.34.0-arm64.exe",
+      "size": 105628128,
       "state": "uploaded",
-      "browser_download_url": "https://github.com/Protonmatter/earth-radio/releases/download/v0.32.2/EarthRadio-Setup-0.32.2-arm64.exe",
-      "digest": "sha256:c621e5e5bd5725ea2fa1ebc1c7dad2c22d87c70121043f78cb49b3d74884eaba"
+      "browser_download_url": "https://github.com/Protonmatter/earth-radio/releases/download/v0.34.0/EarthRadio-Setup-0.34.0-arm64.exe",
+      "digest": "sha256:acdf3095124f4c6812542a1d9e30bdf6e9fd0990dd892f23766bd3558526ee56"
     },
     {
-      "id": 735104301,
-      "name": "EarthRadio-Portable-0.32.2-arm64.exe",
-      "size": 105361424,
+      "id": 737342188,
+      "name": "EarthRadio-Portable-0.34.0-arm64.exe",
+      "size": 105373688,
       "state": "uploaded",
-      "browser_download_url": "https://github.com/Protonmatter/earth-radio/releases/download/v0.32.2/EarthRadio-Portable-0.32.2-arm64.exe",
-      "digest": "sha256:53af3bc8c5c31d6d5950b7e21503b82d7ef6cf5c33d7fa27aee1f2479363aded"
+      "browser_download_url": "https://github.com/Protonmatter/earth-radio/releases/download/v0.34.0/EarthRadio-Portable-0.34.0-arm64.exe",
+      "digest": "sha256:2f38d30acffe5d5ec2a6751af40c5bdc69d219b104230b120d4037e986fcd848"
     },
     {
-      "id": 735104294,
-      "name": "EarthRadio-Setup-0.32.2-x64.exe",
-      "size": 110206392,
+      "id": 737342189,
+      "name": "EarthRadio-Setup-0.34.0-x64.exe",
+      "size": 110234800,
       "state": "uploaded",
-      "browser_download_url": "https://github.com/Protonmatter/earth-radio/releases/download/v0.32.2/EarthRadio-Setup-0.32.2-x64.exe",
-      "digest": "sha256:fe7a9538a6ed47f4c132d854775e4a412f38a9cf1a3889e3954b859c8d9f78f1"
+      "browser_download_url": "https://github.com/Protonmatter/earth-radio/releases/download/v0.34.0/EarthRadio-Setup-0.34.0-x64.exe",
+      "digest": "sha256:ac59f32dceb8a403aeae044aae5c06989b11b974bf86ddf6be3d3a0708fbad85"
     },
     {
-      "id": 735104298,
-      "name": "EarthRadio-Portable-0.32.2-x64.exe",
-      "size": 109951528,
+      "id": 737342193,
+      "name": "EarthRadio-Portable-0.34.0-x64.exe",
+      "size": 109979960,
       "state": "uploaded",
-      "browser_download_url": "https://github.com/Protonmatter/earth-radio/releases/download/v0.32.2/EarthRadio-Portable-0.32.2-x64.exe",
-      "digest": "sha256:7ecbc65856cd6558f89416ebf9a24f28b2a37c4244030e941f60587da6fdd5ab"
+      "browser_download_url": "https://github.com/Protonmatter/earth-radio/releases/download/v0.34.0/EarthRadio-Portable-0.34.0-x64.exe",
+      "digest": "sha256:4cb126a62d39519b9e58f9ebdcb75f5e6d77fd217c73b586a83c69e224108dbc"
     },
     {
-      "id": 735104340,
-      "name": "EarthRadio-0.32.2-macOS-arm64-unnotarized.dmg",
-      "size": 131975057,
+      "id": 737342201,
+      "name": "EarthRadio-0.34.0-macOS-arm64-unnotarized.dmg",
+      "size": 131988680,
       "state": "uploaded",
-      "browser_download_url": "https://github.com/Protonmatter/earth-radio/releases/download/v0.32.2/EarthRadio-0.32.2-macOS-arm64-unnotarized.dmg",
-      "digest": "sha256:c7eca0f416c8d2204129409ffe42bc10b368299b8e0ac614dcf4ceaf9f0760a9"
+      "browser_download_url": "https://github.com/Protonmatter/earth-radio/releases/download/v0.34.0/EarthRadio-0.34.0-macOS-arm64-unnotarized.dmg",
+      "digest": "sha256:a97e0bbcf63d41673f4feec46a49b07da9a90061e8d94e6331971bd397899252"
     },
     {
-      "id": 735104855,
-      "name": "EarthRadio-0.32.2-macOS-x64-unnotarized.dmg",
-      "size": 137641811,
+      "id": 737342743,
+      "name": "EarthRadio-0.34.0-macOS-x64-unnotarized.dmg",
+      "size": 137679469,
       "state": "uploaded",
-      "browser_download_url": "https://github.com/Protonmatter/earth-radio/releases/download/v0.32.2/EarthRadio-0.32.2-macOS-x64-unnotarized.dmg",
-      "digest": "sha256:8eb6e5a60c3b698178e61cac30912b939e4e0d13ac9880a5e5a1d0534873d1d6"
+      "browser_download_url": "https://github.com/Protonmatter/earth-radio/releases/download/v0.34.0/EarthRadio-0.34.0-macOS-x64-unnotarized.dmg",
+      "digest": "sha256:ea1619a8d13606a6e785cfc7ac912a6e9790f9e34512d621c30eff669a888b31"
     },
     {
-      "id": 735104972,
+      "id": 737343057,
       "name": "INSTALL.md",
-      "size": 10344,
+      "size": 10741,
       "state": "uploaded",
-      "browser_download_url": "https://github.com/Protonmatter/earth-radio/releases/download/v0.32.2/INSTALL.md",
-      "digest": "sha256:819a2f621e16616255d28caaad38ac7dc3e1f3db577f0dc15ab1e3e04019b853"
+      "browser_download_url": "https://github.com/Protonmatter/earth-radio/releases/download/v0.34.0/INSTALL.md",
+      "digest": "sha256:ce9fffdfafa0c483e9c43ecc94c3d0601d019d14fec0b3e7243881e930b6bb46"
     },
     {
-      "id": 735104992,
+      "id": 737343067,
       "name": "SHA256SUMS.txt",
       "size": 1160,
       "state": "uploaded",
-      "browser_download_url": "https://github.com/Protonmatter/earth-radio/releases/download/v0.32.2/SHA256SUMS.txt",
-      "digest": "sha256:c495548a0f912f12888489864057d8e07d8726caad3ee5657a91f663dec2626b"
+      "browser_download_url": "https://github.com/Protonmatter/earth-radio/releases/download/v0.34.0/SHA256SUMS.txt",
+      "digest": "sha256:613a425d506380f3343c218bab15ce3c335c08be69924320d3cb1f39bc87fa69"
     }
   ]
 };
