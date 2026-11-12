@@ -412,5 +412,15 @@ export default {
   "transfer.imported": "즐겨찾기 {favorites}개, 최근 방송국 {recent}개, 환경설정 {prefs}개를 가져왔습니다.",
   "transfer.partial": "방송국 데이터는 가져왔지만 여권은 추가하지 못했습니다. 기록 설정과 계정 동기화를 확인한 뒤 여권을 다시 가져와 주세요.",
   "transfer.passportImported": "여권을 가져왔습니다.",
-  "transfer.partialExport": "방송국 데이터를 내보냈습니다. 여권은 포함하지 못했으며 이 기기에 계속 저장되어 있습니다."
+  "transfer.partialExport": "방송국 데이터를 내보냈습니다. 여권은 포함하지 못했으며 이 기기에 계속 저장되어 있습니다.",
+  "sharing.button": "방송국 공유",
+  "sharing.title": "방송국 공유",
+  "sharing.close": "공유 닫기",
+  "sharing.copy": "링크 복사",
+  "sharing.link": "방송국 링크",
+  "sharing.help": "이 링크로 방송국을 공유하세요.",
+  "sharing.manual": "링크를 선택하여 복사하세요.",
+  "sharing.copied": "링크를 복사했습니다.",
+  "sharing.unavailable": "이 방송국은 공개 링크를 제공하지 않습니다.",
+  "sharing.directoryUnavailable": "이 방송국은 준비되었습니다. 방송국 목록을 불러올 수 없습니다. 새로고침하여 더 찾아보세요."
 };

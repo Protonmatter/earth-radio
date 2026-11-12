@@ -3,6 +3,7 @@
 import { getRuntimeConfig, type RuntimeConfig } from '../../core/config';
 import {loadDirectorySnapshot,browserDirectoryHosts} from '../../../site/assets/directory-client.js';
 import {createStationClickReporter} from '../../../site/assets/station-clicks.js';
+import {sharedStationDirectoryFallback} from '../../../site/assets/sharing-entry.js';
 import { summarizeStationSources } from '../../core/sourceGraph.js';
 import { dbGet, dbSet } from '../../core/db';
 import { getBadStations } from '../../core/storage';
@@ -22,6 +23,8 @@ interface CachedStations {
   savedAt: number;
   source: string;
   stations: Station[];
+  directoryView?: number;
+  partial?: 'shared-station';
 }
 
 export async function fetchStations({ forceRefresh = false } = {}): Promise<DirectoryResult> {
@@ -51,8 +54,18 @@ export async function fetchStations({ forceRefresh = false } = {}): Promise<Dire
         sourceSummary: summarizeStationSources(stale.stations),
         cached: true,
         stale: true,
-        error
+        error,
+        ...(stale.partial === 'shared-station' ? { partial: stale.partial } : {})
       };
+    }
+    const shared = sharedStationDirectoryFallback(raw => normalizeStation(raw, getBadStations()));
+    if (shared) {
+      // A public single-row fallback must not masquerade as a fresh full catalog.
+      try {
+        await dbSet(CACHE_STORE, CACHE_KEY, { schema: 3, savedAt: 0, source: shared.source,
+          stations: shared.stations, directoryView: 0, partial: shared.partial });
+      } catch { /* optional public cache; the verified row remains usable */ }
+      return { ...shared, error };
     }
     throw error;
   }

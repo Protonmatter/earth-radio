@@ -19,9 +19,12 @@ See the [installation guide](docs/INSTALLATION.md) for Windows ARM64/x64, macOS 
 Accepted web **0.35.0** adds [Listening Passport](docs/PASSPORT.md): countries and
 confirmed cities after a continuous minute, private history/sync, atlas shading
 and export/import. Its [delivery receipt](docs/provenance/web-0.35.0.json) records
-completed CI, database and production acceptance. Web source **0.36.0** adds
+completed CI, database and production acceptance. Accepted web **0.36.0** adds
 [track-level Media Session controls](docs/MEDIA_SESSION.md), bounded cover artwork
 and Stop/replay; its [qualification record](docs/QA-0.36.0.md) tracks current gates.
+Web candidate **0.37.0** adds [public station links and Share](docs/SHARING.md),
+long-tail selection without autoplay and an owned player title; its
+[qualification record](docs/QA-0.37.0.md) distinguishes local from delivery gates.
 Published v0.34.1 desktop artifacts remain unchanged until the remaining phase4
 sharing and installation work is ready for one desktop publication.
 

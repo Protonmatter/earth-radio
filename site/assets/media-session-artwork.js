@@ -1,4 +1,4 @@
-import {mediaArtworkSource,MEDIA_ARTWORK_SIZES,MEDIA_ARTWORK_MAX_BYTES} from './media-session-core.js?v=0.36.0';
+import {mediaArtworkSource,MEDIA_ARTWORK_SIZES,MEDIA_ARTWORK_MAX_BYTES} from './media-session-core.js?v=0.37.0';
 
 const MAX_PIXELS=4_194_304,MAX_EDGE=4096,MAX_CACHE_BYTES=8*1024*1024,MAX_CACHE_ENTRIES=4;
 const rasterTypes=new Set(['image/png','image/jpeg','image/webp','image/avif']);

@@ -1,7 +1,7 @@
 // Conservative station-family/shared-stream components. No I/O, clock, identity
 // rewriting or input mutation. City selection and offline qualification share it.
-import {groupStationVariants} from './station-variants.js?v=0.36.0';
-import {streamIdentity} from './discovery-core.js?v=0.36.0';
+import {groupStationVariants} from './station-variants.js?v=0.37.0';
+import {streamIdentity} from './discovery-core.js?v=0.37.0';
 
 const canonicalId=value=>/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(value)?value.toLowerCase():value;
 const compare=(a,b)=>a<b?-1:a>b?1:0;

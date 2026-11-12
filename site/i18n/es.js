@@ -412,5 +412,15 @@ export default {
   "transfer.imported": "Se importaron {favorites} favoritos, {recent} emisoras recientes y {prefs} preferencias.",
   "transfer.partial": "Se importaron los datos de emisoras, pero no el pasaporte. Comprueba el historial y la sincronización e importa de nuevo el pasaporte.",
   "transfer.passportImported": "Pasaporte importado.",
-  "transfer.partialExport": "Se exportaron los datos de emisoras. El pasaporte no pudo incluirse y sigue guardado en este dispositivo."
+  "transfer.partialExport": "Se exportaron los datos de emisoras. El pasaporte no pudo incluirse y sigue guardado en este dispositivo.",
+  "sharing.button": "Compartir emisora",
+  "sharing.title": "Compartir emisora",
+  "sharing.close": "Cerrar",
+  "sharing.copy": "Copiar enlace",
+  "sharing.link": "Enlace de la emisora",
+  "sharing.help": "Comparte esta emisora mediante un enlace.",
+  "sharing.manual": "Selecciona y copia este enlace.",
+  "sharing.copied": "Enlace copiado.",
+  "sharing.unavailable": "Esta emisora no tiene un enlace público.",
+  "sharing.directoryUnavailable": "Esta emisora está lista. El directorio no está disponible; actualiza para explorar más."
 };

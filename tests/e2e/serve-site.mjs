@@ -6,6 +6,8 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { silentWav } from './fixtures/silent-media.mjs';
+import {SHARING_STATIONS} from './fixtures/sharing.mjs';
+import {createStationShareRoute} from '../../functions/_shared/share-document.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', 'site');
 const websiteRoot = path.resolve(root, '..', '.build', 'website');
@@ -23,12 +25,26 @@ const types = new Map(Object.entries({
   '.png': 'image/png'
 }));
 
-export function createSiteServer({appRoot=root,marketingRoot=websiteRoot}={}) {
+export function createSiteServer({appRoot=root,marketingRoot=websiteRoot,shareLookup=async id=>SHARING_STATIONS.find(row=>row.stationuuid===id)||null}={}) {
  let mediaFixture;
+ const stationShare=createStationShareRoute({lookup:shareLookup});
  return createServer(async (req, res) => {
   let selectedRoot=path.resolve(appRoot);
   try {
-    const pathname = decodeURIComponent(new URL(req.url || '/', 'http://localhost').pathname);
+    const rawPathname = new URL(req.url || '/', 'http://localhost').pathname;
+    // Execute the real generated-document handler. Only its public lookup and
+    // static asset binding are controlled; no separate mock HTML implementation.
+    if(rawPathname.startsWith('/s/')){
+      const origin='http://127.0.0.1:'+req.socket.localPort;
+      const request=new Request(new URL(req.url,origin),{method:req.method,headers:req.headers});
+      const response=await stationShare({request,env:{ASSETS:{async fetch(assetRequest){
+        if(new URL(assetRequest.url).pathname!=='/')return new Response('missing',{status:404});
+        return new Response(await readFile(path.join(appRoot,'index.html')),{headers:{'content-type':'text/html; charset=utf-8'}});
+      }}}});
+      res.writeHead(response.status,Object.fromEntries(response.headers));
+      res.end(req.method==='HEAD'?undefined:Buffer.from(await response.arrayBuffer()));return;
+    }
+    const pathname = decodeURIComponent(rawPathname);
     // WebKit's media process may bypass page.route. Keep this PCM fixture on
     // the loopback test server; it is never staged into the public application.
     if(pathname==='/__test-media-session.wav'){

@@ -5,6 +5,7 @@ import { directorySnapshotStatus } from '../site/assets/directory-status.js';
 import { createStationFacts, updatePlayerFacts } from '../site/assets/place-ui.js';
 import { t as translate } from '../site/i18n/index.js';
 import { createUserTransfer } from '../site/assets/user-transfer.js';
+import { createStationSharing } from '../site/assets/sharing-ui.js';
 import './domains/radio/index';
 import './domains/sdr/index';
 
@@ -83,6 +84,7 @@ let sleepTimerId: ReturnType<typeof setTimeout> | null = null;
 let featureModulesReady = false;
 let grid: VirtualGrid<Station> | null = null;
 let autoSkipCount = 0;
+let sharingUI: ReturnType<typeof createStationSharing> | null = null;
 
 const config = getRuntimeConfig();
 let activePack: DomainPack = getActiveDomain()!;
@@ -456,6 +458,7 @@ function updatePlayerBar(station: Station | null): void {
   updatePlayerFacts(station);
   updateFavoriteBtnState();
   updatePlayBtnState();
+  sharingUI?.refresh();
 }
 
 function updatePlayBtnState(): void {
@@ -466,6 +469,7 @@ function updatePlayBtnState(): void {
   btnPlay.replaceChildren(icon(playing ? 'pause' : 'play'));
   btnPlay.setAttribute('aria-label', isPlayingNow() ? t('player.pause') : t('player.play'));
   byId('player-bar')?.classList.toggle('is-playing', status === 'playing');
+  sharingUI?.refresh();
 }
 
 function updateFavoriteBtnState(): void {
@@ -571,6 +575,8 @@ async function performStationLoad({ forceRefresh, loadId }: { forceRefresh: bool
   let ok = true;
   try {
     const result = await activePack.loadEntities({ forceRefresh });
+    const sharedOnly = (result as typeof result & { partial?: 'shared-station' }).partial === 'shared-station';
+    if (sharedOnly) ok = false;
     const routeBeforeControls = readRoute();
     allStations = result.stations;
     if (routeBeforeControls.station && allStations.some(station => station.stationuuid === routeBeforeControls.station)) activeStationUuid = routeBeforeControls.station;
@@ -613,7 +619,8 @@ async function performStationLoad({ forceRefresh, loadId }: { forceRefresh: bool
     const mode = result.cached ? (result.stale ? 'stale cache' : 'cache') : 'live';
     const sourceLabel = result.sourceSummary?.label || result.source || 'unknown source';
     setStatus(directorySnapshotStatus(result, currentStations.length) || t('status.loaded', { count: currentStations.length, mode, source: sourceLabel }));
-      if (result.stale) showToast(t('discovery.savedCopy'));
+    if (sharedOnly) showToast(translate('sharing.directoryUnavailable'));
+    else if (result.stale) showToast(translate('discovery.savedCopy'));
     void runHealthProbe(currentStations, { onUpdate: () => grid?.refresh() });
   } catch (error) {
     console.error('Failed to load stations:', error);
@@ -644,13 +651,21 @@ function applyCountry(country: string): void {
 
 // ---- Event wiring ----
 
+function selectedPlayerStation(): Station | null {
+  const last = getLastPlayed();
+  // The shipped runtime additionally retains its existing safe cached-record
+  // hydration and Today fallback. This evidence snapshot has no rebuild toolchain.
+  return discovery.selectedStation(getCurrentStation()) || getCurrentStation()
+    || allStations.find(station => station.stationuuid === activeStationUuid)
+    || allStations.find(station => station.stationuuid === last?.stationuuid) || last;
+}
+
 function setupPlayerEvents(): void {
+  sharingUI?.dispose();
+  sharingUI = createStationSharing({ getStation: selectedPlayerStation, notify: showToast });
   btnPlay?.addEventListener('click', async () => {
     if (isPlayingNow()) { pause(); updatePlayBtnState(); return; }
-    const last = getLastPlayed();
-    const selected = discovery.selectedStation(getCurrentStation()) || getCurrentStation()
-      || allStations.find(station => station.stationuuid === activeStationUuid)
-      || allStations.find(station => station.stationuuid === last?.stationuuid) || last;
+    const selected = selectedPlayerStation();
     if (selected) await onStationClick(selected);
     updatePlayBtnState();
   });
@@ -960,7 +975,7 @@ function setupRouting(): void {
 function registerServiceWorker(): void {
   if (!('serviceWorker' in navigator)) return;
   const register = (): void => {
-    navigator.serviceWorker.register('./sw.js').catch(() => {
+    navigator.serviceWorker.register(new URL('../sw.js', import.meta.url).href).catch(() => {
       /* app works without the service worker */
     });
   };

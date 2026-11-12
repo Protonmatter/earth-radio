@@ -89,6 +89,11 @@
   "algorithms": [
     {
       "path": "server/station-record-protocol.mjs",
+      "bytes": 130,
+      "sha256": "1bd26fb655c4b6ba58ed50078e93256b886c7d79011f97e60f11e0d6720c2e44"
+    },
+    {
+      "path": "site/assets/station-record-protocol.js",
       "bytes": 4744,
       "sha256": "fa7fa82b3f7bb13062178d5ec1477c1aedd6cd7f9efe70eaeed343933486b7af"
     },
@@ -118,5 +123,14 @@
   "unicodeUrlCorrection": {
     "all707ExistingPayloadsIdentical": true,
     "normalizerAndIndexBoundaryTestsPassed": true
+  },
+  "sharedProtocolRequalification": {
+    "at": "2026-11-12T17:16:50.248Z",
+    "acceptedSource": "94974388377c2cf8529603929fb5782b95b1de6f",
+    "inputBytes": 29937269,
+    "inputSha256": "2ae63f727ae12ee9b27ccca2d632d9feb5972d11147ae3559681646880a4f597",
+    "all707PayloadsIdentical": true,
+    "bothManifestsIdentical": true,
+    "wireAndPublicExportsUnchanged": true
   }
 }

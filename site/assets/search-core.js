@@ -1,5 +1,5 @@
 // Pure search vocabulary and bounded suggestions; no storage, network or browser state.
-import {PLACE_TERMS} from './place-vocabulary.js?v=0.36.0';
+import {PLACE_TERMS} from './place-vocabulary.js?v=0.37.0';
 export const fold=value=>String(value??'').normalize('NFKD').replace(/\p{M}/gu,'').toLowerCase().replace(/[^\p{L}\p{N}]+/gu,' ').trim();
 const compare=(a,b)=>a<b?-1:a>b?1:0;
 const genreGroups={

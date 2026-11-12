@@ -412,5 +412,15 @@ export default {
   "transfer.imported": "تم استيراد {favorites} من المفضلة و{recent} من المحطات الحديثة و{prefs} من التفضيلات.",
   "transfer.partial": "تم استيراد بيانات المحطات، لكن لم تتم إضافة الجواز. تحقّق من إعدادات السجل ومزامنة الحساب ثم استورد الجواز مجددًا.",
   "transfer.passportImported": "تم استيراد الجواز.",
-  "transfer.partialExport": "تم تصدير بيانات المحطات. تعذّر تضمين الجواز، وهو ما يزال محفوظًا على هذا الجهاز."
+  "transfer.partialExport": "تم تصدير بيانات المحطات. تعذّر تضمين الجواز، وهو ما يزال محفوظًا على هذا الجهاز.",
+  "sharing.button": "مشاركة المحطة",
+  "sharing.title": "مشاركة المحطة",
+  "sharing.close": "إغلاق المشاركة",
+  "sharing.copy": "نسخ الرابط",
+  "sharing.link": "رابط المحطة",
+  "sharing.help": "شارك هذه المحطة باستخدام الرابط.",
+  "sharing.manual": "حدّد هذا الرابط وانسخه.",
+  "sharing.copied": "تم نسخ الرابط.",
+  "sharing.unavailable": "لا يتوفر رابط عام لهذه المحطة.",
+  "sharing.directoryUnavailable": "هذه المحطة جاهزة. الدليل غير متاح؛ حدّث الصفحة لاستكشاف المزيد."
 };

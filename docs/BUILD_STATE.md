@@ -1,5 +1,28 @@
 # Build state
 
+## 0.37.0 station sharing candidate
+
+The isolated candidate adds public station paths with safe previews, exact
+long-tail selection without autoplay, native Share/copy/manual fallback and an
+owned player title. It builds on accepted producer PR55/main9497438. Its
+[qualification record](QA-0.37.0.md) records corrected861 tests/three existing
+Windows skips/519 working-index hashes,464 clean browsers,42 rendered scenarios,
+native restart/sync/media, worker/offline and same-reviewer closure of the sole P2.
+Hosted/served acceptance and publication are pending at this revision. Public desktop0.34.1 is preserved
+until the installation pass and combined final-source publication. Account,
+provider, SQL, SMTP/vault and existing collection identities are unchanged.
+
+## Station-record prerequisite accepted
+
+PR55 merged as94974388377c2cf8529603929fb5782b95b1de6f. All ten exact-head/main
+checks and422 clean browser cases per head pass. The real main-only publisher
+produced52,413 indexed identities; all708 payloads and both public manifests match
+the downloaded artifact, all42,000 selected legacy observations match the index
+and all eleven city minima remain. Actual app/legacy/website bytes, routes,
+Chrome/WebKit phone/desktop guest journeys and a three-cycle canary pass. See
+[producer acceptance](provenance/directory-station-records.json). No new app UI,
+account or desktop asset was published in that prerequisite.
+
 ## 0.34.1 web and desktop published
 
 Release [v0.34.1](https://github.com/Protonmatter/earth-radio/releases/tag/v0.34.1) is published as release 442427866 at 2026-11-12T02:39:11Z. Annotated tag `e52196bd01d05d3bdc24bfd7cdeed9f51a9d7315` points to source `8b6875a5fcd299e0af6df8d12cd5fb82af23acd8`. All six packages match 128 application files and production metadata; all 13 draft and anonymous public downloads pass complete size/SHA-256 checks.

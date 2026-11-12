@@ -1,9 +1,9 @@
 // Presentation over the existing conservative model. No implicit clock, I/O,
 // storage, identity rewriting or source-data mutation.
-import {stationPlace,formatPlaceTime} from './place-core.js?v=0.36.0';
-import {nativeProgramSupport} from './program-components.js?v=0.36.0';
-import {countryCode,displayCountry,canonicalGenre,facetLabel} from './search-core.js?v=0.36.0';
-import {normalizeLocale,t} from '../i18n/index.js?v=0.36.0';
+import {stationPlace,formatPlaceTime} from './place-core.js?v=0.37.0';
+import {nativeProgramSupport} from './program-components.js?v=0.37.0';
+import {countryCode,displayCountry,canonicalGenre,facetLabel} from './search-core.js?v=0.37.0';
+import {normalizeLocale,t} from '../i18n/index.js?v=0.37.0';
 
 const smallText=(value,limit)=>typeof value==='string'&&value.length<=limit?value.trim().replaceAll('\r',' ').replaceAll('\n',' ').replaceAll('\t',' '):'';
 const genericTags=new Set(['radio','music','musica','estacion','station','general','misc']);

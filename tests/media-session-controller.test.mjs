@@ -27,6 +27,29 @@ test('controller projects current song and registers five independent owned acti
  assert.deepEqual([h.session.metadata.title,h.session.metadata.artist,h.session.metadata.album],['First song','Artist','Berlin Signal']);
  assert.equal(h.session.playbackState,'playing');assert.deepEqual(h.calls,[]);h.controller.dispose();
 });
+
+test('document title follows trusted track, paused context and owned Stop without late restoration',async()=>{
+ const titles=[],h=fixture({dependencies:{setDocumentTitle:value=>titles.push(value)}});
+ assert.equal(titles.at(-1),'First song · Earth Radio');
+ h.setSnapshot({...h.snapshot(),status:'paused'});h.controller.refresh();assert.equal(titles.at(-1),'First song · Earth Radio');
+ await h.handlers.stop();assert.equal(titles.at(-1),'Earth Radio');h.setSong({...song,title:'Late'});h.publish();assert.equal(titles.at(-1),'Earth Radio');h.controller.dispose();
+});
+
+test('document title works without native Media Session and never loads covers or starts audio',()=>{
+ const titles=[],h=fixture({dependencies:{session:null,setDocumentTitle:value=>titles.push(value)}});
+ assert.equal(titles.at(-1),'First song · Earth Radio');h.setSong({...song,artworkUrl:'https://i.scdn.co/cover'});h.publish();assert.equal(h.requests.length,0);assert.deepEqual(h.calls,[]);
+ h.controller.clear();assert.equal(titles.at(-1),'Earth Radio');h.publish();assert.equal(titles.at(-1),'Earth Radio');h.controller.dispose();
+});
+
+test('a different owner or unplayed selection uses the station title rather than stale song text',()=>{
+ const titles=[],h=fixture({dependencies:{setDocumentTitle:value=>titles.push(value)}});
+ h.setSong({...song,stationUuid:'other',title:'Wrong owner'});h.publish();assert.equal(titles.at(-1),'Berlin Signal · Earth Radio');
+ h.setSong({...song,title:'New'});h.setSnapshot({...h.snapshot(),status:'loading',played:false});h.controller.selectStation();assert.equal(titles.at(-1),'Berlin Signal · Earth Radio');h.controller.dispose();
+});
+
+test('an optional document title setter cannot interrupt native metadata or transport',async()=>{
+ const h=fixture({dependencies:{setDocumentTitle(){throw Error('denied');}}});assert.equal(h.session.metadata.title,'First song');await h.handlers.play();assert.deepEqual(h.calls,['play']);h.controller.dispose();
+});
 test('selection/loading suppresses earlier song, then actual played state admits the new promoted song',()=>{
  const h=fixture();h.controller.selectStation();assert.equal(h.session.metadata.title,'Berlin Signal');
  h.setSnapshot({...h.snapshot(),status:'loading',played:false});h.controller.refresh();assert.equal(h.session.metadata.title,'Berlin Signal');

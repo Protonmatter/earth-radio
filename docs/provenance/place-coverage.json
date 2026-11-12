@@ -195,7 +195,7 @@
       {
         "path": "site/assets/place-core.js",
         "bytes": 5510,
-        "sha256": "0031018adf2b66b14616ab263de6cdd032667ac89ffe86318c3b034b4f82d92c"
+        "sha256": "f982d482ff0724fc6828fb07c8a1ac660a136c1d72107e1822dc8a39d2fd19c0"
       },
       {
         "path": "site/assets/curated-places.js",
@@ -205,7 +205,7 @@
       {
         "path": "site/assets/station-location.js",
         "bytes": 1640,
-        "sha256": "9f8c27774d08bafe97259a32c0fd66ec8ad74998c2bca9234a5ea0ac38c2250b"
+        "sha256": "fb47138e1a7d08e984fee627abaeb21868d7d76645bb23039de42fff78c355db"
       },
       {
         "path": "site/assets/country-locations.js",
@@ -215,22 +215,22 @@
       {
         "path": "site/assets/station-variants.js",
         "bytes": 8422,
-        "sha256": "0e6ec8cc7bded008052c908a51ee54a3d19692f22b69aa655cded088a49817a4"
+        "sha256": "e4a1ec365e7bfdf745d4c47620c5845381443d836b7892df447664fcd33a28d9"
       },
       {
         "path": "site/assets/search-core.js",
         "bytes": 8877,
-        "sha256": "a64bdc776e5d90ece5f5acf051e5474b5ed713b7180ea02ba0771bcf54764593"
+        "sha256": "a7df9c79858b1f9d2c92b4fc1c9fce9c5e3e3abea8d9d45a86f3360fe1fedbb4"
       },
       {
         "path": "site/assets/discovery-core.js",
         "bytes": 15194,
-        "sha256": "a97a03fa444404a4be940bedd3afcb509c4b6220d4458e04af56f9c69f5d60b1"
+        "sha256": "b4a485e8b606bf2df78b76e56c583a58879e0e49400383bbdd8c50154845d655"
       },
       {
         "path": "site/assets/program-components.js",
         "bytes": 3087,
-        "sha256": "2b46a4eea48ec73400b1a5792e114d37b68c0b42674130d730ea8baa7245827a"
+        "sha256": "77df50cce89b63c18dcb198d490181570dc6e84ccf392e766e9189c6dace3bf1"
       },
       {
         "path": "scripts/qualify-place-data.mjs",
@@ -256,8 +256,8 @@
       "architecture": "arm64"
     }
   },
-  "qualifiedAt": "2026-11-12T01:13:10.333Z",
-  "scope": "Offline replay of the same integrity-checked frozen input against patch0.34.1 model bytes; release URLs changed, grouping/place inference and every coverage count are unchanged. This is not a new live generation or physical/audio qualification.",
+  "qualifiedAt": "2026-11-12T17:16:08.192Z",
+  "scope": "Offline replay of the same integrity-checked frozen input against station-sharing0.37.0 model bytes; release query URLs changed, every grouping/place inference and coverage count is identical. No new live generation or physical/audio qualification.",
   "sourceAcquisition": {
     "checkedAt": "2026-11-11T11:40:00.984Z",
     "integrityCheckedBy": "createPublishedCatalog; SHA-bound manifest descriptor and bounded HTTPS payload",

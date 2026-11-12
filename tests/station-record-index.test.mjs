@@ -97,6 +97,8 @@ test('retained-data proof binds the current producer bytes and preserves every e
   assert.equal(receipt.comparison.allIdentitiesExactlyOnce,true);assert.equal(receipt.comparison.shardsStableWithReversedInputAndNewTimestamp,true);
   assert.ok(receipt.index.maxShardBytes<=256*1024);assert.ok(receipt.index.maxShardRecords<=1024);assert.ok(receipt.stage.bytes<128*1024*1024);
   assert.equal(receipt.cityCoverage.length,11);assert.ok(receipt.cityCoverage.every(city=>city.selectedPrograms>=5));
-  assert.equal(receipt.algorithms.length,4);
+  assert.equal(receipt.algorithms.length,5);
+  assert.ok(receipt.algorithms.some(item=>item.path==='site/assets/station-record-protocol.js'));
+  assert.equal(receipt.sharedProtocolRequalification.all707PayloadsIdentical,true);
   for(const item of receipt.algorithms){const bytes=await readFile(item.path);assert.equal(bytes.length,item.bytes,item.path);assert.equal(createHash('sha256').update(bytes).digest('hex'),item.sha256,item.path);}
 });

@@ -1,9 +1,9 @@
-import { WORLD_LAND } from './world-land.js?v=0.36.0';
-import { MAP_LABEL_STORAGE, sanitizeMapLabels, layoutMapLabels, intersectsBounds, resolveMapTheme } from './map-core.js?v=0.36.0';
-import { t, normalizeLocale } from '../i18n/index.js?v=0.36.0';
-import {installMapViewport} from './map-viewport.js?v=0.36.0';
-import {MAP_COUNTRY_IDENTIFIERS} from './map-country-identifiers.js?v=0.36.0';
-import {passportMapCountries,subscribePassportMap} from './passport-map.js?v=0.36.0';
+import { WORLD_LAND } from './world-land.js?v=0.37.0';
+import { MAP_LABEL_STORAGE, sanitizeMapLabels, layoutMapLabels, intersectsBounds, resolveMapTheme } from './map-core.js?v=0.37.0';
+import { t, normalizeLocale } from '../i18n/index.js?v=0.37.0';
+import {installMapViewport} from './map-viewport.js?v=0.37.0';
+import {MAP_COUNTRY_IDENTIFIERS} from './map-country-identifiers.js?v=0.37.0';
+import {passportMapCountries,subscribePassportMap} from './passport-map.js?v=0.37.0';
 
 export function identifyAtlasCountries(data, kind, asset) {
   const index = MAP_COUNTRY_IDENTIFIERS[kind];

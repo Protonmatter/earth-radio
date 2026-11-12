@@ -37,6 +37,20 @@ test('validateSite accepts a complete direct-mode site', async () => {
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
+test('Function routing admits the finite station path but rejects broad invocation or bypasses',async()=>{
+  const root=await mkdtemp(path.join(os.tmpdir(),'earth-radio-function-routes-'));
+  try{
+    await createSite(root);
+    const valid={version:1,include:['/api/*','/directory/*','/s/*'],exclude:[]};
+    await writeFile(path.join(root,'_routes.json'),JSON.stringify(valid));
+    assert.equal((await validateSite(root)).ok,true);
+    for(const bad of [{...valid,include:['/*']},{...valid,include:[...valid.include,'/assets/*']},{...valid,exclude:['/s/*']},{...valid,include:['/api/*','/directory/*']}]){
+      await writeFile(path.join(root,'_routes.json'),JSON.stringify(bad));
+      await assert.rejects(()=>validateSite(root),/Functions routes/);
+    }
+  }finally{await rm(root,{recursive:true,force:true});}
+});
+
 test('validateSite rejects overlapping cache policies that Pages would concatenate',async()=>{
   const root=await mkdtemp(path.join(os.tmpdir(),'earth-radio-cache-overlap-'));
   try{

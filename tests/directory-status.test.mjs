@@ -12,3 +12,7 @@ test('fresh status shows its timestamp without claiming a live provider request'
 test('unknown legacy generation falls back to the existing source status',()=>{
   assert.equal(directorySnapshotStatus({},123),null);assert.equal(directorySnapshotStale(null),false);
 });
+
+test('a shared-only fallback never claims the full catalog is ready or freshly cached',()=>{
+  for(const cached of [false,true])assert.equal(directorySnapshotStatus({partial:'shared-station',cached,stale:cached,directorySnapshot:{generatedAt:new Date().toISOString()}},1),'This station is ready. The directory is unavailable; refresh to browse more.');
+});

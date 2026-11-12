@@ -119,7 +119,7 @@ export async function validateSite(rootInput) {
 
   if(fileSet.has('_routes.json')){
     const routes=JSON.parse(await readFile(path.join(root,'_routes.json'),'utf8'));
-    if(routes.version!==1||JSON.stringify(routes.include)!==JSON.stringify(['/api/*','/directory/*'])||!Array.isArray(routes.exclude)||routes.exclude.length)errors.push('Functions routes must cover only metadata APIs and the finite directory');
+    if(routes.version!==1||JSON.stringify(routes.include)!==JSON.stringify(['/api/*','/directory/*','/s/*'])||!Array.isArray(routes.exclude)||routes.exclude.length)errors.push('Functions routes must cover only metadata APIs, the finite directory and public station paths');
   }
 
   const html = await readFile(path.join(root, 'index.html'), 'utf8');
