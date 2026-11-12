@@ -30,17 +30,22 @@ User delegated implementation/design; only new cost requires a question.
   controlled provenance, unchanged-input place replay, manifests and docs.
 - [x] Reconcile Passport delivery records using its exact head/main/CI/served/
   hosted SQL/recovery evidence; keep desktop publication explicitly at0.34.1.
-- [ ] Full verify, complete zero-retry browser suite, rendered42 and native
+- [x] Full verify, complete zero-retry browser suite, rendered42 and native
   sandbox/sync/restart/lifecycle/renderer gates; canonical Git blob checks.
-- [ ] One fresh whole-feature review after local gates; re-grade findings and
+- [x] One fresh whole-feature review after local gates; re-grade findings and
   perform one tested correction pass if needed. Preserve every concrete ruling.
 
 ## Task4 — Bounded delivery and continuation
 
-- [ ] Checked commit/push, existing-source PR, all exact-head CI and actual
+- [x] Checked commit/push, existing-source PR, all exact-head CI and actual
   preview artifact/header/route/UI/offline acceptance.
-- [ ] Expected-head merge, final-main CI/logs, served production and bounded
+- [x] Expected-head merge, final-main CI/logs, served production and bounded
   canary. Preserve original profiles/providers/SMTP/vault and prior releases.
-- [ ] Update Spaces with evidence/rollback and honest platform boundaries.
+- [x] Update Spaces with evidence/rollback and honest platform boundaries.
 - [ ] Continue ER-09 sharing, ER-10 installation, then phase4 desktop builds/
   publication and the approved phase5. Do not stop at this partial roadmap.
+
+Accepted November12,2026 at13:37:02 UTC: PR#54 head2c5d4cf / main80e3ee0,
+identical tree; final local784passed/3existing skips/490hashes, all422browser
+cases clean locally and on exact head/main. [Final evidence](../../QA-0.36.0.md#final-delivery-addendum)
+retains failed campaigns and platform boundaries. Spaces sequence56 is current.

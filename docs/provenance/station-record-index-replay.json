@@ -1,0 +1,112 @@
+{
+  "qualifiedAt": "2026-11-12T14:10:20.900Z",
+  "input": {
+    "bytes": 29937269,
+    "sha256": "2ae63f727ae12ee9b27ccca2d632d9feb5972d11147ae3559681646880a4f597",
+    "rawRows": 52630,
+    "normalizedRows": 52630
+  },
+  "acceptedSource": "80e3ee014bae96dbb13b318cb1c82fb147d3af3d",
+  "syntheticProducerSha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "comparison": {
+    "existingManifestIdentical": true,
+    "existingPayloadsIdentical": 451,
+    "allIdentitiesExactlyOnce": true,
+    "shardsStableWithReversedInputAndNewTimestamp": true
+  },
+  "index": {
+    "identities": 52630,
+    "shards": 256,
+    "uniqueFiles": 256,
+    "bytes": 29943115,
+    "maxShardBytes": 146553,
+    "maxShardRecords": 256
+  },
+  "stage": {
+    "files": 710,
+    "bytes": 79846665,
+    "generatedAt": "2026-11-12T13:22:34.584Z",
+    "producerSourceSha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "stationIdentities": 52630
+  },
+  "cityCoverage": [
+    {
+      "cityId": "ne-1159151529",
+      "city": "Berlin",
+      "selectedPrograms": 26
+    },
+    {
+      "cityId": "ne-1159151563",
+      "city": "Vienna",
+      "selectedPrograms": 19
+    },
+    {
+      "cityId": "ne-1159151575",
+      "city": "New York",
+      "selectedPrograms": 21
+    },
+    {
+      "cityId": "ne-1159151503",
+      "city": "Madrid",
+      "selectedPrograms": 15
+    },
+    {
+      "cityId": "ne-1159151579",
+      "city": "Istanbul",
+      "selectedPrograms": 9
+    },
+    {
+      "cityId": "ne-1159151577",
+      "city": "London",
+      "selectedPrograms": 18
+    },
+    {
+      "cityId": "ne-1159151557",
+      "city": "Toronto",
+      "selectedPrograms": 8
+    },
+    {
+      "cityId": "ne-1159151309",
+      "city": "Dublin",
+      "selectedPrograms": 5
+    },
+    {
+      "cityId": "ne-1159151599",
+      "city": "Jakarta",
+      "selectedPrograms": 10
+    },
+    {
+      "cityId": "ne-1159151491",
+      "city": "Chicago",
+      "selectedPrograms": 6
+    },
+    {
+      "cityId": "ne-1159151523",
+      "city": "Seoul",
+      "selectedPrograms": 5
+    }
+  ],
+  "algorithms": [
+    {
+      "path": "server/station-record-protocol.mjs",
+      "bytes": 4409,
+      "sha256": "61102d12f05fd33374b0136d712c28e75c0f558316f1fa1633043d9ad4b215f4"
+    },
+    {
+      "path": "scripts/build-station-record-index.mjs",
+      "bytes": 2160,
+      "sha256": "802916d6eb3d7599aba77bacf4dcc9d50576db8e4e7eca30d790517ede49ca31"
+    },
+    {
+      "path": "scripts/build-directory-snapshot.mjs",
+      "bytes": 9161,
+      "sha256": "6dcea14cb9d32e13262866b78ac16b4428e4e113e679a5b163aa624ee34f9bba"
+    },
+    {
+      "path": "scripts/stage-directory-snapshot.mjs",
+      "bytes": 4767,
+      "sha256": "86cea602025caf3f088338643814fef27977ba19e157d2b8dbd64f8927297726"
+    }
+  ],
+  "finalStagingQualifiedAt": "2026-11-12T14:11:03.123Z"
+}

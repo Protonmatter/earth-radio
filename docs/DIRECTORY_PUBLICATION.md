@@ -50,6 +50,32 @@ verifies every referenced file before creating the deployable artifact and exclu
 unreferenced files. The artifact has a 128 MiB aggregate limit. Source branches are
 never modified by the publisher.
 
+### Station records for shared links
+
+The same normalized pull also emits optional `station-manifest.json`, separate
+from the unchanged strict schema 2 boot manifest. Its schema 1 identity binds the
+generation time, producer version and source SHA to the boot publication. All
+normalized identities are included, including aliases and rows beyond the root
+10,000/country 1,000 cutoffs. Fields are explicitly projected from normalized public
+station metadata; no account, listener history, credential or audio is added.
+
+The first byte of SHA-256 over a station UUID's UTF-8 bytes selects one of 256
+descriptors, in numeric order. Each descriptor identifies a newline-terminated
+UTF-8 JSON object with `schemaVersion:1` and a `stations` array sorted by UUID.
+Payloads use `station-records/<sha256>.json`. Empty buckets reuse one payload.
+Bounds are256 KiB and1,024 records per shard,64 KiB for the separate manifest and
+75,000 identities total. A changed timestamp does not change identical shard hashes.
+
+The stager verifies matching generation identity, every hash/length/count, allowed
+public fields and UUID-to-bucket assignment before creating the publication.
+Malformed optional data fails the build; its absence permits older artifacts.
+Station payloads count toward the existing128 MiB aggregate payload guard. No
+limit is increased automatically. `report.json.stationRecords` reports counts,
+total bytes and largest shard bytes/records without station URLs. These additional
+files do not change boot payloads or trigger browser requests until the separate
+sharing feature is delivered. Inspect its public manifest and referenced shards
+after deployment; a successful branch build alone is not publication evidence.
+
 GitHub Pages must use **GitHub Actions** as its build source. Official actions are
 pinned to immutable commits. Build has `contents: read`; only deployment receives
 `pages: write` and `id-token: write`, using an ephemeral workflow identity. There is
@@ -73,7 +99,7 @@ Prerequisites: the repository's pinned Node version; no additional npm dependenc
 or credential is needed for the producer.
 
 ```powershell
-node --test tests/directory-place-selection.test.mjs tests/station-variants.test.mjs tests/directory-normalize.test.mjs tests/directory-generation.test.mjs tests/directory-producer.test.mjs tests/directory-publication.test.mjs
+node --test tests/station-record-index.test.mjs tests/directory-place-selection.test.mjs tests/station-variants.test.mjs tests/directory-normalize.test.mjs tests/directory-generation.test.mjs tests/directory-producer.test.mjs tests/directory-publication.test.mjs
 node scripts/build-directory-snapshot.mjs .build/directory-generation-unique
 node scripts/stage-directory-snapshot.mjs .build/directory-generation-unique .build/directory-publication-unique
 ```
