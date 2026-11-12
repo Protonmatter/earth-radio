@@ -1,9 +1,9 @@
 // Conservative presentation metadata, not broadcaster-site geocoding. No I/O,
 // listener location, account storage, implicit clock or device timezone.
-import {CURATED_PLACES} from './curated-places.js?v=0.36.0';
-import {COUNTRY_LOCATIONS} from './country-locations.js?v=0.36.0';
-import {stationLocation} from './station-location.js?v=0.36.0';
-import {fold} from './search-core.js?v=0.36.0';
+import {CURATED_PLACES} from './curated-places.js?v=0.37.0';
+import {COUNTRY_LOCATIONS} from './country-locations.js?v=0.37.0';
+import {stationLocation} from './station-location.js?v=0.37.0';
+import {fold} from './search-core.js?v=0.37.0';
 
 export const CITY_EVIDENCE_RADIUS_KM=25;
 const zoneName=/^(?:UTC|[-A-Za-z_]+(?:\/[-A-Za-z0-9_+]+){1,3})$/;

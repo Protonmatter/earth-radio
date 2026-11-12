@@ -39,7 +39,7 @@ export default defineConfig({
       // loader does not reliably pass the audio URLs through page.route().
       // Compatibility media uses a real same-origin server resource, avoiding
       // the external-media route limitation; it records actual API availability.
-      testMatch: /(?:search-experience|auth-ui|website|directory-snapshot|today-layout|place-presentation|passport-ui|media-session-compat)\.spec\.mjs/,
+      testMatch: /(?:search-experience|auth-ui|website|directory-snapshot|today-layout|place-presentation|passport-ui|media-session-compat|station-sharing)\.spec\.mjs/,
       use: {
         ...devices['Desktop Safari'],
         viewport: { width: 1360, height: 850 }

@@ -1,6 +1,6 @@
-import {normalizeSong} from './song-library-core.js?v=0.36.0';
-import {stationPlace} from './place-core.js?v=0.36.0';
-import {displayCountry} from './search-core.js?v=0.36.0';
+import {normalizeSong} from './song-library-core.js?v=0.37.0';
+import {stationPlace} from './place-core.js?v=0.37.0';
+import {displayCountry} from './search-core.js?v=0.37.0';
 
 export const MEDIA_ARTWORK_SIZES=Object.freeze([96,256,512]);
 export const MEDIA_ARTWORK_MAX_BYTES=2*1024*1024;

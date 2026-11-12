@@ -1,0 +1,47 @@
+// Built-in public stations, shared without browser/cache side effects.
+export const LISTEN_MOE_STATIONS = Object.freeze([
+  Object.freeze({
+    stationuuid: 'earth-radio:listen.moe:jpop',
+    changeuuid: 'earth-radio:listen.moe:jpop:v1',
+    name: 'LISTEN.moe',
+    url: 'https://listen.moe/fallback',
+    url_resolved: 'https://listen.moe/fallback',
+    homepage: 'https://listen.moe/',
+    favicon: 'https://listen.moe/favicon.ico',
+    tags: 'jpop,anime,listen.moe',
+    country: 'Japan',
+    countrycode: 'JP',
+    language: 'japanese',
+    votes: 5000,
+    codec: 'MP3',
+    bitrate: 128,
+    hls: 0,
+    lastcheckok: 1,
+    clickcount: 8000,
+    geo_lat: 35.6895,
+    geo_long: 139.6917,
+    source: 'direct'
+  }),
+  Object.freeze({
+    stationuuid: 'earth-radio:listen.moe:kpop',
+    changeuuid: 'earth-radio:listen.moe:kpop:v1',
+    name: 'LISTEN.moe Kpop',
+    url: 'https://listen.moe/kpop/fallback',
+    url_resolved: 'https://listen.moe/kpop/fallback',
+    homepage: 'https://listen.moe/',
+    favicon: 'https://listen.moe/favicon.ico',
+    tags: 'kpop,listen.moe',
+    country: 'The Republic Of Korea',
+    countrycode: 'KR',
+    language: 'korean',
+    votes: 5000,
+    codec: 'MP3',
+    bitrate: 128,
+    hls: 0,
+    lastcheckok: 1,
+    clickcount: 7900,
+    geo_lat: 37.5665,
+    geo_long: 126.978,
+    source: 'direct'
+  })
+]);

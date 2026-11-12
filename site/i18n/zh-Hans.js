@@ -412,5 +412,15 @@ export default {
   "transfer.imported": "已导入 {favorites} 个收藏、{recent} 个最近电台和 {prefs} 项偏好设置。",
   "transfer.partial": "已导入电台数据，但未添加护照。请检查历史设置和账户同步，然后重新导入护照。",
   "transfer.passportImported": "已导入护照。",
-  "transfer.partialExport": "已导出电台数据。护照未能包含在内，仍保存在此设备上。"
+  "transfer.partialExport": "已导出电台数据。护照未能包含在内，仍保存在此设备上。",
+  "sharing.button": "分享电台",
+  "sharing.title": "分享电台",
+  "sharing.close": "关闭分享",
+  "sharing.copy": "复制链接",
+  "sharing.link": "电台链接",
+  "sharing.help": "通过此链接分享电台。",
+  "sharing.manual": "选择并复制此链接。",
+  "sharing.copied": "链接已复制。",
+  "sharing.unavailable": "此电台没有公开链接。",
+  "sharing.directoryUnavailable": "此电台已就绪。电台目录暂不可用，请刷新以浏览更多电台。"
 };

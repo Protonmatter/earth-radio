@@ -19,27 +19,27 @@
   <link rel="icon" type="image/svg+xml" sizes="any" href="./branding/earth-radio-favicon-pine.svg" data-earth-radio-icon="svg" data-light="./branding/earth-radio-favicon-pine.svg" data-dark="./branding/earth-radio-favicon-obsidian.svg" />
   <link rel="apple-touch-icon" sizes="180x180" href="./branding/earth-radio-apple-touch-icon-180.png" />
   <link rel="manifest" href="./manifest.webmanifest" />
-  <script type="module" src="./config.js?v=0.36.0"></script>
-  <script type="module" src="./assets/storage-guard.js?v=0.36.0"></script>
-  <script type="module" src="./assets/directory-expansion.js?v=0.36.0"></script>
-  <script type="module" src="./assets/pinned-stations.js?v=0.36.0"></script>
-  <script type="module" src="./assets/metadata-enrichment.js?v=0.36.0"></script>
-  <link rel="stylesheet" href="./assets/metadata-enrichment.css?v=0.36.0" />
-  <script type="module" crossorigin src="./assets/index-b6b29555.js"></script>
+  <script type="module" src="./config.js?v=0.37.0"></script>
+  <script type="module" src="./assets/storage-guard.js?v=0.37.0"></script>
+  <script type="module" src="./assets/directory-expansion.js?v=0.37.0"></script>
+  <script type="module" src="./assets/pinned-stations.js?v=0.37.0"></script>
+  <script type="module" src="./assets/metadata-enrichment.js?v=0.37.0"></script>
+  <link rel="stylesheet" href="./assets/metadata-enrichment.css?v=0.37.0" />
+  <script type="module" crossorigin src="./assets/index-d26191ab.js"></script>
   <link rel="stylesheet" crossorigin href="./assets/index-CSoL7F-Y.css">
-  <link rel="stylesheet" href="./assets/responsive-ui.css?v=0.36.0" />
-  <script type="module" src="./assets/responsive-ui.js?v=0.36.0"></script>
-  <script type="module" src="./assets/song-library-ui.js?v=0.36.0"></script>
-  <script type="module" src="./assets/passport-ui.js?v=0.36.0"></script>
-  <script type="module" src="./assets/atlas-lock.js?v=0.36.0"></script>
-  <link rel="stylesheet" href="./assets/ui-refresh.css?v=0.36.0" />
-  <link rel="stylesheet" href="./assets/atlas-lock.css?v=0.36.0" />
-  <link rel="stylesheet" href="./assets/discovery.css?v=0.36.0" />
-  <link rel="stylesheet" href="./assets/search-controls.css?v=0.36.0" />
-  <link rel="stylesheet" href="./assets/listening-room.css?v=0.36.0" />
-  <link rel="stylesheet" href="./assets/brand-identity.css?v=0.36.0" />
-  <script type="module" src="./assets/brand-identity.js?v=0.36.0"></script>
-  <link rel="stylesheet" href="./assets/today-ui.css?v=0.36.0" />
+  <link rel="stylesheet" href="./assets/responsive-ui.css?v=0.37.0" />
+  <script type="module" src="./assets/responsive-ui.js?v=0.37.0"></script>
+  <script type="module" src="./assets/song-library-ui.js?v=0.37.0"></script>
+  <script type="module" src="./assets/passport-ui.js?v=0.37.0"></script>
+  <script type="module" src="./assets/atlas-lock.js?v=0.37.0"></script>
+  <link rel="stylesheet" href="./assets/ui-refresh.css?v=0.37.0" />
+  <link rel="stylesheet" href="./assets/atlas-lock.css?v=0.37.0" />
+  <link rel="stylesheet" href="./assets/discovery.css?v=0.37.0" />
+  <link rel="stylesheet" href="./assets/search-controls.css?v=0.37.0" />
+  <link rel="stylesheet" href="./assets/listening-room.css?v=0.37.0" />
+  <link rel="stylesheet" href="./assets/brand-identity.css?v=0.37.0" />
+  <script type="module" src="./assets/brand-identity.js?v=0.37.0"></script>
+  <link rel="stylesheet" href="./assets/today-ui.css?v=0.37.0" />
 </head>
 <body>
   <a class="er-skip" href="#er-workspace" data-i18n="app.skip">Skip to content</a>
@@ -322,6 +322,7 @@
       <button class="player-btn" id="btn-prev" type="button" data-i18n="player.prev" data-i18n-attr="aria-label" aria-label="Previous station">&#9198;</button>
       <button class="player-btn player-btn--large" id="btn-play" type="button" disabled data-i18n="player.play" data-i18n-attr="aria-label" aria-label="Play">&#9654;</button>
       <button class="player-btn" id="btn-next" type="button" data-i18n="player.next" data-i18n-attr="aria-label" aria-label="Next station">&#9197;</button>
+      <button class="player-btn" id="btn-share" type="button" disabled data-share-station data-i18n="sharing.button" data-i18n-attr="aria-label" aria-label="Share station" aria-haspopup="dialog" aria-controls="er-share-dialog" aria-expanded="false"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 15V3m-5 5 5-5 5 5M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg></button>
     </div>
     <div class="player-extras">
       <label class="sr-only" for="volume" data-i18n="player.volume">Volume</label>
@@ -373,11 +374,20 @@
     <div class="er-nowplaying-actions er-nowplaying-secondary">
       <button type="button" data-click-id="btn-favorite" aria-pressed="false" data-i18n="music.saveStation">Save station</button>
       <button type="button" data-click-id="btn-similar" data-i18n="music.similar">Similar</button>
+      <button type="button" disabled data-share-station data-i18n="sharing.button" aria-haspopup="dialog" aria-controls="er-share-dialog" aria-expanded="false">Share station</button>
       <button type="button" data-er-dest="map" data-i18n="nav.map">Map</button>
     </div>
     <label class="er-nowplaying-timer"><span data-i18n="player.sleep">Sleep timer</span><select id="er-nowplaying-timer" data-i18n="player.sleep" data-i18n-attr="aria-label" aria-label="Sleep timer"><option value="0" data-i18n="sleep.off">Off</option><option value="15" data-i18n="sleep.15">15 min</option><option value="30" data-i18n="sleep.30">30 min</option><option value="60" data-i18n="sleep.60">60 min</option><option value="active" disabled hidden data-i18n="music.timerActive">Timer on</option></select></label>
     <p id="er-song-now-message" class="er-song-now-message" role="status" aria-live="polite"></p>
   </section>
+  <dialog id="er-share-dialog" class="er-share-dialog" aria-labelledby="er-share-title" aria-describedby="er-share-station" aria-modal="true">
+    <header><h2 id="er-share-title" data-i18n="sharing.title">Share station</h2><button type="button" data-share-close data-i18n="sharing.close" data-i18n-attr="aria-label" aria-label="Close sharing">×</button></header>
+    <p id="er-share-station" dir="auto"></p>
+    <label class="sr-only" for="er-share-url" data-i18n="sharing.link">Station link</label>
+    <input id="er-share-url" type="url" readonly dir="ltr" spellcheck="false" autocomplete="off" aria-describedby="er-share-help" />
+    <p id="er-share-help" data-i18n="sharing.help">Share this station with a link.</p>
+    <button type="button" data-share-copy data-i18n="sharing.copy">Copy link</button>
+  </dialog>
   <dialog id="er-song-details" class="er-song-details" aria-labelledby="er-song-details-title">
     <header><span data-i18n="music.details">Song details</span><button type="button" data-song-details-close aria-label="Close song details" data-i18n="music.closeDetails" data-i18n-attr="aria-label">×</button></header>
     <div id="er-song-details-content"></div>

@@ -1,13 +1,13 @@
-import { t, normalizeLocale } from '../i18n/index.js?v=0.36.0';
-import { passportEntries, recordPassportPlace, ContinuousPassportSession } from './passport-core.js?v=0.36.0';
-import { passportStore } from './passport-store.js?v=0.36.0';
-import { getSongLibraryAccount, subscribeSongLibraryAccount, songLibraryStore } from './song-library-store.js?v=0.36.0';
-import { clearSongHistory } from './song-library-core.js?v=0.36.0';
-import { currentPlaybackStation } from './discovery-ui.js?v=0.36.0';
-import { stationPlace } from './place-core.js?v=0.36.0';
-import { displayCountry } from './search-core.js?v=0.36.0';
-import { setPassportMapCountries } from './passport-map.js?v=0.36.0';
-import { createUserTransfer } from './user-transfer.js?v=0.36.0';
+import { t, normalizeLocale } from '../i18n/index.js?v=0.37.0';
+import { passportEntries, recordPassportPlace, ContinuousPassportSession } from './passport-core.js?v=0.37.0';
+import { passportStore } from './passport-store.js?v=0.37.0';
+import { getSongLibraryAccount, subscribeSongLibraryAccount, songLibraryStore } from './song-library-store.js?v=0.37.0';
+import { clearSongHistory } from './song-library-core.js?v=0.37.0';
+import { currentPlaybackStation } from './discovery-ui.js?v=0.37.0';
+import { stationPlace } from './place-core.js?v=0.37.0';
+import { displayCountry } from './search-core.js?v=0.37.0';
+import { setPassportMapCountries } from './passport-map.js?v=0.37.0';
+import { createUserTransfer } from './user-transfer.js?v=0.37.0';
 
 const byId = id => document.getElementById(id);
 const locale = () => normalizeLocale(document.documentElement.lang);

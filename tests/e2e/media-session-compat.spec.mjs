@@ -15,6 +15,7 @@ test('the actual player remains usable across native Media Session capability di
   await page.locator('#er-discovery-query').fill('Compatibility radio');await page.getByRole('button',{name:'Play: Compatibility radio',exact:true}).click();
   await expect(page.locator('#player-bar')).toHaveClass(/is-playing/);
   await expect.poll(()=>page.locator('#audio-player').evaluate(audio=>audio.currentTime)).toBeGreaterThan(0.05);
+  await expect(page).toHaveTitle('Compatibility radio · Earth Radio');
   const capabilities=await page.evaluate(()=>({nativeMediaApi:window.fixtureNativeMediaApi,bitmap:typeof createImageBitmap,secure:isSecureContext,registrations:window.fixtureNativeMediaRegistration}));
   await testInfo.attach('native-media-capabilities',{body:JSON.stringify(capabilities),contentType:'application/json'});
   // Successful CI reports are not uploaded; retain the non-sensitive native
@@ -32,12 +33,14 @@ test('the actual player remains usable across native Media Session capability di
     expect(capabilities.registrations.play.registered).toBe(true);expect(capabilities.registrations.pause.registered).toBe(true);
   }
   await page.locator('#btn-play').click();await expect(page.locator('#audio-player')).toHaveJSProperty('paused',true);
+  await expect(page).toHaveTitle('Compatibility radio · Earth Radio');
   await page.locator('#btn-play').click();await expect(page.locator('#player-bar')).toHaveClass(/is-playing/);
   if(capabilities.nativeMediaApi){
     await page.evaluate(()=>window.fixtureNativeMediaHandlers.pause());await expect(page.locator('#audio-player')).toHaveJSProperty('paused',true);
     await page.evaluate(()=>window.fixtureNativeMediaHandlers.play());await expect(page.locator('#player-bar')).toHaveClass(/is-playing/);
     if(capabilities.registrations.stop.registered){
       await page.evaluate(()=>window.fixtureNativeMediaHandlers.stop());await expect.poll(()=>readNativeMediaFields(page)).toBeNull();
+      await expect(page).toHaveTitle('Earth Radio');
       await page.locator('#btn-play').click();await expect(page.locator('#player-bar')).toHaveClass(/is-playing/);
     }
   }

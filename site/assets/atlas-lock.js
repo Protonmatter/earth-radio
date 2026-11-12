@@ -3,7 +3,7 @@
  * Additive. Does not rewrite the hashed runtime.
  */
 
-import { loadUiState, saveUiState } from './responsive-ui.js?v=0.36.0';
+import { loadUiState, saveUiState } from './responsive-ui.js?v=0.37.0';
 
 export function applyAtlasChrome(state = loadUiState()) {
   const root = document.documentElement;

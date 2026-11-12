@@ -54,9 +54,9 @@ previous ER-11 plan, `docs/provenance/web-0.36.0.json`, canonical manifests.
 
 - [x] Reconcile accepted ER-11 records without changing historical failures.
 - [x] Run `npm run verify`; inspect diff, canonical bytes and no dependency drift.
-- [ ] Fresh whole-feature review and bounded corrections with repeat checks.
-- [ ] Commit/push PR, actual feature-branch publisher build with no deploy,
+- [x] Fresh whole-feature review and bounded corrections with repeat checks.
+- [x] Commit/push PR, actual feature-branch publisher build with no deploy,
   exact-head CI and reviewed source; expected-head merge and final-main CI.
-- [ ] Qualify actual public station manifest, all shard hashes/counts/bounds,
+- [x] Qualify actual public station manifest, all shard hashes/counts/bounds,
   existing boot/country endpoints, and update Spaces with rollback/evidence.
 - [ ] Continue ER-09 app sharing and ER-10; desktop publication follows.

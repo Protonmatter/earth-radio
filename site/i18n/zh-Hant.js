@@ -412,5 +412,15 @@ export default {
   "transfer.imported": "已匯入 {favorites} 個收藏、{recent} 個最近電台與 {prefs} 項偏好設定。",
   "transfer.partial": "已匯入電台資料，但未新增護照。請檢查記錄設定與帳戶同步，然後重新匯入護照。",
   "transfer.passportImported": "已匯入護照。",
-  "transfer.partialExport": "已匯出電台資料。護照未能包含在內，仍儲存在此裝置上。"
+  "transfer.partialExport": "已匯出電台資料。護照未能包含在內，仍儲存在此裝置上。",
+  "sharing.button": "分享電台",
+  "sharing.title": "分享電台",
+  "sharing.close": "關閉分享",
+  "sharing.copy": "複製連結",
+  "sharing.link": "電台連結",
+  "sharing.help": "透過此連結分享電台。",
+  "sharing.manual": "選取並複製此連結。",
+  "sharing.copied": "已複製連結。",
+  "sharing.unavailable": "此電台沒有公開連結。",
+  "sharing.directoryUnavailable": "此電台已就緒。電台目錄暫時無法使用，請重新整理以瀏覽更多電台。"
 };

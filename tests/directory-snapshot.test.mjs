@@ -5,9 +5,9 @@ import {loadDirectorySnapshot,snapshotCountryStatus} from '../site/assets/direct
 import {readFile} from 'node:fs/promises';
 import {serializeVariantGroups} from '../site/assets/station-variants.js';
 
-test('only directory and metadata routes invoke Functions; static assets keep their free delivery path',async()=>{
+test('only directory, metadata and public station routes invoke Functions; static assets keep their delivery path',async()=>{
   const routes=JSON.parse(await readFile(new URL('../site/_routes.json',import.meta.url),'utf8'));
-  assert.deepEqual(routes,{version:1,include:['/api/*','/directory/*'],exclude:[]});
+ assert.deepEqual(routes,{version:1,include:['/api/*','/directory/*','/s/*'],exclude:[]});
 });
 
 async function browserProtocol(task){const descriptor=Object.getOwnPropertyDescriptor(globalThis,'location');Object.defineProperty(globalThis,'location',{value:{protocol:'https:'},configurable:true});try{await task();}finally{if(descriptor)Object.defineProperty(globalThis,'location',descriptor);else delete globalThis.location;}}

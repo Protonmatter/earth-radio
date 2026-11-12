@@ -1,7 +1,7 @@
-import {buildRadioMediaMetadata,currentMediaSong,mediaArtworkSource} from './media-session-core.js?v=0.36.0';
-import {createMediaArtworkLoader} from './media-session-artwork.js?v=0.36.0';
-import {getCurrentSongSnapshot,subscribeCurrentSong} from './metadata-enrichment.js?v=0.36.0';
-import {normalizeLocale} from '../i18n/index.js?v=0.36.0';
+import {buildRadioMediaMetadata,currentMediaSong,mediaArtworkSource} from './media-session-core.js?v=0.37.0';
+import {createMediaArtworkLoader} from './media-session-artwork.js?v=0.37.0';
+import {getCurrentSongSnapshot,subscribeCurrentSong} from './metadata-enrichment.js?v=0.37.0';
+import {normalizeLocale} from '../i18n/index.js?v=0.37.0';
 
 const actionNames={play:'play',pause:'pause',stop:'stop',previoustrack:'previous',nexttrack:'next'};
 
@@ -14,18 +14,19 @@ export function createRadioMediaSession(adapter,dependencies={}){
     session=Object.hasOwn(dependencies,'session')?dependencies.session:globalThis.navigator?.mediaSession;
     Metadata=Object.hasOwn(dependencies,'Metadata')?dependencies.Metadata:globalThis.MediaMetadata;
   }catch{/* optional browser capability */}
-  if(!session)return{refresh(){},selectStation(){},clear(){},dispose(){dependencies.artworkLoader?.dispose();}};
   const getSong=dependencies.getSong||getCurrentSongSnapshot,subscribeSong=dependencies.subscribeSong||subscribeCurrentSong;
   const getLocale=dependencies.getLocale||(()=>normalizeLocale(globalThis.document?.documentElement.lang));
-  const loader=dependencies.artworkLoader||createMediaArtworkLoader();
+  const loader=dependencies.artworkLoader||(session?createMediaArtworkLoader():{load:async()=>null,dispose(){}});
+  const setDocumentTitle=dependencies.setDocumentTitle||(value=>{if(globalThis.document)globalThis.document.title=value;});
   const onError=dependencies.onError||(action=>console.warn('Earth Radio media action could not finish: '+action));
   const events=Object.hasOwn(dependencies,'eventTarget')?dependencies.eventTarget:globalThis.window;
-  let disposed=false,blocked=false,generation=0,actionSerial=0,key=null,current=null,coverController=null,unsubscribe;
+  let disposed=false,blocked=false,generation=0,actionSerial=0,key=null,current=null,coverController=null,unsubscribe,lastTitle;
   const handlers=new Map();
   const retire=()=>{generation++;coverController?.abort();coverController=null;};
-  const setState=value=>{try{session.playbackState=value;}catch{/* unsupported optional state */}};
+  const setState=value=>{try{if(session)session.playbackState=value;}catch{/* unsupported optional state */}};
+  function writeTitle(value){try{if(value!==lastTitle){setDocumentTitle(value);lastTitle=value;}}catch{/* optional document presentation cannot affect audio */}}
   function write(value){
-    try{if(value===null)session.metadata=null;else if(typeof Metadata==='function')session.metadata=new Metadata(value);}catch{/* optional native metadata must not affect audio */}
+    try{if(!session)return;if(value===null)session.metadata=null;else if(typeof Metadata==='function')session.metadata=new Metadata(value);}catch{/* optional native metadata must not affect audio */}
   }
   function project(forceLoading){
     if(blocked)return null;
@@ -42,12 +43,13 @@ export function createRadioMediaSession(adapter,dependencies={}){
   function publish(forceLoading=false,forceGeneration=false){
     if(disposed)return;
     let projection;try{projection=project(forceLoading);}catch{/* optional presentation cannot interrupt the audio owner */}
-    if(!projection){if(key!==null||current){retire();key=null;current=null;}write(null);setState('none');return;}
+    if(!projection){if(key!==null||current){retire();key=null;current=null;}write(null);writeTitle('Earth Radio');setState('none');return;}
     current=projection;
+    writeTitle(projection.data.title+' · Earth Radio');
     setState(projection.status==='playing'?'playing':projection.status==='paused'||projection.status==='loading'?'paused':'none');
     if(projection.key===key&&!forceGeneration)return;
     retire();key=projection.key;write(projection.data);
-    if(!projection.cover||typeof Metadata!=='function')return;
+    if(!session||!projection.cover||typeof Metadata!=='function')return;
     const version=generation,expected=key,controller=new AbortController();coverController=controller;
     // Native artwork receives only bounded local raster output, never a remote
     // URL that could bypass this loader's redirect/content/byte guards.
@@ -60,7 +62,7 @@ export function createRadioMediaSession(adapter,dependencies={}){
   }
   function refresh(){publish();}
   function selectStation(){if(disposed)return;blocked=false;actionSerial++;publish(true,true);}
-  function clear(){if(disposed)return;blocked=true;actionSerial++;retire();key=null;current=null;write(null);setState('none');}
+  function clear(){if(disposed)return;blocked=true;actionSerial++;retire();key=null;current=null;write(null);writeTitle('Earth Radio');setState('none');}
   function dispose(){
     if(disposed)return;clear();disposed=true;
     try{unsubscribe?.();}catch{/* released with the document */}
@@ -69,7 +71,7 @@ export function createRadioMediaSession(adapter,dependencies={}){
     handlers.clear();events?.removeEventListener('earthradio:locale-changed',refresh);events?.removeEventListener('pageshow',refresh);events?.removeEventListener('pagehide',exit);
   }
   function exit(event){if(!event.persisted)dispose();}
-  for(const [action,command]of Object.entries(actionNames)){
+  if(session)for(const [action,command]of Object.entries(actionNames)){
     const handler=typeof adapter[command]==='function'?async()=>{
       if(disposed)return;const ticket=++actionSerial;
       try{await adapter[command]();if(disposed)return;if(action==='stop'&&ticket===actionSerial)clear();else refresh();}

@@ -1,7 +1,7 @@
 // A view over stream identities. No UUID, favorite record or account document is
 // rewritten by grouping. The same pure model is used by the scheduled producer.
-import {fold} from './search-core.js?v=0.36.0';
-import {streamIdentity} from './discovery-core.js?v=0.36.0';
+import {fold} from './search-core.js?v=0.37.0';
+import {streamIdentity} from './discovery-core.js?v=0.37.0';
 
 const compare=(a,b)=>a<b?-1:a>b?1:0;
 const id=value=>typeof value==='string'&&value.trim()&&value.length<=160&&!['__proto__','prototype','constructor'].includes(value)?value.trim():'';

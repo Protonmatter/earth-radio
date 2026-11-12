@@ -1,12 +1,12 @@
 import {
   emptyPassport, normalizePassport, encodePassportEnvelope, decodePassportEnvelope,
   passportNamespaceKey, passportSyncStateKey, addPassportVisits
-} from './passport-core.js?v=0.36.0';
-import { getSongLibraryAccount, subscribeSongLibraryAccount, songLibraryStore } from './song-library-store.js?v=0.36.0';
+} from './passport-core.js?v=0.37.0';
+import { getSongLibraryAccount, subscribeSongLibraryAccount, songLibraryStore } from './song-library-store.js?v=0.37.0';
 import {
   passportFailure as failure, passportEnvelopeTag as rawTag, nextPassportGeneration,
   readPassportHistoryPolicy, queuePassportHistoryClear, mirrorPassportEnvelope
-} from './passport-policy.js?v=0.36.0';
+} from './passport-policy.js?v=0.37.0';
 
 const namespaceOf = id => id ? `account:${encodeURIComponent(id)}` : 'default';
 const equal = (a, b) => JSON.stringify(a) === JSON.stringify(b);

@@ -15,7 +15,8 @@ test('release module URLs are coherent and an older cache cannot satisfy a newer
   const worker = await readFile(path.join(root, 'site/sw.js'), 'utf8');
   for (const asset of ['song-library-core.js', 'song-library-store.js', 'song-library-ui.js', 'metadata-enrichment.js', 'place-copy.js', 'place-ui.js',
     'passport-core.js', 'passport-policy.js', 'passport-store.js', 'passport-map.js', 'passport-ui.js', 'user-transfer.js', 'map-country-identifiers.js',
-    'media-session-core.js', 'media-session-artwork.js', 'media-session.js']) {
+    'media-session-core.js', 'media-session-artwork.js', 'media-session.js',
+    'direct-stations.js', 'station-record-protocol.js', 'sharing-core.js', 'sharing-entry.js', 'sharing-ui.js']) {
     assert.ok(worker.includes(`./assets/${asset}?v=${version}`), `Missing current offline dependency ${asset}`);
   }
   const handlers = new Map(); let fetched = '';
@@ -76,7 +77,7 @@ test('the live immutable runtime filename is derived from its final content hash
 
 test('service worker registers even when async startup outlives window load', async () => {
   const source = await readFile(path.join(root, 'src-recovered', 'main.ts'), 'utf8');
-  const bundle = await readFile(path.join(root, 'site', 'assets', 'index-b6b29555.js'), 'utf8');
+  const bundle = await readFile(path.join(root, 'site', 'assets', 'index-d26191ab.js'), 'utf8');
   assert.match(source, /document\.readyState === 'complete'/);
   assert.match(bundle, /document\.readyState===`complete`/);
 });
@@ -112,7 +113,7 @@ test('deployed pages send HSTS and revalidate the auth overlays', async () => {
 test('service worker precaches the auth, responsive, and i18n shell under a new cache version', async () => {
   const worker = await readFile(path.join(root, 'site', 'sw.js'), 'utf8');
   assert.match(worker, /cache: isImmutableAsset\(asset\) \? 'force-cache' : 'reload'/);
-  assert.match(worker, /earth-radio-shell-v80-media-session/);
+  assert.match(worker, /earth-radio-shell-v81-station-sharing/);
   for (const palette of ['pine', 'obsidian']) {
     for (const suffix of ['.svg', '-16.png', '-32.png']) {
       assert.ok(worker.includes(`branding/earth-radio-favicon-${palette}${suffix}`));

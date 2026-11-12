@@ -412,5 +412,15 @@ export default {
   "transfer.imported": "Imported {favorites} favorites, {recent} recent stations and {prefs} preferences.",
   "transfer.partial": "Station data was imported, but your passport was not added. Check history settings and account sync, then import the passport again.",
   "transfer.passportImported": "Passport imported.",
-  "transfer.partialExport": "Station data was exported. Your passport could not be included and remains saved on this device."
+  "transfer.partialExport": "Station data was exported. Your passport could not be included and remains saved on this device.",
+  "sharing.button": "Share station",
+  "sharing.title": "Share station",
+  "sharing.close": "Close sharing",
+  "sharing.copy": "Copy link",
+  "sharing.link": "Station link",
+  "sharing.help": "Share this station with a link.",
+  "sharing.manual": "Select and copy this link.",
+  "sharing.copied": "Link copied.",
+  "sharing.unavailable": "This station does not have a public link.",
+  "sharing.directoryUnavailable": "This station is ready. The directory is unavailable; refresh to browse more."
 };

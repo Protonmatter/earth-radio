@@ -1,5 +1,24 @@
 # Station link record prerequisite qualification
 
+## Accepted delivery (supersedes earlier pending gates below)
+
+PR55 final head9a1d4b8 merged as94974388377c2cf8529603929fb5782b95b1de6f with an
+identical qualified tree. All ten head/main checks pass; both browser runs pass422
+cases with zero failures, flaky cases, retries or skips. Local804/three existing
+Windows skips/498 canonical hashes pass. The independent review and same-seat
+follow-ups close containment, cross-drive fixture and Unicode URL findings.
+
+Main publisher43244413700 successfully deployed. The downloaded artifact and
+anonymous public bytes match all708 payloads and both manifests:52,413 identities,
+79,654,131 payload bytes, all42,000 selected legacy observations and all eleven
+city minima. App/legacy origins each match116 files; website19 files; security/
+cache headers,15 routes, four actual Chrome/WebKit phone/desktop guest journeys,
+muted buffered playback/Stop and18 checks over three canary cycles pass. Spaces
+and the original checkout were reconciled without applying the retained stash.
+The [public-safe acceptance receipt](provenance/directory-station-records.json)
+binds sources, CI, publication and qualification limits. Historical failures and
+earlier pending statements below remain dated evidence, not current blockers.
+
 Base: accepted main `80e3ee014bae96dbb13b318cb1c82fb147d3af3d`.
 This is publisher support for ER-09. App version 0.36.0, runtime, worker v80,
 accounts, provider configuration, database and published desktop 0.34.1 are unchanged.

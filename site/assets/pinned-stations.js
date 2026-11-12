@@ -1,3 +1,7 @@
+import {LISTEN_MOE_STATIONS} from './direct-stations.js?v=0.37.0';
+import {getSharedStation,restoreCachedSharedStation} from './sharing-entry.js?v=0.37.0';
+export {LISTEN_MOE_STATIONS};
+
 // Earth Radio git-catalogued stations that Radio Browser is not allowed to omit.
 // LISTEN.moe is a first-class station: J-pop and K-pop MP3 fallbacks plus the
 // matching wss://listen.moe gateway the metadata overlay already knows how to read.
@@ -6,53 +10,6 @@
 
 export const CACHE_STORE = 'cache';
 export const CACHE_KEY = 'stations.v3';
-
-export const LISTEN_MOE_STATIONS = Object.freeze([
-  Object.freeze({
-    stationuuid: 'earth-radio:listen.moe:jpop',
-    changeuuid: 'earth-radio:listen.moe:jpop:v1',
-    name: 'LISTEN.moe',
-    url: 'https://listen.moe/fallback',
-    url_resolved: 'https://listen.moe/fallback',
-    homepage: 'https://listen.moe/',
-    favicon: 'https://listen.moe/favicon.ico',
-    tags: 'jpop,anime,listen.moe',
-    country: 'Japan',
-    countrycode: 'JP',
-    language: 'japanese',
-    votes: 5000,
-    codec: 'MP3',
-    bitrate: 128,
-    hls: 0,
-    lastcheckok: 1,
-    clickcount: 8000,
-    geo_lat: 35.6895,
-    geo_long: 139.6917,
-    source: 'direct'
-  }),
-  Object.freeze({
-    stationuuid: 'earth-radio:listen.moe:kpop',
-    changeuuid: 'earth-radio:listen.moe:kpop:v1',
-    name: 'LISTEN.moe Kpop',
-    url: 'https://listen.moe/kpop/fallback',
-    url_resolved: 'https://listen.moe/kpop/fallback',
-    homepage: 'https://listen.moe/',
-    favicon: 'https://listen.moe/favicon.ico',
-    tags: 'kpop,listen.moe',
-    country: 'The Republic Of Korea',
-    countrycode: 'KR',
-    language: 'korean',
-    votes: 5000,
-    codec: 'MP3',
-    bitrate: 128,
-    hls: 0,
-    lastcheckok: 1,
-    clickcount: 7900,
-    geo_lat: 37.5665,
-    geo_long: 126.978,
-    source: 'direct'
-  })
-]);
 
 export function isDirectoryRequest(url) {
   try {
@@ -67,7 +24,13 @@ export function isDirectoryRequest(url) {
   }
 }
 
-export function mergePinnedStations(payload, pinned = LISTEN_MOE_STATIONS) {
+function defaultPinnedStations() {
+  const shared=getSharedStation();
+  return shared&&!LISTEN_MOE_STATIONS.some(station=>station.stationuuid===shared.stationuuid)
+    ?[...LISTEN_MOE_STATIONS,shared]:LISTEN_MOE_STATIONS;
+}
+
+export function mergePinnedStations(payload, pinned = defaultPinnedStations()) {
   if (Array.isArray(payload)) return mergeStationList(payload, pinned);
   if (!payload || typeof payload !== 'object' || !Array.isArray(payload.stations)) return payload;
   return { ...payload, stations: mergeStationList(payload.stations, pinned) };
@@ -107,7 +70,7 @@ export function installDirectoryFetchPatch(fetchImpl = globalThis.fetch) {
 
 export async function mergePinnedStationCache({
   indexedDBImpl = globalThis.indexedDB,
-  stations = LISTEN_MOE_STATIONS
+  stations
 } = {}) {
   if (!indexedDBImpl) return false;
   const db = await openDatabase(indexedDBImpl);
@@ -125,7 +88,10 @@ export async function mergePinnedStationCache({
           resolve(false);
           return;
         }
-        const stationsMerged = mergeStationList(cached.stations, stations);
+        // Keep an explicitly requested, already cached public station available
+        // across a later fresh-catalog cutoff. Reuse this cache; no new history key.
+        if(stations===undefined)restoreCachedSharedStation(cached.stations);
+        const stationsMerged = mergeStationList(cached.stations, stations===undefined?defaultPinnedStations():stations);
         if (stationsMerged === cached.stations) {
           resolve(false);
           return;
@@ -155,6 +121,9 @@ function openDatabase(indexedDBImpl) {
 }
 
 async function bootBrowser() {
+  // Consume the verified path entry even without an existing catalog cache.
+  // The directory owner can then recover this exact row after an upstream outage.
+  getSharedStation();
   await mergePinnedStationCache();
   if (typeof window !== 'undefined' && window.fetch) {
     window.fetch = installDirectoryFetchPatch(window.fetch.bind(window));

@@ -1,6 +1,6 @@
-import { coordinates, streamIdentity } from './discovery-core.js?v=0.36.0';
-import {browserDirectoryHosts} from './directory-hosts.js?v=0.36.0';
-import {stationLocation} from './station-location.js?v=0.36.0';
+import { coordinates, streamIdentity } from './discovery-core.js?v=0.37.0';
+import {browserDirectoryHosts} from './directory-hosts.js?v=0.37.0';
+import {stationLocation} from './station-location.js?v=0.37.0';
 
 const LIMIT = 10000;
 const MAX_BYTES = 16 * 1024 * 1024;
