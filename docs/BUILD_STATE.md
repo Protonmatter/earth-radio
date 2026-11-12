@@ -1,6 +1,14 @@
 # Build state
 
-## 0.34.1 focus patch under qualification
+## 0.34.1 web and desktop published
+
+Release [v0.34.1](https://github.com/Protonmatter/earth-radio/releases/tag/v0.34.1) is published as release 442427866 at 2026-11-12T02:39:11Z. Annotated tag `e52196bd01d05d3bdc24bfd7cdeed9f51a9d7315` points to source `8b6875a5fcd299e0af6df8d12cd5fb82af23acd8`. All six packages match 128 application files and production metadata; all 13 draft and anonymous public downloads pass complete size/SHA-256 checks.
+
+PR #51 head and main each pass ten checks and 341 browser cases with zero flaky results. Actual production acceptance passed for 106 files on each app origin, 19 website files, cache/security headers, 15 routes, four app account-control contexts, eight focus cases, 16 website contexts, offline reload and muted live playback. Local verification passed 679 tests with three existing Windows skips, 42 rendered contracts, native auth/encrypted restart/lifecycle and installed-worker upgrade.
+
+Both Windows portable guests pass native palette typing and search recovery: 21 Seoul matches, seven with HTTPS filtering, and 21 after removing its chip. Muted live playback, favorite retention, volume retention at 61% or 37%, two normal quits and no autoplay after restart pass. Mac native CI and independent DMG/ASAR source checks pass. Local signing, unnotarized status and physical/provider/fidelity limits remain explicit. Website and current-guide metadata is prepared in this follow-up; its own CI/served gate is pending at this revision. See the [release receipt](provenance/release-0.34.1.json).
+
+## Initial 0.34.1 focus patch qualification (before PR51)
 
 PR50 merged as `715f997e94bd6d1dd62386506f2904eed80e16ee`. Its production files,
 headers, routes, offline shell, four app UI and sixteen website contexts pass;

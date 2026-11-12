@@ -2,20 +2,17 @@
 
 Explore live radio stations around the world in a recovered, auditable web and Electron application.
 
-Release **[0.34.0 is published](https://github.com/Protonmatter/earth-radio/releases/tag/v0.34.0)** with Today, Continue, place-first station facts and Details stream choice. All six Windows/macOS builds match the qualified source; all thirteen draft and anonymous public downloads passed full size/SHA-256 verification. The scheduled directory now preserves five qualified programs per curated city before the global cutoff, verified through both public formats and the actual desktop loopback reader. See the [release record and qualification limits](docs/RELEASE-0.34.0.md). Earlier releases and original account/sync identities are preserved.
+Release **[0.34.1 is published](https://github.com/Protonmatter/earth-radio/releases/tag/v0.34.1)** with reliable search-palette typing, Today, Continue and place-first station facts. All six Windows/macOS builds match qualified production source; all thirteen draft and anonymous public downloads passed complete size/SHA-256 checks. See the [release record and qualification limits](docs/RELEASE-0.34.1.md). Earlier releases and original account/sync identities are preserved.
 
 Website and downloads: **https://earthradio.stream/**. Radio app: **https://app.earthradio.stream/**. The earlier **https://earth-radio.pages.dev/** app remains available for existing shortcuts and unsynced local collections. Public repository: **https://github.com/Protonmatter/earth-radio**.
 
-The published web/desktop baseline is **0.34.0**. A narrow **0.34.1** search-focus
-patch is under qualification after strict final-main checks exposed a deferred
-focus race and a missing durable-write wait in a test. See its
-[qualification record](docs/QA-0.34.1.md); prior releases remain immutable.
-Today, Continue,
-place/genre/local-time facts and Details-based stream choice retain the original
-player, collections and accounts. The [qualification record](docs/QA-0.34.0.md)
-distinguishes source, hosted, served, native and physical-device evidence.
-The [release receipt](docs/provenance/release-0.34.0.json) records the immutable
-source, tag, artifacts, checks and public-download readback.
+The published web/desktop baseline is **0.34.1**. The search palette preserves
+typing and composition while its internal query bridge remains intact. Today,
+Continue, place/genre/local-time facts and Details stream choice preserve player,
+collections and accounts. The [qualification record](docs/QA-0.34.1.md) distinguishes
+source, hosted, served, native and physical-device evidence. The
+[release receipt](docs/provenance/release-0.34.1.json) records immutable source, tag,
+artifacts, checks and complete public-download readback.
 
 See the [installation guide](docs/INSTALLATION.md) for Windows ARM64/x64, macOS Apple Silicon/Intel, and Safari Home Screen installation on iPhone/iPad. Get desktop downloads, checksums and build provenance from the [latest complete release](https://github.com/Protonmatter/earth-radio/releases/latest). Windows uses the accepted local signer; macOS builds are explicitly labeled unnotarized.
 

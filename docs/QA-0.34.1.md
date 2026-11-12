@@ -40,8 +40,18 @@ counts and eleven city minima are unchanged. Local qualification passed:
   cache creation alone does not establish a completed installation.
 - Thirty-five focused worker/model checks passed. No original profile was used.
 
-Independent review, hosted/served and final-source desktop package/download
-gates are pending. Local browser/native fixtures do not establish those results.
+Independent review found no P0–P3 defect and independently passed 56 unit checks,
+60 browser cases without retries and 448 canonical Git hashes. PR #51 reviewed head
+8bf7c4d and merged main 8b6875a each passed all ten checks and 341 hosted browser
+cases with zero flaky results. Actual preview/production artifacts and headers,
+10/15 routes, four app contexts, eight focus cases, 16 website contexts, offline and muted live playback
+passed. Account-control visibility is separate from fresh provider sign-in.
+
+All six final-source desktop packages and 13 draft/anonymous public downloads are
+qualified and published. Both Windows guests retained favorites and 61%/37% volume
+after two normal quit cycles without autoplay. The current website/guide update
+has its own CI and served acceptance gate, pending at this revision. See the
+[immutable release record](RELEASE-0.34.1.md) and [public receipt](provenance/release-0.34.1.json).
 
 The change adds no dependency, provider, schema, credential, telemetry, paid
 resource or new directory request. Ranking, station identities, audio intent,

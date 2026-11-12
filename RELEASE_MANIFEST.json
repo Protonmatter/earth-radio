@@ -55,8 +55,8 @@
     },
     {
       "path": "docs/BUILD_STATE.md",
-      "bytes": 39670,
-      "sha256": "a81c312604e535bbf5b1baf665f1baf4c5657c9a71cf14cc50af29a1f3e82968"
+      "bytes": 41233,
+      "sha256": "cb8a28e65eccc3c67597c049984b48eca127cabd751c453afb489b242e765707"
     },
     {
       "path": "docs/CLOUDFLARE_DEPLOYMENT.md",
@@ -100,8 +100,8 @@
     },
     {
       "path": "docs/INSTALLATION.md",
-      "bytes": 10741,
-      "sha256": "ce9fffdfafa0c483e9c43ecc94c3d0601d019d14fec0b3e7243881e930b6bb46"
+      "bytes": 10807,
+      "sha256": "8aed11f21d6754b27acbdba9c34653b548a3cd0eefdab55cbd43d2b2509a6c20"
     },
     {
       "path": "docs/LIVE_METADATA.md",
@@ -179,6 +179,11 @@
       "sha256": "1c00dc2113f46610ba0d50c71ab8b542d8bf8ec7a9efe5088ff78bafcd94f45c"
     },
     {
+      "path": "docs/provenance/release-0.34.1.json",
+      "bytes": 12116,
+      "sha256": "a96c71c717964064a2c7f79d1c723ff35aadbbf46e1e131a6487f8fce6ab93bb"
+    },
+    {
       "path": "docs/QA-0.33.0.md",
       "bytes": 6973,
       "sha256": "7d51b2cf3818d87645d7c0a143ff83add0dc874f261a2d330397cf9314df4afb"
@@ -195,8 +200,8 @@
     },
     {
       "path": "docs/QA-0.34.1.md",
-      "bytes": 3282,
-      "sha256": "eed9493b34428739ac299f9803dbb6c3a1942a73d62ecba386f24f7514c02e77"
+      "bytes": 4059,
+      "sha256": "c256ba9035ea1ab2cbe3a5cd685987cf8495a0e777a8ceaa172eb4087586b2f3"
     },
     {
       "path": "docs/QA-DIRECTORY-PLACE-MINIMUM.md",
@@ -339,6 +344,11 @@
       "sha256": "cdf6c731de6c1d3f3128dd630158fe7733339225850317aae2f99552db5b22ba"
     },
     {
+      "path": "docs/RELEASE-0.34.1.md",
+      "bytes": 2985,
+      "sha256": "2f2bc4b4b6adde589f9df0353c37bbe927f495d4aaeec7897c75a79d39fa0958"
+    },
+    {
       "path": "docs/RELEASE.md",
       "bytes": 1961,
       "sha256": "e9e57aa12c4cf47827a04ee792ee9646f0ba1b0b118ea999de998faf0b2f78ba"
@@ -421,7 +431,7 @@
     {
       "path": "docs/superpowers/plans/2026-11-12-search-focus-qualification.md",
       "bytes": 2553,
-      "sha256": "222153e61720a88d7a2c6dfa6202d773893b3bda5c87eaa9b7e14de1a4117369"
+      "sha256": "0976365a54fa09176f4ee7e3012911101779525239e27cade711ebb30e15f13e"
     },
     {
       "path": "docs/superpowers/specs/2026-08-21-earth-radio-public-cloudflare-design.md",
@@ -2186,12 +2196,12 @@
     {
       "path": "website/index.html",
       "bytes": 11041,
-      "sha256": "59e1b9739e6e6ceaadb1b5b6ac589f80ee65d3170dafbb8df2576d93367118f9"
+      "sha256": "8c320fa3c662ee840d818e09cfc41a32e3e3e1c44fc3793ea49dc6c2c82b3cc8"
     },
     {
       "path": "website/published-release.js",
       "bytes": 3318,
-      "sha256": "c796f079929ad9aeccd00f21c3bab040def469ec9de7d4e85592a60aa8662414"
+      "sha256": "c32fab3ce1d851b334bac02aef046cba7373af3da50f5b5a942b4aba6a52bc9c"
     },
     {
       "path": "website/release-core.js",

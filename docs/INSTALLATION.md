@@ -1,16 +1,16 @@
-# Install Earth Radio v0.34.0
+# Install Earth Radio v0.34.1
 
 Website and downloads: **https://earthradio.stream/**
 
 Production web app: **https://app.earthradio.stream/**
 
-Desktop downloads: **https://github.com/Protonmatter/earth-radio/releases/tag/v0.34.0**
+Desktop downloads: **https://github.com/Protonmatter/earth-radio/releases/tag/v0.34.1**
 
 Download only the file for your computer, plus `SHA256SUMS.txt`. The release also
 includes `BUILD-PROVENANCE.json`, platform verification receipts and this guide as
 `INSTALL.md`. Older published releases retain their original files and checksums.
 
-Version 0.34.0 uses the approved precision identity for the app, website and native desktop icons. Existing OS icon caches can refresh later than the page; avoid clearing account data as an icon troubleshooting step.
+Version 0.34.1 preserves typed search and composition when the palette opens. It uses the approved precision identity for the app, website and native desktop icons. Existing OS icon caches can refresh later than the page; avoid clearing account data as an icon troubleshooting step.
 
 Today opens with a shared daily place, one-tap Continue when history is available,
 and On air now. Open Search for discovery, Atlas for the map, and Library for
@@ -25,7 +25,7 @@ automatic program skipping.
 A Desktop hint means browser playback may be blocked. Open Details to inspect the
 stream protocol, choose an HTTPS stream or try the desktop app. Declared bitrate is not a measured fidelity result.
 
-The earlier **https://earth-radio.pages.dev/** app and existing Home Screen shortcuts remain available. Browser-local data stays at that origin. Sign in at the new app address for synced data; export unsynced favorites/preferences and songs at the earlier address before switching. See [domain operations](https://github.com/Protonmatter/earth-radio/blob/v0.34.0/docs/DOMAINS.md).
+The earlier **https://earth-radio.pages.dev/** app and existing Home Screen shortcuts remain available. Browser-local data stays at that origin. Sign in at the new app address for synced data; export unsynced favorites/preferences and songs at the earlier address before switching. See [domain operations](https://github.com/Protonmatter/earth-radio/blob/v0.34.1/docs/DOMAINS.md).
 
 ## iPhone (iOS) and iPad (iPadOS)
 
@@ -80,7 +80,7 @@ vary by OS version and Safari layout.
   the dated v0.30.0 checks. This release preserves those settings; current native
   provider tests use synthetic HTTP.
   Other mailbox providers, new outside-team OAuth identities and physical installed
-  iOS/iPadOS account returns remain untested. See [account operations](https://github.com/Protonmatter/earth-radio/blob/v0.34.0/docs/AUTHENTICATION.md).
+  iOS/iPadOS account returns remain untested. See [account operations](https://github.com/Protonmatter/earth-radio/blob/v0.34.1/docs/AUTHENTICATION.md).
 
 ## Finding stations
 
@@ -113,8 +113,8 @@ Open **Settings → System → About → System type** before choosing a downloa
 
 | Windows PC | Installer | Portable |
 | --- | --- | --- |
-| ARM64 / ARM-based processor | `EarthRadio-Setup-0.34.0-arm64.exe` | `EarthRadio-Portable-0.34.0-arm64.exe` |
-| x64 / Intel or AMD processor | `EarthRadio-Setup-0.34.0-x64.exe` | `EarthRadio-Portable-0.34.0-x64.exe` |
+| ARM64 / ARM-based processor | `EarthRadio-Setup-0.34.1-arm64.exe` | `EarthRadio-Portable-0.34.1-arm64.exe` |
+| x64 / Intel or AMD processor | `EarthRadio-Setup-0.34.1-x64.exe` | `EarthRadio-Portable-0.34.1-x64.exe` |
 
 Choose the architecture matching your PC. A native ARM64 build is preferable on
 ARM-based Windows; x64 qualification on an ARM machine uses Windows emulation and
@@ -131,8 +131,8 @@ For a separate portable profile, run from the download folder in PowerShell
 (change `arm64` to `x64` when using that build):
 
 ```powershell
-$radioProfile = Join-Path $env:LOCALAPPDATA 'EarthRadio-Portable-0.34.0'
-& .\EarthRadio-Portable-0.34.0-arm64.exe "--user-data-dir=$radioProfile"
+$radioProfile = Join-Path $env:LOCALAPPDATA 'EarthRadio-Portable-0.34.1'
+& .\EarthRadio-Portable-0.34.1-arm64.exe "--user-data-dir=$radioProfile"
 ```
 
 These builds have local self-signed Authenticode signatures and DigiCert timestamps.
@@ -145,8 +145,8 @@ Choose the DMG matching **Apple menu → About This Mac**:
 
 | Mac | Release file |
 | --- | --- |
-| Apple Silicon (M-series chip) | `EarthRadio-0.34.0-macOS-arm64-unnotarized.dmg` |
-| Intel processor | `EarthRadio-0.34.0-macOS-x64-unnotarized.dmg` |
+| Apple Silicon (M-series chip) | `EarthRadio-0.34.1-macOS-arm64-unnotarized.dmg` |
+| Intel processor | `EarthRadio-0.34.1-macOS-x64-unnotarized.dmg` |
 
 1. Download and verify the appropriate DMG from the release page.
 2. Open the disk image and drag **Earth Radio** into **Applications**.
@@ -162,7 +162,7 @@ available if you do not want to approve an unnotarized desktop app.
 The application declares macOS 12 minimum; native qualification used macOS 15 on
 Apple Silicon and Intel. Native runner checks do not establish physical provider
 consent, audio-device behavior or upgrades on every Mac/OS/profile. Platform receipts
-and the [qualification record](https://github.com/Protonmatter/earth-radio/blob/v0.34.0/docs/QUALIFICATION-0.26.0.md) state the tested scope.
+and the [qualification record](https://github.com/Protonmatter/earth-radio/blob/v0.34.1/docs/QUALIFICATION-0.26.0.md) state the tested scope.
 
 ## Check a download's SHA-256
 
@@ -173,13 +173,13 @@ you do not need to download every platform's installer.
 Windows PowerShell:
 
 ```powershell
-Get-FileHash -LiteralPath .\EarthRadio-Setup-0.34.0-arm64.exe -Algorithm SHA256
+Get-FileHash -LiteralPath .\EarthRadio-Setup-0.34.1-arm64.exe -Algorithm SHA256
 ```
 
 macOS Terminal (replace the filename for Intel):
 
 ```sh
-shasum -a 256 EarthRadio-0.34.0-macOS-arm64-unnotarized.dmg
+shasum -a 256 EarthRadio-0.34.1-macOS-arm64-unnotarized.dmg
 ```
 
 The checksums prove file equality with this release's published values. They do not

@@ -1,0 +1,382 @@
+{
+  "schemaVersion": 1,
+  "version": "0.34.1",
+  "releaseId": 442427866,
+  "url": "https://github.com/Protonmatter/earth-radio/releases/tag/v0.34.1",
+  "publishedAt": "2026-11-12T02:39:11Z",
+  "sourceSha": "8b6875a5fcd299e0af6df8d12cd5fb82af23acd8",
+  "annotatedTagObject": "e52196bd01d05d3bdc24bfd7cdeed9f51a9d7315",
+  "sourceQualification": {
+    "canonicalFiles": 448,
+    "localPassed": 679,
+    "existingWindowsSkips": 3,
+    "hostedHeadAndMainBrowserCases": 341,
+    "flaky": 0,
+    "requiredChecksPerSource": 10,
+    "mainCiRun": 43137528839,
+    "mainSupabaseRun": 43137528895,
+    "renderedScenarios": 42,
+    "independentReview": "No P0-P3 findings; independent56focused unit/60no-retry browser/448canonical Git hashes",
+    "productionFilesPerOrigin": [
+      106,
+      106,
+      19
+    ],
+    "productionRoutes": 15,
+    "actualAuthEnabledUiContexts": 4,
+    "actualFocusUiContextsPerDeployment": 8,
+    "productionOfflineShellPassed": true
+  },
+  "directory": {
+    "generatedAt": "2026-11-12T02:03:15.767Z",
+    "producerSourceSha": "8b6875a5fcd299e0af6df8d12cd5fb82af23acd8",
+    "identities": 10000,
+    "groups": 9419,
+    "currentManifestPayloadsMatch": true,
+    "catalogSha256": "70bff550f0429475ef44315816deb3111777abf4dc97812b581e081acb8c4db3",
+    "legacySha256": "e5a1659805c0856f6924a4865392f0aa17a0d25a94dc12bc56f2f103763caeca",
+    "cityCounts": [
+      {
+        "city": "Berlin",
+        "legacy": 25,
+        "grouped": 25
+      },
+      {
+        "city": "Vienna",
+        "legacy": 20,
+        "grouped": 19
+      },
+      {
+        "city": "New York",
+        "legacy": 24,
+        "grouped": 24
+      },
+      {
+        "city": "Madrid",
+        "legacy": 18,
+        "grouped": 16
+      },
+      {
+        "city": "Istanbul",
+        "legacy": 10,
+        "grouped": 9
+      },
+      {
+        "city": "London",
+        "legacy": 22,
+        "grouped": 22
+      },
+      {
+        "city": "Toronto",
+        "legacy": 7,
+        "grouped": 7
+      },
+      {
+        "city": "Dublin",
+        "legacy": 5,
+        "grouped": 5
+      },
+      {
+        "city": "Jakarta",
+        "legacy": 10,
+        "grouped": 10
+      },
+      {
+        "city": "Chicago",
+        "legacy": 8,
+        "grouped": 8
+      },
+      {
+        "city": "Seoul",
+        "legacy": 5,
+        "grouped": 5
+      }
+    ],
+    "native": {
+      "generatedAt": "2026-11-12T02:03:15.767Z",
+      "stations": 3278,
+      "aggregationRootReads": 1,
+      "cityCounts": [
+        {
+          "city": "Berlin",
+          "aggregation": 13,
+          "actualProxy": 13
+        },
+        {
+          "city": "Vienna",
+          "aggregation": 12,
+          "actualProxy": 12
+        },
+        {
+          "city": "New York",
+          "aggregation": 10,
+          "actualProxy": 10
+        },
+        {
+          "city": "Madrid",
+          "aggregation": 6,
+          "actualProxy": 6
+        },
+        {
+          "city": "Istanbul",
+          "aggregation": 5,
+          "actualProxy": 5
+        },
+        {
+          "city": "London",
+          "aggregation": 12,
+          "actualProxy": 12
+        },
+        {
+          "city": "Toronto",
+          "aggregation": 6,
+          "actualProxy": 6
+        },
+        {
+          "city": "Dublin",
+          "aggregation": 5,
+          "actualProxy": 5
+        },
+        {
+          "city": "Jakarta",
+          "aggregation": 5,
+          "actualProxy": 5
+        },
+        {
+          "city": "Chicago",
+          "aggregation": 5,
+          "actualProxy": 5
+        },
+        {
+          "city": "Seoul",
+          "aggregation": 5,
+          "actualProxy": 5
+        }
+      ]
+    }
+  },
+  "builds": {
+    "allSixSourceMatched": true,
+    "applicationFilesPerPlatform": 128,
+    "windowsPayloadFilesPerPackage": 87,
+    "guest": [
+      {
+        "architecture": "arm64",
+        "savedVolume": 0.61,
+        "normalQuitCycles": 2,
+        "favoriteRetained": true,
+        "noAutoplayOnRestart": true,
+        "snapshotProducerEvidence": "Signed payload/source parity, separate actual same-source native reader/loopback receipt, and observed guest Settings date 1 stations · Snapshot Nov 12, 02:03 AM UTC. No per-launch route credential was extracted."
+      },
+      {
+        "architecture": "x64",
+        "savedVolume": 0.37,
+        "normalQuitCycles": 2,
+        "favoriteRetained": true,
+        "noAutoplayOnRestart": true,
+        "snapshotProducerEvidence": "Signed payload/source parity, separate actual same-source native reader/loopback receipt, and observed guest Settings date 3,111 stations · Snapshot Nov 12, 02:24 AM UTC. No per-launch route credential was extracted."
+      }
+    ]
+  },
+  "downloads": {
+    "checkedAt": "2026-11-12T02:39:45.758Z",
+    "sourceSha": "8b6875a5fcd299e0af6df8d12cd5fb82af23acd8",
+    "releaseId": 442427866,
+    "tag": "v0.34.1",
+    "releaseUrl": "https://github.com/Protonmatter/earth-radio/releases/tag/v0.34.1",
+    "state": "published",
+    "publishedAt": "2026-11-12T02:39:11Z",
+    "verifiedAssets": 13,
+    "previousPublishedAssetsUnchanged": true,
+    "files": [
+      {
+        "name": "EarthRadio-Setup-0.34.1-arm64.exe",
+        "bytes": 105628168,
+        "sha256": "6bf31975e3186f06059e50cfbc32941b326d4b6e9a28ea467a98b9c41c723534",
+        "assetId": 737763883
+      },
+      {
+        "name": "EarthRadio-Portable-0.34.1-arm64.exe",
+        "bytes": 105373784,
+        "sha256": "e8eb2cf34cdfa80fc32bdc77bdfb098e8b6288c6860d67e931fc55d64d367cc7",
+        "assetId": 737763884
+      },
+      {
+        "name": "EarthRadio-Setup-0.34.1-x64.exe",
+        "bytes": 110217024,
+        "sha256": "0b87bf57f881d2beeed2dffeecbd8003be55c69257540f4d7b8e630a456c0f4a",
+        "assetId": 737763877
+      },
+      {
+        "name": "EarthRadio-Portable-0.34.1-x64.exe",
+        "bytes": 109962200,
+        "sha256": "cf243376053ba6300ffc0e3ee0a9eca9de6c29af9e2e0d6252eb2e4967ce895a",
+        "assetId": 737763882
+      },
+      {
+        "name": "WINDOWS-VERIFICATION.json",
+        "bytes": 31351,
+        "sha256": "49c46fe3aae62eab0979f459ed6b03bf4b40aec89797a202290245d97a7d2b58",
+        "assetId": 737763879
+      },
+      {
+        "name": "EarthRadio-0.34.1-macOS-arm64-unnotarized.dmg",
+        "bytes": 131988726,
+        "sha256": "f145fb7585d83bd8b205ce8688e6604f8ff0f912559122bee5b7060d3cf8a458",
+        "assetId": 737763925
+      },
+      {
+        "name": "MACOS-VERIFICATION-arm64.json",
+        "bytes": 1601,
+        "sha256": "a1a2dc65955185c06af114fba97ccb62ba2fc23dd61f8175594727aaa309ad21",
+        "assetId": 737764349
+      },
+      {
+        "name": "EarthRadio-0.34.1-macOS-x64-unnotarized.dmg",
+        "bytes": 137679579,
+        "sha256": "694b3dd1ce34efb97ca0af7b566c781be3b2509ebad975f84e65a5529fe38568",
+        "assetId": 737764399
+      },
+      {
+        "name": "MACOS-VERIFICATION-x64.json",
+        "bytes": 1593,
+        "sha256": "805e3a3b89233b42bb2f6b4ada88bb90c8205bb5be224c1875c8ce3cac7c7a66",
+        "assetId": 737764489
+      },
+      {
+        "name": "PRODUCTION-PARITY.json",
+        "bytes": 46798,
+        "sha256": "04f14c457a61ba47064eb2578936316936790ec7c07f847fe40da1751bf5acf2",
+        "assetId": 737764509
+      },
+      {
+        "name": "INSTALL.md",
+        "bytes": 10807,
+        "sha256": "8aed11f21d6754b27acbdba9c34653b548a3cd0eefdab55cbd43d2b2509a6c20",
+        "assetId": 737764536
+      },
+      {
+        "name": "BUILD-PROVENANCE.json",
+        "bytes": 5842,
+        "sha256": "e92652616dc698d4323566ad1392c805c5c95291d4eb523ef6aacfd4b8df6535",
+        "assetId": 737764554
+      },
+      {
+        "name": "SHA256SUMS.txt",
+        "bytes": 1160,
+        "sha256": "01209272f561cc24666f8301ff850f5fc5ebd85ccf17b838fbf949dcabd64d68",
+        "assetId": 737764560
+      }
+    ],
+    "anonymousPublicDownloads": [
+      {
+        "name": "EarthRadio-Setup-0.34.1-arm64.exe",
+        "bytes": 105628168,
+        "sha256": "6bf31975e3186f06059e50cfbc32941b326d4b6e9a28ea467a98b9c41c723534",
+        "anonymousDownloadVerified": true
+      },
+      {
+        "name": "EarthRadio-Portable-0.34.1-arm64.exe",
+        "bytes": 105373784,
+        "sha256": "e8eb2cf34cdfa80fc32bdc77bdfb098e8b6288c6860d67e931fc55d64d367cc7",
+        "anonymousDownloadVerified": true
+      },
+      {
+        "name": "EarthRadio-Setup-0.34.1-x64.exe",
+        "bytes": 110217024,
+        "sha256": "0b87bf57f881d2beeed2dffeecbd8003be55c69257540f4d7b8e630a456c0f4a",
+        "anonymousDownloadVerified": true
+      },
+      {
+        "name": "EarthRadio-Portable-0.34.1-x64.exe",
+        "bytes": 109962200,
+        "sha256": "cf243376053ba6300ffc0e3ee0a9eca9de6c29af9e2e0d6252eb2e4967ce895a",
+        "anonymousDownloadVerified": true
+      },
+      {
+        "name": "WINDOWS-VERIFICATION.json",
+        "bytes": 31351,
+        "sha256": "49c46fe3aae62eab0979f459ed6b03bf4b40aec89797a202290245d97a7d2b58",
+        "anonymousDownloadVerified": true
+      },
+      {
+        "name": "EarthRadio-0.34.1-macOS-arm64-unnotarized.dmg",
+        "bytes": 131988726,
+        "sha256": "f145fb7585d83bd8b205ce8688e6604f8ff0f912559122bee5b7060d3cf8a458",
+        "anonymousDownloadVerified": true
+      },
+      {
+        "name": "MACOS-VERIFICATION-arm64.json",
+        "bytes": 1601,
+        "sha256": "a1a2dc65955185c06af114fba97ccb62ba2fc23dd61f8175594727aaa309ad21",
+        "anonymousDownloadVerified": true
+      },
+      {
+        "name": "EarthRadio-0.34.1-macOS-x64-unnotarized.dmg",
+        "bytes": 137679579,
+        "sha256": "694b3dd1ce34efb97ca0af7b566c781be3b2509ebad975f84e65a5529fe38568",
+        "anonymousDownloadVerified": true
+      },
+      {
+        "name": "MACOS-VERIFICATION-x64.json",
+        "bytes": 1593,
+        "sha256": "805e3a3b89233b42bb2f6b4ada88bb90c8205bb5be224c1875c8ce3cac7c7a66",
+        "anonymousDownloadVerified": true
+      },
+      {
+        "name": "PRODUCTION-PARITY.json",
+        "bytes": 46798,
+        "sha256": "04f14c457a61ba47064eb2578936316936790ec7c07f847fe40da1751bf5acf2",
+        "anonymousDownloadVerified": true
+      },
+      {
+        "name": "INSTALL.md",
+        "bytes": 10807,
+        "sha256": "8aed11f21d6754b27acbdba9c34653b548a3cd0eefdab55cbd43d2b2509a6c20",
+        "anonymousDownloadVerified": true
+      },
+      {
+        "name": "BUILD-PROVENANCE.json",
+        "bytes": 5842,
+        "sha256": "e92652616dc698d4323566ad1392c805c5c95291d4eb523ef6aacfd4b8df6535",
+        "anonymousDownloadVerified": true
+      },
+      {
+        "name": "SHA256SUMS.txt",
+        "bytes": 1160,
+        "sha256": "01209272f561cc24666f8301ff850f5fc5ebd85ccf17b838fbf949dcabd64d68",
+        "anonymousDownloadVerified": true
+      }
+    ]
+  },
+  "previousReleases": [
+    {
+      "id": 438913852,
+      "tag": "v0.32.1",
+      "publishedAt": "2026-11-09T09:06:04Z",
+      "assets": 11,
+      "assetIdentitiesUnchanged": true
+    },
+    {
+      "id": 441543551,
+      "tag": "v0.32.2",
+      "publishedAt": "2026-11-11T10:36:31Z",
+      "assets": 13,
+      "assetIdentitiesUnchanged": true
+    },
+    {
+      "id": 442317988,
+      "tag": "v0.34.0",
+      "publishedAt": "2026-11-11T23:55:27Z",
+      "assets": 13,
+      "assetIdentitiesUnchanged": true
+    }
+  ],
+  "limits": [
+    "Windows uses the accepted local Authenticode signer; public publisher trust is not provided. macOS is ad-hoc signed and explicitly unnotarized.",
+    "Windows x64 executes here under Windows ARM emulation; installer extraction is not installer/upgrade execution on physical Intel/AMD hardware.",
+    "Native CI and controlled browser tests do not establish fresh provider/signup acceptance, physical iPhone/PWA/Mac installation, physical OS IME behavior, screen-reader acceptance or human audio fidelity.",
+    "Directory city minima count metadata programs, including HTTP streams; station availability and hourly data can change. Guest snapshot observations are separately dated."
+  ],
+  "metadataFollowupScope": "Current website/download links and documentation only; immutable release, app/native/server/functions and package/lockfile unchanged. Follow-up CI/served acceptance remains a separate gate."
+}
