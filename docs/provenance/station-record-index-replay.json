@@ -104,9 +104,15 @@
     },
     {
       "path": "scripts/stage-directory-snapshot.mjs",
-      "bytes": 4767,
-      "sha256": "86cea602025caf3f088338643814fef27977ba19e157d2b8dbd64f8927297726"
+      "bytes": 5969,
+      "sha256": "6812090f144b25bc203ce855b9e290c6fc272df152b0b2fca7c802feb8e69088"
     }
   ],
-  "finalStagingQualifiedAt": "2026-11-12T14:11:03.123Z"
+  "finalStagingQualifiedAt": "2026-11-12T14:23:18.194Z",
+  "containmentCorrection": {
+    "sourceRootLinkRejected": true,
+    "sourceAncestorLinkRejected": true,
+    "targetAncestorLinkRejected": true,
+    "existingOutputNeverAdopted": true
+  }
 }

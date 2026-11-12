@@ -70,8 +70,8 @@
     },
     {
       "path": "docs/DIRECTORY_PUBLICATION.md",
-      "bytes": 8885,
-      "sha256": "486e80ca93be5b1a15746123985711cc710baaeaa0822ba22b27da7ed1a30eee"
+      "bytes": 9208,
+      "sha256": "274742c55bfbb3e6f9f4026e4c67e2f53b70d4085a1c28c6e4b8e4b2f7e96d2c"
     },
     {
       "path": "docs/DISCOVERY_RELIABILITY.md",
@@ -200,8 +200,8 @@
     },
     {
       "path": "docs/provenance/station-record-index-replay.json",
-      "bytes": 2798,
-      "sha256": "1ad95498140f8e946b6b98f7a40a493a19f03e39e98693ed8611e5e649b1f071"
+      "bytes": 2987,
+      "sha256": "d476a49ea5ceda920a2b8072bf476910d6d550e311aa58d75058fee4b67c6d10"
     },
     {
       "path": "docs/provenance/web-0.35.0.json",
@@ -250,8 +250,8 @@
     },
     {
       "path": "docs/QA-STATION_LINK_RECORDS.md",
-      "bytes": 2836,
-      "sha256": "8f2cc1e9f06159e725e060d60815d7677ca465bf744c9f416c6ae485c699d9cd"
+      "bytes": 4503,
+      "sha256": "47728a5523dfcb316f5a4d236a97682659d874dd2f0d01cc2ea0e5585ef2bdf6"
     },
     {
       "path": "docs/QUALIFICATION-0.26.0.md",
@@ -790,8 +790,8 @@
     },
     {
       "path": "scripts/stage-directory-snapshot.mjs",
-      "bytes": 4767,
-      "sha256": "86cea602025caf3f088338643814fef27977ba19e157d2b8dbd64f8927297726"
+      "bytes": 5969,
+      "sha256": "6812090f144b25bc203ce855b9e290c6fc272df152b0b2fca7c802feb8e69088"
     },
     {
       "path": "scripts/stage-site.mjs",
@@ -1830,8 +1830,8 @@
     },
     {
       "path": "tests/directory-publication.test.mjs",
-      "bytes": 7378,
-      "sha256": "5b3a60f462ec4164931c4fa152adeabefd0c7f4ec1b2f663b665384fde6129f1"
+      "bytes": 9197,
+      "sha256": "136bdf6fc4f1a8c2db9f05fc7f49926e63d09f2ec05a3b66fa8d9693215b8bcb"
     },
     {
       "path": "tests/directory-snapshot.test.mjs",

@@ -1,15 +1,33 @@
 import {createHash} from 'node:crypto';
-import {mkdir,readFile,writeFile,lstat} from 'node:fs/promises';
+import {mkdir,readFile,writeFile,lstat,realpath} from 'node:fs/promises';
 import path from 'node:path';
 import {pathToFileURL} from 'node:url';
 import {validateSnapshotManifest} from '../site/assets/snapshot-protocol.js';
 import {STATION_RECORD_MANIFEST_MAX_BYTES,validateStationRecordManifest,validateStationRecordShard} from '../server/station-record-protocol.mjs';
+
+async function assertArtifactBoundary(buildRoot,target,{allowMissing=false}={}){
+  const rootInfo=await lstat(buildRoot);
+  if(!rootInfo.isDirectory()||rootInfo.isSymbolicLink())throw Error('Invalid linked artifact build boundary');
+  const physicalRoot=await realpath(buildRoot),relative=path.relative(buildRoot,target);
+  if(!relative||relative==='..'||relative.startsWith('..'+path.sep)||path.isAbsolute(relative))throw Error('Invalid artifact path boundary');
+  let existing=buildRoot;
+  for(const part of relative.split(path.sep)){
+    const next=path.join(existing,part);let info;
+    try{info=await lstat(next);}catch(error){if(allowMissing&&error.code==='ENOENT')break;throw error;}
+    if(!info.isDirectory()||info.isSymbolicLink())throw Error('Invalid linked artifact path boundary');
+    existing=next;
+  }
+  const physicalExisting=await realpath(existing),expected=path.join(physicalRoot,path.relative(buildRoot,existing));
+  if(path.relative(expected,physicalExisting)!=='')throw Error('Artifact physical path boundary mismatch');
+}
 
 // Validate the entire generation before creating the deployable artifact. Only
 // manifest-referenced, content-addressed files enter the static site.
 export async function stageDirectorySnapshot(input,output){
   const buildRoot=path.resolve('.build')+path.sep,source=path.resolve(input),target=path.resolve(output);
   if(!source.startsWith(buildRoot)||!target.startsWith(buildRoot)||source===target)throw Error('Directory artifacts must use distinct .build paths');
+  await assertArtifactBoundary(path.resolve('.build'),source);
+  await assertArtifactBoundary(path.resolve('.build'),target,{allowMissing:true});
   const manifest=validateSnapshotManifest(JSON.parse(await readFile(path.join(source,'manifest.json'),'utf8')));
   let stationManifest;
   const stationPath=path.join(source,'station-manifest.json');

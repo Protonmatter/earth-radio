@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdtemp,readFile,writeFile,rm,mkdir,unlink,rename,symlink} from 'node:fs/promises';
+import {mkdtemp,readFile,writeFile,rm,mkdir,unlink,rename,symlink,lstat} from 'node:fs/promises';
 import path from 'node:path';
+import {tmpdir} from 'node:os';
 import {createHash} from 'node:crypto';
 import {buildDirectoryGeneration,writeDirectoryGeneration} from '../scripts/build-directory-snapshot.mjs';
 import {stageDirectorySnapshot} from '../scripts/stage-directory-snapshot.mjs';
@@ -57,6 +58,34 @@ test('publication rejects a linked station-record directory before creating outp
   await rename(folder,real);await symlink(real,folder,process.platform==='win32'?'junction':'dir');
   await assert.rejects(stageDirectorySnapshot(input,output),/artifact directory/);
   await assert.rejects(readFile(path.join(output,'manifest.json')),/ENOENT/);
+});
+
+async function externalDirectory(t){
+  const root=await mkdtemp(path.join(tmpdir(),'earth-radio-publication-boundary-'));
+  t.after(()=>rm(root,{recursive:true,force:true}));return root;
+}
+
+test('a linked source root cannot escape the trusted build directory',async t=>{
+  const{input,output}=await fixture(t),outside=await externalDirectory(t),source=path.join(outside,'source');
+  await rename(input,source);await symlink(source,input,process.platform==='win32'?'junction':'dir');
+  await assert.rejects(stageDirectorySnapshot(input,output),/boundary|linked|symbolic/i);
+  await assert.rejects(lstat(output),/ENOENT/);
+});
+
+test('a linked intermediate source ancestor cannot bypass containment',async t=>{
+  const{input,output}=await fixture(t),outside=await externalDirectory(t),source=path.join(outside,'source');
+  await rename(input,source);const link=path.join(path.dirname(input),'source-parent-link');
+  await symlink(outside,link,process.platform==='win32'?'junction':'dir');
+  await assert.rejects(stageDirectorySnapshot(path.join(link,'source'),output),/boundary|linked|symbolic/i);
+  await assert.rejects(lstat(output),/ENOENT/);
+});
+
+test('a linked target ancestor cannot create publication files outside the build directory',async t=>{
+  const{input}=await fixture(t),outside=await externalDirectory(t),link=path.join(path.dirname(input),'target-parent-link');
+  await writeFile(path.join(outside,'keep.txt'),'keep');await symlink(outside,link,process.platform==='win32'?'junction':'dir');
+  await assert.rejects(stageDirectorySnapshot(input,path.join(link,'new-parent','output')),/boundary|linked|symbolic/i);
+  await assert.rejects(lstat(path.join(outside,'new-parent')),/ENOENT/);
+  assert.equal(await readFile(path.join(outside,'keep.txt'),'utf8'),'keep');
 });
 
 test('an existing empty output directory is never adopted or partially populated',async t=>{

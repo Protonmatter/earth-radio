@@ -34,6 +34,31 @@ behavior is byte-identical; hosted CI still exercises its full browser/native
 matrix. Public publication alone does not qualify a new share route, physical
 mobile share sheets, installed apps, provider sign-in or audio fidelity.
 
+## Independent review and containment correction
+
+The complete review of ac85c00 found one P2 and no P0/P1 issues. It independently
+passed all69 focused cases,498 canonical hashes and the retained-data replay,
+including all451 old payloads and52,630 identities. Its filesystem experiments
+demonstrated that a junction at the source root or an output ancestor could escape
+the lexical `.build` boundary. This predates the feature but contradicts the new
+explicit boundary promise, so it is included in the correction rather than deferred.
+
+Three new tests reproduced linked source-root, intermediate-source-ancestor and
+target-ancestor escapes before correction. The stager now inspects the trusted
+build anchor and every existing path component, rejects links/junctions and checks
+physical containment before reading manifests or creating output. It still uses
+exclusive output-directory creation. All three cases pass without creating an
+output or modifying the external marker. The retained publication was staged
+again with current code and its proof hashes refreshed. Corrective full verification
+passes 802 tests with three existing Windows skips and 498 canonical hashes. The
+same reviewer's hash-bound follow-up remains required before push.
+
+Review scope rulings: app Share/path/preview/title behavior remains the explicit
+next PR; hosted CI/publication/readback remain delivery gates; historical ER-11
+acceptance is reconciled from its retained receipt rather than re-audited. Physical
+share sheets, provider sign-in, accessibility and audio fidelity are not established
+by producer tests. These boundaries are retained, not treated as waived requirements.
+
 ## Operations and rollback
 
 The [publication runbook](DIRECTORY_PUBLICATION.md#station-records-for-shared-links)

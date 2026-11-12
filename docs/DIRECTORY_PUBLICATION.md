@@ -68,6 +68,10 @@ Bounds are256 KiB and1,024 records per shard,64 KiB for the separate manifest an
 
 The stager verifies matching generation identity, every hash/length/count, allowed
 public fields and UUID-to-bucket assignment before creating the publication.
+It checks the trusted build anchor, source root and all existing source/output
+ancestors for links or junctions, and verifies physical containment before reading
+manifests. Output directory creation is exclusive; an existing directory is never
+adopted. Run in a controlled checkout without concurrent filesystem mutations.
 Malformed optional data fails the build; its absence permits older artifacts.
 Station payloads count toward the existing128 MiB aggregate payload guard. No
 limit is increased automatically. `report.json.stationRecords` reports counts,
