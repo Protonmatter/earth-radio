@@ -11,6 +11,7 @@ import {requestPublic} from '../server/net-guard.mjs';
 import {selectDirectoryPlaces} from './directory-place-selection.mjs';
 import {CURATED_PLACES} from '../site/assets/curated-places.js';
 import {cityProgramChoices} from '../site/assets/today-core.js';
+import {buildStationRecordIndex} from './build-station-record-index.mjs';
 
 export function buildDirectoryGeneration(input,{generatedAt=new Date().toISOString(),producerSourceSha,producerVersion='0.32.0',servers=[],minimumRecords=1000,minimumCountries=20,globalLimit=10000,countryLimit=1000,minimumCityPrograms=5}={}){
   if(!Number.isInteger(globalLimit)||globalLimit<1||globalLimit>10000||!Number.isInteger(countryLimit)||countryLimit<1||countryLimit>1000)throw Error('Invalid snapshot limits');
@@ -41,7 +42,9 @@ export function buildDirectoryGeneration(input,{generatedAt=new Date().toISOStri
     files:{...primary,countries:put(countries,countries.length),servers:put(safeServers,safeServers.length),emptyCatalog:put({schemaVersion:2,groups:[]},0),emptyLegacy:put([],0)},byCountry};
   validateSnapshotManifest(manifest,{now:Date.parse(generatedAt)});
   if(Buffer.byteLength(JSON.stringify(manifest))>128*1024)throw Error('Snapshot manifest exceeds byte budget');
-  return{manifest,files,report:{...normalized.stats,placeSelection,logicalStations:manifest.totals.stations,streams:manifest.totals.streams,files:files.size,legacyBytes:primary.legacy.bytes,catalogBytes:primary.catalog.bytes}};
+  const index=buildStationRecordIndex(all,{generatedAt,producerSourceSha,producerVersion});
+  for(const[name,bytes]of index.files)files.set(name,bytes);
+  return{manifest,stationManifest:index.manifest,files,report:{...normalized.stats,placeSelection,logicalStations:manifest.totals.stations,streams:manifest.totals.streams,files:files.size,legacyBytes:primary.legacy.bytes,catalogBytes:primary.catalog.bytes,stationRecords:{identities:all.length,shards:256,uniqueFiles:index.files.size,bytes:[...index.files.values()].reduce((sum,bytes)=>sum+bytes.length,0),maxShardBytes:Math.max(...index.manifest.shards.map(item=>item.bytes)),maxShardRecords:Math.max(...index.manifest.shards.map(item=>item.records))}}};
 }
 
 export async function fetchDirectoryForPublication({timeoutMs=120000,requestImpl=requestPublic}={}){
@@ -85,8 +88,10 @@ export async function writeDirectoryGeneration(generation,output){
   const root=path.resolve(output),workspace=path.resolve('.build');
   if(!root.startsWith(workspace+path.sep))throw Error('Snapshot output must be inside .build');
   await mkdir(path.join(root,'snapshots'),{recursive:true});
+  await mkdir(path.join(root,'station-records'),{recursive:true});
   for(const[name,bytes]of generation.files)await writeFile(path.join(root,name),bytes,{flag:'wx'});
   await writeFile(path.join(root,'manifest.json'),JSON.stringify(generation.manifest,null,2)+'\n',{flag:'wx'});
+  await writeFile(path.join(root,'station-manifest.json'),JSON.stringify(generation.stationManifest)+'\n',{flag:'wx'});
   await writeFile(path.join(root,'report.json'),JSON.stringify(generation.report,null,2)+'\n',{flag:'wx'});
 }
 

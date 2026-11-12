@@ -157,7 +157,7 @@ synthetic policy fixture is ignored and is not part of the real suite or release
 Final canonical verification, policy-delta review and clean hosted acceptance
 remain required; green badges with a flaky log are never sufficient.
 
-Remaining gates:
+Historical pre-delivery gates (superseded by final acceptance below):
 
 - Canonical index/commit blob verification.
 - One fresh source review; every finding and declined scope ruled on explicitly.
@@ -169,6 +169,46 @@ callback invocation is synthetic OS input. This does not establish new live
 provider sign-in, original-profile upgrade, physical installation, OS media-key/
 lock-screen behavior, assistive-technology certification or audible fidelity.
 Accepted local Windows signing and unnotarized Mac distribution remain unchanged.
+
+## Final delivery addendum
+
+ER-11 was accepted at13:37:02 UTC on November12,2026. PR#54 head
+`2c5d4cf59ec1a79af96e26be820d283223af61e2` merged as
+`80e3ee014bae96dbb13b318cb1c82fb147d3af3d`; their tree
+`beb4996a7a61da0d0f885e328a2985b23fd562b5` is identical. The public-safe
+[acceptance receipt](provenance/web-0.36.0.json) records exact checks and boundaries.
+
+- Final local verification:784passed, three existing Windows skips and490
+  canonical hashes. Local, final-head and final-main browser campaigns each passed
+  all422cases with no failures, retries, flaky cases or skips. All ten required
+  head/main checks passed. CI now fails flaky outcomes while retaining diagnostics.
+- WindowsARM local plus Windowsx64/macOSARM/macOSIntel CI qualified native
+  sandbox/IPC/PKCE/encrypted restart/sync/logout/normal quit and media controls.
+  Actual Linux Chromium and WebKit accepted all five native action registrations.
+  The42-context rendered matrix and real v79→v80 offline/privacy-retention upgrade
+  are bound to identical product source. Both Mac candidates qualified; no new
+  desktop release was published.
+- Production app and legacy origins each matched116files; the website matched19,
+  including bytes/cache/security headers. Fifteen routes, four Chrome/WebKit
+  mobile/desktop journeys, search, Passport import/off/on/clear, visible provider
+  controls, muted live Classic Vinyl playback and owned Stop passed. Offline reload
+  passed; the three-cycle/nine-check canary was healthy (51–205ms).
+- Scheduled directory run43226625171 succeeded from accepted main. Both actual
+  representations converged to generation13:22:34.584Z and their public descriptor
+  hashes:10,000identities/9,430logical stations/9,983streams. All eleven city
+  minimums passed. One ordinary stale legacy response and its refresh are retained;
+  no purge or controlled recovery was used for this release.
+- Root main was fast-forwarded cleanly; retained stash/worktrees and prior desktop
+  assets were preserved. Spaces sequence56/309blocks has the accepted evidence,
+  with unrelated block hashes/order verified. No account/provider/SMTP/vault or
+  hosted schema change, new dependency or paid resource was introduced.
+
+The earlier observer failure, local startup timeout and config transport flake
+remain historical failed campaigns; none was relabeled clean. Public Windows
+trust, Apple notarization, physical devices/OS media surfaces, fresh external
+provider sign-in and audible fidelity were not established by these checks.
+Published desktop remains0.34.1. Next: ER-09 sharing, ER-10 installation, phase-four
+desktop publication and phase-five data/performance/atlas/SEO.
 
 ## Previous delivery and rollback
 

@@ -26,7 +26,7 @@ jobs:
         with:
           node-version-file: .node-version
       - name: Test producer and integrity guards
-        run: node --test tests/directory-place-selection.test.mjs tests/station-variants.test.mjs tests/directory-normalize.test.mjs tests/directory-generation.test.mjs tests/directory-producer.test.mjs tests/directory-publication.test.mjs
+        run: node --test tests/station-record-index.test.mjs tests/directory-place-selection.test.mjs tests/station-variants.test.mjs tests/directory-normalize.test.mjs tests/directory-generation.test.mjs tests/directory-producer.test.mjs tests/directory-publication.test.mjs
       - name: Generate and validate complete snapshot
         run: |
           node scripts/build-directory-snapshot.mjs .build/directory-generation

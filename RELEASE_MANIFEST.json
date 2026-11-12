@@ -10,8 +10,8 @@
     },
     {
       "path": ".github/workflows/directory-snapshot.yml",
-      "bytes": 1767,
-      "sha256": "021d483b442388d023b968727b1493dfb7cf7fd94fe2f36f8dcecba9ed2383db"
+      "bytes": 1803,
+      "sha256": "e94f5e33d93a88349044a0411a62b68f7816e8b0fcc982539cd7636e1b92f67e"
     },
     {
       "path": ".github/workflows/macos-release.yml",
@@ -70,8 +70,8 @@
     },
     {
       "path": "docs/DIRECTORY_PUBLICATION.md",
-      "bytes": 7125,
-      "sha256": "f1e39bb8374a3dafee5f1641b04a2f0b0f49ab24716a7db6ff7b685cdf14421e"
+      "bytes": 9428,
+      "sha256": "715415cd065e79eedf2b034b4a7cbdfbc3a6155478053764c86b6085bda3b896"
     },
     {
       "path": "docs/DISCOVERY_RELIABILITY.md",
@@ -199,9 +199,19 @@
       "sha256": "a96c71c717964064a2c7f79d1c723ff35aadbbf46e1e131a6487f8fce6ab93bb"
     },
     {
+      "path": "docs/provenance/station-record-index-replay.json",
+      "bytes": 3115,
+      "sha256": "af65064e133f8c6d6acf7e6315779aec67f639087ff9f30724e08c1e6563d93e"
+    },
+    {
       "path": "docs/provenance/web-0.35.0.json",
       "bytes": 2718,
       "sha256": "fbc6320d59c075d092a99e852b3f8106eb67a432aed1119f5c8a088db6c77847"
+    },
+    {
+      "path": "docs/provenance/web-0.36.0.json",
+      "bytes": 4206,
+      "sha256": "b85d509c922df2f49b53f187c1c2065103a7ad72dc6d1f092ac1aa4b619476ba"
     },
     {
       "path": "docs/QA-0.33.0.md",
@@ -230,13 +240,18 @@
     },
     {
       "path": "docs/QA-0.36.0.md",
-      "bytes": 11910,
-      "sha256": "feac02f9c06677455b865006cad7de188c66d017412d7e7db3f623ea2595ae92"
+      "bytes": 14634,
+      "sha256": "5839ba6eef674257ef6ea9ab359117117b9cc7f58ea60a4c63f8b6b20696579a"
     },
     {
       "path": "docs/QA-DIRECTORY-PLACE-MINIMUM.md",
       "bytes": 3709,
       "sha256": "4b2e5a106d2d274777044ccc92f0765f63c7858ab19371b56435688c0891681e"
+    },
+    {
+      "path": "docs/QA-STATION_LINK_RECORDS.md",
+      "bytes": 7304,
+      "sha256": "081c197b72fc36661865ba78a155d894d042b17b414b4cb83f3754f1332bf615"
     },
     {
       "path": "docs/QUALIFICATION-0.26.0.md",
@@ -465,13 +480,18 @@
     },
     {
       "path": "docs/superpowers/plans/2026-11-12-media-session.md",
-      "bytes": 2741,
-      "sha256": "ac7ac5e7dd07ea0f93300e23706029de134ee19bbf64e63e7511afce79a7176b"
+      "bytes": 3079,
+      "sha256": "58120f091f3df2dedd0f48603c957e6f0b8a943f3cc038b1af997e5384e28a10"
     },
     {
       "path": "docs/superpowers/plans/2026-11-12-search-focus-qualification.md",
       "bytes": 2553,
       "sha256": "0976365a54fa09176f4ee7e3012911101779525239e27cade711ebb30e15f13e"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-11-12-station-link-records.md",
+      "bytes": 3391,
+      "sha256": "027e696c61cf176017f1511a25cd1791607923bf0432d2f7577b6fe245d8ad0b"
     },
     {
       "path": "docs/superpowers/specs/2026-08-21-earth-radio-public-cloudflare-design.md",
@@ -547,6 +567,11 @@
       "path": "docs/superpowers/specs/2026-11-12-search-focus-qualification.md",
       "bytes": 3145,
       "sha256": "178d2b42befeb6daa090877e10060683b46efdd037c54e1cd60ba9dbf697e6f9"
+    },
+    {
+      "path": "docs/superpowers/specs/2026-11-12-station-sharing-design.md",
+      "bytes": 4748,
+      "sha256": "94df18da6792eb54ad5e67e6b360e5e884e29faa1471c269cdb82934791b1d4b"
     },
     {
       "path": "docs/TODAY.md",
@@ -645,8 +670,8 @@
     },
     {
       "path": "package.json",
-      "bytes": 5732,
-      "sha256": "713fe647675a988e9cc1a1f70f0e6a1b71929db1d21346ae205c202f332c361c"
+      "bytes": 5768,
+      "sha256": "4ad769dd39b71f644aaa4d60a3ff9df0609f5ea24213fc77ef90c19286c3f378"
     },
     {
       "path": "scripts/build-desktop-icon.mjs",
@@ -655,8 +680,8 @@
     },
     {
       "path": "scripts/build-directory-snapshot.mjs",
-      "bytes": 8419,
-      "sha256": "db8592261017bdc61c125f2544adbb9e1844c0380f8072ca1abcd689cecc28d4"
+      "bytes": 9161,
+      "sha256": "6dcea14cb9d32e13262866b78ac16b4428e4e113e679a5b163aa624ee34f9bba"
     },
     {
       "path": "scripts/build-discovery-geography.mjs",
@@ -677,6 +702,11 @@
       "path": "scripts/build-place-data.mjs",
       "bytes": 9721,
       "sha256": "651e1be6993105ae7df8518758f93611013d7b899242c029c602fe26ef2b0eef"
+    },
+    {
+      "path": "scripts/build-station-record-index.mjs",
+      "bytes": 2160,
+      "sha256": "802916d6eb3d7599aba77bacf4dcc9d50576db8e4e7eca30d790517ede49ca31"
     },
     {
       "path": "scripts/build-windows.mjs",
@@ -760,8 +790,8 @@
     },
     {
       "path": "scripts/stage-directory-snapshot.mjs",
-      "bytes": 2783,
-      "sha256": "2da5fd69e7024602eaf6026afa453b9b5906f415ff5907ebc8e12650abb6ac7a"
+      "bytes": 5969,
+      "sha256": "6812090f144b25bc203ce855b9e290c6fc272df152b0b2fca7c802feb8e69088"
     },
     {
       "path": "scripts/stage-site.mjs",
@@ -857,6 +887,11 @@
       "path": "server/shared-cache.mjs",
       "bytes": 1862,
       "sha256": "8635c6a9d014a688958160bbcb1fa0901b5e3e3dea69c614e5b3827e85e600ad"
+    },
+    {
+      "path": "server/station-record-protocol.mjs",
+      "bytes": 4744,
+      "sha256": "fa7fa82b3f7bb13062178d5ec1477c1aedd6cd7f9efe70eaeed343933486b7af"
     },
     {
       "path": "site/_headers",
@@ -1795,8 +1830,8 @@
     },
     {
       "path": "tests/directory-publication.test.mjs",
-      "bytes": 3171,
-      "sha256": "5412bba8d85f573611f68cb92826ed09c9ff61ad33f22a83e7fae326a1d1976a"
+      "bytes": 9430,
+      "sha256": "4fc7d08a5603fed963d6434711882caedc29b924b227d1b1a1048825b9af5e60"
     },
     {
       "path": "tests/directory-snapshot.test.mjs",
@@ -2312,6 +2347,11 @@
       "path": "tests/station-location.test.mjs",
       "bytes": 1744,
       "sha256": "e5c998ba627991359a09b2ca4cd3d9f55a95d5eeb9ede89aac534011bad9c505"
+    },
+    {
+      "path": "tests/station-record-index.test.mjs",
+      "bytes": 8199,
+      "sha256": "511d1254dcaac4bab799cb41429b346021005427effc34d884597c4ea754417f"
     },
     {
       "path": "tests/station-variants.test.mjs",
