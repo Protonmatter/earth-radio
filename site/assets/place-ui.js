@@ -1,7 +1,7 @@
 // Facts rendering only. Never selects, plays, persists or calls a provider.
-import {stationFacts} from './place-copy.js?v=0.34.0';
-import {streamIdentity} from './discovery-core.js?v=0.34.0';
-import {getLocale} from '../i18n/index.js?v=0.34.0';
+import {stationFacts} from './place-copy.js?v=0.34.1';
+import {streamIdentity} from './discovery-core.js?v=0.34.1';
+import {getLocale} from '../i18n/index.js?v=0.34.1';
 
 const rows=new WeakMap();
 let player=null,playerKey='',playerTitle='',playerFacts=null;

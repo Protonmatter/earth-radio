@@ -13,10 +13,10 @@
  * maintained catalogs, over a bounded list of known runtime-owned elements.
  */
 
-import { getCurrentSongSnapshot } from './metadata-enrichment.js?v=0.34.0';
-import {refreshPlaceFacts} from './place-ui.js?v=0.34.0';
-import { countryCode, countryWords, matchesCountry } from './search-core.js?v=0.34.0';
-import { countryIndex } from './directory-expansion.js?v=0.34.0';
+import { getCurrentSongSnapshot } from './metadata-enrichment.js?v=0.34.1';
+import {refreshPlaceFacts} from './place-ui.js?v=0.34.1';
+import { countryCode, countryWords, matchesCountry } from './search-core.js?v=0.34.1';
+import { countryIndex } from './directory-expansion.js?v=0.34.1';
 import {
   applyDeclarativeI18n,
   applyDocumentLocale,
@@ -27,7 +27,7 @@ import {
   DEFAULT_LOCALE,
   FONT_PROFILES,
   t
-} from '../i18n/index.js?v=0.34.0';
+} from '../i18n/index.js?v=0.34.1';
 
 export const UI_STORAGE_KEY = 'earthRadio.ui.v1';
 export const DEFAULT_SPLIT = 42;
@@ -1196,6 +1196,9 @@ function bindCountrySearch() {
   const countries = byId('filter-countries');
   if (!engine || !station || !country || !options || !countries) return;
   countrySearchBound = true;
+  // Keep the runtime's value/event bridge, but its deferred focus callback must
+  // never take typing away from the visible station or country control.
+  engine.hidden = true;
 
   const syncCountries = () => {
     const entries = countryFilterEntries();
@@ -1327,7 +1330,7 @@ function bindCountrySearch() {
     stationQuery = byId('er-discovery-query')?.value || '';
     station.value = stationQuery; syncRuntimeSearch();
     const focusCountry = requestedSearchFocus === 'country';
-    requestAnimationFrame(() => requestAnimationFrame(() => byId(focusCountry ? 'er-country-query' : 'er-station-query')?.focus()));
+    byId(focusCountry ? 'er-country-query' : 'er-station-query')?.focus();
     requestedSearchFocus = 'station';
   });
   document.addEventListener('earthradio:discovery-browse', () => {

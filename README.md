@@ -6,7 +6,11 @@ Release **[0.34.0 is published](https://github.com/Protonmatter/earth-radio/rele
 
 Website and downloads: **https://earthradio.stream/**. Radio app: **https://app.earthradio.stream/**. The earlier **https://earth-radio.pages.dev/** app remains available for existing shortcuts and unsynced local collections. Public repository: **https://github.com/Protonmatter/earth-radio**.
 
-The deployed web UI and desktop release are **0.34.0**. Today, Continue,
+The published web/desktop baseline is **0.34.0**. A narrow **0.34.1** search-focus
+patch is under qualification after strict final-main checks exposed a deferred
+focus race and a missing durable-write wait in a test. See its
+[qualification record](docs/QA-0.34.1.md); prior releases remain immutable.
+Today, Continue,
 place/genre/local-time facts and Details-based stream choice retain the original
 player, collections and accounts. The [qualification record](docs/QA-0.34.0.md)
 distinguishes source, hosted, served, native and physical-device evidence.
