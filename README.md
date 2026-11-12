@@ -16,6 +16,11 @@ artifacts, checks and complete public-download readback.
 
 See the [installation guide](docs/INSTALLATION.md) for Windows ARM64/x64, macOS Apple Silicon/Intel, and Safari Home Screen installation on iPhone/iPad. Get desktop downloads, checksums and build provenance from the [latest complete release](https://github.com/Protonmatter/earth-radio/releases/latest). Windows uses the accepted local signer; macOS builds are explicitly labeled unnotarized.
 
+The next local feature is [Listening Passport](docs/PASSPORT.md): countries and
+confirmed cities after a continuous minute, with owner-private history/sync,
+atlas shading and export/import. Its source work and pending database/release
+qualification are documented separately from the published v0.34.1 baseline.
+
 This repository was reconstructed from the installed Earth Radio 0.24.0 application and two user-supplied archives. It is not a byte-for-byte reproduction of the original development repository. The newest runnable installed assets were selected where they differed from older archived source; those decisions are recorded in [docs/PROVENANCE.md](docs/PROVENANCE.md).
 
 ## Local validation

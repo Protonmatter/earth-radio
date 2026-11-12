@@ -261,6 +261,7 @@ export function createPassportStore({ indexedDBImpl = globalThis.indexedDB,
       const expected = token(), snapshot = await load(expected); assertToken(expected);
       return { namespace: expected.namespace, ownerVersion: expected.version, generation: snapshot.decoded?.generation || 0,
         historyEpoch: snapshot.policy.historyEpoch, settingsVersion: snapshot.policy.settingsVersion,
+        historyClearedAt: snapshot.policy.historyClearedAt,
         historyEnabled: snapshot.policy.historyEnabled,
         value: snapshot.policy.historyEnabled ? snapshot.decoded?.value : emptyPassport(snapshot.policy.historyEpoch, snapshot.policy.historyClearedAt),
         canWrite: snapshot.policy.historyEnabled && (!expected.accountId || syncReady(snapshot.state) && syncReady(snapshot.policy.songState)), backupAvailable };

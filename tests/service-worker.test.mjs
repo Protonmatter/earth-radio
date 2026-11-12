@@ -73,7 +73,7 @@ test('the live immutable runtime filename is derived from its final content hash
 
 test('service worker registers even when async startup outlives window load', async () => {
   const source = await readFile(path.join(root, 'src-recovered', 'main.ts'), 'utf8');
-  const bundle = await readFile(path.join(root, 'site', 'assets', 'index-d7add1ac.js'), 'utf8');
+  const bundle = await readFile(path.join(root, 'site', 'assets', 'index-77e2dc91.js'), 'utf8');
   assert.match(source, /document\.readyState === 'complete'/);
   assert.match(bundle, /document\.readyState===`complete`/);
 });

@@ -58,6 +58,22 @@ station records, account data or precise map-area filters. See
 
 ## Rebuild and validation
 
+Listening Passport uses a separate 2,793-byte country identifier index, generated
+from the same pinned country inputs and checked against every existing serialized
+polygon. It preserves the four large modules and their immutable cache URLs.
+`ISO_A2_EH` then `ISO_A2` supply identities; unidentified polygons stay blank and
+postal abbreviations are never used. Passport shades actual country polygons,
+clears on history/account changes and requests no extra map detail. It does not
+represent the listener's physical location. See [Passport](PASSPORT.md) and
+[identifier provenance](provenance/map-country-identifiers.json).
+
+Reproduce that small index from already downloaded, hash-checked source files:
+
+```powershell
+node scripts/build-map-country-identifiers.mjs "--source-dir=C:\path\to\map-source"
+node --test tests/passport-map.test.mjs
+```
+
 Normal web/desktop builds use committed curated assets without upstream downloads.
 To reproduce them from the pinned sources, run from the repository root:
 

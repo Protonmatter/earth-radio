@@ -739,6 +739,7 @@ function applyViewport(state) {
   root.dataset.erDest = state.destination;
   root.dataset.erSaved = state.savedSegment;
   root.dataset.erLibrarySection=librarySection;
+  const passport=byId('er-passport');if(passport)passport.hidden=state.destination!=='you'||librarySection!=='passport';
   const today=byId('er-today');if(today)today.hidden=state.destination!=='today';
   const skip=document.querySelector('.er-skip');if(skip)skip.href=state.destination==='you'?'#er-you':state.destination==='search'&&mode==='mobile'?'#er-station-query':'#er-workspace';
   root.dataset.erCollapsed = state.collapsed || '';
@@ -1680,7 +1681,7 @@ function bindActions() {
     if (dest) {
       event.preventDefault();
       const destination = dest.getAttribute('data-er-dest');
-      if(dest.dataset.erLibrarySection)librarySection=dest.dataset.erLibrarySection==='account'?'account':'music';
+      if(dest.dataset.erLibrarySection)librarySection=['account','passport'].includes(dest.dataset.erLibrarySection)?dest.dataset.erLibrarySection:'music';
       if(dest.dataset.erPrimary==='search'&&loadUiState().collapsed==='list')saveUiState({collapsed:null});
       if (destination === 'you' && !dest.dataset.erLibrarySection&&loadUiState().destination === 'you' && classifyViewport() !== 'mobile') {
         setDestination('listen', true);

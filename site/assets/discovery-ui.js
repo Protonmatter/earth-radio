@@ -10,6 +10,11 @@ import {groupStationVariants,projectVariantResults,expandFavoriteIds,chooseGroup
 import {atlasViewAction} from './map-viewport.js?v=0.34.1';
 import {createPlaybackIntent} from './playback-intent.js?v=0.34.1';
 
+let playbackContext = null;
+// Consumers receive a clone, never the runtime's mutable current station. This
+// preserves explicit coordinate/provenance flags used by the shared place model.
+export function currentPlaybackStation() { return playbackContext?.() || null; }
+
 // A hidden-to-visible resize can leave Leaflet's animated bounds correction
 // running. Its moveend handler can start another correction while stop() fires.
 // Suspend that handler through the public bounds API for this synchronous action,
@@ -40,6 +45,10 @@ export function installDiscovery(adapter) {
   const selections=new Map(),attempts=new Set();
   const playback=createPlaybackIntent({onExpire:station=>adapter.timeout(station)});
   const keyOf=station=>byId.get(station?.stationuuid)?.key||station?.stationuuid;
+  playbackContext = () => {
+    const station = adapter.current();
+    return station?.stationuuid ? { station: structuredClone(station), programKey: keyOf(station) } : null;
+  };
   const player=document.getElementById('player-bar'),failure=document.createElement('div');
   failure.className='er-playback-failure';failure.hidden=true;failure.setAttribute('role','group');
   const retry=document.createElement('button'),similar=document.createElement('button');

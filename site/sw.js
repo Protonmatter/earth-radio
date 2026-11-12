@@ -29,7 +29,7 @@ const SHELL_ASSETS = [
   './branding/earth-radio-maskable-icon-512.png',
   './branding/earth-radio-maskable-icon-1024.png',
   './assets/hls.light-Dr1Fv81C.js',
-  './assets/index-d7add1ac.js',
+  './assets/index-77e2dc91.js',
   './assets/index-CSoL7F-Y.css',
   './assets/storage-guard.js?v=0.34.1',
   './assets/directory-expansion.js?v=0.34.1',
@@ -145,7 +145,7 @@ async function cacheFirst(request) {
 }
 
 function isImmutableAsset(pathname) {
-  return /index-d7add1ac|index-CSoL7F-Y|hls\.light-Dr1Fv81C|map-(?:world|detail|terrain|roads)-[a-f0-9]{8}\.js/.test(pathname);
+  return /index-77e2dc91|index-CSoL7F-Y|hls\.light-Dr1Fv81C|map-(?:world|detail|terrain|roads)-[a-f0-9]{8}\.js/.test(pathname);
 }
 
 self.addEventListener('fetch', event => {

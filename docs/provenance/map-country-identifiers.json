@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "sourceRevision": "v5.1.2",
+  "license": "Public domain",
+  "method": "Exact serialized curateGeometry correspondence (JSON normalizes negative zero); ISO_A2_EH then ISO_A2; unidentified polygons remain blank.",
+  "sources": [
+    {
+      "name": "ne_50m_admin_0_countries",
+      "bytes": 3083490,
+      "sha256": "3e458fc036ad0a66411f2c1e6cac49c5d7bfb81cb1123bc513b22511a2b7fdeb"
+    },
+    {
+      "name": "ne_10m_admin_0_countries",
+      "bytes": 13287234,
+      "sha256": "239eec57ac17f100a11e2536cffc56752c318b50ae765b0918ff7aab4ce8f255"
+    }
+  ],
+  "assets": {
+    "world": {
+      "asset": "map-world-b021d4b5.js",
+      "sha256": "b021d4b516b305427c515128b556ceaea5ac7a4bee37358ca619a5f61171dabc",
+      "features": 242,
+      "codesSha256": "09bd8aaef163043c304ab69acc590ce0312b5721cd9bb2725b351ad5bb2ff477",
+      "geometrySha256": "e84c752c28924e292afc4f2e7781183072cfc9bc4063f4b855383fee447b1c8c"
+    },
+    "detail": {
+      "asset": "map-detail-5d713b76.js",
+      "sha256": "5d713b76949df7b1fb7453c5e85eacdc22d658cd2e00a091f33220f1a1225584",
+      "features": 258,
+      "codesSha256": "c7c8cb5325dce1c48a6dcb16b428f7deafbe591bea24c9b208e270230b5d8a4f",
+      "geometrySha256": "89e45d524c7ce34493b813081ffe5f1011cc294f5cccba336066f3b9ea71abc3"
+    }
+  },
+  "output": {
+    "path": "site/assets/map-country-identifiers.js",
+    "bytes": 2793,
+    "sha256": "909dac21147666219064379315dfbc31c572609cbdc4ad717e69ae45899fa2bd"
+  }
+}

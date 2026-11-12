@@ -2,6 +2,17 @@ import { WORLD_LAND } from './world-land.js?v=0.34.1';
 import { MAP_LABEL_STORAGE, sanitizeMapLabels, layoutMapLabels, intersectsBounds, resolveMapTheme } from './map-core.js?v=0.34.1';
 import { t, normalizeLocale } from '../i18n/index.js?v=0.34.1';
 import {installMapViewport} from './map-viewport.js?v=0.34.1';
+import {MAP_COUNTRY_IDENTIFIERS} from './map-country-identifiers.js?v=0.34.1';
+import {passportMapCountries,subscribePassportMap} from './passport-map.js?v=0.34.1';
+
+export function identifyAtlasCountries(data, kind, asset) {
+  const index = MAP_COUNTRY_IDENTIFIERS[kind];
+  // A future dataset cannot accidentally inherit an older ordinal's identity.
+  if (!index || index.asset !== asset || index.codes.length !== data?.countries?.features?.length) return data;
+  return { ...data, countries: { ...data.countries, features: data.countries.features.map((feature, ordinal) => ({
+    ...feature, properties: { ...feature.properties, countrycode: index.codes[ordinal] }
+  })) } };
+}
 
 // All geography ships with the app. No tile, geocoder or location service is
 // used. The runtime retains ownership of the Leaflet map and radio markers.
@@ -48,8 +59,8 @@ function installTooltipBounds(map) {
 function loadData(kind) {
   if (!dataPromises.has(kind)) {
     const loaders = {
-      world: () => import('./map-world-b021d4b5.js').then(module => module.MAP_WORLD),
-      detail: () => import('./map-detail-5d713b76.js').then(module => module.MAP_DETAIL),
+      world: () => import('./map-world-b021d4b5.js').then(module => identifyAtlasCountries(module.MAP_WORLD,'world','map-world-b021d4b5.js')),
+      detail: () => import('./map-detail-5d713b76.js').then(module => identifyAtlasCountries(module.MAP_DETAIL,'detail','map-detail-5d713b76.js')),
       terrain: () => import('./map-terrain-c2f063b9.js').then(module => module.MAP_TERRAIN),
       roads: () => import('./map-roads-d81fc5ea.js').then(module => module.MAP_ROADS)
     };
@@ -112,8 +123,8 @@ export function createVectorBasemap(L, map, theme = 'dark') {
   installMapViewport(map);
   installTooltipBounds(map);
   const group = L.layerGroup(), palettes = {
-    dark: { water: '#193c39', land: '#34594c', border: '#779785', river: '#699b99', road: '#af956a', region: '#6a8a7c' },
-    light: { water: '#99bcb5', land: '#f0ecdf', border: '#839e8e', river: '#76a49f', road: '#c5a676', region: '#a4af9d' }
+    dark: { water: '#193c39', land: '#34594c', visited: '#657b4e', border: '#779785', river: '#699b99', road: '#af956a', region: '#6a8a7c' },
+    light: { water: '#99bcb5', land: '#f0ecdf', visited: '#d5be83', border: '#839e8e', river: '#76a49f', road: '#c5a676', region: '#a4af9d' }
   };
   let renderedTheme = resolveMapTheme(document.documentElement.dataset.erPalette, theme), palette = palettes[renderedTheme];
   for (const [name, depth] of [['erAtlasLand', 200], ['erAtlasWater', 210], ['erAtlasDetail', 230], ['erAtlasLabels', 350]]) {
@@ -125,6 +136,23 @@ export function createVectorBasemap(L, map, theme = 'dark') {
     style: { className: 'er-vector-land', color: palette.border, fillColor: palette.land, fillOpacity: 1, weight: 0.8 }
   }).addTo(baseLayer);
   let active = false, world = null, detail = null, terrain = null, roads = null, timer = 0, lastView = '', baseMode = 'fallback';
+  let visitedCountries = new Set(passportMapCountries()), countryPolygons = null;
+  function countryStyle(feature) {
+    return { className: 'er-vector-land er-map-country', color: palette.border,
+      fillColor: visitedCountries.has(feature.properties.countrycode) ? palette.visited : palette.land,
+      fillOpacity: 1, weight: map.getZoom() >= 4 ? 0.75 : 0.6 };
+  }
+  function identifyElement(feature, layer) {
+    const element = layer.getElement(); if (!element) return;
+    element.dataset.erCountry = feature.properties.countrycode || '';
+    element.dataset.erPassportVisited = String(visitedCountries.has(feature.properties.countrycode));
+  }
+  function updatePassport(codes = passportMapCountries()) {
+    visitedCountries = new Set(codes);
+    countryPolygons?.setStyle(countryStyle);
+    countryPolygons?.eachLayer(layer => identifyElement(layer.feature, layer));
+    map.getContainer().dataset.erPassportCountries = [...visitedCountries].sort().join(',');
+  }
   const loading = new Set(), errors = new Set(), controller = preferences(map);
   const canvas = L.canvas({ pane: 'erAtlasDetail', padding: 0.2 });
   const notice = document.getElementById('er-map-data-status');
@@ -149,11 +177,12 @@ export function createVectorBasemap(L, map, theme = 'dark') {
   function drawBase() {
     const high = Boolean(detail && map.getZoom() >= 4), mode = high ? 'detail' : world ? 'world' : 'fallback';
     if (mode === baseMode) return;
-    baseMode = mode; baseLayer.clearLayers(); fallback = null;
+    baseMode = mode; baseLayer.clearLayers(); fallback = countryPolygons = null;
     const data = high ? detail : world;
     if (!data) return;
-    L.geoJSON(data.countries, { pane: 'erAtlasLand', interactive: false,
-      style: { className: 'er-vector-land er-map-country', color: palette.border, fillColor: palette.land, fillOpacity: 1, weight: high ? 0.75 : 0.6 }
+    countryPolygons = L.geoJSON(data.countries, { pane: 'erAtlasLand', interactive: false,
+      style: countryStyle,
+      onEachFeature(feature, layer) { layer.on('add', () => identifyElement(feature, layer)); }
     }).addTo(baseLayer);
     map.getContainer().dataset.erMapDetail = mode;
   }
@@ -205,10 +234,13 @@ export function createVectorBasemap(L, map, theme = 'dark') {
     }
     noticeText();
   }
-  let unsubscribe = null;
-  group.on('add', () => { active = true; unsubscribe = controller.subscribe(schedule); map.on('moveend zoomend resize', schedule); render(); });
+  let unsubscribe = null, unsubscribePassport = null;
+  group.on('add', () => {
+    active = true; updatePassport(); unsubscribePassport = subscribePassportMap(updatePassport);
+    unsubscribe = controller.subscribe(schedule); map.on('moveend zoomend resize', schedule); render();
+  });
   group.on('remove', () => {
-    active = false; clearTimeout(timer); timer = 0; unsubscribe?.(); map.off('moveend zoomend resize', schedule);
+    active = false; clearTimeout(timer); timer = 0; unsubscribe?.(); unsubscribePassport?.(); map.off('moveend zoomend resize', schedule);
     if (map.hasLayer(canvas)) map.removeLayer(canvas);
     if (notice) notice.hidden = true;
   });

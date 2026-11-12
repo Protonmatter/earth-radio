@@ -162,8 +162,8 @@ html.er-root .er-atlas-caption > span, html.er-root .er-atlas-caption strong { d
 html.er-root .er-atlas-caption small { color: var(--er2-ink); background: var(--er2-surface); padding: 5px 8px; border-radius: 5px; font-size: 11px; }
 html.er-root #map[data-er-basemap="light"] { background: #99bcb5; }
 html.er-root #map[data-er-basemap="dark"] { background: #193c39; }
-html.er-root #map[data-er-basemap="light"] .er-vector-land { fill: #f0ecdf; stroke: #839e8e; }
-html.er-root #map[data-er-basemap="dark"] .er-vector-land { fill: #34594c; stroke: #779785; }
+html.er-root #map[data-er-basemap="light"] .er-vector-land:not([data-er-passport-visited="true"]) { fill: #f0ecdf; stroke: #839e8e; }
+html.er-root #map[data-er-basemap="dark"] .er-vector-land:not([data-er-passport-visited="true"]) { fill: #34594c; stroke: #779785; }
 html.er-root #map .leaflet-erAtlasLand-pane path:not(.er-vector-land) { opacity: .12; }
 /* Leaflet panes have no intrinsic width. The generic responsive canvas cap
  * would reduce this explicitly sized geographic renderer to zero pixels. */

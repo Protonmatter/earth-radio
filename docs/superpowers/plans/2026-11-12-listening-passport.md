@@ -122,6 +122,17 @@ modify `discovery-ui.js`, `responsive-ui.js/.css`, `vector-atlas.js`, `site/inde
 all six `site/i18n/` catalogs and authoritative runtime plus its reference export/
 import handler. Update `site/privacy.html`, website privacy and `docs/PASSPORT.md`.
 
+Source inspection correction: existing country polygons omit country identifiers.
+Add a compact generated `map-country-identifiers.js` sidecar, its pinned provenance,
+`scripts/build-map-country-identifiers.mjs` and `tests/passport-map.test.mjs`.
+Prove exact serialized correspondence to each existing polygon using pinned source
+inputs; preserve all four large map files/hashes/URLs. `passport-map.js` holds only
+ephemeral view state, avoiding UI/atlas cycles or forced geography loads. Scope the
+two existing listening-room.css land-fill rules so they permit visited fills.
+Add `tests/user-transfer.test.mjs`; the transfer bridge prepares existing sanitized
+records, commits them in one owner-fenced transaction, then updates runtime memory.
+The website privacy build already consumes site/privacy.html; no duplicate page.
+
 Interfaces: `currentPlaybackStation()` from discovery returns a clone
 `{station,programKey}` or null from its installed adapter. New UI uses actual audio
 samples and existing `stationPlace`; persisted observations contain only places,
@@ -129,16 +140,16 @@ days and fences. General transfer wraps legacy schema1 with optionalPassport,
 captures/rechecks owner, accepts old and Passport-only formats, and reports
 partial failure instead of claiming everything imported. No credential fields.
 
-- [ ] RED UI/transfer cases: exact60s progressing silent media earns a place;
+- [x] RED UI/transfer cases: exact60s progressing silent media earns a place;
   selection/hover/like does not; held/invalid saves cannot credit another account;
   history-off explains empty view; Clear removes totals/shading/backups; exports
   include correct own Passport and imports add only explicit positive entries.
-- [ ] Add Passport to Library, wrap section controls safely, provide totals/list/
+- [x] Add Passport to Library, wrap section controls safely, provide totals/list/
   exports/imports/guest-add and appropriate empty/loading/recovery/capacity copy.
   Preserve all existing tabs and UI actions. Add all locales and clear focus rules.
-- [ ] Country shading composes with theme and country polygons, clears on privacy/
+- [x] Country shading composes with theme and country polygons, clears on privacy/
   owner change, and does not force map loading or alter station locations.
-- [ ] Require phone/desktop/Paper/Night/RTL/keyboard and actual media cases GREEN;
+- [x] Require phone/desktop/Paper/Night/RTL/keyboard and actual media cases GREEN;
   preserve search/filter/failover/song/auth regressions. No operating-system IME,
   physical background playback or human fidelity claim from synthetic fixtures.
 

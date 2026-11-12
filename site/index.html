@@ -25,11 +25,12 @@
   <script type="module" src="./assets/pinned-stations.js?v=0.34.1"></script>
   <script type="module" src="./assets/metadata-enrichment.js?v=0.34.1"></script>
   <link rel="stylesheet" href="./assets/metadata-enrichment.css?v=0.34.1" />
-  <script type="module" crossorigin src="./assets/index-d7add1ac.js"></script>
+  <script type="module" crossorigin src="./assets/index-77e2dc91.js"></script>
   <link rel="stylesheet" crossorigin href="./assets/index-CSoL7F-Y.css">
   <link rel="stylesheet" href="./assets/responsive-ui.css?v=0.34.1" />
   <script type="module" src="./assets/responsive-ui.js?v=0.34.1"></script>
   <script type="module" src="./assets/song-library-ui.js?v=0.34.1"></script>
+  <script type="module" src="./assets/passport-ui.js?v=0.34.1"></script>
   <script type="module" src="./assets/atlas-lock.js?v=0.34.1"></script>
   <link rel="stylesheet" href="./assets/ui-refresh.css?v=0.34.1" />
   <link rel="stylesheet" href="./assets/atlas-lock.css?v=0.34.1" />
@@ -159,6 +160,7 @@
         <button type="button" data-er-saved="favorites" data-i18n="saved.favorites">Favorites</button>
         <button type="button" data-er-saved="recent" data-i18n="saved.recent">Recent</button>
         <button type="button" data-er-dest="you" data-er-library-section="music" data-i18n="music.library">Your music</button>
+        <button type="button" data-er-dest="you" data-er-library-section="passport" data-i18n="passport.tab">Passport</button>
         <button type="button" data-er-dest="you" data-er-library-section="account" data-i18n="you.account">Account</button>
       </div>
       <form class="er-discovery" id="er-discovery" role="search" aria-label="Station discovery">
@@ -247,7 +249,9 @@
     <h2 data-i18n="today.library">Library</h2>
     <div class="er-library-tabs" role="group" data-i18n="today.library" data-i18n-attr="aria-label">
       <button type="button" data-er-saved="favorites" data-i18n="saved.favorites">Favorites</button><button type="button" data-er-saved="recent" data-i18n="saved.recent">Recent</button>
-      <button type="button" data-er-dest="you" data-er-library-section="music" data-i18n="music.library">Your music</button><button type="button" data-er-dest="you" data-er-library-section="account" data-i18n="you.account">Account</button>
+      <button type="button" data-er-dest="you" data-er-library-section="music" data-i18n="music.library">Your music</button>
+      <button type="button" data-er-dest="you" data-er-library-section="passport" data-i18n="passport.tab">Passport</button>
+      <button type="button" data-er-dest="you" data-er-library-section="account" data-i18n="you.account">Account</button>
     </div>
     <section class="er-song-library" aria-labelledby="er-song-library-title">
       <div class="er-song-library-heading"><h3 id="er-song-library-title" data-i18n="music.library">Your music</h3><p id="er-song-library-status" role="status"></p></div>
@@ -265,6 +269,28 @@
         <label class="er-song-import"><span data-i18n="music.import">Import songs</span><input type="file" id="er-song-import" accept="application/json,.json" /></label>
       </div>
       <p id="er-song-library-message" class="er-song-library-message" role="status" aria-live="polite"></p>
+    </section>
+    <section id="er-passport" class="er-passport" aria-labelledby="er-passport-title" hidden>
+      <h3 id="er-passport-title" data-i18n="passport.title">Listening passport</h3>
+      <p class="er-passport-intro" data-i18n="passport.help">Listen for one continuous minute to add a place. Only confirmed cities count.</p>
+      <dl class="er-passport-totals">
+        <div><dt data-i18n="passport.countries">Countries</dt><dd id="er-passport-countries">0</dd></div>
+        <div><dt data-i18n="passport.cities">Confirmed cities</dt><dd id="er-passport-cities">0</dd></div>
+      </dl>
+      <p id="er-passport-status"></p>
+      <p id="er-passport-off" hidden data-i18n="passport.off">Listening history is off. Your earlier places stay saved and hidden until you turn it on.</p>
+      <p id="er-passport-empty" data-i18n="passport.empty">Your first place is a minute away. Choose a station and settle in.</p>
+      <ol id="er-passport-list" class="er-passport-list"></ol>
+      <button type="button" id="er-passport-more" hidden data-i18n="passport.more">Show more places</button>
+      <div class="er-passport-tools">
+        <button type="button" id="er-passport-history-settings" data-i18n="passport.historySettings">History settings</button>
+        <button type="button" id="er-passport-export" data-i18n="passport.export">Export passport</button>
+        <label class="er-passport-import"><span data-i18n="passport.import">Import passport</span><input type="file" id="er-passport-import" accept="application/json,.json" /></label>
+        <button type="button" id="er-passport-add-local" hidden data-i18n="passport.addLocal">Add this device's passport</button>
+        <button type="button" id="er-passport-clear" data-i18n="passport.clear">Clear listening history</button>
+      </div>
+      <p class="er-passport-note" data-i18n="passport.privacy">No location tracking. Dates use UTC; long background pauses may not count. Shaded countries mark saved visits.</p>
+      <p id="er-passport-message" role="status"></p>
     </section>
     <div class="er-library-account" id="er-library-account-actions"><p data-i18n="today.accountHelp">Keep your stations and songs together across devices.</p></div>
     <div class="er-you-block" data-er-settings-preference>
