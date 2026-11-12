@@ -6,14 +6,17 @@ import { emptyPassport, recordPassportPlace, exportPassport } from '../site/asse
 const visit = (doc, countrycode) => recordPassportPlace(doc, { countrycode, confidence: 'country' }, 20_000);
 const file = value => { const text = typeof value === 'string' ? value : JSON.stringify(value); return { size: Buffer.byteLength(text), text: async () => text }; };
 function fixture() {
-  let owner = { ready: true, accountId: null, version: 1 }, doc = visit(emptyPassport(), 'US'), enabled = true;
+  let owner = { ready: true, accountId: null, version: 1 }, doc = visit(emptyPassport(), 'US'), enabled = true, settingsVersion = 0;
   const legacy = { schema: 1, favorites: { fixture: { uuid: 'fixture' } }, recent: [], preferences: { volume: 0.4 } };
   const applied = [], prepared = [], writes = [];
   let beforeRead = null, beforeCommit = null, beforeOwnerCheck = null;
   const passport = {
+    captureFence() { return { namespace: owner.accountId ? 'account:' + owner.accountId : 'default', ownerVersion: owner.version,
+      historyEpoch: doc.historyEpoch, historyClearedAt: doc.historyClearedAt, settingsVersion, historyEnabled: enabled }; },
+    async readPolicy() { return this.captureFence(); },
     async read() {
       const snapshot = { namespace: owner.accountId ? 'account:' + owner.accountId : 'default', ownerVersion: owner.version,
-        historyEpoch: doc.historyEpoch, settingsVersion: 0, historyEnabled: enabled, canWrite: enabled,
+        historyEpoch: doc.historyEpoch, historyClearedAt: doc.historyClearedAt, settingsVersion, historyEnabled: enabled, canWrite: enabled,
         value: structuredClone(enabled ? doc : emptyPassport(doc.historyEpoch)) };
       if (beforeRead) await beforeRead(); return snapshot;
     },
@@ -36,9 +39,27 @@ function fixture() {
     }, applyLegacy: records => applied.push(records) });
   return { transfer, passport, legacy, prepared, applied, writes, doc: () => structuredClone(doc),
     setOwner() { owner = { ...owner, accountId: 'fixture-second', version: owner.version + 1 }; },
-    setOff() { enabled = false; }, clear() { doc = emptyPassport(doc.historyEpoch + 1, 1000); },
+    setOff() { enabled = false; settingsVersion++; }, setOn() { enabled = true; settingsVersion++; }, clear() { doc = emptyPassport(doc.historyEpoch + 1, 1000); },
     onRead(fn) { beforeRead = fn; }, onCommit(fn) { beforeCommit = fn; }, onOwnerCheck(fn) { beforeOwnerCheck = fn; } };
 }
+
+for (const boundary of ['clear', 'off-on', 'owner', 'cancel']) test(`pre-picker ticket rejects ${boundary} before preparing either document`, async () => {
+  const h = fixture(), ticket = h.transfer.beginImport();
+  if (boundary === 'clear') h.clear();
+  else if (boundary === 'off-on') { h.setOff(); h.setOn(); }
+  else if (boundary === 'owner') h.setOwner();
+  else h.transfer.cancelImport(ticket);
+  await assert.rejects(h.transfer.importFile(file({ schema: 1, preferences: { volume: 0.1 }, passport: visit(emptyPassport(), 'KR') }), { ticket }),
+    error => error.code === (boundary === 'owner' ? 'ACCOUNT_CHANGED' : 'PASSPORT_POLICY_CHANGED'));
+  assert.equal(h.prepared.length, 0); assert.equal(h.applied.length, 0); assert.equal(h.writes.length, 0);
+});
+
+test('unchanged picker ticket imports once and cannot be replayed or borrowed by another transfer', async () => {
+  const h = fixture(), other = fixture(), ticket = h.transfer.beginImport(), input = file(exportPassport(visit(emptyPassport(), 'KR')));
+  await assert.rejects(other.transfer.importFile(input, { ticket }), error => error.code === 'PASSPORT_POLICY_CHANGED');
+  assert.equal((await h.transfer.importFile(input, { ticket })).passportImported, true);
+  await assert.rejects(h.transfer.importFile(input, { ticket }), error => error.code === 'PASSPORT_POLICY_CHANGED');
+});
 
 test('general export retains schema1 legacy records and includes only the current private Passport', async () => {
   const h = fixture(); h.legacy.unrelatedPrivateField = 'fixture-must-stay-out';

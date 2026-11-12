@@ -75,7 +75,7 @@ test('the live immutable runtime filename is derived from its final content hash
 
 test('service worker registers even when async startup outlives window load', async () => {
   const source = await readFile(path.join(root, 'src-recovered', 'main.ts'), 'utf8');
-  const bundle = await readFile(path.join(root, 'site', 'assets', 'index-9e67ecda.js'), 'utf8');
+  const bundle = await readFile(path.join(root, 'site', 'assets', 'index-fb2362b3.js'), 'utf8');
   assert.match(source, /document\.readyState === 'complete'/);
   assert.match(bundle, /document\.readyState===`complete`/);
 });
@@ -111,7 +111,7 @@ test('deployed pages send HSTS and revalidate the auth overlays', async () => {
 test('service worker precaches the auth, responsive, and i18n shell under a new cache version', async () => {
   const worker = await readFile(path.join(root, 'site', 'sw.js'), 'utf8');
   assert.match(worker, /cache: isImmutableAsset\(asset\) \? 'force-cache' : 'reload'/);
-  assert.match(worker, /earth-radio-shell-v78-listening-passport/);
+  assert.match(worker, /earth-radio-shell-v79-passport-privacy/);
   for (const palette of ['pine', 'obsidian']) {
     for (const suffix of ['.svg', '-16.png', '-32.png']) {
       assert.ok(worker.includes(`branding/earth-radio-favicon-${palette}${suffix}`));

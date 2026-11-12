@@ -23,6 +23,32 @@ async function importSettings(page, value, name = 'earth-radio-fixture.json') {
   await (await chooser).setFiles({ name, mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(value)) });
 }
 
+for (const entry of ['settings', 'passport']) for (const boundary of ['clear', 'off-on']) test(`${entry} chooser opened before ${boundary} cannot import into the new policy`, async ({ page, context }) => {
+  await setupApp(page);
+  const other = await context.newPage(); await setupApp(other);
+  const before = await kv(page, 'prefs');
+  if (entry === 'settings') await page.locator('#settings-toggle').click(); else await openPassport(page);
+  const waiting = page.waitForEvent('filechooser');
+  await page.locator(entry === 'settings' ? '#settings-modal [data-click-id="import-data"]' : '#er-passport-import').click();
+  const chooser = await waiting;
+  await other.evaluate(async boundary => {
+    const version = document.documentElement.dataset.appVersion;
+    const store = (await import('/assets/song-library-store.js?v=' + version)).songLibraryStore();
+    const core = await import('/assets/song-library-core.js?v=' + version);
+    const owner = (await store.read()).ownerVersion;
+    if (boundary === 'clear') await store.mutate(doc => core.clearSongHistory(doc, Date.now()), owner);
+    else { await store.mutate(doc => core.setSongHistoryEnabled(doc, false), owner); await store.mutate(doc => core.setSongHistoryEnabled(doc, true), owner); }
+  }, boundary);
+  const addition = { version: 1, historyEpoch: 0, historyClearedAt: 0, countries: { US: { firstDay: 20_000, lastDay: 20_000 } }, cities: {} };
+  const payload = entry === 'settings' ? { schema: 1, preferences: { volume: 0.11 }, passport: addition }
+    : await page.evaluate(async value => (await import('/assets/passport-core.js?v=' + document.documentElement.dataset.appVersion)).exportPassport(value), addition);
+  await chooser.setFiles({ name: 'pre-policy.json', mimeType: 'application/json', buffer: Buffer.from(typeof payload === 'string' ? payload : JSON.stringify(payload)) });
+  await expect(page.locator(entry === 'settings' ? '.toast' : '#er-passport-message')).toContainText('Listening history changed');
+  expect(await kv(page, 'prefs')).toEqual(before);
+  expect((await passport(page))?.countries || {}).toEqual({});
+  await other.close();
+});
+
 test('actual advancing media earns a place only after a continuous minute following pause; Clear removes the visit', async ({ page }) => {
   test.setTimeout(100_000);
   await setupApp(page);
@@ -210,7 +236,8 @@ test('a damaged Passport preserves legacy export and can be explicitly cleared t
   await page.locator('#er-you [data-er-library-section="passport"]').click();
   await expect(page.locator('#er-passport-countries')).toHaveText('0');
   await expect(page.locator('#er-passport-import')).toBeEnabled();
-  await page.locator('#er-passport-import').setInputFiles({ name: 'known-passport.json', mimeType: 'application/json', buffer: Buffer.from(known) });
+  const choosing = page.waitForEvent('filechooser'); await page.locator('#er-passport-import').click();
+  await (await choosing).setFiles({ name: 'known-passport.json', mimeType: 'application/json', buffer: Buffer.from(known) });
   await expect(page.locator('#er-passport-countries')).toHaveText('1');
   expect((await passport(page)).historyEpoch).toBe(1);
   expect(Object.keys((await passport(page)).countries)).toEqual(['US']);

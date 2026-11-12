@@ -95,6 +95,22 @@ test('Settings palette still drives the existing theme and persists after reload
  await expect(page.locator('html')).toHaveAttribute('data-er-palette','night');await expect(page.locator('#er-today')).toBeVisible();
 });
 
+test('More filters waits for its catalog-owned sidebar to initialize',async({page})=>{
+ await setupToday(page);let release;const pending=new Promise(resolve=>{release=resolve;});
+ await page.route(url=>url.hostname.endsWith('api.radio-browser.info')&&/\/json\/stations\/(?:topclick|search)/.test(url.pathname),async route=>{await pending;await route.fallback();});
+ try{
+  await page.goto('/');await expect(page.locator('#settings-toggle')).toBeEnabled();
+  await page.locator('.er-primary-nav [data-er-primary="search"]').click();
+  await page.locator('#er-discovery details > summary').click();
+  await expect(page.locator('#filters-toggle')).toBeVisible();
+  await expect(page.locator('#filters-toggle')).toBeDisabled();
+  release();await expect(page.locator('#filters-toggle')).toBeEnabled();
+  await page.locator('#filters-toggle').click();await expect(page.locator('#filter-sidebar')).toHaveAttribute('aria-hidden','false');
+  await page.locator('#filter-sidebar [data-close-filters]').first().click();
+  await expect(page.locator('#filters-toggle')).toBeFocused();
+ }finally{release();}
+});
+
 for(const width of [390,1440])test(`Search retains the existing advanced filter surface and focus return at ${width}px`,async({page})=>{
  await page.setViewportSize({width,height:900});
  await setupToday(page);await page.goto('/');await page.locator('.er-primary-nav [data-er-primary="search"]').click();

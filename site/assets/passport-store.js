@@ -14,11 +14,13 @@ const corrupt = () => failure('PASSPORT_CORRUPT', 'The saved Passport needs reco
 const storageError = () => failure('PASSPORT_STORAGE', 'Passport storage could not finish.');
 const classify = error => typeof error?.code === 'string' ? error : storageError();
 const isGeneration = value => Number.isSafeInteger(value) && value >= 1;
+const samePolicy = (a, b) => a.historyEpoch === b.historyEpoch && a.settingsVersion === b.settingsVersion
+  && a.historyEnabled === b.historyEnabled && a.historyClearedAt === b.historyClearedAt;
 
 export function createPassportStore({ indexedDBImpl = globalThis.indexedDB,
   storage = () => { try { return globalThis.localStorage; } catch { return null; } },
   getAccount = getSongLibraryAccount, now = Date.now, channel = null, subscribePolicy = null } = {}) {
-  const listeners = new Set(); let backupAvailable = true, disposed = false;
+  const listeners = new Set(); let backupAvailable = true, disposed = false, policyFence = null;
   const storageObject = () => { try { return typeof storage === 'function' ? storage() : storage; } catch { return null; } };
   const changed = (broadcast = true) => {
     if (disposed) return;
@@ -68,10 +70,19 @@ export function createPassportStore({ indexedDBImpl = globalThis.indexedDB,
     try {
       assertToken(expected);
       return await new Promise((resolve, reject) => {
-        const tx = db.transaction('kv', mode), store = tx.objectStore('kv'); let result, error, settled = false;
+        const tx = db.transaction('kv', mode), store = tx.objectStore('kv'); let result, error, settled = false, observedPolicy;
         const timer = setTimeout(() => abort(storageError()), 8000);
         const abort = reason => { error = classify(reason); try { tx.abort(); } catch { clearTimeout(timer); if (!settled) reject(error); } };
-        tx.oncomplete = () => { settled = true; clearTimeout(timer); resolve(result); };
+        tx.oncomplete = () => {
+          settled = true; clearTimeout(timer);
+          try {
+            assertToken(expected);
+            if (observedPolicy) policyFence = Object.freeze({ namespace: expected.namespace, ownerVersion: expected.version,
+              historyEpoch: observedPolicy.historyEpoch, settingsVersion: observedPolicy.settingsVersion,
+              historyEnabled: observedPolicy.historyEnabled, historyClearedAt: observedPolicy.historyClearedAt });
+            resolve(result);
+          } catch (reason) { reject(reason); }
+        };
         tx.onerror = tx.onabort = () => { settled = true; clearTimeout(timer); reject(error || storageError()); };
         const active = store.get('account:active'); active.onerror = () => abort(storageError());
         active.onsuccess = () => {
@@ -79,7 +90,7 @@ export function createPassportStore({ indexedDBImpl = globalThis.indexedDB,
             assertToken(expected);
             if (namespaceOf(active.result || null) !== expected.namespace) throw failure('ACCOUNT_CHANGED', 'Account changed while using Passport.');
             readPassportHistoryPolicy(store, expected.namespace, policy => {
-              try { assertToken(expected); work(store, policy, value => { result = value; }, abort); } catch (reason) { abort(reason); }
+              try { assertToken(expected); observedPolicy = policy; work(store, policy, value => { result = value; }, abort); } catch (reason) { abort(reason); }
             }, abort);
           } catch (reason) { abort(reason); }
         };
@@ -126,12 +137,35 @@ export function createPassportStore({ indexedDBImpl = globalThis.indexedDB,
     try { const text = storageObject()?.getItem(passportNamespaceKey(namespace) + ':backup'); return Boolean(text && text.length <= 1_048_576 && rawTag(JSON.parse(text)) === rawTag(raw)); }
     catch { return false; }
   }
-  async function publishBackup(expected, envelope, forgetPrior = false) {
-    await transact(expected, 'readwrite', (store, policy, done) => {
+  async function publishBackup(expected, envelope, forgetPrior = false, expectedPolicy = null) {
+    return transact(expected, 'readwrite', (store, policy, done) => {
       const read = store.get(passportNamespaceKey(expected.namespace));
       read.onsuccess = () => {
-        if (rawTag(read.result) === rawTag(envelope) && (envelope.payload === 'null' || envelope.policyEpoch === policy.historyEpoch)) {
+        const matched = rawTag(read.result) === rawTag(envelope) && (!expectedPolicy || samePolicy(policy, expectedPolicy))
+          && (envelope.payload === 'null' || envelope.policyEpoch === policy.historyEpoch);
+        if (matched) {
           backupAvailable = mirrorPassportEnvelope(storageObject(), envelope, forgetPrior);
+        }
+        // Mirror quota is independent of the authoritative primary/policy fence.
+        done(matched);
+      };
+    });
+  }
+  function staleBaseline(state, policy) {
+    let value = state?.value;
+    if (value === undefined && typeof state?.hash === 'string') {
+      try { value = JSON.parse(state.hash); } catch { /* dirty sentinels have no payload */ }
+    }
+    return Number.isSafeInteger(value?.historyEpoch) && value.historyEpoch >= 0 && value.historyEpoch < policy.historyEpoch;
+  }
+  async function reconcileBaseline(expected, snapshot) {
+    await transact(expected, 'readwrite', (store, policy, done) => {
+      const key = passportSyncStateKey(expected.namespace), read = store.get(key);
+      read.onsuccess = () => {
+        if (equal(read.result, snapshot.state) && samePolicy(policy, snapshot.policy) && staleBaseline(read.result, policy)) {
+          if (syncReady(read.result)) store.put({ revision: read.result.revision, hash: 'passport-policy-cleared',
+            value: emptyPassport(policy.historyEpoch, policy.historyClearedAt) }, key);
+          else store.delete(key);
         }
         done(true);
       };
@@ -150,6 +184,9 @@ export function createPassportStore({ indexedDBImpl = globalThis.indexedDB,
   async function load(expected) {
     for (let attempt = 0; attempt < 3; attempt++) {
       const current = await rawSnapshot(expected); let decoded;
+      // Baselines are private recovery copies even when the primary is a valid
+      // deletion tombstone. Reconcile independently without reviving that primary.
+      if (staleBaseline(current.state, current.policy)) { await reconcileBaseline(expected, current); continue; }
       // A known older policy epoch is an explicit history clear, including when
       // an older client did not know it must clear this separate document.
       if (current.raw?.namespace === expected.namespace && Number.isSafeInteger(current.raw.policyEpoch)
@@ -161,7 +198,7 @@ export function createPassportStore({ indexedDBImpl = globalThis.indexedDB,
       if (decoded?.value && decoded.policyEpoch > current.policy.historyEpoch) throw failure('PASSPORT_POLICY_PENDING', 'Wait for listening-history sync before using Passport.');
       const { copy, obsolete } = backups(expected.namespace, current.policy, current.privacyFloor);
       if (decoded) {
-        if (obsolete) await publishBackup(expected, current.raw, true);
+        if (obsolete && !await publishBackup(expected, current.raw, true, current.policy)) continue;
         backupAvailable = currentMirror(current.raw, expected.namespace);
         return { ...current, decoded };
       }
@@ -256,6 +293,19 @@ export function createPassportStore({ indexedDBImpl = globalThis.indexedDB,
     throw failure('PASSPORT_CHANGED', 'Passport changed while saving. Try again.');
   }
   const api = {
+    // No asynchronous work here: native file pickers need the original trusted
+    // click activation on Safari. The ticket is checked against IDB on import.
+    captureFence() {
+      const owner = token();
+      if (!policyFence || policyFence.namespace !== owner.namespace || policyFence.ownerVersion !== owner.version) throw failure('PASSPORT_NOT_READY', 'Wait for listening history to finish loading.');
+      return { ...policyFence };
+    },
+    async readPolicy() {
+      const owner = token();
+      return transact(owner, 'readonly', (_store, policy, done) => done({ namespace: owner.namespace, ownerVersion: owner.version,
+        historyEpoch: policy.historyEpoch, settingsVersion: policy.settingsVersion, historyEnabled: policy.historyEnabled,
+        historyClearedAt: policy.historyClearedAt }));
+    },
     subscribe(listener) { if (disposed) throw failure('PASSPORT_DISPOSED', 'Passport storage has closed.'); listeners.add(listener); return () => listeners.delete(listener); },
     async read() {
       const expected = token(), snapshot = await load(expected); assertToken(expected);

@@ -20,6 +20,11 @@ export async function installPassportHarness(page) {
         event.stopImmediatePropagation();
         const release = () => { replay.add(request); request.dispatchEvent(new Event('success')); };
         if (gate.mode === 'next') { gate.mode = null; gate.pending = release; gate.resolve(); return; }
+        if (gate.mode === 'ordinal') {
+          if (--gate.threshold === 0) { gate.mode = null; gate.pending = release; gate.resolve(); }
+          else release();
+          return;
+        }
         const tx = request.result.transaction('kv', 'readonly'), read = tx.objectStore('kv').get(core.passportNamespaceKey(namespace()));
         tx.oncomplete = () => {
           if ((read.result?.generation || 0) >= gate.threshold) { gate.mode = null; gate.pending = release; gate.resolve(); }
@@ -55,7 +60,7 @@ export async function installPassportHarness(page) {
       return passport.mutate(doc => core.recordPassportPlace(doc, { countrycode: code, confidence: 'country' }, 20_000), expected || await fence());
     }
     async function policy(enabled) { return songs.mutate(doc => songCore.setSongHistoryEnabled(doc, enabled), owner.version); }
-    async function clear() { return songs.mutate(doc => songCore.clearSongHistory(doc, 1000), owner.version); }
+    async function clear(at = 1000) { return songs.mutate(doc => songCore.clearSongHistory(doc, at), owner.version); }
     async function oldClientClear() {
       const key = songCore.songNamespaceKey(namespace()), before = await raw(null, key), floor = await raw(null, key + ':privacy');
       const doc = songCore.clearSongHistory(songCore.decodeSongEnvelope(before, namespace())?.value || songCore.emptySongLibrary(), 2000);
@@ -69,7 +74,7 @@ export async function installPassportHarness(page) {
     }
     function release() { const pending = gate.pending; gate.pending = null; if (!pending) throw Error('No held native callback'); pending(); }
     await songs.read(); await passport.read();
-    window.__passportTest = { core, songCore, songs, passport, createPassportStore, copies, check, rejects, checks, raw, namespace,
+    window.__passportTest = { core, songCore, songs, passport, createPassportStore, normalIdb, copies, check, rejects, checks, raw, namespace,
       fence, record, setOwner, readyBoth, policy, clear, oldClientClear, hold, release,
       pauseOwner() { owner = { ...owner, ready: false, version: owner.version + 1 }; },
       owner: () => ({ ...owner }), setStorageFailure(value) { storageFails = value; },

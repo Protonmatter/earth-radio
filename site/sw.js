@@ -1,4 +1,4 @@
-const CACHE_NAME = 'earth-radio-shell-v78-listening-passport';
+const CACHE_NAME = 'earth-radio-shell-v79-passport-privacy';
 const SHELL_ASSETS = [
   './assets/passport-core.js?v=0.35.0',
   './assets/passport-policy.js?v=0.35.0',
@@ -36,7 +36,7 @@ const SHELL_ASSETS = [
   './branding/earth-radio-maskable-icon-512.png',
   './branding/earth-radio-maskable-icon-1024.png',
   './assets/hls.light-Dr1Fv81C.js',
-  './assets/index-9e67ecda.js',
+  './assets/index-fb2362b3.js',
   './assets/index-CSoL7F-Y.css',
   './assets/storage-guard.js?v=0.35.0',
   './assets/directory-expansion.js?v=0.35.0',
@@ -152,7 +152,7 @@ async function cacheFirst(request) {
 }
 
 function isImmutableAsset(pathname) {
-  return /index-9e67ecda|index-CSoL7F-Y|hls\.light-Dr1Fv81C|map-(?:world|detail|terrain|roads)-[a-f0-9]{8}\.js/.test(pathname);
+  return /index-fb2362b3|index-CSoL7F-Y|hls\.light-Dr1Fv81C|map-(?:world|detail|terrain|roads)-[a-f0-9]{8}\.js/.test(pathname);
 }
 
 self.addEventListener('fetch', event => {

@@ -4,6 +4,103 @@ import { installPassportHarness } from './fixtures/passport-store-harness.mjs';
 
 async function start(page) { await setupApp(page); await installPassportHarness(page); }
 
+for (const boundary of ['clear', 'off', 'off-on']) test(`backup cleanup read rechecks the ${boundary} privacy boundary`, async ({ page }) => {
+  await start(page);
+  const result = await page.evaluate(async boundary => {
+    const h = window.__passportTest;
+    try {
+      await h.clear(); await h.record('US');
+      const obsolete = h.core.encodePassportEnvelope(h.namespace(), 1,
+        h.core.recordPassportPlace(h.core.emptyPassport(), { countrycode: 'KR', confidence: 'country' }, 20_000), 1);
+      h.copies.set(h.key() + ':previous', JSON.stringify(obsolete));
+      const started = h.hold('ordinal', 2), pending = h.passport.read();
+      await started;
+      if (boundary === 'clear') await h.clear(2000);
+      else { await h.policy(false); if (boundary === 'off-on') await h.policy(true); }
+      h.release(); const snapshot = await pending;
+      h.check(snapshot.historyEpoch === (boundary === 'clear' ? 2 : 1), 'read uses the current history epoch');
+      h.check(snapshot.historyEnabled === (boundary !== 'off'), 'read uses the current enabled policy');
+      h.check(snapshot.settingsVersion === (boundary === 'clear' ? 0 : boundary === 'off' ? 1 : 2), 'read uses the current settings fence');
+      h.check(Boolean(snapshot.value?.countries.US) === (boundary === 'off-on'), 'read never discloses cleared or hidden visits');
+      return h.checks;
+    } finally { h.dispose(); }
+  }, boundary);
+  expect(result).toHaveLength(4);
+});
+
+test('old-client clear sanitizes a stale sync baseline behind a valid primary tombstone', async ({ page }) => {
+  await start(page);
+  const result = await page.evaluate(async () => {
+    const h = window.__passportTest;
+    try {
+      await h.setOwner('fixture-alice'); await h.readyBoth(); await h.record('US');
+      const value = (await h.passport.read()).value;
+      await h.passport.writeSyncState('fixture-alice', { revision: 7, hash: JSON.stringify(value), value });
+      await h.passport.writeForAccount('fixture-alice', undefined);
+      const tombstone = await h.raw(null, h.key());
+      await h.oldClientClear();
+      h.check(await h.passport.readForAccount('fixture-alice') === undefined, 'primary remains a whole-document tombstone');
+      const state = await h.passport.readSyncState('fixture-alice');
+      h.check(state.revision === 7 && state.hash === 'passport-policy-cleared', 'baseline keeps revision with a dirty sentinel');
+      h.check(state.value.historyEpoch === 1 && !JSON.stringify(state).includes('US'), 'baseline contains no cleared place plaintext');
+      h.check(JSON.stringify(await h.raw(null, h.key())) === JSON.stringify(tombstone), 'baseline cleanup preserves primary tombstone generation');
+      h.check(h.backups().every(copy => !copy?.value?.countries.US), 'mirrors contain no cleared visits');
+      return h.checks;
+    } finally { h.dispose(); }
+  });
+  expect(result).toHaveLength(5);
+});
+
+for (const mode of ['sync', 'export', 'general-export']) test(`${mode} rechecks a clear while obsolete backup cleanup is held`, async ({ page }) => {
+  await start(page);
+  const result = await page.evaluate(async mode => {
+    const h = window.__passportTest;
+    try {
+      await h.clear(); await h.record('US');
+      const { createUserTransfer } = await import('/assets/user-transfer.js');
+      const transfer = createUserTransfer({ getAccount: h.owner, passport: h.passport, readLegacy: () => ({ schema: 1 }) });
+      h.copies.set(h.key() + ':previous', JSON.stringify(h.core.encodePassportEnvelope(h.namespace(), 1, h.core.emptyPassport(), 1)));
+      const started = h.hold('ordinal', 2);
+      const pending = mode === 'sync' ? h.passport.readForAccount(null) : mode === 'export' ? transfer.exportPassportData() : transfer.exportData();
+      await started; await h.clear(2000); h.release();
+      const output = await pending;
+      const value = mode === 'sync' ? output : mode === 'export' ? JSON.parse(output).value : output.passport;
+      h.check(value.historyEpoch === 2 && Object.keys(value.countries).length === 0, 'async consumer receives only current cleared scope');
+      return h.checks;
+    } finally { h.dispose(); }
+  }, mode);
+  expect(result).toHaveLength(1);
+});
+
+test('legacy import checks the captured policy inside its delayed durable write transaction', async ({ page }) => {
+  await start(page);
+  const result = await page.evaluate(async () => {
+    const h = window.__passportTest;
+    try {
+      const { createUserTransfer } = await import('/assets/user-transfer.js');
+      let began, release, applied = false;
+      const started = new Promise(resolve => { began = resolve; });
+      const transfer = createUserTransfer({ getAccount: h.owner, passport: h.passport,
+        prepareLegacy: () => ({ records: { prefs: { volume: 0.11 } }, report: { preferencesImported: 1 } }),
+        applyLegacy: () => { applied = true; }, indexedDBImpl: { open() {
+          const request = h.normalIdb.open(), replay = new WeakSet();
+          request.addEventListener('success', event => {
+            if (replay.has(request)) return;
+            event.stopImmediatePropagation();
+            release = () => { replay.add(request); request.dispatchEvent(new Event('success')); }; began();
+          }, true); return request;
+        } } });
+      const ticket = transfer.beginImport(), text = JSON.stringify({ schema: 1, preferences: { volume: 0.11 } });
+      const pending = transfer.importFile({ size: text.length, text: async () => text }, { ticket }).then(() => null, error => error.code);
+      await started; await h.clear(); release();
+      h.check(await pending === 'PASSPORT_POLICY_CHANGED', 'write transaction rejects a changed policy after open');
+      h.check(!applied && await h.raw(null, 'prefs') === undefined, 'neither durable legacy data nor renderer mirror changes');
+      return h.checks;
+    } finally { h.dispose(); }
+  });
+  expect(result).toHaveLength(2);
+});
+
 test('Passport real IndexedDB isolates accounts, gates first sync and imports guest data explicitly', async ({ page }) => {
   await start(page);
   const result = await page.evaluate(async () => {

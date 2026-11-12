@@ -783,7 +783,16 @@ function setupHeaderEvents(): void {
   });
 
   importBtn?.addEventListener('click', () => importInput?.click());
-  importInput?.addEventListener('change', event => void handleImportFile((event.target as HTMLInputElement).files?.[0]));
+  importInput?.addEventListener('click', event => {
+    userTransfer.cancelImport(importTicket); importTicket = null;
+    try { importTicket = userTransfer.beginImport(); }
+    catch (error) { event.preventDefault(); showToast(translate((error as any)?.code === 'PASSPORT_POLICY_CHANGED' ? 'passport.historyChanged' : 'transfer.importFailed'), 'error'); }
+  });
+  importInput?.addEventListener('cancel', () => { userTransfer.cancelImport(importTicket); importTicket = null; });
+  importInput?.addEventListener('change', event => {
+    const ticket = importTicket; importTicket = null;
+    void handleImportFile((event.target as HTMLInputElement).files?.[0], ticket);
+  });
 
   emptyStateEl?.addEventListener('click', event => {
     const action = (event.target as HTMLElement).closest('[data-action]')?.getAttribute('data-action');
@@ -798,10 +807,11 @@ function setupHeaderEvents(): void {
   });
 }
 
-async function handleImportFile(file: File | undefined): Promise<void> {
+let importTicket: object | null = null;
+async function handleImportFile(file: File | undefined, ticket: object | null): Promise<void> {
   if (!file) return;
   try {
-    const owner = userTransfer.captureOwner(), result = await userTransfer.importFile(file);
+    const owner = userTransfer.captureOwner(), result = await userTransfer.importFile(file, { ticket });
     userTransfer.assertOwner(owner);
     applyUserPreferencesToControls();
     updateFavoritesCount();
@@ -814,8 +824,9 @@ async function handleImportFile(file: File | undefined): Promise<void> {
       : translate('transfer.passportImported');
     showToast(message, result.partial ? 'error' : undefined); setStatus(message);
   } catch (error) {
-    if ((error as any)?.code !== 'ACCOUNT_CHANGED') showToast(translate('transfer.importFailed'), 'error');
+    if ((error as any)?.code !== 'ACCOUNT_CHANGED') showToast(translate((error as any)?.code === 'PASSPORT_POLICY_CHANGED' ? 'passport.historyChanged' : 'transfer.importFailed'), 'error');
   } finally {
+    userTransfer.cancelImport(ticket);
     if (importInput) importInput.value = '';
   }
 }

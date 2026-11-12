@@ -160,9 +160,17 @@ function start() {
     anchor.href = url; anchor.download = `EarthRadio-Passport-${new Date().toISOString().slice(0, 10)}.json`; anchor.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }, 'exported'));
+  let importTicket = null;
+  byId('er-passport-import').addEventListener('click', event => {
+    transfer.cancelImport(importTicket); importTicket = null;
+    try { importTicket = transfer.beginImport(); }
+    catch (error) { event.preventDefault(); message(errorText(error)); }
+  });
+  byId('er-passport-import').addEventListener('cancel', () => { transfer.cancelImport(importTicket); importTicket = null; });
   byId('er-passport-import').addEventListener('change', event => {
     const file = event.target.files?.[0]; if (!file) return;
-    void perform(() => transfer.importFile(file, { passportOnly: true }), 'imported').finally(() => { event.target.value = ''; });
+    const ticket = importTicket; importTicket = null;
+    void perform(() => transfer.importFile(file, { passportOnly: true, ticket }), 'imported').finally(() => { transfer.cancelImport(ticket); event.target.value = ''; });
   });
   const retry = () => { for (const item of pending.values()) { item.attempts = 0; item.retryAt = 0; } void refresh(); };
   window.addEventListener('focus', retry); window.addEventListener('online', retry);

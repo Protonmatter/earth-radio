@@ -44,8 +44,11 @@ for (const locale of ['en', 'es', 'ar', 'ko', 'zh-Hans', 'zh-Hant']) for (const 
   await page.addInitScript(({ locale, palette }) => localStorage.setItem('earthRadio.ui.v1', JSON.stringify({ locale, localeExplicit: true, palette })), { locale, palette });
   await setupApp(page); await seed(page); await openPassport(page);
   await expect(page.locator('#er-passport-title')).toHaveText(CATALOGS[locale]['passport.title']);
-  await expect(page.locator('#er-passport-countries')).toHaveText(new Intl.NumberFormat(locale).format(2));
-  await expect(page.locator('#er-passport-cities')).toHaveText(new Intl.NumberFormat(locale).format(1));
+  // Node and WebKit may ship different CLDR default numbering systems for ar.
+  // Both representations express the exact count; don't derive browser output
+  // from the runner's independent ICU version or force Latin digits in the UI.
+  await expect(page.locator('#er-passport-countries')).toHaveText(locale === 'ar' ? /^(?:2|٢)$/ : '2');
+  await expect(page.locator('#er-passport-cities')).toHaveText(locale === 'ar' ? /^(?:1|١)$/ : '1');
   await expect(page.locator('#er-passport-list')).toContainText('Berlin');
   await expect(page.locator('#er-passport-list [data-passport-country]')).toHaveCount(2);
   await expect(page.locator('html')).toHaveAttribute('dir', locale === 'ar' ? 'rtl' : 'ltr');

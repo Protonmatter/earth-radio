@@ -41,6 +41,13 @@ complete import. General files are capped at 32 MiB, retaining the existing 8 Mi
 favorites, 1 MiB recents and 64 KiB preferences contracts plus formatted JSON overhead.
 The separate song-file limit does not limit general exports.
 
+Both file choosers capture the current account/history/settings fence before
+opening. A clear, history toggle or account change while the chooser or file read
+is pending invalidates the operation before legacy or Passport data is committed.
+Select the file again under the current policy to continue. Capturing the ticket
+is synchronous so Safari keeps the trusted click activation; subsequent database
+checks, including the legacy write transaction, remain authoritative.
+
 If Passport cannot be read, Settings Export can still save the legacy station
 records after an independent authoritative account check. The file contains
 `passportOmitted:true`, and the interface warns that Passport was not included.

@@ -120,8 +120,8 @@
     },
     {
       "path": "docs/PASSPORT.md",
-      "bytes": 9444,
-      "sha256": "70774182f308d9d20adb8e7e92f3dcb51131bdd1e03ecb27bce61b1d3e941c50"
+      "bytes": 9918,
+      "sha256": "6aa134e9e1711bf477dd9db5ea1dd6af719e743e69145dee08f99ad39bbfc3c8"
     },
     {
       "path": "docs/PLACE_MODEL.md",
@@ -150,8 +150,8 @@
     },
     {
       "path": "docs/provenance/hardening-overlays.json",
-      "bytes": 21524,
-      "sha256": "1e35c1d2da7c909b81dc91b630c776e1135bb43eec50f9c538da23cd55311dd6"
+      "bytes": 22138,
+      "sha256": "d3f2993cf308862a935dfe3735c87c9ecb67a574195b15c2807dccbfbe78068a"
     },
     {
       "path": "docs/provenance/map-country-identifiers.json",
@@ -215,8 +215,8 @@
     },
     {
       "path": "docs/QA-0.35.0.md",
-      "bytes": 6373,
-      "sha256": "c697a9a7e841929b09c89b576ae12498ccf919444e047a455f7800d98fe9ad6b"
+      "bytes": 11778,
+      "sha256": "8508bb42aea109899c334d7119af2938a8876ec32813beadcc72da0af31be1b0"
     },
     {
       "path": "docs/QA-DIRECTORY-PLACE-MINIMUM.md",
@@ -836,7 +836,7 @@
     {
       "path": "site/_headers",
       "bytes": 4152,
-      "sha256": "155c6953f832320510d88bb4c470befc7107a5bb93d2dbd8acf4625deff36100"
+      "sha256": "9c37bb9ba17494ce04015499709da6bdd34e13613aca14a31bcd66f01513126f"
     },
     {
       "path": "site/_redirects",
@@ -959,14 +959,14 @@
       "sha256": "6560373fba977682d3acc4290af72029fb722879a2edce30504f8a93caec069c"
     },
     {
-      "path": "site/assets/index-9e67ecda.js",
-      "bytes": 283082,
-      "sha256": "9e67ecda45fa65f28fc928c2f7d9a73bf3b9ef3ccc02a2e46cce69d73c1f9568"
-    },
-    {
       "path": "site/assets/index-CSoL7F-Y.css",
       "bytes": 43016,
       "sha256": "60f44cedcfa837816c145a1b34cdf1b25c64b5530f84b0867016e6097bb27001"
+    },
+    {
+      "path": "site/assets/index-fb2362b3.js",
+      "bytes": 283770,
+      "sha256": "fb2362b34271402f4d48e52017705450e8109f49eb46fae06c8adb74ca17bc1c"
     },
     {
       "path": "site/assets/listening-room.css",
@@ -1040,13 +1040,13 @@
     },
     {
       "path": "site/assets/passport-store.js",
-      "bytes": 23822,
-      "sha256": "15e7f1ca204bf9fad51d0e0dc74c97171e4ac69958d58b10330f2d0db49f47be"
+      "bytes": 26913,
+      "sha256": "abf3c25f213f6ffeefa0157e428f8e434cdc0cc9b686f4e2fdbe2a75581e6e67"
     },
     {
       "path": "site/assets/passport-ui.js",
-      "bytes": 12265,
-      "sha256": "f4928541377e62be52fda51d8db39619946ecd7a798d70bbc57f0983c7479b3b"
+      "bytes": 12769,
+      "sha256": "f424ff708e4b8ae797333a0fe94c89f4a58ba5bc7977af4d5a3ed9e8a0fdc2d4"
     },
     {
       "path": "site/assets/pinned-stations.js",
@@ -1180,8 +1180,8 @@
     },
     {
       "path": "site/assets/user-transfer.js",
-      "bytes": 9190,
-      "sha256": "a85d73efe56c1c7406178d6473aa541db3487f6af6e4461e9859d5e20dcb833c"
+      "bytes": 11164,
+      "sha256": "79452a0ccafd3a80e030159864fbeb7f1c4ad13baab01abdfed7b559af0b1c90"
     },
     {
       "path": "site/assets/vector-atlas.js",
@@ -1375,8 +1375,8 @@
     },
     {
       "path": "site/index.html",
-      "bytes": 48149,
-      "sha256": "ae0d3671434f72787348af1b514cb777437bd5851f93d6272f5faf6312ac1efb"
+      "bytes": 48158,
+      "sha256": "e22ad60ec714c87371ea58620a22f413c8d85b0e2057c133790a9c7059b26976"
     },
     {
       "path": "site/manifest.webmanifest",
@@ -1405,8 +1405,8 @@
     },
     {
       "path": "site/sw.js",
-      "bytes": 6773,
-      "sha256": "6cf0f8b584f1ef043cb290047aa52c52cbfe193a128e1fc7545ae3cea90b25a5"
+      "bytes": 6771,
+      "sha256": "8fb732ca257322f28a8ce435d412cd47a78a7e7f0b65f5ba2b578ee1b78b5d67"
     },
     {
       "path": "src-recovered/core/config.ts",
@@ -1560,8 +1560,8 @@
     },
     {
       "path": "src-recovered/main.ts",
-      "bytes": 38305,
-      "sha256": "d97269cba8c5c770db037cbe36af44e1bb3558da389aa0cec98f56a62ebc1c2c"
+      "bytes": 39051,
+      "sha256": "9533b968222de8edb630a83770c6bd2147c768bc4d4f6ca6a4aca8ed97afa214"
     },
     {
       "path": "src-recovered/server/metadata-api.mjs",
@@ -1580,8 +1580,8 @@
     },
     {
       "path": "src-recovered/ui/filters.ts",
-      "bytes": 10222,
-      "sha256": "c7d31625c9138542a19a6d6dca2375b04fde9b8429cb96e5a8efb8064c173bd0"
+      "bytes": 10324,
+      "sha256": "a73e1217c4837468d2318e60e780786b514277917197f306d6da505280e2ccd8"
     },
     {
       "path": "src-recovered/ui/icons.ts",
@@ -1805,8 +1805,8 @@
     },
     {
       "path": "tests/e2e/fixtures/passport-store-harness.mjs",
-      "bytes": 6133,
-      "sha256": "72d17647cb2e7cd757ba5ea32d47c5bb097ebed7b22e99b42811ad78e7ed83d8"
+      "bytes": 6344,
+      "sha256": "e68818fd8b8dfebd5a5ba992ea34dff215b1e92348a12587c84ad9e53a440b67"
     },
     {
       "path": "tests/e2e/fixtures/search-focus-schedule.mjs",
@@ -1860,18 +1860,18 @@
     },
     {
       "path": "tests/e2e/passport-storage.spec.mjs",
-      "bytes": 14243,
-      "sha256": "d6e6e45d9747bcda6223a431efab321b4116e3e38ecc2508d06e138dd869c2b3"
+      "bytes": 20155,
+      "sha256": "667a96fd379b67979206187c62240df6e5a693e38957b9499106f82ed1857c98"
     },
     {
       "path": "tests/e2e/passport-ui.spec.mjs",
-      "bytes": 10560,
-      "sha256": "86855f0f8ad4a452978fca7e8cf775f51ff7a98609c71dedddc07bc13f555c7a"
+      "bytes": 10792,
+      "sha256": "f364a23b815d3b7aef15d007a89cb593626e9452612487bb2cfd63031b9bff65"
     },
     {
       "path": "tests/e2e/passport.spec.mjs",
-      "bytes": 15750,
-      "sha256": "3af01cd71cfecbc50f758a14f5c8046db2263aee0dace9d0a8a8b5883492004a"
+      "bytes": 17960,
+      "sha256": "ff3d21c39a500febda7486113788e77a04c80312e320bb811d6791a2bd5ded89"
     },
     {
       "path": "tests/e2e/place-playback.spec.mjs",
@@ -1940,8 +1940,8 @@
     },
     {
       "path": "tests/e2e/today-layout.spec.mjs",
-      "bytes": 14949,
-      "sha256": "25e3739212c95a324c659858232f9ab7fecca07bcd4a117f945386f615a2a616"
+      "bytes": 16048,
+      "sha256": "2af484c89256ed48437fe9859d52c55a7fff7d29089969d676d8729fee5cb273"
     },
     {
       "path": "tests/e2e/ui-state.spec.mjs",
@@ -2016,7 +2016,7 @@
     {
       "path": "tests/live-metadata.test.mjs",
       "bytes": 42675,
-      "sha256": "8af136d33155ca80668177b6099411ed2fead578c641c7c05c982875df0bf3a8"
+      "sha256": "5b454fc98962516430ced817f03b44c64f884a713e61b0643488e224e706b2e7"
     },
     {
       "path": "tests/macos-release.test.mjs",
@@ -2156,7 +2156,7 @@
     {
       "path": "tests/responsive-ui.test.mjs",
       "bytes": 13885,
-      "sha256": "b9e2af994125756b3e8d4b6c400d904b0f6aeb888f597d864ca79e7a63360275"
+      "sha256": "0fb4eb785d01cf596803e52666365fff3a97f9134fb66b3331d2b5c8425bfd6f"
     },
     {
       "path": "tests/search-core.test.mjs",
@@ -2165,8 +2165,8 @@
     },
     {
       "path": "tests/service-worker.test.mjs",
-      "bytes": 14752,
-      "sha256": "c5a0abfef35f9c4b0aaa2d698d61acdf8299b860d1f34705612017d92e076e79"
+      "bytes": 14750,
+      "sha256": "f9defe0c8831b1dc60d41df05dd6ffee93eaf6ccc8eeb785d1be3e4c63e42cf8"
     },
     {
       "path": "tests/smoke-desktop-auth-lifecycle.mjs",
@@ -2191,7 +2191,7 @@
     {
       "path": "tests/smoke-metadata.mjs",
       "bytes": 7009,
-      "sha256": "7f2b668d499478290fcc1257c554533cf3a86543ec1c859dafcbff8c15529676"
+      "sha256": "8332d0acbc4a3a528b68cf574e1fc742a0ff94084147ebefcc6e1ea7a7a201ca"
     },
     {
       "path": "tests/smoke-recovery-import.ps1",
@@ -2245,8 +2245,8 @@
     },
     {
       "path": "tests/user-transfer.test.mjs",
-      "bytes": 9085,
-      "sha256": "0b7239e1fa6b0702ef11a619a42133bbb9ffbac37ff6a6f14f2f52cc78238226"
+      "bytes": 10867,
+      "sha256": "34ebcbad0a81288a8b24b46cb0d19c898dd22792d674f4c72ddf63e89bc491ea"
     },
     {
       "path": "tests/validate-repository.test.mjs",

@@ -5,12 +5,17 @@ Listening Passport. Published desktop downloads remain v0.34.1 until the approve
 Passport → Media Session → sharing → installation sequence completes. No existing
 release, tag, profile, provider, SMTP setting or vault was replaced.
 
-The candidate identity is **0.35.0**, runtime **index-9e67ecda.js**, worker
-**earth-radio-shell-v78-listening-passport**. The release manifest binds the source
+The candidate identity is **0.35.0**, runtime **index-fb2362b3.js**, worker
+**earth-radio-shell-v79-passport-privacy**. The release manifest binds the source
 files; staged/index/committed byte hashes are checked at publication. A local pass
 does not establish hosted CI, database application or served production acceptance.
 
-## Local evidence
+## Local evidence before review correction
+
+The table records head `9bc593c` (v78). It is retained as dated evidence; the
+privacy correction below requires a fresh complete verification and CI run.
+
+## Recorded baseline checks
 
 | Gate | Observed result |
 | --- | --- |
@@ -41,7 +46,7 @@ at epoch 0. This establishes the old-client trigger rather than substituting a n
 client implementation.
 
 The server then switched to this candidate at the same origin. The actual worker
-installed and claimed **v0.35.0/v78**. Before displaying Passport, the new client
+installed and claimed **v0.35.0/v78** in the original head9bc test. Before displaying Passport, the new client
 reconciled the prior clear, verified the primary/privacy floor, removed both old
 mirror copies and sanitized baseline plaintext. Favorite and 43% volume survived;
 the old cache was removed and playback did not start automatically.
@@ -52,6 +57,82 @@ the map. Offline reload, Passport-only file import and another offline reload
 passed with no uncaught error. Large map layers remain outside installation
 precache. This is installed-worker desktop-browser evidence, not physical iPhone
 Home Screen installation or lock-screen audio acceptance.
+
+## Review correction and CI diagnosis
+
+Draft [PR #53](https://github.com/Protonmatter/earth-radio/pull/53) was pushed at
+`9bc593c7c188292cf501aa8f4fa1a49d6ae35bcc`. CI43170148717/Supabase43170148724
+passed both verify platforms, Windows x64/Mac ARM/Mac Intel native tests, both
+Pages checks,45 pgTAP assertions and all3 GoTrue/PKCE/REST/RLS tests. Browser CI
+passed394 and failed2 Arabic WebKit cases: Node's ICU formatted Latin2 while
+WebKit's CLDR formatted Arabic-Indic٢. The product representation was correct.
+The corrected expectation accepts only the exact legitimate locale counts,
+without deriving browser output from Node's independent Intl implementation.
+
+One fresh whole-feature review found3 P2 privacy races and no P0/P1. A single
+correction pass addresses each with real IndexedDB/native chooser regression tests:
+
+- Obsolete-backup cleanup now returns a primary/policy match separately from mirror
+  quota. A declined fence retries the authoritative read before any read/export/sync
+  consumer receives data; valid primary reads still survive mirror quota.
+- Both choosers capture an owner/history/settings ticket synchronously before
+  opening, preserving Safari user activation. One-use factory-local tickets are
+  retired on cancel/finish. The original policy is checked before/after File.text
+  and within the same durable legacy write transaction, before either import part.
+- Sync-baseline reconciliation runs independently of a live primary, including
+  a valid deletion tombstone. It removes older visit/hash plaintext while retaining
+  the CAS revision, dirty sentinel and primary tombstone/generation.
+
+Initial tests reproduced stale reads/off policies, tombstone baseline plaintext,
+and all4 pre-picker clear/off-on imports succeeding. Corrected focused run passed
+65 browser cases and18 transfer unit cases. One clear fixture initially reused the
+same clear timestamp and was corrected to trigger an actual second clear.
+Corrected v79 local acceptance: full verifier738passed/three existing Windows skips,
+complete410browser cases with two workers and zero retries/failures/flaky/skips,
+42rendered contexts and native ARM auth/renderer/encrypted restart all pass.
+Actual v77→v79 and frozen v78→v79 same-origin worker upgrades preserve the favorite
+and43percent volume, sanitize history/recovery/baseline state, remove the old cache,
+and pass offline Passport import plus reload without autoplay/errors. Each exercised
+cache has89entries/4,766,365 response-body bytes. Frozen public replay remains
+identical9400programs/all11city minima. The same reviewer independently confirmed
+all3 original P2 findings resolved, including quota and tombstone controls, and
+found no residual in those paths. The reviewed source hash receipt is retained.
+Fresh exact-head CI/preview, hosted apply and production acceptance remain open.
+
+The reviewer reasonably excluded physical lock-screen/background/audio/IME and
+assistive-technology acceptance, fresh live providers/original-profile upgrades,
+public signing/notarization, hosted apply/served checks, later Media Session/share/
+install/data/performance work and professional linguistic certification. Those
+boundaries are accepted; parent-owned hosted delivery remains required and later
+roadmap work remains active. Existing free signing decisions are preserved.
+
+## Catalog control readiness correction
+
+The first complete corrected-source browser run finished407passed/1failed with
+zero retries. The failure was More filters at390px in WebKit: the trigger was
+enabled before asynchronous catalog initialization assigned the sidebar owner.
+The click therefore called an initialized handler with no sidebar to open.
+A held-directory regression reproduced premature availability in both engines.
+The static button now starts disabled and the existing filter initializer enables
+it only after its sidebar, data, delegates and controls are ready. The recovered
+TypeScript mirrors that single runtime correction; no search/ranking/collection
+semantics changed. Keep the failed full-run log and both RED traces as evidence.
+The final full qualification above includes this correction. The reviewed Passport
+privacy paths retain their bytes apart from the separately audited runtime hunk.
+
+## Qualification workload experiment
+
+The four-worker full run finished408passed/2failed without retries. The20,000+
+catalog case hit its unchanged20-second initial-list assertion (0stations), and a
+WebKit setup hit local `route.fetch: ECONNRESET` for config.js before application
+assertions. The directory fixture responses in the first trace completed in about
+67ms and12ms; no page error was recorded. The earlier two-worker run passed both
+cases (the large catalog took20.7s total). With unchanged code, an isolated
+one-worker run passed all3 relevant engine cases; the complete large-catalog test
+took15.1s and the WebKit filter case3.4s. This supports a qualification-workload/
+local-transport explanation, without proving mobile performance. No assertion,
+timeout, product code or test retry was weakened. Failed logs/traces are retained.
+The final entire two-worker run passed410cases with zero retries.
 
 ## Hosted gates and boundaries
 

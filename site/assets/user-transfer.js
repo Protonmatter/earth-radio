@@ -3,6 +3,7 @@
 import { emptyPassport, normalizePassport, exportPassport, importPassport, addPassportVisits } from './passport-core.js?v=0.35.0';
 import { passportStore } from './passport-store.js?v=0.35.0';
 import { getSongLibraryAccount } from './song-library-store.js?v=0.35.0';
+import { readPassportHistoryPolicy } from './passport-policy.js?v=0.35.0';
 
 // Includes the existing 8 MiB favorite / 1 MiB recent / 64 KiB preference
 // contracts and formatted JSON overhead. The separate song limit is unrelated.
@@ -19,6 +20,7 @@ const bytes = value => new TextEncoder().encode(typeof value === 'string' ? valu
 export function createUserTransfer({ getAccount = getSongLibraryAccount, passport = passportStore(),
   readLegacy = null, prepareLegacy = null, applyLegacy = null, commitLegacy = null, verifyOwner = null,
   indexedDBImpl = globalThis.indexedDB } = {}) {
+  const tickets = new WeakMap();
   function capture() {
     const owner = getAccount();
     if (!owner?.ready || !Number.isSafeInteger(owner.version) || owner.version < 0
@@ -33,7 +35,16 @@ export function createUserTransfer({ getAccount = getSongLibraryAccount, passpor
     assertOwner(owner);
     if (snapshot.ownerVersion !== owner.version || snapshot.namespace !== namespace(owner.accountId)) throw accountChanged();
   }
-  async function commit(records, owner, readonly = false) {
+  function assertPolicy(expected, actual) {
+    if (!expected || expected.historyEpoch !== actual.historyEpoch || expected.settingsVersion !== actual.settingsVersion
+        || expected.historyEnabled !== actual.historyEnabled || expected.historyClearedAt !== actual.historyClearedAt) {
+      throw failure('PASSPORT_POLICY_CHANGED', 'Listening history changed. Select the file again to import it.');
+    }
+  }
+  async function validatePolicy(owner, fence) {
+    const current = await passport.readPolicy(); assertSnapshot(owner, current); assertPolicy(fence, current);
+  }
+  async function commit(records, owner, readonly = false, fence = null) {
     assertOwner(owner);
     if (!readonly && (!plain(records) || Object.keys(records).some(key => !Object.hasOwn(limits, key) || bytes(JSON.stringify(records[key])) > limits[key]))) throw invalid();
     if (!indexedDBImpl) throw failure('TRANSFER_STORAGE', 'Your data could not be saved.');
@@ -59,7 +70,12 @@ export function createUserTransfer({ getAccount = getSongLibraryAccount, passpor
           try {
             assertOwner(owner);
             if (namespace(active.result || null) !== namespace(owner.accountId)) throw accountChanged();
-            if (!readonly) for (const [key, value] of Object.entries(records)) store.put(value, key);
+            if (!readonly) readPassportHistoryPolicy(store, namespace(owner.accountId), policy => {
+              try {
+                assertOwner(owner); assertPolicy(fence, policy);
+                for (const [key, value] of Object.entries(records)) store.put(value, key);
+              } catch (reason) { error = reason; tx.abort(); }
+            }, reason => { error = reason; tx.abort(); });
           } catch (reason) { error = reason; tx.abort(); }
         };
       });
@@ -72,6 +88,11 @@ export function createUserTransfer({ getAccount = getSongLibraryAccount, passpor
   return {
     captureOwner: capture,
     assertOwner,
+    beginImport() {
+      const owner = capture(), fence = passport.captureFence(); assertSnapshot(owner, fence);
+      const ticket = Object.freeze({}); tickets.set(ticket, { owner, fence }); return ticket;
+    },
+    cancelImport(ticket) { if (ticket && typeof ticket === 'object') tickets.delete(ticket); },
     async exportData() {
       const owner = capture();
       if (typeof readLegacy !== 'function') throw invalid();
@@ -96,16 +117,25 @@ export function createUserTransfer({ getAccount = getSongLibraryAccount, passpor
       const owner = capture(), snapshot = await ownedSnapshot(owner);
       return exportPassport(snapshot.value || emptyPassport(snapshot.historyEpoch, snapshot.historyClearedAt));
     },
-    async importFile(file, { passportOnly = false } = {}) {
-      const owner = capture();
+    async importFile(file, { passportOnly = false, ticket } = {}) {
+      let owner, fence;
+      if (ticket !== undefined) {
+        const captured = ticket && typeof ticket === 'object' ? tickets.get(ticket) : null;
+        if (!captured) throw failure('PASSPORT_POLICY_CHANGED', 'Listening history changed. Select the file again to import it.');
+        tickets.delete(ticket); ({ owner, fence } = captured); assertOwner(owner);
+      } else {
+        // Non-UI callers start their operation here. Both real choosers pass a
+        // synchronous pre-picker ticket instead of taking this later fence.
+        owner = capture(); fence = await passport.readPolicy(); assertSnapshot(owner, fence);
+      }
       if (!file || !Number.isSafeInteger(file.size) || file.size < 1 || file.size > USER_TRANSFER_MAX_BYTES || typeof file.text !== 'function') throw invalid();
-      // Capture the policy before reading the file. An explicit clear/off while
-      // the file picker/read is pending must invalidate this import too.
+      await validatePolicy(owner, fence);
       let snapshot, snapshotError;
       try { snapshot = await ownedSnapshot(owner); }
       catch (error) { assertOwner(owner); if (error.code === 'ACCOUNT_CHANGED') throw error; snapshotError = error; }
       assertOwner(owner);
       const text = await file.text(); assertOwner(owner);
+      await validatePolicy(owner, fence);
       if (typeof text !== 'string' || bytes(text) > USER_TRANSFER_MAX_BYTES) throw invalid();
       let payload; try { payload = JSON.parse(text); } catch { throw invalid(); }
       if (!plain(payload)) throw invalid();
@@ -126,7 +156,9 @@ export function createUserTransfer({ getAccount = getSongLibraryAccount, passpor
         if (!plain(prepared) || !plain(prepared.records) || !plain(prepared.report)) throw invalid();
         if (!hasPassport && !Object.values(prepared.report).some(value => Number.isSafeInteger(value) && value > 0)) throw invalid();
         assertOwner(owner);
-        await (commitLegacy || commit)(prepared.records, owner); assertOwner(owner);
+        if (commitLegacy) { await validatePolicy(owner, fence); await commitLegacy(prepared.records, owner, fence); }
+        else await commit(prepared.records, owner, false, fence);
+        assertOwner(owner);
         applyLegacy(prepared.records); legacy = structuredClone(prepared.report);
       }
       let passportImported = false;
