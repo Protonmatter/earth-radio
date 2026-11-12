@@ -429,6 +429,11 @@
       "sha256": "472143e1277955086ea4b6b818c6d6305ac26e0bf6517ff4658d032306f82e67"
     },
     {
+      "path": "docs/superpowers/plans/2026-11-12-listening-passport.md",
+      "bytes": 10286,
+      "sha256": "bb863927523f68cb58c9d5b7830469baa304f8540abfc862c684b70bcd9bfe72"
+    },
+    {
       "path": "docs/superpowers/plans/2026-11-12-search-focus-qualification.md",
       "bytes": 2553,
       "sha256": "0976365a54fa09176f4ee7e3012911101779525239e27cade711ebb30e15f13e"
@@ -492,6 +497,11 @@
       "path": "docs/superpowers/specs/2026-11-11-today-home-design.md",
       "bytes": 7021,
       "sha256": "4c471cb65731862c966f59f25590ff640362adaf2390804adb2cccdc7132477f"
+    },
+    {
+      "path": "docs/superpowers/specs/2026-11-12-listening-passport-design.md",
+      "bytes": 9208,
+      "sha256": "c65d2393a328230f5527bd469930f5b86cddd0f802ef128e50e9d97e810fe39d"
     },
     {
       "path": "docs/superpowers/specs/2026-11-12-search-focus-qualification.md",
@@ -595,8 +605,8 @@
     },
     {
       "path": "package.json",
-      "bytes": 5385,
-      "sha256": "ec9583285a9a5e6095fd29579528f24e14e97b33b1c7f0f5d2753cfcaf0c4462"
+      "bytes": 5414,
+      "sha256": "413be9ed3e22967a1c5a7d88e530afe4899f9a6acaa904587e599e93098e3c17"
     },
     {
       "path": "scripts/build-desktop-icon.mjs",
@@ -987,6 +997,11 @@
       "path": "site/assets/metadata-enrichment.js",
       "bytes": 74233,
       "sha256": "08899a218d345b7ff08d5e1fd109f5e0e8ae770ab4820ff8df46b1480b5547c6"
+    },
+    {
+      "path": "site/assets/passport-core.js",
+      "bytes": 13254,
+      "sha256": "05f8691c3d73652c9d5000e654140df9dbc05151c813ecc27793bcb0c5ee34ee"
     },
     {
       "path": "site/assets/pinned-stations.js",
@@ -1967,6 +1982,11 @@
       "path": "tests/pages-functions.test.mjs",
       "bytes": 63930,
       "sha256": "499205a81c2b39994abb7a5d3205bdb18501fdbc3f79d82fb396e96a0b3ae816"
+    },
+    {
+      "path": "tests/passport-core.test.mjs",
+      "bytes": 13260,
+      "sha256": "ba0f2f325fec81163d89c85a4b56f8bc70f0bef220c5089b2127a997821327dc"
     },
     {
       "path": "tests/pinned-stations.test.mjs",
