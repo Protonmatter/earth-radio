@@ -1,4 +1,5 @@
-import { mergeSongLibraries, mergeSongLibrariesThreeWay } from './song-library-core.js?v=0.34.1';
+import { mergeSongLibraries, mergeSongLibrariesThreeWay } from './song-library-core.js?v=0.35.0';
+import { mergePassports, mergePassportsThreeWay } from './passport-core.js?v=0.35.0';
 
 const DOCUMENTS = Object.freeze([
   {
@@ -18,7 +19,10 @@ const DOCUMENTS = Object.freeze([
   },
   { localKey: 'songs', documentKey: 'songs', merge: mergeSongLibraries,
     mergeConcurrent: mergeSongLibrariesThreeWay,
-    mergeInitial: (local, remote, context) => context?.remoteDeleted ? undefined : mergeSongLibraries(local, remote) }
+    mergeInitial: (local, remote, context) => context?.remoteDeleted ? undefined : mergeSongLibraries(local, remote) },
+  { localKey: 'passport', documentKey: 'passport', merge: mergePassports,
+    mergeConcurrent: mergePassportsThreeWay,
+    mergeInitial: (local, remote, context) => context?.remoteDeleted ? undefined : mergePassports(local, remote) }
 ]);
 
 const STORAGE_GENERATION_KEY = 'earth-radio-storage-generation-v2';

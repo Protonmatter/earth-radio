@@ -3,7 +3,7 @@ import { beginAuthCallback } from './auth-callback.mjs';
 
 export const AUTH_OPERATIONS = Object.freeze(['initialize', 'session', 'providers', 'user', 'signIn', 'link', 'email', 'cancel', 'signOut', 'readDocuments', 'upsertDocument']);
 const READ_PATH = 'user_config_documents?select=document_key,value,revision,deleted_at&order=document_key';
-const DOCUMENT_LIMITS = Object.freeze({ favorites: 8388608, recents: 1048576, preferences: 65536, songs: 1048576 });
+const DOCUMENT_LIMITS = Object.freeze({ favorites: 8388608, recents: 1048576, preferences: 65536, songs: 1048576, passport: 262144 });
 export const AUTH_MAX_REQUEST_BYTES = 9 * 1024 * 1024;
 export class PublicAuthError extends Error {
   constructor(message, code = 'AUTH_FAILED', status = 0) { super(message); this.code = code; this.status = status; }

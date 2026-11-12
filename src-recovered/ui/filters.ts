@@ -51,6 +51,8 @@ export function initFilters(stations: Station[], onChange: ChangeCallback, initi
   bindDelegates();
   syncFilterControls();
   updateFilterSummary();
+  const trigger = byId<HTMLButtonElement>('filters-toggle');
+  if (trigger) trigger.disabled = false;
 }
 
 export function openFilters(): void {

@@ -4,6 +4,7 @@ import { installDiscovery } from '../site/assets/discovery-ui.js';
 import { directorySnapshotStatus } from '../site/assets/directory-status.js';
 import { createStationFacts, updatePlayerFacts } from '../site/assets/place-ui.js';
 import { t as translate } from '../site/i18n/index.js';
+import { createUserTransfer } from '../site/assets/user-transfer.js';
 import './domains/radio/index';
 import './domains/sdr/index';
 
@@ -17,7 +18,8 @@ import {
   getPreferences,
   getRecentStations,
   hydrateStorage,
-  importUserData,
+  prepareUserDataImport,
+  applyImportedUserData,
   isFavorite,
   markStationPlaybackFailure,
   setLastPlayed,
@@ -109,6 +111,7 @@ const refreshBtn = byId<HTMLButtonElement>('refresh-stations');
 const surpriseBtn = byId<HTMLButtonElement>('surprise');
 const themeBtn = byId<HTMLButtonElement>('theme-toggle');
 const exportBtn = byId<HTMLButtonElement>('export-data');
+const userTransfer = createUserTransfer({ readLegacy: exportUserData, prepareLegacy: prepareUserDataImport, applyLegacy: applyImportedUserData });
 const importBtn = byId<HTMLButtonElement>('import-data');
 const importInput = byId<HTMLInputElement>('import-data-input');
 
@@ -764,19 +767,32 @@ function setupHeaderEvents(): void {
     setMapTheme(document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light');
   });
 
-  exportBtn?.addEventListener('click', () => {
-    const data = exportUserData();
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement('a');
-    anchor.href = url;
-    anchor.download = `earth-radio-export-${new Date().toISOString().slice(0, 10)}.json`;
-    anchor.click();
-    URL.revokeObjectURL(url);
+  exportBtn?.addEventListener('click', async () => {
+    try {
+      const owner = userTransfer.captureOwner(), data = await userTransfer.exportData();
+      userTransfer.assertOwner(owner);
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob), anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = `earth-radio-export-${new Date().toISOString().slice(0, 10)}.json`;
+      anchor.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+      if (data.passportOmitted) showToast(translate('transfer.partialExport'), 'error');
+    } catch (error) {
+      if ((error as any)?.code !== 'ACCOUNT_CHANGED') showToast(translate('transfer.exportFailed'), 'error');
+    }
   });
 
   importBtn?.addEventListener('click', () => importInput?.click());
-  importInput?.addEventListener('change', event => void handleImportFile((event.target as HTMLInputElement).files?.[0]));
+  importInput?.addEventListener('click', event => {
+    userTransfer.cancelImport(importTicket); importTicket = null;
+    try { importTicket = userTransfer.beginImport(); }
+    catch (error) { event.preventDefault(); showToast(translate((error as any)?.code === 'PASSPORT_POLICY_CHANGED' ? 'passport.historyChanged' : 'transfer.importFailed'), 'error'); }
+  });
+  importInput?.addEventListener('cancel', () => { userTransfer.cancelImport(importTicket); importTicket = null; });
+  importInput?.addEventListener('change', event => {
+    const ticket = importTicket; importTicket = null;
+    void handleImportFile((event.target as HTMLInputElement).files?.[0], ticket);
+  });
 
   emptyStateEl?.addEventListener('click', event => {
     const action = (event.target as HTMLElement).closest('[data-action]')?.getAttribute('data-action');
@@ -791,23 +807,26 @@ function setupHeaderEvents(): void {
   });
 }
 
-async function handleImportFile(file: File | undefined): Promise<void> {
+let importTicket: object | null = null;
+async function handleImportFile(file: File | undefined, ticket: object | null): Promise<void> {
   if (!file) return;
   try {
-    const text = await file.text();
-    const payload = JSON.parse(text);
-    const report = importUserData(payload);
+    const owner = userTransfer.captureOwner(), result = await userTransfer.importFile(file, { ticket });
+    userTransfer.assertOwner(owner);
     applyUserPreferencesToControls();
     updateFavoritesCount();
     updateFavoriteBtnState();
     grid?.refresh();
     if (view === 'favorites') applyFilters();
-    showToast(t('toast.imported', { favorites: report.favoritesImported, recent: report.recentImported, prefs: report.preferencesImported }));
-    setStatus(t('status.imported'));
+    const report = result.legacy;
+    const message = result.partial ? translate('transfer.partial') : report
+      ? translate('transfer.imported', { favorites: report.favoritesImported, recent: report.recentImported, prefs: report.preferencesImported })
+      : translate('transfer.passportImported');
+    showToast(message, result.partial ? 'error' : undefined); setStatus(message);
   } catch (error) {
-    console.error('Import failed:', error);
-    showToast(t('toast.importFailed', { message: (error as Error).message }), 'error');
+    if ((error as any)?.code !== 'ACCOUNT_CHANGED') showToast(translate((error as any)?.code === 'PASSPORT_POLICY_CHANGED' ? 'passport.historyChanged' : 'transfer.importFailed'), 'error');
   } finally {
+    userTransfer.cancelImport(ticket);
     if (importInput) importInput.value = '';
   }
 }

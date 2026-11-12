@@ -59,7 +59,7 @@
     <p class="meta">Earth Radio is operated by Protonmatter. Last updated 8 November 2026.</p>
 
     <h2>What this app is</h2>
-    <p>Earth Radio is a public internet-radio browser. You can search and play stations without an account. An optional account lets you keep favorite stations, recent stations, preferences, liked songs and optional song history across browsers and desktop apps.</p>
+    <p>Earth Radio is a public internet-radio browser. You can search and play stations without an account. An optional account lets you keep favorite stations, recent stations, preferences, liked songs, optional song history and your listening passport across browsers and desktop apps.</p>
 
     <h2>Sign-in</h2>
     <p>Sign-in is provided by Supabase Auth. You may use Google, GitHub, or an email magic link. When you choose Google or GitHub, that provider sends us the account email, and may send a display name and avatar. We do not receive your Google or GitHub password.</p>
@@ -67,11 +67,13 @@
     <h2>What we store</h2>
     <ul>
       <li>Account identity: provider user id, email, and optional name or avatar URL.</li>
-      <li>Your saved favorite stations, recent stations, preferences, liked songs and optional recently heard songs, keyed to your user id in our Supabase project. Song records may include artist, title, available catalog details, station context and listening dates.</li>
+      <li>Your saved favorite stations, recent stations, preferences, liked songs, optional recently heard songs and listening passport, keyed to your user id in our Supabase project. Song records may include artist, title, available catalog details, station context and listening dates. Passport records contain station countries, confirmed city identifiers/names and first/latest UTC listening dates.</li>
       <li>Session tokens in the browser (local storage and cookies) so you stay signed in on this device.</li>
     </ul>
     <p>Anonymous use keeps favorites, recently played stations, the last station you played, stations marked unreachable after a failed connection, preferences and songs on this device, including account-namespaced local backup copies. Map label preferences are also local. Song history is optional and records a named artist/title after 15 seconds of advancing playback; it does not record audio. Signing in does not automatically add guest songs to your account: use Add local songs explicitly. We do not sell personal data or use it for advertising.</p>
-    <p>Account provides Recently heard and Liked songs, an option to stop recording song history, Clear recent (which preserves likes), individual removal, and song export/import. Recovery copies use generation and privacy checks so removed records cannot be restored from older backups. Local browser song storage is not encrypted; use separate OS accounts on shared devices. Clearing website data or uninstalling can remove unsynced data, so export it first.</p>
+    <p>Library provides Recently heard and Liked songs, an option to stop recording listening history, Clear listening history (which preserves likes), individual song removal, and song export/import. Listening passport adds a place after a continuous minute of advancing audio; only corroborated cities count. It does not track your location, record audio or save stream URLs. Long background pauses can prevent a minute from counting. Browsing and prior Recent/likes are not backfilled.</p>
+    <p>The same Keep listening history setting controls Passport. Turning it off stops recording and hides earlier visits while keeping them saved. Clear listening history removes Passport visits and recently heard songs, including recovery copies, while preserving liked songs; signed-in clears sync to other devices. Guest Passport data is added to an account only through an explicit control. Passport has its own export/import and is also included in Settings export/import; imports add visits without applying another profile's deletion counters.</p>
+    <p>Recovery copies use generation and privacy checks so cleared records cannot be restored from older backups. Local browser song and Passport storage is not encrypted; use separate OS accounts on shared devices. Clearing website data or uninstalling can remove unsynced data, so export it first.</p>
 
     <h2>Playback and metadata</h2>
     <p>The web app normally loads public station records through an Earth Radio directory cache. The cache contains public station data, not your account documents. Provider discovery, direct fallback and map-area lookups may contact Radio Browser from your device. Public directory records and mirror names may be cached locally. Approximate country markers use public map data, not your device location.</p>

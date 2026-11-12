@@ -1,4 +1,4 @@
-import {COUNTRY_LOCATIONS} from './country-locations.js?v=0.34.1';
+import {COUNTRY_LOCATIONS} from './country-locations.js?v=0.35.0';
 
 export const ATLAS_MIN_LATITUDE=-60,ATLAS_MAX_LATITUDE=85;
 const inAtlas=point=>point[0]>=ATLAS_MIN_LATITUDE&&point[0]<=ATLAS_MAX_LATITUDE;

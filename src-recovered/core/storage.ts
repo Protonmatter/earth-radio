@@ -187,40 +187,57 @@ export function exportUserData(): any {
   };
 }
 
-export function importUserData(payload: any): { favoritesImported: number; recentImported: number; preferencesImported: number } {
+export type UserImportRecords = Partial<Pick<typeof state, 'favorites' | 'recents' | 'prefs'>>;
+export interface UserImportReport { favoritesImported: number; recentImported: number; preferencesImported: number }
+
+// Mirrors the shipped runtime's supported async user-transfer bridge. Preparation
+// is pure; the bridge commits these records in one owner-fenced IDB transaction
+// before applying this in-memory mirror. This evidence snapshot is not rebuilt.
+export function prepareUserDataImport(payload: any): { records: UserImportRecords; report: UserImportReport } {
   if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
     throw new Error('Invalid import payload');
   }
 
   const report = { favoritesImported: 0, recentImported: 0, preferencesImported: 0 };
+  const records: UserImportRecords = {};
 
   const favorites = sanitizeFavoriteRecords(payload.favorites);
   if (favorites) {
-    state.favorites = limitObjectEntries({ ...state.favorites, ...favorites }, MAX_FAVORITES);
-    persist('favorites');
+    records.favorites = limitObjectEntries({ ...state.favorites, ...favorites }, MAX_FAVORITES);
     report.favoritesImported = Object.keys(favorites).length;
   }
 
   if (Array.isArray(payload.recent)) {
-    state.recents = payload.recent
+    records.recents = payload.recent
       .map((item: any) => summarizeStation(item))
       .filter((item: any) => item.stationuuid)
       .slice(0, MAX_RECENTS);
-    persist('recents');
-    report.recentImported = state.recents.length;
+    report.recentImported = records.recents.length;
   }
 
   const preferences = sanitizePreferences(payload.preferences);
   if (Object.keys(preferences).length > 0) {
-    state.prefs = { ...state.prefs, ...(preferences as Partial<Preferences>) };
-    persist('prefs');
+    records.prefs = { ...state.prefs, ...(preferences as Partial<Preferences>) };
     report.preferencesImported = Object.keys(preferences).length;
   }
 
+  return { records, report };
+}
+
+export function applyImportedUserData(records: UserImportRecords): void {
+  if (records.favorites !== undefined) state.favorites = records.favorites;
+  if (records.recents !== undefined) state.recents = records.recents;
+  if (records.prefs !== undefined) state.prefs = records.prefs;
+}
+
+// Retain the prior synchronous API for existing reference-source consumers.
+export function importUserData(payload: any): UserImportReport {
+  const { records, report } = prepareUserDataImport(payload);
   if (!report.favoritesImported && !report.recentImported && !report.preferencesImported) {
     throw new Error('Import file did not contain favorites, recent stations, or preferences');
   }
-
+  applyImportedUserData(records);
+  for (const key of Object.keys(records) as Array<keyof UserImportRecords>) persist(key);
   return report;
 }
 

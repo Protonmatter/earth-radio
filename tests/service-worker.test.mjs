@@ -7,13 +7,15 @@ import vm from 'node:vm';
 import { versionSiteModules } from '../scripts/version-site-modules.mjs';
 
 const root = path.resolve(import.meta.dirname, '..');
+const releaseVersion = JSON.parse(await readFile(path.join(root, 'package.json'), 'utf8')).version;
 
 test('release module URLs are coherent and an older cache cannot satisfy a newer import', async () => {
   await versionSiteModules(root, { check: true });
   const { version } = JSON.parse(await readFile(path.join(root, 'package.json'), 'utf8'));
   const worker = await readFile(path.join(root, 'site/sw.js'), 'utf8');
-  for (const asset of ['song-library-core.js', 'song-library-store.js', 'song-library-ui.js', 'metadata-enrichment.js', 'place-copy.js', 'place-ui.js']) {
-    assert.ok(worker.includes(`./assets/${asset}?v=${version}`));
+  for (const asset of ['song-library-core.js', 'song-library-store.js', 'song-library-ui.js', 'metadata-enrichment.js', 'place-copy.js', 'place-ui.js',
+    'passport-core.js', 'passport-policy.js', 'passport-store.js', 'passport-map.js', 'passport-ui.js', 'user-transfer.js', 'map-country-identifiers.js']) {
+    assert.ok(worker.includes(`./assets/${asset}?v=${version}`), `Missing current offline dependency ${asset}`);
   }
   const handlers = new Map(); let fetched = '';
   vm.runInNewContext(worker, {
@@ -34,10 +36,10 @@ for (const relative of [
   '/branding/earth-radio-favicon-pine.svg',
   '/branding/earth-radio-favicon-obsidian.svg',
   '/branding/earth-radio-favicon-obsidian-32.png',
-  '/assets/brand-identity.js?v=0.34.1',
-  '/assets/brand-identity.css?v=0.34.1',
-  '/assets/place-copy.js?v=0.34.1',
-  '/assets/place-ui.js?v=0.34.1',
+  `/assets/brand-identity.js?v=${releaseVersion}`,
+  `/assets/brand-identity.css?v=${releaseVersion}`,
+  `/assets/place-copy.js?v=${releaseVersion}`,
+  `/assets/place-ui.js?v=${releaseVersion}`,
   '/manifest.webmanifest'
 ]) {
   test(`service worker serves cached ${relative} when the network is offline`, async () => {
@@ -73,7 +75,7 @@ test('the live immutable runtime filename is derived from its final content hash
 
 test('service worker registers even when async startup outlives window load', async () => {
   const source = await readFile(path.join(root, 'src-recovered', 'main.ts'), 'utf8');
-  const bundle = await readFile(path.join(root, 'site', 'assets', 'index-d7add1ac.js'), 'utf8');
+  const bundle = await readFile(path.join(root, 'site', 'assets', 'index-fb2362b3.js'), 'utf8');
   assert.match(source, /document\.readyState === 'complete'/);
   assert.match(bundle, /document\.readyState===`complete`/);
 });
@@ -109,7 +111,7 @@ test('deployed pages send HSTS and revalidate the auth overlays', async () => {
 test('service worker precaches the auth, responsive, and i18n shell under a new cache version', async () => {
   const worker = await readFile(path.join(root, 'site', 'sw.js'), 'utf8');
   assert.match(worker, /cache: isImmutableAsset\(asset\) \? 'force-cache' : 'reload'/);
-  assert.match(worker, /earth-radio-shell-v77-search-focus/);
+  assert.match(worker, /earth-radio-shell-v79-passport-privacy/);
   for (const palette of ['pine', 'obsidian']) {
     for (const suffix of ['.svg', '-16.png', '-32.png']) {
       assert.ok(worker.includes(`branding/earth-radio-favicon-${palette}${suffix}`));

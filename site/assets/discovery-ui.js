@@ -1,14 +1,19 @@
-import { buildFacetOptions, pickStation, rankStations, sanitizePreferences } from './discovery-core.js?v=0.34.1';
-import { createMapDirectory, mergeMappedStations } from './map-directory.js?v=0.34.1';
-import { installSearchControls } from './search-controls.js?v=0.34.1';
-import { getLocale, t } from '../i18n/index.js?v=0.34.1';
-import {stationLocation,stationMapPoint} from './station-location.js?v=0.34.1';
-import {stationFacts} from './place-copy.js?v=0.34.1';
-import {stationPlace} from './place-core.js?v=0.34.1';
-import {createStationFacts} from './place-ui.js?v=0.34.1';
-import {groupStationVariants,projectVariantResults,expandFavoriteIds,chooseGroupStation} from './station-variants.js?v=0.34.1';
-import {atlasViewAction} from './map-viewport.js?v=0.34.1';
-import {createPlaybackIntent} from './playback-intent.js?v=0.34.1';
+import { buildFacetOptions, pickStation, rankStations, sanitizePreferences } from './discovery-core.js?v=0.35.0';
+import { createMapDirectory, mergeMappedStations } from './map-directory.js?v=0.35.0';
+import { installSearchControls } from './search-controls.js?v=0.35.0';
+import { getLocale, t } from '../i18n/index.js?v=0.35.0';
+import {stationLocation,stationMapPoint} from './station-location.js?v=0.35.0';
+import {stationFacts} from './place-copy.js?v=0.35.0';
+import {stationPlace} from './place-core.js?v=0.35.0';
+import {createStationFacts} from './place-ui.js?v=0.35.0';
+import {groupStationVariants,projectVariantResults,expandFavoriteIds,chooseGroupStation} from './station-variants.js?v=0.35.0';
+import {atlasViewAction} from './map-viewport.js?v=0.35.0';
+import {createPlaybackIntent} from './playback-intent.js?v=0.35.0';
+
+let playbackContext = null;
+// Consumers receive a clone, never the runtime's mutable current station. This
+// preserves explicit coordinate/provenance flags used by the shared place model.
+export function currentPlaybackStation() { return playbackContext?.() || null; }
 
 // A hidden-to-visible resize can leave Leaflet's animated bounds correction
 // running. Its moveend handler can start another correction while stop() fires.
@@ -40,6 +45,10 @@ export function installDiscovery(adapter) {
   const selections=new Map(),attempts=new Set();
   const playback=createPlaybackIntent({onExpire:station=>adapter.timeout(station)});
   const keyOf=station=>byId.get(station?.stationuuid)?.key||station?.stationuuid;
+  playbackContext = () => {
+    const station = adapter.current();
+    return station?.stationuuid ? { station: structuredClone(station), programKey: keyOf(station) } : null;
+  };
   const player=document.getElementById('player-bar'),failure=document.createElement('div');
   failure.className='er-playback-failure';failure.hidden=true;failure.setAttribute('role','group');
   const retry=document.createElement('button'),similar=document.createElement('button');

@@ -135,6 +135,58 @@ test('browser storage failure pauses sign-out safely and lets the user retry', a
   expect(await page.evaluate(() => localStorage.getItem('earthRadio.auth.activeUser.v1'))).toBeNull();
 });
 
+test('Passport-only account sync applies and uploads without reloading the page or adopting guest visits', async ({ page }) => {
+  await setupApp(page, { enableAuth: true });
+  const user = { id: 'passport-sync-user', email: 'passport@earth-radio.test', identities: [{ provider: 'github' }] };
+  const rows = new Map();
+  await page.route('https://*.supabase.co/**', async route => {
+    const path = new URL(route.request().url()).pathname;
+    if (path.endsWith('/settings')) return route.fulfill({ json: { external: { google: true, github: true } } });
+    if (path.endsWith('/user')) return route.fulfill({ json: user });
+    if (path.endsWith('/user_config_documents')) return route.fulfill({ json: [...rows.values()] });
+    if (path.endsWith('/rpc/upsert_user_config_document')) {
+      const body = route.request().postDataJSON(), before = rows.get(body.p_document_key);
+      if ((before?.revision || 0) !== body.p_expected_revision) return route.fulfill({ json: [] });
+      const row = { document_key: body.p_document_key, value: body.p_value, revision: body.p_expected_revision + 1,
+        deleted_at: body.p_delete ? '2026-11-12T00:00:00Z' : null };
+      rows.set(row.document_key, row); return route.fulfill({ json: [row] });
+    }
+    return route.abort();
+  });
+  await page.evaluate(async user => {
+    const { passportStore } = await import('/assets/passport-store.js?v=' + document.documentElement.dataset.appVersion);
+    const { recordPassportPlace } = await import('/assets/passport-core.js?v=' + document.documentElement.dataset.appVersion);
+    const store = passportStore(), snapshot = await store.read();
+    await store.mutate(doc => recordPassportPlace(doc, { countrycode: 'FR', confidence: 'country' }, 20_000), snapshot);
+    localStorage.setItem('earthRadio.auth.session.v1', JSON.stringify({ user,
+      access_token: 'fixture-passport-access', refresh_token: 'fixture-passport-refresh', expires_at: 4102444800 }));
+  }, user);
+  await page.reload(); await openAccountView(page); await page.locator('#er-auth-button').click();
+  const dialog = page.getByRole('dialog', { name: 'Your Earth Radio account' });
+  await expect(dialog.locator('.er-auth-sync')).toHaveText('Synced');
+  await expect.poll(() => page.evaluate(async () => (await (await import('/assets/passport-store.js?v=' + document.documentElement.dataset.appVersion)).passportStore().read()).canWrite)).toBe(true);
+  expect(rows.has('passport')).toBe(false, 'sign-in does not silently adopt this device’s guest Passport');
+  const marker = await page.evaluate(() => window.passportSyncDocumentMarker = crypto.randomUUID());
+  let navigations = 0;
+  page.on('framenavigated', frame => { if (frame === page.mainFrame()) navigations++; });
+  rows.set('passport', { document_key: 'passport', revision: 1, deleted_at: null,
+    value: { version: 1, historyEpoch: 0, historyClearedAt: 0, countries: { US: { firstDay: 20_000, lastDay: 20_000 } }, cities: {} } });
+  await dialog.getByRole('button', { name: 'Sync now' }).click();
+  await expect.poll(() => page.evaluate(async () => Boolean((await (await import('/assets/passport-store.js?v=' + document.documentElement.dataset.appVersion)).passportStore().read()).value?.countries.US))).toBe(true);
+  await expect(dialog.locator('.er-auth-sync')).toHaveText('Synced');
+  expect(await page.evaluate(() => window.passportSyncDocumentMarker)).toBe(marker);
+  expect(navigations).toBe(0);
+  await page.evaluate(async () => {
+    const store = (await import('/assets/passport-store.js?v=' + document.documentElement.dataset.appVersion)).passportStore();
+    const { recordPassportPlace } = await import('/assets/passport-core.js?v=' + document.documentElement.dataset.appVersion);
+    await store.mutate(doc => recordPassportPlace(doc, { countrycode: 'KR', confidence: 'country' }, 20_001), await store.read());
+  });
+  await dialog.getByRole('button', { name: 'Sync now' }).click();
+  await expect.poll(() => Boolean(rows.get('passport')?.value.countries.KR)).toBe(true);
+  expect(rows.get('passport').value.countries.FR).toBeUndefined();
+  expect(navigations).toBe(0);
+});
+
 function assertVisibleInViewport(box,viewport) {
   if (!box) throw new Error('Sign in has no layout box');
   expect(box.x).toBeGreaterThanOrEqual(0);expect(box.x+box.width).toBeLessThanOrEqual(viewport.width);

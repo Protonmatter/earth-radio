@@ -13,10 +13,10 @@
  * maintained catalogs, over a bounded list of known runtime-owned elements.
  */
 
-import { getCurrentSongSnapshot } from './metadata-enrichment.js?v=0.34.1';
-import {refreshPlaceFacts} from './place-ui.js?v=0.34.1';
-import { countryCode, countryWords, matchesCountry } from './search-core.js?v=0.34.1';
-import { countryIndex } from './directory-expansion.js?v=0.34.1';
+import { getCurrentSongSnapshot } from './metadata-enrichment.js?v=0.35.0';
+import {refreshPlaceFacts} from './place-ui.js?v=0.35.0';
+import { countryCode, countryWords, matchesCountry } from './search-core.js?v=0.35.0';
+import { countryIndex } from './directory-expansion.js?v=0.35.0';
 import {
   applyDeclarativeI18n,
   applyDocumentLocale,
@@ -27,7 +27,7 @@ import {
   DEFAULT_LOCALE,
   FONT_PROFILES,
   t
-} from '../i18n/index.js?v=0.34.1';
+} from '../i18n/index.js?v=0.35.0';
 
 export const UI_STORAGE_KEY = 'earthRadio.ui.v1';
 export const DEFAULT_SPLIT = 42;
@@ -739,6 +739,7 @@ function applyViewport(state) {
   root.dataset.erDest = state.destination;
   root.dataset.erSaved = state.savedSegment;
   root.dataset.erLibrarySection=librarySection;
+  const passport=byId('er-passport');if(passport)passport.hidden=state.destination!=='you'||librarySection!=='passport';
   const today=byId('er-today');if(today)today.hidden=state.destination!=='today';
   const skip=document.querySelector('.er-skip');if(skip)skip.href=state.destination==='you'?'#er-you':state.destination==='search'&&mode==='mobile'?'#er-station-query':'#er-workspace';
   root.dataset.erCollapsed = state.collapsed || '';
@@ -1680,7 +1681,7 @@ function bindActions() {
     if (dest) {
       event.preventDefault();
       const destination = dest.getAttribute('data-er-dest');
-      if(dest.dataset.erLibrarySection)librarySection=dest.dataset.erLibrarySection==='account'?'account':'music';
+      if(dest.dataset.erLibrarySection)librarySection=['account','passport'].includes(dest.dataset.erLibrarySection)?dest.dataset.erLibrarySection:'music';
       if(dest.dataset.erPrimary==='search'&&loadUiState().collapsed==='list')saveUiState({collapsed:null});
       if (destination === 'you' && !dest.dataset.erLibrarySection&&loadUiState().destination === 'you' && classifyViewport() !== 'mobile') {
         setDestination('listen', true);

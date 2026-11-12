@@ -6,7 +6,7 @@ Release **[0.34.1 is published](https://github.com/Protonmatter/earth-radio/rele
 
 Website and downloads: **https://earthradio.stream/**. Radio app: **https://app.earthradio.stream/**. The earlier **https://earth-radio.pages.dev/** app remains available for existing shortcuts and unsynced local collections. Public repository: **https://github.com/Protonmatter/earth-radio**.
 
-The published web/desktop baseline is **0.34.1**. The search palette preserves
+The last published desktop baseline is **0.34.1**. The search palette preserves
 typing and composition while its internal query bridge remains intact. Today,
 Continue, place/genre/local-time facts and Details stream choice preserve player,
 collections and accounts. The [qualification record](docs/QA-0.34.1.md) distinguishes
@@ -15,6 +15,12 @@ source, hosted, served, native and physical-device evidence. The
 artifacts, checks and complete public-download readback.
 
 See the [installation guide](docs/INSTALLATION.md) for Windows ARM64/x64, macOS Apple Silicon/Intel, and Safari Home Screen installation on iPhone/iPad. Get desktop downloads, checksums and build provenance from the [latest complete release](https://github.com/Protonmatter/earth-radio/releases/latest). Windows uses the accepted local signer; macOS builds are explicitly labeled unnotarized.
+
+Web source **0.35.0** adds [Listening Passport](docs/PASSPORT.md): countries and
+confirmed cities after a continuous minute, with owner-private history/sync,
+atlas shading and export/import. The [qualification record](docs/QA-0.35.0.md)
+separates complete local checks from the required database/CI/review/served gates;
+published v0.34.1 desktop artifacts remain unchanged.
 
 This repository was reconstructed from the installed Earth Radio 0.24.0 application and two user-supplied archives. It is not a byte-for-byte reproduction of the original development repository. The newest runnable installed assets were selected where they differed from older archived source; those decisions are recorded in [docs/PROVENANCE.md](docs/PROVENANCE.md).
 
