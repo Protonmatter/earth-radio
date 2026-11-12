@@ -74,26 +74,27 @@ volume,readyState,seeking}`. Observation retains place/day and owner/epoch fence
 ### Task 2: Atomic local persistence and privacy clear
 
 Files: create `site/assets/passport-store.js`, `site/assets/passport-policy.js`,
-`tests/e2e/passport-storage.spec.mjs`; modify `song-library-store.js` narrowly.
+`tests/e2e/passport-storage.spec.mjs` and its `fixtures/passport-store-harness.mjs`;
+modify `song-library-store.js` narrowly.
 
 Interfaces: `createPassportStore(options)` / `passportStore()` expose
-`read`, `mutate(transform,ownerVersion,historyEpoch)`, `readForAccount`,
+`read`, `mutate(transform,{ownerVersion,historyEpoch,settingsVersion})`, `readForAccount`,
 `writeForAccount`, `compareForAccount`, `readSyncState`, `writeSyncState`,
-`ensureSyncBaseline`, `importGuest`, `subscribe`, `dispose`, matching song adapter
+`ensureSyncBaseline`, `guestPassportAvailable`, `importGuest(fence)`, `subscribe`, `dispose`, matching song adapter
 signatures where shared. Reads return ownerVersion/namespace/value/generation,
-historyEnabled/historyEpoch/canWrite. The policy helper queues an empty Passport
+historyEnabled/historyEpoch/settingsVersion/canWrite. The policy helper queues an empty Passport
 and privacy floor inside the existing owner-fenced song-clear transaction, then
 cleans mirrors only against the committed primary/policy. It imports no account
 manager and does not form a store dependency cycle.
 
-- [ ] RED real-IDB cases: two accounts/tabs, paused owner readiness, delayed open,
-  clear before/after held record, disabled history, old-client epoch-only clear,
+- [x] RED real-IDB cases: two accounts/tabs, paused owner readiness, delayed open,
+  clear before/after held record, disabled history and off→on settings-version race, old-client epoch-only clear,
   stale backup publication/recovery, quota/corruption/future schemas, contradictory
   ahead policy, missing-primary vs remote-delete semantics and first-sync gating.
-- [ ] Implement owner/policy reads and writes in one transaction. Preserve song
+- [x] Implement owner/policy reads and writes in one transaction. Preserve song
   public interfaces and existing backup/like/unlike behavior. Clear Passport
   atomically on current-client Clear; reconcile old-client clears before disclosure.
-- [ ] Require new storage and all existing song storage/retention browser cases
+- [x] Require new storage and all existing song storage/retention browser cases
   GREEN without retries; run relevant node suites and manifest. Explicit commit.
 
 ### Task 3: Existing sync, native boundary and additive database admission

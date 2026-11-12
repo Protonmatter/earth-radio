@@ -430,8 +430,8 @@
     },
     {
       "path": "docs/superpowers/plans/2026-11-12-listening-passport.md",
-      "bytes": 10286,
-      "sha256": "bb863927523f68cb58c9d5b7830469baa304f8540abfc862c684b70bcd9bfe72"
+      "bytes": 10434,
+      "sha256": "0bac735804fe92d3dd907c45eee069179d2348c6965469b542d86b16a6b1fe4a"
     },
     {
       "path": "docs/superpowers/plans/2026-11-12-search-focus-qualification.md",
@@ -1004,6 +1004,16 @@
       "sha256": "05f8691c3d73652c9d5000e654140df9dbc05151c813ecc27793bcb0c5ee34ee"
     },
     {
+      "path": "site/assets/passport-policy.js",
+      "bytes": 5278,
+      "sha256": "6c5b36b9cbcec7a245da8f6dd439235b6b5508c450432c82764697b291ef6aaf"
+    },
+    {
+      "path": "site/assets/passport-store.js",
+      "bytes": 23762,
+      "sha256": "d979776b3e2af4ed7902f337c7b944c827e10d84578742efac5af6877a61838c"
+    },
+    {
       "path": "site/assets/pinned-stations.js",
       "bytes": 5877,
       "sha256": "8513aab94b50a3fffb5ab6fa55bbcefb9e2a541e265d7c924e76ddd9a50359de"
@@ -1080,8 +1090,8 @@
     },
     {
       "path": "site/assets/song-library-store.js",
-      "bytes": 17683,
-      "sha256": "71930c7c7d44dbba025639cb43daf003b8ebf44a09c485df7ef4493498c42162"
+      "bytes": 18662,
+      "sha256": "8e9a3fd884ad7b3966e106156bdff82e5af56e9825f93945905bebdafa8ce65c"
     },
     {
       "path": "site/assets/song-library-ui.js",
@@ -1749,6 +1759,11 @@
       "sha256": "88965eb3ab090af45163c1ef7b789f66447cd73c29365b4f463d140aebe707de"
     },
     {
+      "path": "tests/e2e/fixtures/passport-store-harness.mjs",
+      "bytes": 6133,
+      "sha256": "72d17647cb2e7cd757ba5ea32d47c5bb097ebed7b22e99b42811ad78e7ed83d8"
+    },
+    {
       "path": "tests/e2e/fixtures/search-focus-schedule.mjs",
       "bytes": 1043,
       "sha256": "5af2c4558dea685106d5fa8f274bbb41f5ea3b912c4d245db56cb57454206737"
@@ -1797,6 +1812,11 @@
       "path": "tests/e2e/offline-shell.spec.mjs",
       "bytes": 2781,
       "sha256": "deb1abae363374558aae205e689ff55b5d35750c54f82722707ba486c667321b"
+    },
+    {
+      "path": "tests/e2e/passport-storage.spec.mjs",
+      "bytes": 14243,
+      "sha256": "d6e6e45d9747bcda6223a431efab321b4116e3e38ecc2508d06e138dd869c2b3"
     },
     {
       "path": "tests/e2e/place-playback.spec.mjs",

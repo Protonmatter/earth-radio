@@ -2,6 +2,8 @@ import {
   emptySongLibrary, normalizeSongLibrary, encodeSongEnvelope, decodeSongEnvelope,
   songNamespaceKey, songSyncStateKey, addSongsFromLibrary
 } from './song-library-core.js?v=0.34.1';
+import { queuePassportHistoryClear, mirrorPassportEnvelope, passportEnvelopeTag } from './passport-policy.js?v=0.34.1';
+import { passportNamespaceKey } from './passport-core.js?v=0.34.1';
 
 // The supported auth adapter selects the tab's identity. IndexedDB independently
 // verifies it in every transaction; another tab changing account cannot redirect
@@ -181,6 +183,15 @@ export function createSongLibraryStore({ indexedDBImpl = globalThis.indexedDB,
       };
     });
   }
+  async function publishPassportClear(expected, envelope) {
+    await transact(expected, 'readwrite', (store, done) => {
+      const read = store.get(passportNamespaceKey(expected.namespace));
+      read.onsuccess = () => {
+        if (passportEnvelopeTag(read.result) === passportEnvelopeTag(envelope)) mirrorPassportEnvelope(storageObject(), envelope, true);
+        done(true);
+      };
+    });
+  }
   async function replace(expected, transform, { compare, requireCloudReady = false } = {}) {
     await load(expected); const key = songNamespaceKey(expected.namespace);
     const result = await transact(expected, 'readwrite', (store, done, abort) => {
@@ -195,7 +206,10 @@ export function createSongLibraryStore({ indexedDBImpl = globalThis.indexedDB,
               const envelope = encodeSongEnvelope(expected.namespace, Math.max(decoded?.generation || 0, privacy.result || 0) + 1, normalized, now());
               const forgetPrior = privateRemoval(before, normalized);
               store.put(envelope, key); if (forgetPrior) { store.put(envelope.generation, `${key}:privacy`); store.delete(`${key}:damaged`); }
-              done({ matched: true, value: normalized, changed: true, envelope, forgetPrior });
+              const complete = passportClear => done({ matched: true, value: normalized, changed: true, envelope, forgetPrior, passportClear });
+              if (normalized && normalized.historyEpoch > (before?.historyEpoch || 0)) {
+                queuePassportHistoryClear(store, expected.namespace, normalized, now(), complete, abort);
+              } else complete(null);
             } catch (error) { abort(error); }
           };
           if (requireCloudReady && expected.accountId) {
@@ -205,7 +219,11 @@ export function createSongLibraryStore({ indexedDBImpl = globalThis.indexedDB,
         } catch (error) { abort(error); }
       };
     });
-    if (result.changed) { await publishBackup(expected, result.envelope, result.forgetPrior); changed(); }
+    if (result.changed) {
+      await publishBackup(expected, result.envelope, result.forgetPrior);
+      if (result.passportClear) await publishPassportClear(expected, result.passportClear);
+      changed();
+    }
     return result;
   }
   const api = {
