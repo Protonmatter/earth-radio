@@ -63,9 +63,9 @@ Current-source local checks on November 12, 2026:
 
 | Check | Observed result |
 | --- | --- |
-| `npm run verify` | 778 passed, three existing Windows skips, zero failures; 488 canonical file hashes |
+| `npm run verify` | Observer follow-up: 780 passed, three existing Windows skips, zero failures; 489 canonical file hashes |
 | `npm audit --audit-level=moderate` | Zero advisories |
-| Complete Chromium/WebKit browser suite | 422 passed in 9.9 minutes; two workers, zero retries/failures/flaky cases/skips |
+| Original reviewed Chromium/WebKit browser suite | 422 passed in 9.9 minutes; two workers, zero retries/failures/flaky cases/skips; observer follow-up campaigns are recorded below |
 | Rendered Electron matrix | 42 contexts, complete, zero errors and no skip on the qualified rerun |
 | Native Windows ARM64 | Sandbox/owned-frame IPC, PKCE, encrypted restart, Passport-only sync, logout, normal quit, media controls and owned renderer pass |
 | Frozen place replay | Identical 6,166,295-byte input and all 9,400 program semantics; all eleven city minimums remain met |
@@ -75,6 +75,50 @@ Current-source local checks on November 12, 2026:
 The initial rendered command reported a dependency-path skip. The ignored
 worktree dependency junction was restored to the existing exact locked runtime;
 the real 42-context rerun passed. Both records are retained.
+
+## Hosted observer correction
+
+The first PR #54 head, `d3b01c9`, passed nine hosted checks, including all three
+native platforms, both verifiers and database/Auth tests. Both macOS candidate
+DMGs passed payload/mount/startup qualification. The actual preview passed
+116 app/19 website file hashes and headers, ten routes, four live guest journeys,
+owned Stop on muted live playback and an offline-shell check.
+
+Its hosted browser run had 421 passes and one persistent Linux-WebKit test failure:
+the fixture observed Media Session but had no captured Stop callback. That is
+insufficient evidence that the browser rejected Stop. The original test wrapped
+one native object instance, which can miss calls through a renewed wrapper.
+Two deterministic observer tests reproduced lost registrations before correction
+and pass with a shared-prototype observer. The observer preserves the native
+receiver, return value and thrown exception, records every attempted action and
+captures only successful callbacks. The compatibility test now fails on any
+missing attempt and requires a real native exception for an unsupported action.
+Play/Pause registration and transport are required where the API is present;
+supported Stop still must clear metadata and permit replay. The existing eight
+Chromium native-API cases retain their unconditional Stop assertions.
+
+All twelve focused browser cases pass locally after correction. Product runtime,
+source/reference player, offline cache graph, map data and installer inputs are
+unchanged. The failed hosted run/report/traces are retained; it does not authorize
+merge. Full local/browser verification, same-reviewer follow-up and fresh exact-head
+CI are required before delivery. Linux's actual registration results must be read
+from that new run rather than inferred from the original missing observation.
+
+The first two-worker corrected local matrix had 421 passes and one 20-second
+startup assertion timeout in the existing 21,002-record catalog-expansion case.
+Its trace shows snapshot/country responses of 200 in about 53/8 ms and no page
+error. The unchanged case then passed in isolation: 16.2 seconds for the candidate
+and 15.3 seconds for accepted v0.35. Those single flow timings are not a calibrated
+performance comparison. The assertion, timeout and workload remain unchanged;
+the next complete local campaign uses one worker and no retries, while hosted CI
+keeps its normal configuration. Retain the failed local trace and track startup
+performance margin with ER-14. No product optimization is claimed in this pass.
+
+Native registration diagnostics are attached to test results and also printed as
+small non-sensitive CI log records, because successful HTML reports are not
+uploaded. The observer follow-up review found no issue and independently passed
+19 focused tests; its reviewed bytes and final diagnostic addition remain bound
+to the local qualification receipt.
 
 Remaining gates:
 

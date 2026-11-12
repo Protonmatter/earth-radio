@@ -15,14 +15,31 @@ test('the actual player remains usable across native Media Session capability di
   await page.locator('#er-discovery-query').fill('Compatibility radio');await page.getByRole('button',{name:'Play: Compatibility radio',exact:true}).click();
   await expect(page.locator('#player-bar')).toHaveClass(/is-playing/);
   await expect.poll(()=>page.locator('#audio-player').evaluate(audio=>audio.currentTime)).toBeGreaterThan(0.05);
-  const capabilities=await page.evaluate(()=>({nativeMediaApi:window.fixtureNativeMediaApi,bitmap:typeof createImageBitmap,secure:isSecureContext}));
+  const capabilities=await page.evaluate(()=>({nativeMediaApi:window.fixtureNativeMediaApi,bitmap:typeof createImageBitmap,secure:isSecureContext,registrations:window.fixtureNativeMediaRegistration}));
   await testInfo.attach('native-media-capabilities',{body:JSON.stringify(capabilities),contentType:'application/json'});
-  if(capabilities.nativeMediaApi)await expect.poll(()=>readNativeMediaFields(page)).toEqual({title:'Compatibility radio',artist:'Berlin, Germany',album:'Earth Radio'});
+  // Successful CI reports are not uploaded; retain the non-sensitive native
+  // results in the job log as well, without inferring platform support.
+  console.log('Native Media Session capabilities: '+JSON.stringify({project:testInfo.project.name,platform:process.platform,...capabilities}));
+  if(capabilities.nativeMediaApi){
+    await expect.poll(()=>readNativeMediaFields(page)).toEqual({title:'Compatibility radio',artist:'Berlin, Germany',album:'Earth Radio'});
+    // Missing observation is a failure. An individually unsupported action must
+    // have an actual recorded native exception, never a silent conditional skip.
+    for(const action of ['play','pause','stop','previoustrack','nexttrack']){
+      const registration=capabilities.registrations[action];expect(registration,action+' must be attempted').toBeTruthy();
+      if(registration.registered)expect(await page.evaluate(action=>typeof window.fixtureNativeMediaHandlers[action],action)).toBe('function');
+      else expect(registration.errorName).toMatch(/^(?:NotSupportedError|TypeError)$/);
+    }
+    expect(capabilities.registrations.play.registered).toBe(true);expect(capabilities.registrations.pause.registered).toBe(true);
+  }
   await page.locator('#btn-play').click();await expect(page.locator('#audio-player')).toHaveJSProperty('paused',true);
   await page.locator('#btn-play').click();await expect(page.locator('#player-bar')).toHaveClass(/is-playing/);
   if(capabilities.nativeMediaApi){
-    await page.evaluate(()=>window.fixtureNativeMediaHandlers.stop());await expect.poll(()=>readNativeMediaFields(page)).toBeNull();
-    await page.locator('#btn-play').click();await expect(page.locator('#player-bar')).toHaveClass(/is-playing/);
+    await page.evaluate(()=>window.fixtureNativeMediaHandlers.pause());await expect(page.locator('#audio-player')).toHaveJSProperty('paused',true);
+    await page.evaluate(()=>window.fixtureNativeMediaHandlers.play());await expect(page.locator('#player-bar')).toHaveClass(/is-playing/);
+    if(capabilities.registrations.stop.registered){
+      await page.evaluate(()=>window.fixtureNativeMediaHandlers.stop());await expect.poll(()=>readNativeMediaFields(page)).toBeNull();
+      await page.locator('#btn-play').click();await expect(page.locator('#player-bar')).toHaveClass(/is-playing/);
+    }
   }
   expect(errors).toEqual([]);
 });

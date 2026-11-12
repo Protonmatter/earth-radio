@@ -115,8 +115,8 @@
     },
     {
       "path": "docs/MEDIA_SESSION.md",
-      "bytes": 5121,
-      "sha256": "efddafd276d98b84a20cfeb516a0bda37819b1615171cf201025685ae75b9166"
+      "bytes": 5317,
+      "sha256": "0b80ac0577718455ee8da94f32361da7bd7b7e57bfbfe0ee6b1e9b0609a570bd"
     },
     {
       "path": "docs/OPERATIONS.md",
@@ -230,8 +230,8 @@
     },
     {
       "path": "docs/QA-0.36.0.md",
-      "bytes": 6433,
-      "sha256": "9c9ef43ed159cc49bdeb092d4db0eaf0045e48ebd931dffbf31c36da4b360669"
+      "bytes": 9428,
+      "sha256": "1c9aff34e4a2a59b6f536ae4ffe6f5b474f790cdc21bcebd12539a5b0f629710"
     },
     {
       "path": "docs/QA-DIRECTORY-PLACE-MINIMUM.md",
@@ -645,8 +645,8 @@
     },
     {
       "path": "package.json",
-      "bytes": 5661,
-      "sha256": "07733b01d108ae17a85eb51597184ffdbd56533e55812d7488c981b6a803386f"
+      "bytes": 5698,
+      "sha256": "f94ca71ccf5667f7b9b21ca2fa773dd4c016c4a744a228c22695f1a2de4f22f8"
     },
     {
       "path": "scripts/build-desktop-icon.mjs",
@@ -1845,8 +1845,8 @@
     },
     {
       "path": "tests/e2e/fixtures/media-session.mjs",
-      "bytes": 763,
-      "sha256": "ef11d3e9e74b1bbf316974b7007eff573840a205609e271c1120cceec9d61aa7"
+      "bytes": 1297,
+      "sha256": "0e37a5bc40190526a42cc30f46f50461a2d48536642321856a1f5e0d24baa4ae"
     },
     {
       "path": "tests/e2e/fixtures/passport-store-harness.mjs",
@@ -1905,8 +1905,8 @@
     },
     {
       "path": "tests/e2e/media-session-compat.spec.mjs",
-      "bytes": 3737,
-      "sha256": "004f637ebfe0b4a08865e881324d8af74b300487ff0a3f09cb8d0b0dc70fa910"
+      "bytes": 5174,
+      "sha256": "3a934791cb1d94b82e5b3e601eaff77cf826fb279fc1528c3e7469fe60987a46"
     },
     {
       "path": "tests/e2e/media-session.spec.mjs",
@@ -2097,6 +2097,11 @@
       "path": "tests/media-session-artwork.test.mjs",
       "bytes": 7413,
       "sha256": "d5e141a13b2809578aa8e3da3ab3c6de2ed7cb89eb726efd1ce5ea6e4168b4bc"
+    },
+    {
+      "path": "tests/media-session-capture.test.mjs",
+      "bytes": 2293,
+      "sha256": "bfa9bd3185c6b7d2e04230dd2f48cb88d8a4d585fcee75e801cefa00c901cb31"
     },
     {
       "path": "tests/media-session-controller.test.mjs",

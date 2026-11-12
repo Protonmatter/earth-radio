@@ -69,7 +69,10 @@ npm run test:desktop-auth
 
 Browser tests inspect the actual native `MediaMetadata` object and decode the
 generated PNGs as images under the unchanged CSP. A wrapper records only
-successful native action registration. Calling those handlers in a test is
+successful native action registration through the shared native prototype, so
+renewing a wrapper cannot silently lose observation. Rejected registrations
+retain the actual native exception; a missing attempt fails compatibility tests.
+Calling those handlers in a test is
 synthetic OS input; it does not qualify a physical lock screen or media key.
 Held source/import/image tests exercise the real player and request cancellation.
 Other tests cover optional API failures, bounded resources and stale results.
