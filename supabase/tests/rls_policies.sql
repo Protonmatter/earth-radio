@@ -2,7 +2,15 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(31);
+select plan(45);
+
+select ok((select relrowsecurity and relforcerowsecurity from pg_class where oid = 'public.user_config_documents'::regclass),
+  'adding Passport preserves forced row-level security');
+select ok((select prosecdef and proconfig @> array['search_path=""'] from pg_proc
+    where oid = 'public.upsert_user_config_document(text,jsonb,bigint,boolean)'::regprocedure)
+  and not has_function_privilege('anon', 'public.upsert_user_config_document(text,jsonb,bigint,boolean)', 'EXECUTE')
+  and has_function_privilege('authenticated', 'public.upsert_user_config_document(text,jsonb,bigint,boolean)', 'EXECUTE'),
+  'the bounded privileged RPC keeps its empty search path and authenticated-only grant');
 
 select ok(
   to_regprocedure('public.rls_auto_enable()') is null
@@ -156,7 +164,7 @@ select throws_ok(
   $$ select * from public.upsert_user_config_document('unsupported', '{}'::jsonb, 0, false) $$,
   '23514',
   'unsupported document key',
-  'config RPC rejects keys outside the four synchronized documents'
+  'config RPC rejects keys outside the five synchronized documents'
 );
 
 select lives_ok(
@@ -193,6 +201,25 @@ select is((select count(*)::integer from public.upsert_user_config_document('son
 select ok((select value is null and deleted_at is not null from public.user_config_documents where document_key = 'songs'),
   'song deletion leaves a sync tombstone');
 
+select is((select revision::integer from public.upsert_user_config_document('passport', '{"version":1,"countries":{},"cities":{}}'::jsonb, 0, false)),
+  1, 'Passport uses the existing authenticated revision-checked RPC');
+select is((select count(*)::integer from public.user_config_documents where document_key = 'passport'),
+  1, 'the owner can read their Passport');
+select is((select count(*)::integer from public.upsert_user_config_document('passport', '{}'::jsonb, 99, false)),
+  0, 'Passport rejects stale expected revisions');
+select throws_ok($$ select * from public.upsert_user_config_document('passport', jsonb_build_object('payload', repeat('x', 262144)), 1, false) $$,
+  '23514', 'document exceeds supported size', 'Passport rejects values above 256 KiB');
+select is((select revision::integer from public.upsert_user_config_document('passport', to_jsonb(repeat('한', 87380) || 'xx'), 1, false)),
+  2, 'Passport accepts exactly 262144 serialized UTF-8 bytes');
+select throws_ok($$ select * from public.upsert_user_config_document('passport', to_jsonb(repeat('한', 87380) || 'xxx'), 2, false) $$,
+  '23514', 'document exceeds supported size', 'Passport rejects one byte above the serialized UTF-8 limit');
+select throws_ok($$ update public.user_config_documents set value = '{}'::jsonb where document_key = 'passport' $$,
+  '42501', null, 'direct Passport mutation cannot bypass revision checks');
+select is((select count(*)::integer from public.upsert_user_config_document('passport', null, 2, true)),
+  1, 'Passport supports revision-checked deletion');
+select ok((select value is null and deleted_at is not null and revision = 3 from public.user_config_documents where document_key = 'passport'),
+  'Passport deletion retains a revisioned tombstone');
+
 select is(
   (select count(*)::integer from public.favorite_stations),
   0,
@@ -200,7 +227,7 @@ select is(
 );
 
 select is(
-  (select count(*)::integer from public.user_config_documents where document_key <> 'songs'),
+  (select count(*)::integer from public.user_config_documents where document_key not in ('songs', 'passport')),
   0,
   'another user cannot read the first user config documents'
 );
@@ -213,6 +240,10 @@ select is((select count(*)::integer from public.user_config_documents where docu
   'a different account cannot read the song document');
 select is((select count(*)::integer from public.upsert_user_config_document('songs', '{"version":1}'::jsonb, 3, false)), 0,
   'a different account cannot update the song document using its known revision');
+select is((select count(*)::integer from public.user_config_documents where document_key = 'passport'), 0,
+  'a different account cannot read the Passport');
+select is((select count(*)::integer from public.upsert_user_config_document('passport', '{}'::jsonb, 3, false)), 0,
+  'a different account cannot update the Passport using its known revision');
 
 select is(
   (select count(*)::integer from public.favorite_stations),
@@ -243,6 +274,8 @@ select throws_ok(
   null,
   'anonymous users cannot execute the config mutation RPC'
 );
+select throws_ok($$ select * from public.upsert_user_config_document('passport', '{}'::jsonb, 0, false) $$,
+  '42501', null, 'anonymous users cannot execute Passport writes');
 
 select * from finish();
 rollback;

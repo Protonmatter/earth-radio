@@ -1,6 +1,7 @@
 import { createAuthClient } from './auth-core.js?v=0.34.1';
 import { createDesktopAuthClient, isDesktopAuthAvailable } from './desktop-auth.js?v=0.34.1';
 import { songLibraryStore, setSongLibraryAccount, pauseSongLibraryAccount } from './song-library-store.js?v=0.34.1';
+import { passportStore } from './passport-store.js?v=0.34.1';
 import {
   accountDataKey, accountLocalRecords, createSyncEngine, planLocalAccountTransition,
   shouldResetBrowserAccount, stableStringify, syncDocuments
@@ -328,40 +329,41 @@ async function boot() {
         assertActive();
       };
       const songs = songLibraryStore();
+      const passport = passportStore(), stores = { songs, passport };
       let reloadRequired = false;
       const engine = createSyncEngine({
         readLocal: async key => {
           assertActive();
-          const value = key === 'songs' ? await songs.readForAccount(userId) : await accountKv('get', key, undefined, userId);
+          const value = Object.hasOwn(stores, key) ? await stores[key].readForAccount(userId) : await accountKv('get', key, undefined, userId);
           assertActive();
           return value;
         },
         writeLocal: async (key, value) => {
           assertActive();
-          const result = key === 'songs' ? await songs.writeForAccount(userId, value) : await accountKv('put', key, value, userId);
+          const result = Object.hasOwn(stores, key) ? await stores[key].writeForAccount(userId, value) : await accountKv('put', key, value, userId);
           assertActive();
           return result;
         },
         writeLocalIfUnchanged: async (key, expected, value) => {
           assertActive();
-          const written = key === 'songs' ? await songs.compareForAccount(userId, expected, value)
+          const written = Object.hasOwn(stores, key) ? await stores[key].compareForAccount(userId, expected, value)
             : await accountKv('comparePut', key, { expected, next: value }, userId);
           assertActive();
           return written;
         },
         readState: async key => {
           assertActive();
-          if (key === 'songs') { const state = await songs.readSyncState(userId); assertActive(); return state; }
+          if (Object.hasOwn(stores, key)) { const state = await stores[key].readSyncState(userId); assertActive(); return state; }
           try { return JSON.parse(localStorage.getItem(syncStateKey(userId, key))); }
           catch { return null; }
         },
         writeState: async (key, value) => {
           assertActive();
-          if (key === 'songs') await songs.writeSyncState(userId, value);
+          if (Object.hasOwn(stores, key)) await stores[key].writeSyncState(userId, value);
           else localStorage.setItem(syncStateKey(userId, key), JSON.stringify(value));
           assertActive();
         },
-        onRemoteApplied: key => { if (key !== 'songs') reloadRequired = true; },
+        onRemoteApplied: key => { if (!Object.hasOwn(stores, key)) reloadRequired = true; },
         fetchRemote: async () => {
           await assertActiveNamespace();
           const rows = await auth.rest(
@@ -386,6 +388,7 @@ async function boot() {
       const result = await engine.syncOnce();
       assertActive();
       if (result.conflicts === 0) await songs.ensureSyncBaseline(userId);
+      if (result.conflicts === 0) await passport.ensureSyncBaseline(userId);
       assertActive();
       syncStatus = result.conflicts ? 'Synced · conflicts merged' : 'Synced';
       if (reloadRequired) {

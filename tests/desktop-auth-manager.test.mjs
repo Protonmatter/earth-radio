@@ -155,6 +155,25 @@ test('native sync preserves the existing large-favorites contract and enforces p
   } }), /invalid/i);
 });
 
+test('native Passport admission accepts the exact UTF-8 boundary and rejects larger or foreign-account writes', async t => {
+  const store = storage(); store.setItem(authStorageKeys.session, JSON.stringify(session));
+  let requests = 0;
+  const manager = createDesktopAuthManager({ config, vault: { storage: store, flush: async () => {} }, openExternal: async () => {},
+    fetchImpl: async () => { requests++; return json([{ revision: 1 }]); } });
+  t.after(() => manager.close());
+  const write = (value, userId = 'user-a') => manager.execute('upsertDocument', { expectedUserId: userId, body: {
+    p_document_key: 'passport', p_value: value, p_expected_revision: 0, p_delete: false
+  } });
+  const boundary = '한'.repeat(87380) + 'xx';
+  assert.equal(Buffer.byteLength(JSON.stringify(boundary)), 262144);
+  assert.equal((await write(boundary))[0].revision, 1);
+  assert.equal(requests, 1);
+  await assert.rejects(write(boundary + 'x'), /invalid/i);
+  assert.equal(requests, 1, 'oversize input is rejected before a network request');
+  await assert.rejects(write({ version: 1, countries: {}, cities: {} }, 'user-b'), /changed/i);
+  assert.equal(requests, 1, 'a stale account cannot send a Passport');
+});
+
 for (const stage of ['refresh', 'identity-response']) test(`superseded identity linking cannot resume after deferred ${stage}`, async t => {
   const store = storage();
   store.setItem(authStorageKeys.session, JSON.stringify({ ...session, ...(stage === 'refresh' ? { expires_at: 1 } : {}) }));

@@ -47,7 +47,9 @@ app.whenReady().then(async () => {
         if (url.pathname.endsWith('/user_config_documents')) return json([...records.values()]);
         if (url.pathname.endsWith('/rpc/upsert_user_config_document')) {
           const b = JSON.parse(init.body);
-          const row = { document_key: b.p_document_key, value: b.p_value, revision: 1, deleted_at: null };
+          if ((records.get(b.p_document_key)?.revision || 0) !== b.p_expected_revision) return json([]);
+          const row = { document_key: b.p_document_key, value: b.p_value, revision: b.p_expected_revision + 1,
+            deleted_at: b.p_delete ? '2026-11-12T00:00:00Z' : null };
           records.set(row.document_key, row);
           return json([row]);
         }
@@ -94,12 +96,18 @@ app.whenReady().then(async () => {
   assert.equal(ciphertext.includes(Buffer.from('qualification-private')), false);
   const body = { p_document_key: 'favorites', p_value: { station: { uuid: 'station', addedAt: '2026-01-01T00:00:00Z' } }, p_expected_revision: 0, p_delete: false };
   await window.webContents.executeJavaScript(`window.qualificationAuth.rpc('upsert_user_config_document', ${JSON.stringify(body)}, {expectedUserId:'qualification-user'})`);
+  const passport = { version: 1, historyEpoch: 0, historyClearedAt: 0,
+    countries: { US: { firstDay: 20_000, lastDay: 20_000 } }, cities: {} };
+  await window.webContents.executeJavaScript(`window.qualificationAuth.rpc('upsert_user_config_document', ${JSON.stringify({
+    p_document_key: 'passport', p_value: passport, p_expected_revision: 0, p_delete: false
+  })}, {expectedUserId:'qualification-user'})`);
   await manager.close();
   manager = create(await createAuthVault({ directory: vaultDirectory, safeStorage }));
   subscribe();
   assert.equal((await window.webContents.executeJavaScript('window.qualificationAuth.initialize()')).user.id, 'qualification-user');
   const downloaded = await window.webContents.executeJavaScript("window.qualificationAuth.rest('user_config_documents?select=document_key,value,revision,deleted_at&order=document_key', {expectedUserId:'qualification-user'})");
   assert.equal(downloaded[0].value.station.uuid, 'station');
+  assert.deepEqual(downloaded.find(row => row.document_key === 'passport').value, passport);
   await window.webContents.executeJavaScript('window.qualificationAuth.signOut()');
   await manager.close();
   manager = create(await createAuthVault({ directory: vaultDirectory, safeStorage }));
@@ -168,6 +176,24 @@ app.whenReady().then(async () => {
   await until("Math.abs(Number(document.getElementById('volume')?.value)-0.42)<0.001");
   await until("document.getElementById('er-auth-button')?.textContent === 'qualification@earth-radio.test'");
   await openAccount();
+  qualificationPhase = 'Passport native account sync';
+  const passportRead = "import('./assets/passport-store.js?v='+document.documentElement.dataset.appVersion).then(async module => (await module.passportStore().read()).value)";
+  assert.deepEqual(await window.webContents.executeJavaScript(passportRead), passport);
+  const passportMarker = await window.webContents.executeJavaScript('window.passportNativeDocumentMarker = crypto.randomUUID()');
+  records.set('passport', { document_key: 'passport', revision: 2, deleted_at: null,
+    value: { ...passport, countries: { ...passport.countries, KR: { firstDay: 20_001, lastDay: 20_001 } } } });
+  await window.webContents.executeJavaScript("Array.from(document.querySelectorAll('.er-auth-secondary')).find(button=>button.textContent==='Sync now').click()");
+  await until(`(${passportRead}).then(value => Boolean(value?.countries.KR))`);
+  assert.equal(await window.webContents.executeJavaScript('window.passportNativeDocumentMarker'), passportMarker, 'Passport-only native sync preserves the document');
+  await window.webContents.executeJavaScript(`import('./assets/passport-store.js?v='+document.documentElement.dataset.appVersion).then(async module => {
+    const core = await import('./assets/passport-core.js?v='+document.documentElement.dataset.appVersion), store = module.passportStore();
+    await store.mutate(doc => core.recordPassportPlace(doc, { countrycode:'FR',confidence:'country' }, 20002), await store.read());
+  })`);
+  await until("document.querySelector('.er-auth-sync')?.textContent === 'Synced'");
+  await window.webContents.executeJavaScript("Array.from(document.querySelectorAll('.er-auth-secondary')).find(button=>button.textContent==='Sync now').click()");
+  for (let i = 0; i < 100 && !records.get('passport')?.value.countries.FR; i++) await new Promise(resolve => setTimeout(resolve, 20));
+  assert.ok(records.get('passport')?.value.countries.FR, 'The real native renderer uploads Passport through the scoped IPC adapter');
+  await until("document.querySelector('.er-auth-sync')?.textContent === 'Synced'");
   qualificationPhase = 'UI sign-out persistence failure';
   // Force a real filesystem deletion failure in this disposable profile. The
   // encrypted session remains recoverable until sign-out can be retried.
@@ -206,7 +232,8 @@ app.whenReady().then(async () => {
   await until("document.querySelector('.er-auth-modal')?.textContent.includes('Synced')");
   console.log(JSON.stringify({ platform: process.platform, arch: process.arch, sandbox: true, contextIsolation: true,
     ownedFrameOnly: true, pkceLoopback: true, tokenFreeRenderer: true, osEncryptedRestart: true,
-    syncAdapterRoundTrip: true, logoutSurvivesRestart: true, actualAccountUiSync: true, signOutFailureRecovery: true,
+    syncAdapterRoundTrip: true, passportNativeSync: true, passportAfterEncryptedAuthRestart: true,
+    passportOnlySyncPreservesDocument: true, logoutSurvivesRestart: true, actualAccountUiSync: true, signOutFailureRecovery: true,
     providerEvidence: 'synthetic HTTP, separate from live qualification' }));
 }).then(async () => {
   await manager?.close(); window?.destroy(); clearTimeout(watchdog);

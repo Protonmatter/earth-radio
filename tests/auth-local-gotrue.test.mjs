@@ -300,6 +300,25 @@ test('local Auth issues unique-user JWTs that RLS accepts and fences', {
   assert.deepEqual(crossUser, []);
   assert.equal((await upsert({ payload: 'x'.repeat(1048576) }, 1)).status, 400);
 
+  const passportDocument = { version: 1, historyEpoch: 0, historyClearedAt: 0,
+    countries: { US: { firstDay: 20_000, lastDay: 20_000 } }, cities: {} };
+  const passportUpsert = (value, revision, deleted = false) => fetch(new URL('/rest/v1/rpc/upsert_user_config_document', stack.url), {
+    method: 'POST', headers, body: JSON.stringify({ p_document_key: 'passport', p_value: value, p_expected_revision: revision, p_delete: deleted })
+  });
+  assert.equal((await readOkJson(await passportUpsert(passportDocument, 0)))[0].revision, 1);
+  assert.deepEqual(await readOkJson(await passportUpsert(passportDocument, 99)), []);
+  const visiblePassport = await readOkJson(await fetch(new URL('/rest/v1/user_config_documents?select=document_key,value&document_key=eq.passport', stack.url), { headers }));
+  assert.deepEqual(visiblePassport, [{ document_key: 'passport', value: passportDocument }]);
+  const boundary = '한'.repeat(87380) + 'xx';
+  assert.equal(Buffer.byteLength(JSON.stringify(boundary)), 262144);
+  assert.equal((await readOkJson(await passportUpsert(boundary, 1)))[0].revision, 2);
+  assert.equal((await passportUpsert(boundary + 'x', 2)).status, 400);
+  const crossPassport = await readOkJson(await fetch(new URL(`/rest/v1/user_config_documents?select=document_key&document_key=eq.passport&user_id=neq.${userId}`, stack.url), { headers }));
+  assert.deepEqual(crossPassport, []);
+  assert.equal((await readOkJson(await passportUpsert(null, 2, true)))[0].revision, 3);
+  const tombstone = await readOkJson(await fetch(new URL('/rest/v1/user_config_documents?select=value,revision,deleted_at&document_key=eq.passport', stack.url), { headers }));
+  assert.equal(tombstone[0].value, null); assert.equal(tombstone[0].revision, 3); assert.ok(tombstone[0].deleted_at);
+
   const anon = await fetch(new URL('/rest/v1/user_config_documents?select=document_key', stack.url), {
     headers: { apikey: stack.apikey }
   });

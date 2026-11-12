@@ -431,7 +431,7 @@
     {
       "path": "docs/superpowers/plans/2026-11-12-listening-passport.md",
       "bytes": 10434,
-      "sha256": "0bac735804fe92d3dd907c45eee069179d2348c6965469b542d86b16a6b1fe4a"
+      "sha256": "07c909ffa6588b5a2e586e3ca76194c6e4b8301a2b962796fec886aca208624d"
     },
     {
       "path": "docs/superpowers/plans/2026-11-12-search-focus-qualification.md",
@@ -535,8 +535,8 @@
     },
     {
       "path": "electron/auth-manager.mjs",
-      "bytes": 9878,
-      "sha256": "6d435bec98f46b0a18384d5d61de938ae388280838fe97e891faeeab4bcce686"
+      "bytes": 9896,
+      "sha256": "a579e794c2fe339050298e5f48ee165c377c54c7d26dacddeffb68182e023465"
     },
     {
       "path": "electron/auth-vault.mjs",
@@ -605,8 +605,8 @@
     },
     {
       "path": "package.json",
-      "bytes": 5414,
-      "sha256": "413be9ed3e22967a1c5a7d88e530afe4899f9a6acaa904587e599e93098e3c17"
+      "bytes": 5443,
+      "sha256": "b91b0f683c6d49391a7fbb81e932c889a89b31e258d2d95659abff0987db49d9"
     },
     {
       "path": "scripts/build-desktop-icon.mjs",
@@ -860,8 +860,8 @@
     },
     {
       "path": "site/assets/auth-ui.js",
-      "bytes": 29355,
-      "sha256": "771784a74ca3a58f8326bf98b098a74f53427c8817931ddd1b7ce0955a1f86da"
+      "bytes": 29661,
+      "sha256": "af7881260d0cdaf55f1d81f912c33cc44e010f8e0172f3ab234c62d7e3dd402e"
     },
     {
       "path": "site/assets/brand-identity.css",
@@ -1120,8 +1120,8 @@
     },
     {
       "path": "site/assets/sync-core.js",
-      "bytes": 13810,
-      "sha256": "2a28521f7905f350181e729b725ae456e504771106b37ea2efe2d48096d2132b"
+      "bytes": 14131,
+      "sha256": "b5eb597488afbde6965914fb9aa243154d23df39cbb07eb57eb9263a7842809f"
     },
     {
       "path": "site/assets/today-core.js",
@@ -1599,9 +1599,14 @@
       "sha256": "6e87c3bab452abbea17883e4feb730213c5d987c842713ad0f1c94e04d10a1ca"
     },
     {
+      "path": "supabase/migrations/20261112033456_listening_passport.sql",
+      "bytes": 3449,
+      "sha256": "77a38c6afe91fb23d98f81b52de88d5fa07e0700d4520b981b24aa9c92fd8ba3"
+    },
+    {
       "path": "supabase/tests/rls_policies.sql",
-      "bytes": 7401,
-      "sha256": "f7711982ffd0982d05981949ea3a74ed036c5ebba667485545dc6ceadb72b17c"
+      "bytes": 10407,
+      "sha256": "6643981a3e1da7337499398d873ed0faef37b8785ea86f87d00c97d404b4001c"
     },
     {
       "path": "tests/atlas-lock.test.mjs",
@@ -1610,8 +1615,8 @@
     },
     {
       "path": "tests/auth-local-gotrue.test.mjs",
-      "bytes": 13119,
-      "sha256": "9b6e1fc9d11ca8763909dea64f13e1ae088e0d0d2f2598999e6579dc76146a87"
+      "bytes": 14896,
+      "sha256": "0d5199bfe55e097f6aaca3c39dd96121e1e1b99912a86fef91121480ffaf9c60"
     },
     {
       "path": "tests/auth-sync.test.mjs",
@@ -1675,8 +1680,8 @@
     },
     {
       "path": "tests/desktop-auth-manager.test.mjs",
-      "bytes": 11244,
-      "sha256": "dbefb659f86bc5effc84c3917e8ef23561dcb2283efe19d834bf0babdaf5485d"
+      "bytes": 12453,
+      "sha256": "65695786174cbd8c805d1e5c3f3aa42055c9d9a18fe845d45a9864a48e70bcc1"
     },
     {
       "path": "tests/desktop-auth-vault.test.mjs",
@@ -1740,8 +1745,8 @@
     },
     {
       "path": "tests/e2e/auth-ui.spec.mjs",
-      "bytes": 7608,
-      "sha256": "d7fe022abae7637b401d294e026544729b9682df8844a90e370aec4ea3929a01"
+      "bytes": 11480,
+      "sha256": "61632d1817d27e9608b9bea87dac7a46d68469df68516710615b6dbcfb0d7cb8"
     },
     {
       "path": "tests/e2e/directory-snapshot.spec.mjs",
@@ -2009,6 +2014,11 @@
       "sha256": "ba0f2f325fec81163d89c85a4b56f8bc70f0bef220c5089b2127a997821327dc"
     },
     {
+      "path": "tests/passport-sync.test.mjs",
+      "bytes": 6430,
+      "sha256": "d5dd41ab25695b667d47c0978e0b6d70807d53e73fe390392c091e02f1557638"
+    },
+    {
       "path": "tests/pinned-stations.test.mjs",
       "bytes": 3895,
       "sha256": "174ac3acf13fe3ad9dcef945013d98c9150d477cf3c3f82956b08251b629de1f"
@@ -2110,8 +2120,8 @@
     },
     {
       "path": "tests/smoke-desktop-auth.mjs",
-      "bytes": 16284,
-      "sha256": "b9cfd99a78441640c049be00a36481ccbfabc93f9ca12e4b48ca322fcfd65ebe"
+      "bytes": 19168,
+      "sha256": "7dc42f46790db291b40c4a479947fa752a75844ca23b36eae39658449f00dd8a"
     },
     {
       "path": "tests/smoke-desktop-renderer.mjs",

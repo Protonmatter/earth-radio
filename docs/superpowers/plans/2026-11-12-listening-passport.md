@@ -104,10 +104,10 @@ Files: `sync-core.js`, `auth-ui.js`, `electron/auth-manager.mjs`, generated
 `supabase/tests/rls_policies.sql`, `tests/passport-sync.test.mjs`,
 native auth/adapter tests and `tests/auth-local-gotrue.test.mjs` as appropriate.
 
-- [ ] RED five-key tests: Passport after songs, cross-client CAS/clear/tombstones,
+- [x] RED five-key tests: Passport after songs, cross-client CAS/clear/tombstones,
   concurrent positive additions, offline/stale-policy merge, no page reload for a
   Passport-only update, explicit guest adoption and preserved four-key behavior.
-- [ ] Add262,144-byte native/SQL key admission, preserving all prior limits and
+- [x] Add262,144-byte native/SQL key admission, preserving all prior limits and
   RLS/owner/RPC/revision/grant semantics. No new role/table/provider/secret. Inspect
   hosted structure read-only before any eventual schema operation.
 - [ ] Exercise native sandbox/auth/restart and full node suites locally. Local DB
