@@ -1,7 +1,36 @@
 import {test,expect} from '@playwright/test';
 import {setupApp} from './helpers.mjs';
 import {FIXTURE_COUNTRIES,FIXTURE_STATIONS} from './fixtures/stations.mjs';
+import {holdLegacySearchFocus,heldLegacyFocusCount,releaseLegacySearchFocus} from './fixtures/search-focus-schedule.mjs';
 const openSearch=async page=>{await page.keyboard.press('Control+k');await expect(page.locator('#er-station-query')).toBeVisible();};
+
+for(const width of [390,1440]){
+test(`deferred legacy focus cannot steal an active palette edit at ${width}px`,async({page})=>{
+  await page.setViewportSize({width,height:900});
+  await holdLegacySearchFocus(page);await setupApp(page);await openSearch(page);
+  const query=page.locator('#er-station-query');await expect(query).toBeFocused();
+  await expect.poll(()=>heldLegacyFocusCount(page)).toBeGreaterThan(0);
+  await releaseLegacySearchFocus(page);await page.keyboard.type('seoul');
+  await expect(query).toHaveValue('seoul');
+  await expect(page.locator('#search-results .search-result-item__name')).toHaveText(['E2E Seoul Pop']);
+  await expect(page.locator('#audio-player')).toHaveJSProperty('paused',true);
+});
+
+test(`deferred legacy focus cannot steal a palette composition at ${width}px`,async({page})=>{
+  await page.setViewportSize({width,height:900});
+  await holdLegacySearchFocus(page);await setupApp(page);await openSearch(page);
+  const query=page.locator('#er-station-query');await expect(query).toBeFocused();
+  await expect.poll(()=>heldLegacyFocusCount(page)).toBeGreaterThan(0);
+  const before=await page.locator('#search-results .search-result-item__name').allTextContents();
+  await query.dispatchEvent('compositionstart');await query.fill('seoul');
+  await releaseLegacySearchFocus(page);await expect(query).toBeFocused();
+  await expect(query).toHaveValue('seoul');
+  await expect(page.locator('#search-results .search-result-item__name')).toHaveText(before);
+  await query.dispatchEvent('compositionend');
+  await expect(page.locator('#search-results .search-result-item__name')).toHaveText(['E2E Seoul Pop']);
+  await expect(page.locator('#audio-player')).toHaveJSProperty('paused',true);
+});
+}
 async function genre(page,value='jaz'){
   const input=page.getByRole('combobox',{name:'Search genres',exact:true});
   if(!await input.isVisible())await page.locator('.er-discovery-advanced>summary').click();

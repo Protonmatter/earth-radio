@@ -2,9 +2,29 @@ import { mkdir, readFile } from 'node:fs/promises';
 import { expect, test } from '@playwright/test';
 import { setupApp,openSongLibraryView } from './helpers.mjs';
 import { reviewBackupOrdering } from './fixtures/song-store-schedule.mjs';
+import {holdSongStorageOpen,heldSongStorageOpens,releaseSongStorageOpen} from './fixtures/song-save-schedule.mjs';
 
 const broadcast = { found: true, source: 'icy', platform: 'icy', artist: 'IU', title: 'Blueming', raw: 'IU - Blueming' };
 const moduleVersion = JSON.parse(await readFile('package.json', 'utf8')).version;
+
+async function waitForSavedHistoryPolicy(page, enabled) {
+  await expect.poll(() => page.evaluate(async version =>
+    (await (await import(`/assets/song-library-store.js?v=${version}`)).songLibraryStore().read()).value?.historyEnabled,
+  moduleVersion)).toBe(enabled);
+  await expect(page.locator('#er-song-history-enabled')).toBeEnabled();
+}
+
+test('history-off waits for durable storage before reload, including a held native callback',async({page})=>{
+  await setupApp(page);await openSongLibraryView(page);
+  const control=page.locator('#er-song-history-enabled');await expect(control).toBeEnabled();
+  await holdSongStorageOpen(page);
+  try{
+    await control.uncheck();await expect.poll(()=>heldSongStorageOpens(page)).toBeGreaterThan(0);
+    await expect(control).toBeDisabled();await releaseSongStorageOpen(page);
+    await waitForSavedHistoryPolicy(page,false);await page.reload();
+    await expect(control).toBeEnabled();await expect(control).not.toBeChecked();
+  }finally{await releaseSongStorageOpen(page);}
+});
 
 test('out-of-order backup callbacks and interrupted removals cannot restore deleted songs', async ({ page }) => {
   await setupApp(page);
@@ -118,6 +138,7 @@ test('heard songs, likes, details, removal/undo and reload persist independently
   await page.locator('[data-song-view="liked"]').click();
   await expect(page.locator('#er-song-feed')).toContainText('Blueming');
   await page.locator('#er-song-history-enabled').uncheck();
+  await waitForSavedHistoryPolicy(page,false);
   await page.reload();
   await expect(page.locator('#er-song-history-enabled')).not.toBeChecked();
 });

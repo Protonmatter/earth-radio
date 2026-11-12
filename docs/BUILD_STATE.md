@@ -1,5 +1,28 @@
 # Build state
 
+## 0.34.1 focus patch under qualification
+
+PR50 merged as `715f997e94bd6d1dd62386506f2904eed80e16ee`. Its production files,
+headers, routes, offline shell, four app UI and sixteen website contexts pass;
+all ten GitHub checks are green. The strict browser-log gate nevertheless found
+330 passes and two cases passing on retry, so final delivery was not declared
+clean. Controlled probes in both engines reproduce hidden legacy focus taking
+typing from the visible palette and navigation before a pending history write.
+The completed history operation itself persists correctly.
+
+The isolated patch hides the internal engine and focuses the visible control
+within the open action. Tests wait for durable policy before reload and retain a
+held-native-callback case. Local verifier679/3existing skips, full341browser
+cases with retries disabled,42rendered contracts, native renderer/auth/restart
+and installed-worker upgrade/offline checks pass. Independent review, hosted/
+served and final-source package/download qualification are pending. Frozen model replay
+preserves all 9,400 component counts and eleven city minima. Identity is coherent
+0.34.1/v77-search-focus/index-d7add1ac.js. No storage, account, ranking, directory
+algorithm, dependency or service changes. See [patch qualification](QA-0.34.1.md).
+
+The v0.34.0 release below remains published and immutable. A new patch release
+will use separately qualified final-source packages; no old asset is replaced.
+
 ## 0.34.0 web and desktop delivered
 
 [v0.34.0](https://github.com/Protonmatter/earth-radio/releases/tag/v0.34.0) is
