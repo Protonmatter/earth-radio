@@ -37,9 +37,13 @@ byte-identical. App 0.34.0/v76 identity stays coherent. All 37 targeted browser
 directory/loading checks pass, including the generated grouped root, five Dublin
 rows and cached reload without autoplay. Full source verification passes 679 tests,
 three existing Windows skips and 441 hashes, including lint/syntax and both staged
-artifacts. Independent review and exact-head hosted delivery are still pending. Final merged publication
-must pass live edge and seeded native/loopback minima before the final desktop
-rebuild and release. Published 0.32.2 assets remain immutable. The retained input,
+artifacts. Independent review found no findings. PR49 head and final main each pass ten
+hosted gates and332 browser cases without flaky results. Final publication from
+9fefbd0 passes both public formats/origins against current manifest payload hashes,
+stable ETags/304 and every city minimum. Actual seeded native aggregation and
+loopback pass all eleven minima with3,279 rows and one root read. Final desktop
+rebuild, guest restart and all thirteen public downloads now pass; see the
+[release record](RELEASE-0.34.0.md). Published 0.32.2 assets remain immutable. The retained input,
 algorithm hashes, both representations, native counts and unchanged country views
 are in the [coverage receipt](provenance/directory-place-coverage.json). Counts
 include HTTP programs; they do not assert five HTTPS-playable or audible streams.

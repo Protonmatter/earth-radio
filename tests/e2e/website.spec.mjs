@@ -34,7 +34,10 @@ for(const width of [320,390,768,1440]){
 }
 
 test('complete stable release updates every download together; keyboard and direct install anchor work',async({page})=>{
-  const version='0.32.2',tag=`v${version}`,base=`${repository}/releases/download/${tag}`;
+  // Keep this synthetic API release newer than the qualified fallback. Older
+  // responses are covered separately and must never downgrade download links.
+  const [major,minor,patch]=FALLBACK_RELEASE.version.split('.').map(Number);
+  const version=`${major}.${minor}.${patch+1}`,tag=`v${version}`,base=`${repository}/releases/download/${tag}`;
   const names=[`EarthRadio-Setup-${version}-arm64.exe`,`EarthRadio-Portable-${version}-arm64.exe`,`EarthRadio-Setup-${version}-x64.exe`,`EarthRadio-Portable-${version}-x64.exe`,`EarthRadio-${version}-macOS-arm64-unnotarized.dmg`,`EarthRadio-${version}-macOS-x64-unnotarized.dmg`,'SHA256SUMS.txt','INSTALL.md'];
   await page.route(api,route=>route.fulfill({json:{draft:false,prerelease:false,tag_name:tag,html_url:`${repository}/releases/tag/${tag}`,assets:names.map(name=>({name,state:'uploaded',size:100,browser_download_url:`${base}/${name}`}))}}));
   await page.goto('/__website/#iphone-install');

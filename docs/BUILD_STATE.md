@@ -1,30 +1,45 @@
 # Build state
 
-## 0.34.0 web delivered; desktop qualification held on directory coverage
+## 0.34.0 web and desktop delivered
 
-PR #48 merged as `644e19f289fe2b92bf2e4dad118144083a39d4a5`. All ten head/main
-checks pass, both hosted browser logs report 330 passes with no flaky cases, and actual
-production matches 106/106/19 files with headers, 15 routes, four account-enabled UI
-contexts and an installed-worker/offline check. Original main is clean at the
-same source; 435 hashes verify. Desktop 0.34 candidates match 128 app files and
-production metadata, with 87-file Windows payload parity and local CMS/timestamps.
-They are unpublished and retained separately from stable 0.32.2.
+[v0.34.0](https://github.com/Protonmatter/earth-radio/releases/tag/v0.34.0) is
+published as release 442317988 at 2026-11-11T23:55:27Z. Annotated tag
+`b3dc7826124e2e0f083ba0f7ab1d3574d164d371` points to qualified release source
+`9fefbd0a1b295a79857a9fafd7a127b399061536` (PR49). All thirteen draft and anonymous public
+downloads pass full sizes/SHA-256; v0.32.1/v0.32.2 assets remain unchanged.
 
-Fresh publication 43103795772 exposed a coverage gap: Dublin has 3 programs in the
-global 10,000-row root and 30 in its 196-row Ireland shard. Native sampling also
-returns 3. The loss occurs at the producer cutoff. A new
-pure selection helper has ten focused passing checks. The feature-branch producer
-integration protects qualified city witnesses before clipping and rejects an unmet
-legacy or grouped minimum, without extra requests or location guesses. The inactive
-core passed 675 tests, three existing Windows skips and 439 hashes. Integration
-passes 46 focused producer/protocol cases and 37 browser/loading cases. Fresh live
-input replay restores Dublin to five, retains 10,000 rows and all country views,
-and passes eleven-city native sampling with one root read. Full integration
-verification passes 679 tests, three existing Windows skips and 441 hashes.
-Review and publication are pending; production still uses the prior selector.
-See the [correction design](superpowers/specs/2026-11-11-directory-place-minimum.md).
+All ten exact-head and final-main checks pass, with 332 hosted browser cases per
+source and no flaky results. Production matches 106 files on each app origin and 19
+website files with cache/security policy, 15 routes, four account-enabled Chromium/
+WebKit UI contexts and an installed-worker/offline check. The producer verifier
+passes 679 tests, three existing Windows skips and 441 deterministic source hashes;
+46 focused and37 changed-data browser cases pass. One independent producer review
+found no findings. ER-05's 330 browser cases, 42 rendered scenarios and native
+lifecycle checks remain dated evidence for the unchanged application assets.
 
-## 0.34.0 place-first source qualification
+The cutoff correction is delivered: current generation 2026-11-11T23:23:12.183Z
+has 10,000 identities/9,411 groups, exact current-manifest payload hashes/stable
+ETags/304 on both public formats/origins and at least five programs per curated
+city. Actual native aggregation/loopback retains all eleven minima with 3,279 rows
+and one root read. These counts include HTTP metadata programs, not five audible
+or HTTPS streams. No extra app fetch, service, dependency or location inference.
+
+All six builds match 128 application files and complete production metadata.
+Windows setup/portable pairs match 87 payload files, correct native PE architecture,
+local CMS/RFC3161 signatures and isolated startup. Both real guest portable tests
+pass search, muted playback, favorite/volume retention, Continue and no autoplay
+after two normal exit cycles; x64 runs under Windows ARM emulation. Both native
+Mac CI candidates pass architecture/DMG/read-only mount/ad-hoc/icon/startup checks,
+plus independent full ASAR/metadata inspection. Public publisher trust, Apple
+notarization, physical installations/upgrades and fresh live provider acceptance
+remain separate limits. See [release record and rollback](RELEASE-0.34.0.md).
+
+The curated website metadata and current guide advance only after the complete
+public-download gate. This follow-up changes no app/native/lockfile bytes and no
+immutable asset. Original accounts/providers/SMTP/vault are unchanged. Passport,
+Media Session, share/install and broader data/atlas phases remain planned.
+
+## 0.34.0 place-first source qualification — initial ER-05 stage
 
 The ER-05 branch integrates conservative place/genre/time copy across rows,
 player facts and tooltips, retains raw song input independently, and moves the
@@ -37,7 +52,8 @@ retries, the 42-scenario rendered matrix and isolated Windows ARM64 renderer/aut
 encrypted-restart checks. Fresh review found one P2 Details refresh-focus issue;
 it was reproduced in both engines and corrected with six focused checks and the
 full green post-correction suites. Hosted and production acceptance followed as
-recorded above; desktop publication awaits the directory correction.
+recorded above. At that stage desktop publication awaited the directory correction;
+the delivered state above and release record supersede that earlier hold.
 
 ## 0.33.1 web delivery — verified
 

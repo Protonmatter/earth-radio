@@ -55,8 +55,8 @@
     },
     {
       "path": "docs/BUILD_STATE.md",
-      "bytes": 37141,
-      "sha256": "5f4a7a7b601898b5173414dd1c7643b2a83740192f43c08a7713ce3be15d37d0"
+      "bytes": 38204,
+      "sha256": "1fb7ca884011d9eaaea647b9379c4ed7b8300394a238d9ddff623daa9ef18e4b"
     },
     {
       "path": "docs/CLOUDFLARE_DEPLOYMENT.md",
@@ -100,8 +100,8 @@
     },
     {
       "path": "docs/INSTALLATION.md",
-      "bytes": 10158,
-      "sha256": "9760bdab867755e4c755c239344b3ac1279367de142d9cefc5840abcf1fa6889"
+      "bytes": 10741,
+      "sha256": "ce9fffdfafa0c483e9c43ecc94c3d0601d019d14fec0b3e7243881e930b6bb46"
     },
     {
       "path": "docs/LIVE_METADATA.md",
@@ -174,6 +174,11 @@
       "sha256": "e1cd6788e0a912b58c7d8d87dd4513cb19c15ff3e50fcf8b247463d55e34786d"
     },
     {
+      "path": "docs/provenance/release-0.34.0.json",
+      "bytes": 11318,
+      "sha256": "1c00dc2113f46610ba0d50c71ab8b542d8bf8ec7a9efe5088ff78bafcd94f45c"
+    },
+    {
       "path": "docs/QA-0.33.0.md",
       "bytes": 6973,
       "sha256": "7d51b2cf3818d87645d7c0a143ff83add0dc874f261a2d330397cf9314df4afb"
@@ -185,13 +190,13 @@
     },
     {
       "path": "docs/QA-0.34.0.md",
-      "bytes": 3724,
-      "sha256": "ca80581e8e43b45afa506a695cb2b92fa965dc966b576f60bc7e92adc11384ca"
+      "bytes": 4485,
+      "sha256": "598573810d5a1f5afc193b649a37fd9a57635cf2e4443cec54846bf6ea5ab58e"
     },
     {
       "path": "docs/QA-DIRECTORY-PLACE-MINIMUM.md",
-      "bytes": 3392,
-      "sha256": "ab50e40dc5104a7d37c43fa15fb92d70121cf27a3e80a6d8d1329fe4720bb117"
+      "bytes": 3709,
+      "sha256": "4b2e5a106d2d274777044ccc92f0765f63c7858ab19371b56435688c0891681e"
     },
     {
       "path": "docs/QUALIFICATION-0.26.0.md",
@@ -322,6 +327,11 @@
       "path": "docs/RELEASE-0.32.2.md",
       "bytes": 9609,
       "sha256": "70f31ff21ebfcafc11b49ab87a248c9f78432740b4630b8e77f924fbdf4a4f67"
+    },
+    {
+      "path": "docs/RELEASE-0.34.0.md",
+      "bytes": 9760,
+      "sha256": "cdf6c731de6c1d3f3128dd630158fe7733339225850317aae2f99552db5b22ba"
     },
     {
       "path": "docs/RELEASE.md",
@@ -1825,8 +1835,8 @@
     },
     {
       "path": "tests/e2e/website.spec.mjs",
-      "bytes": 8245,
-      "sha256": "bc82b5acaafe3545931e00e1b603943e1f52ed32827d9f4faea0fe499ff8679b"
+      "bytes": 8501,
+      "sha256": "0f8cc7af7362026353f84817562ae028f51dfe6e8301d153605d9e6ebbf86683"
     },
     {
       "path": "tests/edge-rate-limit.test.mjs",
@@ -2151,12 +2161,12 @@
     {
       "path": "website/index.html",
       "bytes": 11041,
-      "sha256": "76f305a185cfb8517199ac24105381fcf49b0d0d80bc83f7b1d71915b6c555c6"
+      "sha256": "59e1b9739e6e6ceaadb1b5b6ac589f80ee65d3170dafbb8df2576d93367118f9"
     },
     {
       "path": "website/published-release.js",
       "bytes": 3318,
-      "sha256": "1637dd03f136ea2696fe325b7d2e3277a0c4a806bfd67eb5ff1e7945a2067324"
+      "sha256": "c796f079929ad9aeccd00f21c3bab040def469ec9de7d4e85592a60aa8662414"
     },
     {
       "path": "website/release-core.js",
