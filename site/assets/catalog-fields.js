@@ -1,6 +1,6 @@
 // Pure metadata cleanup, shared by publication and client fallback. URL egress
 // policy remains in the existing server boundary; this module performs no I/O.
-import {countryCode,displayCountry,canonicalGenre,canonicalLanguage,fold} from './search-core.js?v=0.35.0';
+import {countryCode,displayCountry,canonicalGenre,canonicalLanguage,fold} from './search-core.js?v=0.36.0';
 
 const excludedRegions=new Set(['ZZ','XX','EU','UN','QO','XA','XB','AC','CP','DG','EA','IC','TA']);
 const noise=new Set(['radio','music','estacion','station','online','various','unknown','undefined']);

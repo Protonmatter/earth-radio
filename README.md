@@ -2,7 +2,7 @@
 
 Explore live radio stations around the world in a recovered, auditable web and Electron application.
 
-Release **[0.34.1 is published](https://github.com/Protonmatter/earth-radio/releases/tag/v0.34.1)** with reliable search-palette typing, Today, Continue and place-first station facts. All six Windows/macOS builds match qualified production source; all thirteen draft and anonymous public downloads passed complete size/SHA-256 checks. See the [release record and qualification limits](docs/RELEASE-0.34.1.md). Earlier releases and original account/sync identities are preserved.
+Release **[0.34.1 is published](https://github.com/Protonmatter/earth-radio/releases/tag/v0.34.1)** with reliable search-palette typing, Today, Continue and place-first station facts. All six Windows/macOS builds match their qualified v0.34.1 release source; all thirteen draft and anonymous public downloads passed complete size/SHA-256 checks. See the [release record and qualification limits](docs/RELEASE-0.34.1.md). Earlier releases and original account/sync identities are preserved.
 
 Website and downloads: **https://earthradio.stream/**. Radio app: **https://app.earthradio.stream/**. The earlier **https://earth-radio.pages.dev/** app remains available for existing shortcuts and unsynced local collections. Public repository: **https://github.com/Protonmatter/earth-radio**.
 
@@ -16,11 +16,14 @@ artifacts, checks and complete public-download readback.
 
 See the [installation guide](docs/INSTALLATION.md) for Windows ARM64/x64, macOS Apple Silicon/Intel, and Safari Home Screen installation on iPhone/iPad. Get desktop downloads, checksums and build provenance from the [latest complete release](https://github.com/Protonmatter/earth-radio/releases/latest). Windows uses the accepted local signer; macOS builds are explicitly labeled unnotarized.
 
-Web source **0.35.0** adds [Listening Passport](docs/PASSPORT.md): countries and
-confirmed cities after a continuous minute, with owner-private history/sync,
-atlas shading and export/import. The [qualification record](docs/QA-0.35.0.md)
-separates complete local checks from the required database/CI/review/served gates;
-published v0.34.1 desktop artifacts remain unchanged.
+Accepted web **0.35.0** adds [Listening Passport](docs/PASSPORT.md): countries and
+confirmed cities after a continuous minute, private history/sync, atlas shading
+and export/import. Its [delivery receipt](docs/provenance/web-0.35.0.json) records
+completed CI, database and production acceptance. Web source **0.36.0** adds
+[track-level Media Session controls](docs/MEDIA_SESSION.md), bounded cover artwork
+and Stop/replay; its [qualification record](docs/QA-0.36.0.md) tracks current gates.
+Published v0.34.1 desktop artifacts remain unchanged until the remaining phase4
+sharing and installation work is ready for one desktop publication.
 
 This repository was reconstructed from the installed Earth Radio 0.24.0 application and two user-supplied archives. It is not a byte-for-byte reproduction of the original development repository. The newest runnable installed assets were selected where they differed from older archived source; those decisions are recorded in [docs/PROVENANCE.md](docs/PROVENANCE.md).
 

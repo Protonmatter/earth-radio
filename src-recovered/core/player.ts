@@ -4,6 +4,8 @@ import { getRuntimeConfig } from './config';
 import { firstPlayableUrl, isHlsUrl, isPlaylistUrl } from './playlist.js';
 import { playbackResult } from './playback-result.js';
 import type { Station } from './types';
+import { buildRadioMediaMetadata } from '../../site/assets/media-session-core.js';
+import { createRadioMediaSession } from '../../site/assets/media-session.js';
 
 export type PlayerStatus = 'idle' | 'loading' | 'playing' | 'paused' | 'error' | 'ended';
 
@@ -59,12 +61,7 @@ export interface MediaSessionMetadataInit {
 
 /** REQ-PLAY-MEDIA: build the Media Session metadata for a station (pure, testable). */
 export function buildMediaSessionMetadata(station: Station): MediaSessionMetadataInit {
-  return {
-    title: station.name || 'Unknown Station',
-    artist: station.country || '',
-    album: 'Earth Radio',
-    artwork: station.favicon ? [{ src: station.favicon, sizes: '512x512', type: 'image/png' }] : []
-  };
+  return buildRadioMediaMetadata(station, null, { locale: typeof document === 'undefined' ? 'en' : document.documentElement.lang });
 }
 
 let audio: HTMLAudioElement | null = null;
@@ -80,6 +77,8 @@ let stallTimer: ReturnType<typeof setTimeout> | null = null;
 let connectTimer: ReturnType<typeof setTimeout> | null = null;
 let hasPlayedCurrent = false;
 let loadToken = 0;
+let stopped = false;
+let mediaSessionController: ReturnType<typeof createRadioMediaSession> | null = null;
 
 export function initPlayer(next: PlayerCallbacks = {}): void {
   audio = document.getElementById('audio-player') as HTMLAudioElement | null;
@@ -90,8 +89,9 @@ export function initPlayer(next: PlayerCallbacks = {}): void {
   callbacks = next || {};
   audio.preload = 'none';
 
-  audio.addEventListener('loadstart', () => setStatus('loading'));
+  audio.addEventListener('loadstart', () => { if (!stopped) setStatus('loading'); });
   audio.addEventListener('canplay', () => {
+    if (stopped) return;
     errorCount = 0;
     reconnectAttempts = 0;
     clearStallTimer();
@@ -99,7 +99,7 @@ export function initPlayer(next: PlayerCallbacks = {}): void {
     callbacks.onCanPlay?.(currentStation);
   });
   audio.addEventListener('playing', event => {
-    if (!intendedPlaying) { audio?.pause(); return; }
+    if (stopped || !intendedPlaying) { audio?.pause(); return; }
     if (!event.isTrusted || audio!.paused || audio!.readyState < 2) return;
     hasPlayedCurrent = true;
     clearStallTimer();
@@ -107,8 +107,9 @@ export function initPlayer(next: PlayerCallbacks = {}): void {
     setStatus('playing');
     callbacks.onPlaying?.(currentStation);
   });
-  audio.addEventListener('pause', () => setStatus(audio?.ended ? 'ended' : intendedPlaying && !hasPlayedCurrent ? 'loading' : 'paused'));
+  audio.addEventListener('pause', () => { if (!stopped) setStatus(audio?.ended ? 'ended' : intendedPlaying && !hasPlayedCurrent ? 'loading' : 'paused'); });
   audio.addEventListener('ended', () => {
+    if (stopped) return;
     setStatus('ended');
     callbacks.onEnded?.(currentStation);
   });
@@ -121,6 +122,7 @@ export function initPlayer(next: PlayerCallbacks = {}): void {
 export async function playStation(station: Station | null, { restart = false } = {}): Promise<boolean> {
   if (!audio || !station) return false;
   if (!(station.url_resolved || station.url)) return false;
+  stopped = false;
 
   const isNewStation = restart || !hasPlayedCurrent || Boolean(audio.error) || !currentStation || currentStation.stationuuid !== station.stationuuid;
   currentStation = station;
@@ -162,6 +164,7 @@ export async function playStation(station: Station | null, { restart = false } =
 export async function togglePlay(): Promise<boolean> {
   if (!audio) return false;
   if (!currentStation && !audio.src) return false;
+  if (stopped && currentStation) return playStation(currentStation);
 
   if (audio.paused) {
     intendedPlaying = true;
@@ -184,13 +187,20 @@ export function pause({ preserveIntent = false } = {}): void {
 
 export function stop(): void {
   if (!audio) return;
+  pause(); // invalidate source ownership and the existing station intent
+  stopped = true;
   intendedPlaying = false;
+  loadToken += 1; // also supersede work from a reentrant callback
+  hasPlayedCurrent = false;
   clearTimers();
   teardownHls();
   audio.pause();
   audio.removeAttribute('src');
   audio.load();
   setStatus('idle');
+  setMediaSessionState('none');
+  mediaSessionController?.clear();
+  window.dispatchEvent(new CustomEvent('earthradio:station-cleared'));
 }
 
 export function setVolume(value: number | string): void {
@@ -227,12 +237,8 @@ export async function playPrev(stations: Station[]): Promise<PlaybackResult> {
 
 /** Push a live now-playing title into the Media Session metadata. */
 export function setNowPlayingMetadata(title: string): void {
-  if (typeof navigator === 'undefined' || !('mediaSession' in navigator) || !navigator.mediaSession.metadata) return;
-  try {
-    navigator.mediaSession.metadata.title = title;
-  } catch {
-    // MediaMetadata is read-only in some engines; ignore.
-  }
+  void title; // Raw ICY cannot replace promoted song fields.
+  mediaSessionController?.refresh();
 }
 
 async function startPlayback(token = loadToken): Promise<boolean> {
@@ -429,13 +435,15 @@ function teardownHls(): void {
 }
 
 function updateMediaSession(station: Station): void {
-  if (typeof navigator === 'undefined' || !('mediaSession' in navigator)) return;
+  void station; // read the current audio owner's snapshot
   try {
-    navigator.mediaSession.metadata = new MediaMetadata(buildMediaSessionMetadata(station));
-    navigator.mediaSession.setActionHandler('play', () => callbacks.onPlay ? callbacks.onPlay() : void togglePlay());
-    navigator.mediaSession.setActionHandler('pause', () => pause());
-    navigator.mediaSession.setActionHandler('previoustrack', () => callbacks.onPrev?.());
-    navigator.mediaSession.setActionHandler('nexttrack', () => callbacks.onNext?.());
+    mediaSessionController ||= createRadioMediaSession({
+      snapshot: () => ({ station: currentStation, status, played: hasPlayedCurrent }),
+      play: () => callbacks.onPlay ? callbacks.onPlay() : togglePlay(),
+      pause: () => pause(), stop: () => stop(),
+      previous: () => callbacks.onPrev?.(), next: () => callbacks.onNext?.()
+    });
+    mediaSessionController.selectStation();
   } catch {
     // MediaMetadata unavailable; non-fatal.
   }
@@ -451,9 +459,8 @@ function setMediaSessionState(state: 'playing' | 'paused' | 'none'): void {
 }
 
 function setStatus(next: PlayerStatus): void {
-  if (status === next) return;
-  status = next;
-  callbacks.onStateChange?.(status, currentStation);
+  if (status !== next) { status = next; callbacks.onStateChange?.(status, currentStation); }
+  mediaSessionController?.refresh();
 }
 
 function getAudioError(): Error {
