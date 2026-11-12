@@ -110,7 +110,7 @@ native auth/adapter tests and `tests/auth-local-gotrue.test.mjs` as appropriate.
 - [x] Add262,144-byte native/SQL key admission, preserving all prior limits and
   RLS/owner/RPC/revision/grant semantics. No new role/table/provider/secret. Inspect
   hosted structure read-only before any eventual schema operation.
-- [ ] Exercise native sandbox/auth/restart and full node suites locally. Local DB
+- [x] Exercise native sandbox/auth/restart and full node suites locally. Local DB
   is unavailable; validate migration and Auth/pgTAP in existing isolated CI before
   hosted application. Never promote a pending database gate to a pass.
 
@@ -158,15 +158,21 @@ partial failure instead of claiming everything imported. No credential fields.
 - [x] Advance coherent0.35.0 module/runtime/worker identity, refresh provenance
   with frozen place replay as needed, manifests and docs. Run `npm run verify`,
   full no-retry browser suite, rendered matrix, desktop renderer/auth/restart.
-- [ ] If needed, push an explicitly pending draft for isolated SQL/Auth CI after
+- [x] If needed, push an explicitly pending draft for isolated SQL/Auth CI after
   all locally available gates pass. Fix concrete failures; never deploy a failed
   migration. One fresh whole-feature review of final immutable source; re-grade
   findings and perform one tested fix pass. Record every ruling/declined scope.
-- [ ] Exact-head checks/logs and actual preview; bounded reviewed migration and
+- [x] Exact-head checks/logs and actual preview; bounded reviewed migration and
   post-apply verification/advisors; expected-head merge; final-main and production
   checks and a bounded canary. Original profile/provider/vault remain untouched.
-- [ ] Update Spaces with source/evidence/rollback and phase4 desktop publication
+- [x] Update Spaces with source/evidence/rollback and phase4 desktop publication
   status. Then continue ER-11, ER-09 and ER-10; the broader roadmap remains active.
 
 New cost is the only question gate. Keep failed/RED evidence and prior releases;
 no force pushes, tag replacement, destructive schema rollback or profile reset.
+
+Completion: Passport web0.35 accepted on main7e5e33b at08:46:49Z, November12,2026.
+Head/main each passed ten checks and410clean browser cases; exact SQL admission,
+production and canary passed. Spaces sequence49 records Step263. See
+[the delivery receipt](../../provenance/web-0.35.0.json). This closes Passport only;
+Media Session/share/install, desktop publication and phase5 remain active.

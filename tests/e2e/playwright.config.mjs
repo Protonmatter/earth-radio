@@ -13,6 +13,8 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 1 : 0,
+  // Retain diagnostic retries, but never report a flaky CI run as successful.
+  failOnFlakyTests: Boolean(process.env.CI),
   reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : 'list',
   use: {
     baseURL: `http://127.0.0.1:${PORT}`,
@@ -35,7 +37,9 @@ export default defineConfig({
       // These suites cover real WebKit search, responsive controls and account
       // presentation. Media fixtures remain in Chromium: Windows WebKit's media
       // loader does not reliably pass the audio URLs through page.route().
-      testMatch: /(?:search-experience|auth-ui|website|directory-snapshot|today-layout|place-presentation|passport-ui)\.spec\.mjs/,
+      // Compatibility media uses a real same-origin server resource, avoiding
+      // the external-media route limitation; it records actual API availability.
+      testMatch: /(?:search-experience|auth-ui|website|directory-snapshot|today-layout|place-presentation|passport-ui|media-session-compat)\.spec\.mjs/,
       use: {
         ...devices['Desktop Safari'],
         viewport: { width: 1360, height: 850 }

@@ -1,9 +1,9 @@
 // Supported async transfer boundary for the recovered runtime. No credentials,
 // network access, Blob interception or changes to existing document formats.
-import { emptyPassport, normalizePassport, exportPassport, importPassport, addPassportVisits } from './passport-core.js?v=0.35.0';
-import { passportStore } from './passport-store.js?v=0.35.0';
-import { getSongLibraryAccount } from './song-library-store.js?v=0.35.0';
-import { readPassportHistoryPolicy } from './passport-policy.js?v=0.35.0';
+import { emptyPassport, normalizePassport, exportPassport, importPassport, addPassportVisits } from './passport-core.js?v=0.36.0';
+import { passportStore } from './passport-store.js?v=0.36.0';
+import { getSongLibraryAccount } from './song-library-store.js?v=0.36.0';
+import { readPassportHistoryPolicy } from './passport-policy.js?v=0.36.0';
 
 // Includes the existing 8 MiB favorite / 1 MiB recent / 64 KiB preference
 // contracts and formatted JSON overhead. The separate song limit is unrelated.

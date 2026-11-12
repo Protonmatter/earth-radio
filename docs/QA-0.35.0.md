@@ -134,7 +134,7 @@ local-transport explanation, without proving mobile performance. No assertion,
 timeout, product code or test retry was weakened. Failed logs/traces are retained.
 The final entire two-worker run passed410cases with zero retries.
 
-## Hosted gates and boundaries
+## Hosted gates and boundaries at candidate publication
 
 The prepared migration is
 `supabase/migrations/20261112033456_listening_passport.sql`. It admits the fifth
@@ -155,6 +155,44 @@ Live external Google/GitHub/email qualification remains separate from synthetic
 native HTTP and isolated GoTrue tests. Original-profile upgrades, physical iPhone/
 Android/Mac/Intel-Windows installation, public Windows signing trust, Apple
 notarization, OS IME and audible fidelity are not established by these tests.
+
+## Final delivery addendum
+
+Passport web 0.35 was accepted November 12, 2026 at 08:46:49 UTC. PR #53 head
+`a30d2444682cb4191d6c7a986a20fb4f02f4bf90` merged as
+`7e5e33b0ccc52c9cff016ae53c28ff5196a9be09`; their source trees are identical.
+The [delivery receipt](provenance/web-0.35.0.json) records ten head/main checks and
+410 browser cases per source without failures, flaky cases, skips or retries.
+Local verifier: 738 passed, three existing Windows skips; 472 canonical hashes,
+42 rendered contexts, native platforms and actual worker/offline upgrades pass.
+
+After isolated 45 pgTAP/3 Auth tests, the exact 3,449-byte SQL with SHA-256
+`77a38c6afe91fb23d98f81b52de88d5fa07e0700d4520b981b24aa9c92fd8ba3`
+was applied as remote journal `20261112081804/listening_passport`. The local CLI
+filename remains `20261112033456_listening_passport.sql`; no history repair was
+attempted. Catalog comparison proves only the Passport key/262,144-byte admission
+changed. Other limits/constraints, forced RLS, owner SELECT, ACL, empty privileged
+search path and CAS remain; security advisories are unchanged.
+
+Production: 113 app files per app origin and 19 website files match all bytes and
+cache/security headers. Fifteen routes, four live UI contexts, explicit guest Passport
+import/off/on/clear, visible account controls, muted Classic Vinyl start and offline
+checks pass. The bounded canary completed three cycles/nine HTTP 200 checks, 70–177 ms in this
+observation. Original profiles/providers/SMTP/vault and prior releases are unchanged.
+
+Scheduled directory run 43182769798 rejected overlapping upstream pages before
+publication and retained the last good generation. The producer code and previous
+five hourly successes were inspected. One controlled same-source run 43183637001
+build/deploy passed all guards and 454 atomic artifacts. Its 08:31:53.445 generation
+has 10,000 identities/9,423 logical stations/9,980 streams. Actual catalog 6,181,670 bytes
+and legacy 5,841,769 bytes match both public SHA descriptors and all 11 city minimums.
+An initially older cached representation converged through ordinary refresh;
+no purge or guard weakening occurred. Failed history and narrowly verified recovery
+remain explicit in the acceptance receipt. Spaces sequence 49 records Step 263.
+
+Published desktops remain v0.34.1 until the remaining phase4 features are ready.
+All physical, live-provider, signing/notarization and fidelity boundaries above
+remain unchanged; this addendum does not promote them to passes.
 
 ## Rollback
 

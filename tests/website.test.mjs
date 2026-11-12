@@ -108,3 +108,23 @@ test('real staged app and marketing HTTP routes return 404, correct MIME and can
     }finally{server.closeAllConnections();await new Promise(resolve=>server.close(resolve));}
   }
 });
+
+test('loopback media fixture supports real media-process byte ranges without public files',async()=>{
+  const server=createSiteServer();await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+  try{
+    const url=`http://127.0.0.1:${server.address().port}/__test-media-session.wav`;
+    const full=await fetch(url),bytes=Buffer.from(await full.arrayBuffer());
+    assert.equal(full.status,200);assert.equal(bytes.toString('ascii',0,4),'RIFF');assert.equal(bytes.length,1920044);
+    assert.equal(full.headers.get('content-type'),'audio/wav');assert.equal(full.headers.get('cache-control'),'no-store');
+    const head=await fetch(url,{method:'HEAD'});assert.equal(head.headers.get('content-length'),String(bytes.length));assert.equal((await head.arrayBuffer()).byteLength,0);
+    for(const [range,start,end] of [['bytes=0-43',0,43],['bytes=44-',44,bytes.length-1],['bytes=-16',bytes.length-16,bytes.length-1],['bytes=1920040-9999999',1920040,bytes.length-1]]){
+      const partial=await fetch(url,{headers:{range}});assert.equal(partial.status,206);
+      assert.equal(partial.headers.get('content-range'),`bytes ${start}-${end}/${bytes.length}`);
+      assert.deepEqual(Buffer.from(await partial.arrayBuffer()),bytes.subarray(start,end+1));
+    }
+    for(const range of ['bytes=5-4','bytes=1920044-','bytes=-0','bytes=-','bytes=0-1,3-4','bytes=9007199254740992-','nonsense']){
+      const invalid=await fetch(url,{headers:{range}});assert.equal(invalid.status,416,range);assert.equal(invalid.headers.get('content-range'),`bytes */${bytes.length}`);await invalid.arrayBuffer();
+    }
+    assert.equal((await fetch(url,{method:'POST'})).status,405);
+  }finally{server.closeAllConnections();await new Promise(resolve=>server.close(resolve));}
+});

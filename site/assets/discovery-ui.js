@@ -1,14 +1,14 @@
-import { buildFacetOptions, pickStation, rankStations, sanitizePreferences } from './discovery-core.js?v=0.35.0';
-import { createMapDirectory, mergeMappedStations } from './map-directory.js?v=0.35.0';
-import { installSearchControls } from './search-controls.js?v=0.35.0';
-import { getLocale, t } from '../i18n/index.js?v=0.35.0';
-import {stationLocation,stationMapPoint} from './station-location.js?v=0.35.0';
-import {stationFacts} from './place-copy.js?v=0.35.0';
-import {stationPlace} from './place-core.js?v=0.35.0';
-import {createStationFacts} from './place-ui.js?v=0.35.0';
-import {groupStationVariants,projectVariantResults,expandFavoriteIds,chooseGroupStation} from './station-variants.js?v=0.35.0';
-import {atlasViewAction} from './map-viewport.js?v=0.35.0';
-import {createPlaybackIntent} from './playback-intent.js?v=0.35.0';
+import { buildFacetOptions, pickStation, rankStations, sanitizePreferences } from './discovery-core.js?v=0.36.0';
+import { createMapDirectory, mergeMappedStations } from './map-directory.js?v=0.36.0';
+import { installSearchControls } from './search-controls.js?v=0.36.0';
+import { getLocale, t } from '../i18n/index.js?v=0.36.0';
+import {stationLocation,stationMapPoint} from './station-location.js?v=0.36.0';
+import {stationFacts} from './place-copy.js?v=0.36.0';
+import {stationPlace} from './place-core.js?v=0.36.0';
+import {createStationFacts} from './place-ui.js?v=0.36.0';
+import {groupStationVariants,projectVariantResults,expandFavoriteIds,chooseGroupStation} from './station-variants.js?v=0.36.0';
+import {atlasViewAction} from './map-viewport.js?v=0.36.0';
+import {createPlaybackIntent} from './playback-intent.js?v=0.36.0';
 
 let playbackContext = null;
 // Consumers receive a clone, never the runtime's mutable current station. This

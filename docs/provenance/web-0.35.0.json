@@ -1,0 +1,90 @@
+{
+  "acceptedAt": "2026-11-12T08:46:49.215Z",
+  "feature": "ER-06 Listening Passport",
+  "version": "0.35.0",
+  "head": "a30d2444682cb4191d6c7a986a20fb4f02f4bf90",
+  "main": "7e5e33b0ccc52c9cff016ae53c28ff5196a9be09",
+  "pr": 53,
+  "tree": "2defea4723eae3917b00ddd64bcccbab84ce02b4",
+  "treeIdenticalToQualifiedHead": true,
+  "canonicalSourceHashes": 472,
+  "localRepositoryPass": 738,
+  "existingWindowsSkips": 3,
+  "localHeadAndMainBrowserCases": 410,
+  "noBrowserFailuresFlakySkipsOrRetries": true,
+  "renderedContexts": 42,
+  "nativeAuthSyncRestartPlatforms": [
+    "Windows ARM local",
+    "Windows x64 CI",
+    "macOS ARM CI",
+    "macOS Intel CI"
+  ],
+  "headAndMainRequiredChecks": 10,
+  "headCi": 43180466551,
+  "headSupabase": 43180466724,
+  "mainCi": 43182033225,
+  "mainSupabase": 43182033188,
+  "isolatedDatabaseTests": 45,
+  "isolatedAuthPkceRlsTests": 3,
+  "reviewFindingsResolved": 3,
+  "workerUpgradeFrom": [
+    "v77",
+    "v78"
+  ],
+  "worker": "v79-passport-privacy",
+  "runtime": "index-fb2362b3.js",
+  "productionFileMatches": [
+    113,
+    113,
+    19
+  ],
+  "productionRoutes": 15,
+  "liveUiContexts": 4,
+  "mutedLivePlaybackStarted": true,
+  "productionOffline": true,
+  "hostedMigration": {
+    "version": "20261112081804",
+    "name": "listening_passport"
+  },
+  "sourceMigration": "20261112033456_listening_passport.sql",
+  "sourceSqlSha256": "77a38c6afe91fb23d98f81b52de88d5fa07e0700d4520b981b24aa9c92fd8ba3",
+  "securityAndOtherFourDocumentLimitsPreserved": true,
+  "directory": {
+    "failedSchedule": 43182769798,
+    "recovery": 43183637001,
+    "generatedAt": "2026-11-12T08:31:53.445Z",
+    "logicalStations": 9423,
+    "identities": 10000,
+    "bothRepresentationsHashVerified": true,
+    "allElevenCityMinimums": true,
+    "guardsUnchanged": true
+  },
+  "canary": {
+    "state": "healthy",
+    "cycles": 3,
+    "httpChecks": 9,
+    "all200": true,
+    "minLatencyMs": 70,
+    "maxLatencyMs": 177
+  },
+  "historicalFailuresPreservedAndScopedRecoveryVerified": true,
+  "originalAccountsProviderSmtpVaultUnchanged": true,
+  "retainedStashPreserved": true,
+  "newCost": false,
+  "desktopPublishedVersion": "0.34.1",
+  "desktopPublicationAfterRemainingPhase4": true,
+  "notQualified": [
+    "fresh external provider sign-in or original-profile upgrade",
+    "physical iPhone/Android/Mac/Intel Windows installer acceptance",
+    "OS IME or assistive-technology certification",
+    "public Windows signing or Apple notarization",
+    "audible fidelity or physical lock-screen/background playback"
+  ],
+  "next": [
+    "ER-11 Media Session",
+    "ER-09 sharing/path links",
+    "ER-10 installation",
+    "phase4 desktop rebuild/publication",
+    "phase5 data/performance/atlas/SEO"
+  ]
+}

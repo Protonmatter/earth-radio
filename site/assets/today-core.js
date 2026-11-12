@@ -1,9 +1,9 @@
 // A separately frozen v1 UTC calendar: adding general place data cannot change
 // an existing day's city. Selection is recommendation-only; it never plays audio.
-import {CURATED_PLACES} from './curated-places.js?v=0.35.0';
-import {stationPlace,formatPlaceTime} from './place-core.js?v=0.35.0';
-import {programComponents,nativeProgramSupport} from './program-components.js?v=0.35.0';
-import {rankStations} from './discovery-core.js?v=0.35.0';
+import {CURATED_PLACES} from './curated-places.js?v=0.36.0';
+import {stationPlace,formatPlaceTime} from './place-core.js?v=0.36.0';
+import {programComponents,nativeProgramSupport} from './program-components.js?v=0.36.0';
+import {rankStations} from './discovery-core.js?v=0.36.0';
 
 export const TODAY_CALENDAR_V1=Object.freeze([
  'ne-1159151529','ne-1159151563','ne-1159151575','ne-1159151503',

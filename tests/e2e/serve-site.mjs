@@ -5,6 +5,7 @@ import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { silentWav } from './fixtures/silent-media.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', 'site');
 const websiteRoot = path.resolve(root, '..', '.build', 'website');
@@ -23,10 +24,30 @@ const types = new Map(Object.entries({
 }));
 
 export function createSiteServer({appRoot=root,marketingRoot=websiteRoot}={}) {
+ let mediaFixture;
  return createServer(async (req, res) => {
   let selectedRoot=path.resolve(appRoot);
   try {
     const pathname = decodeURIComponent(new URL(req.url || '/', 'http://localhost').pathname);
+    // WebKit's media process may bypass page.route. Keep this PCM fixture on
+    // the loopback test server; it is never staged into the public application.
+    if(pathname==='/__test-media-session.wav'){
+      if(req.method!=='GET'&&req.method!=='HEAD'){res.writeHead(405,{allow:'GET, HEAD'}).end();return;}
+      mediaFixture??=silentWav(120);
+      const length=mediaFixture.length,headers={'content-type':'audio/wav','cache-control':'no-store','accept-ranges':'bytes'};
+      let start=0,end=length-1,status=200;
+      if(req.headers.range){
+        const match=/^bytes=(\d*)-(\d*)$/.exec(req.headers.range);
+        if(!match||(!match[1]&&!match[2])||match.slice(1).some(value=>value&&!Number.isSafeInteger(Number(value)))){res.writeHead(416,{...headers,'content-range':`bytes */${length}`}).end();return;}
+        start=match[1]?Number(match[1]):Math.max(0,length-Number(match[2]));
+        end=match[1]&&match[2]?Math.min(Number(match[2]),length-1):length-1;
+        if(!Number.isSafeInteger(start)||!Number.isSafeInteger(end)||start>=length||end<start||(!match[1]&&Number(match[2])===0)){
+          res.writeHead(416,{...headers,'content-range':`bytes */${length}`}).end();return;
+        }
+        status=206;headers['content-range']=`bytes ${start}-${end}/${length}`;
+      }
+      res.writeHead(status,{...headers,'content-length':end-start+1}).end(req.method==='HEAD'?undefined:mediaFixture.subarray(start,end+1));return;
+    }
     const website = pathname.startsWith('/__website/');
     selectedRoot = path.resolve(website ? marketingRoot : appRoot);
     let relative = (website ? pathname.slice('/__website'.length) : pathname).replace(/\/+$/, '') || '/';
