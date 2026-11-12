@@ -1,6 +1,7 @@
 // Shared e2e helpers: hermetic route interception, generated audio, and common flows.
 
 import { expect } from '@playwright/test';
+import { readFile } from 'node:fs/promises';
 import { hlsFixtureResponse } from './fixtures/hls-media.mjs';
 import { EXPANSION_STATIONS, FIXTURE_COUNTRIES, FIXTURE_STATIONS } from './fixtures/stations.mjs';
 import { silentWav } from './fixtures/silent-media.mjs';
@@ -9,6 +10,9 @@ export { silentWav } from './fixtures/silent-media.mjs';
 // Silent 8kHz mono 16-bit PCM WAV; long enough that playback never ends mid-test.
 const AUDIO = silentWav();
 const ALL_STATIONS = [...FIXTURE_STATIONS, ...EXPANSION_STATIONS];
+// These tests run against this checkout. Read its exact public config once;
+// fixture construction must not depend on a second loopback HTTP connection.
+const CONFIG_SOURCE = await readFile(new URL('../../site/config.js', import.meta.url), 'utf8');
 
 export async function setupApp(page, { sameOriginNowPlaying = null, sameOriginFingerprint = null, enableAuth = false, navigate = true, startPath = '/#listen' } = {}) {
   // Chrome 151+ (the build CI's `playwright install chromium` provides) answers
@@ -78,27 +82,13 @@ export async function setupApp(page, { sameOriginNowPlaying = null, sameOriginFi
   // Register after the broad router: route.continue() otherwise bypasses this
   // handler. Existing suites exercise direct fallback; the snapshot suite tests
   // the unmodified production primary path in both engines.
-  await page.route('**/config.js*',async route=>{
-    const response=await route.fetch();
-    await route.fulfill({response,body:(await response.text()).replace("directorySnapshotUrl: '/directory/snapshot'","directorySnapshotUrl: ''")});
-  });
-  if (enableAuth) {
-    await page.route('**/config.js*', async route => {
-      const response = await route.fetch();
-      const body = (await response.text()).replace(
-        'const authOriginAllowed = isWebAuthOrigin(window.location.origin);',
-        'const authOriginAllowed = true;'
-      ).replace("directorySnapshotUrl: '/directory/snapshot'","directorySnapshotUrl: ''");
-      await route.fulfill({
-        status: 200,
-        headers: {
-          'content-type': 'text/javascript; charset=utf-8',
-          'cache-control': 'no-store'
-        },
-        body
-      });
-    });
-  }
+  let config = CONFIG_SOURCE.replace("directorySnapshotUrl: '/directory/snapshot'", "directorySnapshotUrl: ''");
+  if (enableAuth) config = config.replace('const authOriginAllowed = isWebAuthOrigin(window.location.origin);', 'const authOriginAllowed = true;');
+  await page.route(url => url.protocol==='http:'&&url.hostname==='127.0.0.1'&&!url.username&&!url.password&&url.pathname==='/config.js', route => route.fulfill({
+    status: 200,
+    headers: { 'content-type': 'text/javascript; charset=utf-8', 'cache-control': 'no-store' },
+    body: config
+  }));
   // Existing station/search regressions deliberately start in the list context.
   // Default-Today cases configure the same fixtures with navigate:false and
   // navigate to '/' themselves, exercising the real production launch policy.

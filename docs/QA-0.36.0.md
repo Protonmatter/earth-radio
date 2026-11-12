@@ -63,7 +63,7 @@ Current-source local checks on November 12, 2026:
 
 | Check | Observed result |
 | --- | --- |
-| `npm run verify` | Observer follow-up: 780 passed, three existing Windows skips, zero failures; 489 canonical file hashes |
+| `npm run verify` | Observer follow-up: 780 passed, three existing Windows skips, zero failures; 489 canonical file hashes; hermetic-config follow-up tracked below |
 | `npm audit --audit-level=moderate` | Zero advisories |
 | Original reviewed Chromium/WebKit browser suite | 422 passed in 9.9 minutes; two workers, zero retries/failures/flaky cases/skips; observer follow-up campaigns are recorded below |
 | Rendered Electron matrix | 42 contexts, complete, zero errors and no skip on the qualified rerun |
@@ -119,6 +119,43 @@ small non-sensitive CI log records, because successful HTML reports are not
 uploaded. The observer follow-up review found no issue and independently passed
 19 focused tests; its reviewed bytes and final diagnostic addition remain bound
 to the local qualification receipt.
+
+## Hermetic config transport
+
+The next head, `032c912`, passed all ten GitHub checks, but its browser log had
+421 passes and one flaky retry. The failing attempt stopped in 397 ms with
+`route.fetch: read ECONNRESET` while obtaining loopback `config.js`, before the
+artwork test reached the app. The retry passed; that does not meet the clean-run
+acceptance gate. PR #54 remains unmerged and is draft during correction.
+
+The same hosted diagnostic log explicitly records successful registration of all
+five actions, including Stop, in both Linux Chromium and Linux WebKit. This
+resolves the unsupported-action uncertainty for that observed run. It does not
+prove the precise wrapper-lifetime mechanism behind the older missed capture.
+
+Shared setup previously fetched a checked-out public file over a second loopback
+connection solely to apply two intentional test overrides. It now reads the exact
+source file once and fulfills the fixture with the same directory/auth overrides,
+JavaScript MIME and no-store policy. Four RED→GREEN cases reproduce a reset at
+that boundary, execute both auth modes, and preserve pre-injected settings. No
+network or assertion retry is added; production config is untouched. Actual
+preview/production journeys continue to execute their unmodified served config.
+The fixture matches only the exact HTTP loopback `/config.js`, so it cannot mask
+a nested missing asset, a foreign origin or a credential-bearing request.
+Fresh full verification, complete browser qualification and same-reviewer
+follow-up remain required before publishing this correction.
+
+The hermetic config source then passed the complete local matrix: 422 cases in
+17.6 minutes, one worker, zero retries/failures/flaky/skips. Its four-case follow-up
+review is clear. After that frozen campaign completed, a CI-only
+`failOnFlakyTests` policy was added using the existing pinned Playwright option.
+Diagnostic retries remain enabled in CI, but a flaky result must fail the job.
+A controlled synthetic test, without a browser or server, demonstrated the old
+one-flaky/exit-0 behavior and the new CI one-flaky/exit-1 behavior; local mode
+remains exit 0. Browser assertions, timeouts and workload are unchanged. The
+synthetic policy fixture is ignored and is not part of the real suite or release.
+Final canonical verification, policy-delta review and clean hosted acceptance
+remain required; green badges with a flaky log are never sufficient.
 
 Remaining gates:
 

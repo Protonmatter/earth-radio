@@ -230,8 +230,8 @@
     },
     {
       "path": "docs/QA-0.36.0.md",
-      "bytes": 9428,
-      "sha256": "1c9aff34e4a2a59b6f536ae4ffe6f5b474f790cdc21bcebd12539a5b0f629710"
+      "bytes": 11910,
+      "sha256": "feac02f9c06677455b865006cad7de188c66d017412d7e7db3f623ea2595ae92"
     },
     {
       "path": "docs/QA-DIRECTORY-PLACE-MINIMUM.md",
@@ -645,8 +645,8 @@
     },
     {
       "path": "package.json",
-      "bytes": 5698,
-      "sha256": "f94ca71ccf5667f7b9b21ca2fa773dd4c016c4a744a228c22695f1a2de4f22f8"
+      "bytes": 5732,
+      "sha256": "713fe647675a988e9cc1a1f70f0e6a1b71929db1d21346ae205c202f332c361c"
     },
     {
       "path": "scripts/build-desktop-icon.mjs",
@@ -1819,6 +1819,11 @@
       "sha256": "788162b2d749d760f8de02b457f094437a471e8de769ac593bca5dfd8c0f91db"
     },
     {
+      "path": "tests/e2e-config-fixture.test.mjs",
+      "bytes": 3206,
+      "sha256": "328dd5e3f3d0b861fe74508a676671d8a9b6acd76e6ead148fe108cb4a096467"
+    },
+    {
       "path": "tests/e2e/app.spec.mjs",
       "bytes": 9226,
       "sha256": "cd61f9cd5d472b75aa73cdf226cb3372b25f4b659a9986024f8a36334b9bd973"
@@ -1885,8 +1890,8 @@
     },
     {
       "path": "tests/e2e/helpers.mjs",
-      "bytes": 9424,
-      "sha256": "08edb109ca9c117cc9b120e2751d1201a129adbf9337ac05348de046012c2fa6"
+      "bytes": 9442,
+      "sha256": "ed6424897fc9b2ad531bb3f534a13695bfc0c09c0e9d70c2280275a0ca28db76"
     },
     {
       "path": "tests/e2e/listening-room.spec.mjs",
@@ -1950,8 +1955,8 @@
     },
     {
       "path": "tests/e2e/playwright.config.mjs",
-      "bytes": 2064,
-      "sha256": "05e03c7f3db668a283eee6528f715efc6442111c2e7fde93e27a9ef7d422284a"
+      "bytes": 2188,
+      "sha256": "388156530cf73f01546872fe225d560e9a9b785d9125206be402b2632fc40193"
     },
     {
       "path": "tests/e2e/reliability.spec.mjs",
